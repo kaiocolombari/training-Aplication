@@ -1,0 +1,15 @@
+export type PerimetroKey =
+  | "bracoD"
+  | "bracoE"
+  | "antebracoD"
+  | "antebracoE"
+  | "torax"
+  | "cintura"
+  | "abdomen"
+  | "quadril"
+  | "coxaSupD"
+  | "coxaSupE"
+  | "coxaMediaD"
+  | "coxaMediaE"
+  | "panturrilhaD"
+  | "panturrilhaE";
