@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ExamData } from "../types/examData";
 import type { PerimetroKey } from "../types/perimetroKey";
-
-type PerimetroField = {
-  key: PerimetroKey;
-  label: string;
-  index: number;
-};
+import type { PerimetroField } from "../types/perimetroField";
+import { useNavigate } from "react-router";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -133,6 +129,8 @@ function classificationBox(label: string, value: string) {
 }
 
 export default function App() {
+  const navigate = useNavigate();
+
   const [data, setData] = useState<ExamData>({
     nomeCompleto: "",
     genero: "",
@@ -140,8 +138,10 @@ export default function App() {
     etnia: "",
     massa: "",
     estatura: "",
-    umero: "",
     femur: "",
+    tibia: "",
+    una:"",
+    umero: "",
     fcRepouso: "",
     fcMaxima: "",
     fcReserva: "",
@@ -225,7 +225,7 @@ export default function App() {
   const analiseCorporal = useMemo(() => {
     const massa = parseDecimal(data.massa);
     const estatura = parseDecimal(data.estatura);
-    
+
 
     const possuiDadosBasicos =
       data.genero &&
@@ -445,22 +445,39 @@ export default function App() {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Umero (cm)</span>
-                    <input
-                      value={data.umero}
-                      onChange={(event) => updateField("umero", sanitizeDecimal(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Femur (cm)</span>
+                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Fêmur (cm)</span>
                     <input
                       value={data.femur}
                       onChange={(event) => updateField("femur", sanitizeDecimal(event.target.value))}
                       className={inputBaseClass}
                     />
                   </label>
+
+                  <label>
+                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Tíbia (cm)</span>
+                    <input
+                      value={data.umero}
+                      onChange={(event) => updateField("tibia", sanitizeDecimal(event.target.value))}
+                      className={inputBaseClass}
+                    />
+                  </label>
+                  <label>
+                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Úmero (cm)</span>
+                    <input
+                      value={data.umero}
+                      onChange={(event) => updateField("umero", sanitizeDecimal(event.target.value))}
+                      className={inputBaseClass}
+                    />
+                  </label>
+                  <label>
+                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Ulna (cm)</span>
+                    <input
+                      value={data.umero}
+                      onChange={(event) => updateField("una", sanitizeDecimal(event.target.value))}
+                      className={inputBaseClass}
+                    />
+                  </label>
+
                 </div>
               </div>
             </div>
@@ -684,9 +701,8 @@ export default function App() {
               {classificationBox("Area muscular da coxa", analiseCorporal.areaCoxa)}
             </div>
           </div>
-
-          <div className="mt-10 grid gap-5 xl:grid-cols-[2.45fr_1fr]">
-
+          <div className="mt-10 flex items-end justify-end">
+            <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={() => navigate("/")}>Voltar</button>
           </div>
         </div>
       </section>

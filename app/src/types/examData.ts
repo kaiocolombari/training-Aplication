@@ -5,8 +5,10 @@ export type ExamData = {
   etnia: string;
   massa: string;
   estatura: string;
-  umero: string;
   femur: string;
+  tibia: string;
+  una: string;
+  umero: string;
   fcRepouso: string;
   fcMaxima: string;
   fcReserva: string;
