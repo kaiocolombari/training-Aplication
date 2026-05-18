@@ -3,22 +3,8 @@ import type { ExamData } from "../types/examData";
 import type { PerimetroKey } from "../types/perimetroKey";
 import type { PerimetroField } from "../types/perimetroField";
 import { useNavigate } from "react-router";
-
-type DobraKey =
-  | "triceps"
-  | "subescapular"
-  | "biceps"
-  | "iliaca"
-  | "supraespinhal"
-  | "abdominal"
-  | "coxaMedia"
-  | "panturrilha";
-
-type DobraField = {
-  key: DobraKey;
-  label: string;
-  index: number;
-};
+import type { DobraKey } from "../types/dobraKey";
+import type { DobraField } from "../types/dobraField";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
