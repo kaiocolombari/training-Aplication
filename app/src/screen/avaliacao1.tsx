@@ -128,7 +128,10 @@ function classificationBox(label: string, value: string) {
   );
 }
 
+
+
 export default function App() {
+
   const navigate = useNavigate();
 
   const [data, setData] = useState<ExamData>({
@@ -140,7 +143,7 @@ export default function App() {
     estatura: "",
     femur: "",
     tibia: "",
-    una:"",
+    una: "",
     umero: "",
     fcRepouso: "",
     fcMaxima: "",
@@ -360,6 +363,16 @@ export default function App() {
     setPerimetros({ ...emptyPerimetros });
   };
 
+  const navigateScreen = () => {
+    navigate("/avaliacao2", {
+      state: {
+        data2: data,
+        perimetros,
+        analiseCorporal,
+      },
+    });
+  }
+
   return (
     <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
       <section className="mx-auto w-full border border-zinc-400 bg-[#ececec]">
@@ -456,7 +469,7 @@ export default function App() {
                   <label>
                     <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Tíbia (cm)</span>
                     <input
-                      value={data.umero}
+                      value={data.tibia}
                       onChange={(event) => updateField("tibia", sanitizeDecimal(event.target.value))}
                       className={inputBaseClass}
                     />
@@ -472,7 +485,7 @@ export default function App() {
                   <label>
                     <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Ulna (cm)</span>
                     <input
-                      value={data.umero}
+                      value={data.una}
                       onChange={(event) => updateField("una", sanitizeDecimal(event.target.value))}
                       className={inputBaseClass}
                     />
@@ -702,7 +715,7 @@ export default function App() {
             </div>
           </div>
           <div className="mt-10 flex items-end justify-end">
-            <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={() => navigate("/avaliacao2")}>2ª Avaliação</button>
+            <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={navigateScreen}>2ª Avaliação</button>
           </div>
         </div>
       </section>
