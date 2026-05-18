@@ -492,7 +492,7 @@ export default function App() {
     <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
       <section className="mx-auto w-full border border-zinc-400 bg-[#ececec]">
         <header className="border-b-4 border-[#a55c5d] bg-[#4f7fb7] px-5 py-6">
-          <h1 className="text-5xl font-semibold italic tracking-wide text-white">Analise da Composicao Corporal</h1>
+          <h1 className="text-5xl font-semibold italic tracking-wide text-white">1ª Avaliação</h1>
         </header>
         <div className="px-5 py-5">
           <h2 className="mb-3 text-3xl font-bold italic text-zinc-600">DADOS GERAIS</h2>
@@ -828,7 +828,7 @@ export default function App() {
           <div className="mt-10 grid gap-6 xl:grid-cols-[2.45fr_1fr]">
             <div>
               <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                Dobras cutâneas (mm)
+                Dobras cutaneas (mm)
               </h3>
 
               <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
@@ -892,7 +892,7 @@ export default function App() {
 
             <div>
               <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                Proporcionalidade - dobras cutâneas (mm)
+                Proporcionalidade - dobras cutaneas (mm)
               </h3>
 
               <div className="relative pb-16 pl-10 pr-2 pt-2">

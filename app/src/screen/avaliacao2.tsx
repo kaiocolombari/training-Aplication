@@ -134,16 +134,7 @@ const emptyPerimetros: Record<PerimetroKey, string> = {
     panturrilhaE: "",
 };
 
-const [dobras, setDobras] = useState<Record<DobraKey, { primeira: string; segunda: string }>>({
-    triceps: { primeira: "", segunda: "" },
-    subescapular: { primeira: "", segunda: "" },
-    biceps: { primeira: "", segunda: "" },
-    iliaca: { primeira: "", segunda: "" },
-    supraespinhal: { primeira: "", segunda: "" },
-    abdominal: { primeira: "", segunda: "" },
-    coxaMedia: { primeira: "", segunda: "" },
-    panturrilha: { primeira: "", segunda: "" },
-});
+
 
 const emptyDobras = {
     triceps: { primeira: "", segunda: "" },
@@ -219,6 +210,17 @@ export default function App() {
         hdl: "",
         sistolica: "",
         diastolica: "",
+    });
+
+    const [dobras, setDobras] = useState<Record<DobraKey, { primeira: string; segunda: string }>>({
+        triceps: { primeira: "", segunda: "" },
+        subescapular: { primeira: "", segunda: "" },
+        biceps: { primeira: "", segunda: "" },
+        iliaca: { primeira: "", segunda: "" },
+        supraespinhal: { primeira: "", segunda: "" },
+        abdominal: { primeira: "", segunda: "" },
+        coxaMedia: { primeira: "", segunda: "" },
+        panturrilha: { primeira: "", segunda: "" },
     });
 
     const [perimetros, setPerimetros] = useState<Record<PerimetroKey, string>>(emptyPerimetros); ({
@@ -482,7 +484,7 @@ export default function App() {
         <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
             <section className="mx-auto w-full border border-zinc-400 bg-[#ececec]">
                 <header className="border-b-4 border-[#a55c5d] bg-[#4f7fb7] px-5 py-6">
-                    <h1 className="text-5xl font-semibold italic tracking-wide text-white">Analise da Composicao Corporal</h1>
+                    <h1 className="text-5xl font-semibold italic tracking-wide text-white">2ª Avaliação</h1>
                 </header>
 
                 <div className="px-5 py-5">
@@ -827,7 +829,6 @@ export default function App() {
                         </div>
                     </div>
                     <div className="mt-10 flex items-end justify-end">
-                        <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={() => navigate("/")}>Voltar</button>
                     </div>
                     <div className="mt-10 grid gap-6 xl:grid-cols-[2.45fr_1fr]">
                         <div>
@@ -958,10 +959,12 @@ export default function App() {
                                     <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
                                         1ª Avaliacao
                                     </span>
-
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div className="mt-10 flex items-end justify-end">
+                        <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={() => { navigate("/") }}>Voltar</button>
                     </div>
                 </div>
             </section>
