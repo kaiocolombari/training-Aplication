@@ -828,7 +828,7 @@ export default function App() {
           <div className="mt-10 grid gap-6 xl:grid-cols-[2.45fr_1fr]">
             <div>
               <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                Dobras cutaneas (mm)
+                Dobras cutâneas (mm)
               </h3>
 
               <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
@@ -892,7 +892,7 @@ export default function App() {
 
             <div>
               <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                Proporcionalidade - dobras cutaneas (mm)
+                Proporcionalidade - dobras cutâneas (mm)
               </h3>
 
               <div className="relative pb-16 pl-10 pr-2 pt-2">
