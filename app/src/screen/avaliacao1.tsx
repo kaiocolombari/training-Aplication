@@ -4,6 +4,22 @@ import type { PerimetroKey } from "../types/perimetroKey";
 import type { PerimetroField } from "../types/perimetroField";
 import { useNavigate } from "react-router";
 
+type DobraKey =
+  | "triceps"
+  | "subescapular"
+  | "biceps"
+  | "iliaca"
+  | "supraespinhal"
+  | "abdominal"
+  | "coxaMedia"
+  | "panturrilha";
+
+type DobraField = {
+  key: DobraKey;
+  label: string;
+  index: number;
+};
+
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
 
@@ -90,6 +106,33 @@ const emptyPerimetros: Record<PerimetroKey, string> = {
   panturrilhaE: "",
 };
 
+const chartRows = 14;
+const leftAxisMarks = [1, 3, 5, 6, 7, 8, 9, 11, 13];
+const dobraChartRows = 8;
+
+const dobrasConfig: DobraField[] = [
+  { key: "triceps", label: "Triceps", index: 1 },
+  { key: "subescapular", label: "Subescapular", index: 2 },
+  { key: "biceps", label: "Biceps", index: 3 },
+  { key: "iliaca", label: "Iliaca", index: 4 },
+  { key: "supraespinhal", label: "Supraespinhal", index: 5 },
+  { key: "abdominal", label: "Abdominal", index: 6 },
+  { key: "coxaMedia", label: "Coxa media", index: 7 },
+  { key: "panturrilha", label: "Panturrilha", index: 8 },
+];
+
+const dobraReferences: Record<DobraKey, number> = {
+  triceps: 14,
+  subescapular: 18,
+  biceps: 8,
+  iliaca: 22,
+  supraespinhal: 15,
+  abdominal: 20,
+  coxaMedia: 28,
+  panturrilha: 18,
+};
+
+
 
 function classifyPressure(systolic: number, diastolic: number) {
   if (systolic >= 180 || diastolic >= 110) return "Hipertensao estagio 3";
@@ -131,7 +174,6 @@ function classificationBox(label: string, value: string) {
 
 
 export default function App() {
-
   const navigate = useNavigate();
 
   const [data, setData] = useState<ExamData>({
@@ -172,6 +214,30 @@ export default function App() {
     panturrilhaD: "",
     panturrilhaE: "",
   });
+
+  const [dobras, setDobras] = useState<Record<DobraKey, { primeira: string; segunda: string }>>({
+    triceps: { primeira: "", segunda: "" },
+    subescapular: { primeira: "", segunda: "" },
+    biceps: { primeira: "", segunda: "" },
+    iliaca: { primeira: "", segunda: "" },
+    supraespinhal: { primeira: "", segunda: "" },
+    abdominal: { primeira: "", segunda: "" },
+    coxaMedia: { primeira: "", segunda: "" },
+    panturrilha: { primeira: "", segunda: "" },
+  });
+
+  const emptyDobras = {
+    triceps: { primeira: "", segunda: "" },
+    subescapular: { primeira: "", segunda: "" },
+    biceps: { primeira: "", segunda: "" },
+    iliaca: { primeira: "", segunda: "" },
+    supraespinhal: { primeira: "", segunda: "" },
+    abdominal: { primeira: "", segunda: "" },
+    coxaMedia: { primeira: "", segunda: "" },
+    panturrilha: { primeira: "", segunda: "" },
+  };
+
+
 
   const dadosAntropometricosValidos =
     data.genero &&
@@ -351,6 +417,45 @@ export default function App() {
     });
   }, [perimetros, data, dadosAntropometricosValidos]);
 
+  const resumoDobras = useMemo(() => {
+    const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>((acc, item) => {
+      const primeira = parseDecimal(dobras[item.key].primeira);
+      const segunda = parseDecimal(dobras[item.key].segunda);
+      const media = segunda > 0 ? (primeira + segunda) / 2 : primeira;
+      acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
+      return acc;
+    }, {} as Record<DobraKey, string>);
+
+    const valores = dobrasConfig.map((item) => parseDecimal(mediaFinal[item.key]));
+    const somatorio = valores.reduce((total, value) => total + value, 0);
+    const periferico =
+      parseDecimal(mediaFinal.triceps) +
+      parseDecimal(mediaFinal.biceps) +
+      parseDecimal(mediaFinal.coxaMedia) +
+      parseDecimal(mediaFinal.panturrilha);
+    const central =
+      parseDecimal(mediaFinal.subescapular) +
+      parseDecimal(mediaFinal.iliaca) +
+      parseDecimal(mediaFinal.supraespinhal) +
+      parseDecimal(mediaFinal.abdominal);
+
+    return {
+      mediaFinal,
+      somatorio: somatorio ? somatorio.toFixed(1).replace(".", ",") : "",
+      periferico: periferico ? periferico.toFixed(1).replace(".", ",") : "",
+      central: central ? central.toFixed(1).replace(".", ",") : "",
+    };
+  }, [dobras]);
+
+  const pontosDobras = useMemo(() => {
+    return dobrasConfig.map((item, idx) => {
+      const valor = parseDecimal(resumoDobras.mediaFinal[item.key]);
+      const ref = dobraReferences[item.key];
+      const score = Math.max(-4, Math.min(4, (valor - ref) / 4));
+      return { x: score, y: idx + 1 };
+    });
+  }, [resumoDobras.mediaFinal]);
+
   const updateField = (field: keyof ExamData, value: string) => {
     setData((current) => ({ ...current, [field]: value }));
   };
@@ -359,8 +464,18 @@ export default function App() {
     setPerimetros((current) => ({ ...current, [field]: value }));
   };
 
+  const updateDobra = (field: DobraKey, measure: "primeira" | "segunda", value: string) => {
+    setDobras((current) => ({
+      ...current, [field]: { ...current[field], [measure]: sanitizeDecimal(value), },
+    }));
+  };
+
   const clearAllPerimetros = () => {
     setPerimetros({ ...emptyPerimetros });
+  };
+
+  const clearAllDobras = () => {
+    setDobras({ ...emptyDobras });
   };
 
   const navigateScreen = () => {
@@ -698,7 +813,7 @@ export default function App() {
                   </div>
 
                   <span className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
-                    1a Avaliacao
+                    1ª Avaliacao
                   </span>
                 </div>
               </div>
@@ -708,6 +823,140 @@ export default function App() {
               {classificationBox("Massa adiposa", analiseCorporal.massaAdiposa)}
               {classificationBox("Area muscular do braco", analiseCorporal.areaBraco)}
               {classificationBox("Area muscular da coxa", analiseCorporal.areaCoxa)}
+            </div>
+          </div>
+          <div className="mt-10 grid gap-6 xl:grid-cols-[2.45fr_1fr]">
+            <div>
+              <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                Dobras cutaneas (mm)
+              </h3>
+
+              <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+                <div className="grid gap-4 lg:grid-cols-[1fr_0.95fr]">
+                  <div>
+                    <div className="mb-1 grid grid-cols-[1fr_130px_130px_130px] items-center gap-3 pl-1 text-center text-2xl font-semibold italic text-zinc-500">
+                      <span className="text-left" />
+                      <span>1ª Medida</span>
+                      <span>2a Medida</span>
+                      <span>Media final</span>
+                    </div>
+
+                    <div className="space-y-1">
+                      {dobrasConfig.map((field) => (
+                        <div key={field.key} className="grid grid-cols-[1fr_130px_130px_130px] items-center gap-3">
+                          <div className="flex items-center justify-between pr-3">
+                            <span className="text-base font-semibold uppercase italic tracking-wide text-zinc-500 pr-3">{field.label}</span>
+                            <span className="text-sm font-semibold text-zinc-500">{field.index}</span>
+                          </div>
+
+                          <input
+                            value={dobras[field.key].primeira}
+                            onChange={(event) => updateDobra(field.key, "primeira", event.target.value)}
+                            className={inputBaseClass}
+                          />
+
+                          <input
+                            value={dobras[field.key].segunda}
+                            onChange={(event) => updateDobra(field.key, "segunda", event.target.value)}
+                            className={inputBaseClass}
+                          />
+
+                          <input value={resumoDobras.mediaFinal[field.key]} readOnly className={inputBaseClass} />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-6 pt-6">
+                      <label className="grid grid-cols-[1fr_130px] items-center gap-4">
+                        <span className="text-xl font-semibold italic text-zinc-500 text-right">Somatorio (mm)</span>
+                        <input value={resumoDobras.somatorio} readOnly className={inputBaseClass} />
+                      </label>
+
+                      <label className="grid grid-cols-[1fr_130px] items-center gap-4">
+                        <span className="text-xl font-semibold italic text-zinc-500 text-right">Periferico (mm)</span>
+                        <input value={resumoDobras.periferico} readOnly className={inputBaseClass} />
+                      </label>
+
+                      <label className="grid grid-cols-[1fr_130px] items-center gap-4">
+                        <span className="text-xl font-semibold italic text-zinc-500 text-right">Central (mm)</span>
+                        <input value={resumoDobras.central} readOnly className={inputBaseClass} />
+                      </label>
+                    </div>
+                    <button type="button" onClick={clearAllDobras} className="w-[25%] bg-[#4f7fb7] py-1.5 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80">Limpar</button>
+                  </div>
+                </div>
+                <div className="flex min-h-[560px] items-center justify-center border border-zinc-300 bg-white/40 p-1">
+                  <img src="/app/src/assets/human2.png" alt="Human" className="" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                Proporcionalidade - dobras cutaneas (mm)
+              </h3>
+
+              <div className="relative pb-16 pl-10 pr-2 pt-2">
+                <div className="relative h-[460px] border border-zinc-400 bg-white">
+                  <div className="absolute inset-0 grid grid-cols-8">
+                    <div className="bg-[#f3b2b2]" />
+                    <div className="bg-[#f7dfaa]" />
+                    <div className="bg-[#f5ec99]" />
+                    <div className="bg-[#d6e8c7]" />
+                    <div className="bg-[#d6e8c7]" />
+                    <div className="bg-[#f5ec99]" />
+                    <div className="bg-[#f7dfaa]" />
+                    <div className="bg-[#f3b2b2]" />
+                  </div>
+
+                  <div className="absolute inset-0 grid grid-cols-8 border-x border-zinc-400">
+                    {Array.from({ length: 8 }).map((_, idx) => (
+                      <div key={`dobra-col-${idx}`} className="border-r border-zinc-400/60" />
+                    ))}
+                  </div>
+
+                  <div className="absolute inset-0 grid grid-rows-8">
+                    {Array.from({ length: dobraChartRows }).map((_, idx) => (
+                      <div key={`dobra-row-${idx}`} className="border-b border-zinc-300" />
+                    ))}
+                  </div>
+
+                  <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-700" />
+
+                  {pontosDobras.map((point, idx) => (
+                    <div
+                      key={`dobra-point-${idx}`}
+                      className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-500"
+                      style={{
+                        left: `${((point.x + 4) / 8) * 100}%`,
+                        top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
+                      }}
+                    />
+                  ))}
+
+                  <div className="absolute -bottom-7 left-0 right-0 flex justify-between px-1 text-lg font-semibold text-zinc-500">
+                    {[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((value) => (
+                      <span key={`dobra-axis-${value}`}>{value}</span>
+                    ))}
+                  </div>
+
+                  <div className="pointer-events-none absolute left-0 top-0 h-full w-8 text-lg font-semibold text-zinc-500">
+                    {dobrasConfig.map((item) => (
+                      <span
+                        key={`dobra-left-axis-${item.index}`}
+                        className="absolute right-1 -translate-y-1/2"
+                        style={{ top: `${((item.index - 0.5) / dobraChartRows) * 100}%` }}
+                      >
+                        {item.index}
+                      </span>
+                    ))}
+                  </div>
+
+                  <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
+                    1ª Avaliacao
+                  </span>
+
+                </div>
+              </div>
             </div>
           </div>
           <div className="mt-10 flex items-end justify-end">
