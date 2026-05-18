@@ -379,10 +379,8 @@ export default function App() {
         <header className="border-b-4 border-[#a55c5d] bg-[#4f7fb7] px-5 py-6">
           <h1 className="text-5xl font-semibold italic tracking-wide text-white">Analise da Composicao Corporal</h1>
         </header>
-
         <div className="px-5 py-5">
           <h2 className="mb-3 text-3xl font-bold italic text-zinc-600">DADOS GERAIS</h2>
-
           <div className="space-y-5 border-b-8 border-zinc-300 pb-6">
             <div className="grid gap-5 xl:grid-cols-[2.45fr_1fr]">
               <div>
@@ -589,7 +587,6 @@ export default function App() {
                       />
                     </div>
                   </div>
-
                   <div>
                     <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Classificacao</span>
                     <div className="flex h-9 items-center justify-center bg-[#4f7fb7] px-3 text-[1.35rem] font-semibold text-white">
@@ -706,7 +703,6 @@ export default function App() {
                 </div>
               </div>
             </div>
-
             <div className="space-y-6">
               {classificationBox("Massa muscular", analiseCorporal.massaMuscular)}
               {classificationBox("Massa adiposa", analiseCorporal.massaAdiposa)}
