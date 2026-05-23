@@ -31,6 +31,12 @@ function getReferenceByKey(
     key: PerimetroKey,
     data: ExamData
 ): number {
+
+    const umero = parseDecimal(data.umero);
+    const femur = parseDecimal(data.femur);
+    const tibia = parseDecimal(data.tibia);
+    const una = parseDecimal(data.una);
+
     const idade = Number(data.idade);
 
     const massa = parseDecimal(data.massa);
@@ -47,6 +53,21 @@ function getReferenceByKey(
 
     const estaturaFactor =
         1 + ((estatura - 1.75) * 0.25);
+
+    const estruturaBraco =
+        umero > 0
+            ? (umero - 7) * 1.2
+            : 0;
+
+    const estruturaPerna =
+        femur > 0
+            ? (femur - 9) * 1.4
+            : 0;
+
+    const estruturaAntebraco =
+        una > 0
+            ? (una - 5.5) * 0.8
+            : 0;
 
     const baseValues: Record<PerimetroKey, number> = {
         bracoD: masculino ? 36 : 31,
@@ -67,6 +88,31 @@ function getReferenceByKey(
 
     let value =
         baseValues[key] * estaturaFactor;
+
+    switch (key) {
+        case "bracoD":
+        case "bracoE":
+            value += estruturaBraco;
+            break;
+
+        case "antebracoD":
+        case "antebracoE":
+            value += estruturaAntebraco;
+            break;
+
+        case "coxaSupD":
+        case "coxaSupE":
+        case "coxaMediaD":
+        case "coxaMediaE":
+        case "panturrilhaD":
+        case "panturrilhaE":
+            value += estruturaPerna;
+            break;
+
+        case "torax":
+            value += estruturaBraco * 0.7;
+            break;
+    }
 
     const adiposityAdjustment:
         Partial<Record<PerimetroKey, number>> = {
@@ -508,6 +554,8 @@ export default function App() {
             return [];
         }
 
+        const massa = parseDecimal(data.massa);
+
         return perimetroConfig
             .map((item, idx) => {
                 const valorTexto = perimetros[item.key];
@@ -524,12 +572,13 @@ export default function App() {
                 );
 
                 const desvio =
-                    perimetroDesvios[item.key];
+                    perimetroDesvios[item.key as PerimetroKey] *
+                    (1 + (massa - 70) / 200);
 
                 const score = Math.max(
-                    -4,
+                    -5,
                     Math.min(
-                        4,
+                        5,
                         (valor - ref) / desvio
                     )
                 );
@@ -644,18 +693,6 @@ export default function App() {
     const clearAllDobras = () => {
         setDobras({ ...emptyDobras });
     };
-
-    const navigateScreen = () => {
-        navigate("/avaliacao2", {
-            state: {
-                data2: data,
-                perimetros,
-                analiseCorporal,
-            },
-        });
-    }
-
-    console.log(analiseCorporal.massaAdiposa);
 
     return (
         <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
@@ -928,20 +965,22 @@ export default function App() {
                                 <div className="flex items-center justify-center border border-zinc-300 bg-white/40 p-2 max-w-[350px]">
                                     <img src="/app/src/assets/human.png" alt="Human" className="max-w-[300px]" />
                                 </div>
+                                <div className="relative h-[520px] w-[520px] border border-zinc-400 bg-white px-8 py-6">
+                                    <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
+                                        <div className="bg-[#e89a9a]" />
+                                        <div className="bg-[#f3b2b2]" />
+                                        <div className="bg-[#f7dfaa]" />
+                                        <div className="bg-[#f5ec99]" />
+                                        <div className="bg-[#d6e8c7]" />
 
-                                <div className="relative h-[520px] border border-zinc-400 bg-white px-8 py-6">
-                                    <div className="absolute inset-0 grid grid-cols-8 overflow-hidden">
-                                        <div className="bg-[#f3b2b2]" />
-                                        <div className="bg-[#f7dfaa]" />
-                                        <div className="bg-[#f5ec99]" />
-                                        <div className="bg-[#d6e8c7]" />
                                         <div className="bg-[#d6e8c7]" />
                                         <div className="bg-[#f5ec99]" />
                                         <div className="bg-[#f7dfaa]" />
                                         <div className="bg-[#f3b2b2]" />
+                                        <div className="bg-[#e89a9a]" />
                                     </div>
 
-                                    <div className="absolute inset-0 grid grid-cols-8 border-x border-zinc-400">
+                                    <div className="absolute inset-0 grid grid-cols-10 border-x border-zinc-400">
                                         {Array.from({ length: 8 }).map((_, idx) => (
                                             <div key={`col-${idx}`} className="border-r border-zinc-400/60" />
                                         ))}
@@ -956,21 +995,21 @@ export default function App() {
                                         ))}
                                     </div>
 
-                                    <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-700" />
+                                    <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
 
                                     {chartPoints.map((point, idx) => (
                                         <div
                                             key={`point-${idx}`}
                                             className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-sky-500 shadow"
                                             style={{
-                                                left: `${((point.x + 4) / 8) * 100}%`,
+                                                left: `${((point.x + 5) / 10) * 100}%`,
                                                 top: `${(point.y / 14) * 100}%`,
                                             }}
                                         />
                                     ))}
 
                                     <div className="absolute -bottom-8 left-0 right-0 flex justify-between px-2 text-lg font-semibold text-zinc-500">
-                                        {[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((value) => (
+                                        {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((value) => (
                                             <span
                                                 key={`axis-${value}`}
                                                 className="w-6 text-center"
@@ -980,7 +1019,7 @@ export default function App() {
                                         ))}
                                     </div>
 
-                                    <div className="absolute inset-y-0 -left-10 flex flex-col justify-between py-[18px] text-lg font-semibold text-zinc-500">
+                                    <div className="absolute inset-y-0 -left-8 flex flex-col justify-between py-[18px] text-lg font-semibold text-zinc-500">
                                         {Array.from({ length: 14 }).map((_, idx) => (
                                             <span
                                                 key={`axis-y-${idx + 1}`}
@@ -992,7 +1031,7 @@ export default function App() {
                                     </div>
 
                                     <span className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
-                                        1a Avaliacao
+                                        1ª Avaliacao
                                     </span>
                                 </div>
                             </div>
@@ -1084,64 +1123,69 @@ export default function App() {
                                 </div>
                             )}
                             <div className="relative pb-16 pl-10 pr-2 pt-2">
-                                <div className="relative h-[460px] border border-zinc-400 bg-white">
-                                    <div className="absolute inset-0 grid grid-cols-8">
-                                        <div className="bg-[#f3b2b2]" />
-                                        <div className="bg-[#f7dfaa]" />
-                                        <div className="bg-[#f5ec99]" />
-                                        <div className="bg-[#d6e8c7]" />
-                                        <div className="bg-[#d6e8c7]" />
-                                        <div className="bg-[#f5ec99]" />
-                                        <div className="bg-[#f7dfaa]" />
-                                        <div className="bg-[#f3b2b2]" />
-                                    </div>
+                                <div className="relative pb-16 pl-10 pr-2 pt-2">
+                                    <div className="relative h-[460px] border border-zinc-400 bg-white">
+                                        <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
+                                            <div className="bg-[#e89a9a]" />
+                                            <div className="bg-[#f3b2b2]" />
+                                            <div className="bg-[#f7dfaa]" />
+                                            <div className="bg-[#f5ec99]" />
+                                            <div className="bg-[#d6e8c7]" />
 
-                                    <div className="absolute inset-0 grid grid-cols-8 border-x border-zinc-400">
-                                        {Array.from({ length: 8 }).map((_, idx) => (
-                                            <div key={`dobra-col-${idx}`} className="border-r border-zinc-400/60" />
+                                            <div className="bg-[#d6e8c7]" />
+                                            <div className="bg-[#f5ec99]" />
+                                            <div className="bg-[#f7dfaa]" />
+                                            <div className="bg-[#f3b2b2]" />
+                                            <div className="bg-[#e89a9a]" />
+                                        </div>
+
+                                        <div className="absolute inset-0 grid grid-cols-10 border-x border-zinc-400">
+                                            {Array.from({ length: 8 }).map((_, idx) => (
+                                                <div key={`dobra-col-${idx}`} className="border-r border-zinc-400/60" />
+                                            ))}
+                                        </div>
+
+                                        <div className="absolute inset-0 grid grid-rows-8 ">
+                                            {Array.from({ length: dobraChartRows }).map((_, idx) => (
+                                                <div key={`dobra-row-${idx}`} className="border-b border-zinc-300" />
+                                            ))}
+                                        </div>
+
+                                        <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
+                                        {pontosDobras.map((point, idx) => (
+                                            <div
+                                                key={`dobra-point-${idx}`}
+                                                className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-500"
+                                                style={{
+                                                    left: `${((point.x + 5) / 10) * 100}%`,
+                                                    top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
+                                                }}
+                                            />
                                         ))}
+
+                                        <div className="absolute -bottom-7 left-0 right-0 flex justify-between px-1 text-lg font-semibold text-zinc-500">
+                                            {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((value) => (
+                                                <span key={`dobra-axis-${value}`}>{value}</span>
+                                            ))}
+                                        </div>
+
+                                        <div className="pointer-events-none absolute left-0 top-0 h-full w-8 text-lg font-semibold text-zinc-500">
+                                            {dobrasConfig.map((item) => (
+                                                <span
+                                                    key={`dobra-left-axis-${item.index}`}
+                                                    className="absolute right-1 -translate-y-1/2"
+                                                    style={{ top: `${((item.index - 0.5) / dobraChartRows) * 100}%` }}
+                                                >
+                                                    {item.index}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
+                                            1ª Avaliacao
+                                        </span>
+
                                     </div>
-
-                                    <div className="absolute inset-0 grid grid-rows-8 ">
-                                        {Array.from({ length: dobraChartRows }).map((_, idx) => (
-                                            <div key={`dobra-row-${idx}`} className="border-b border-zinc-300" />
-                                        ))}
-                                    </div>
-
-                                    <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-700" />
-                                    {pontosDobras.map((point, idx) => (
-                                        <div
-                                            key={`dobra-point-${idx}`}
-                                            className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-500"
-                                            style={{
-                                                left: `${((point.x + 4) / 8) * 100}%`,
-                                                top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
-                                            }}
-                                        />
-                                    ))}
-
-                                    <div className="absolute -bottom-7 left-0 right-0 flex justify-between px-1 text-lg font-semibold text-zinc-500">
-                                        {[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((value) => (
-                                            <span key={`dobra-axis-${value}`}>{value}</span>
-                                        ))}
-                                    </div>
-
-                                    <div className="pointer-events-none absolute left-0 top-0 h-full w-8 text-lg font-semibold text-zinc-500">
-                                        {dobrasConfig.map((item) => (
-                                            <span
-                                                key={`dobra-left-axis-${item.index}`}
-                                                className="absolute right-1 -translate-y-1/2"
-                                                style={{ top: `${((item.index - 0.5) / dobraChartRows) * 100}%` }}
-                                            >
-                                                {item.index}
-                                            </span>
-                                        ))}
-                                    </div>
-
-                                    <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
-                                        1ª Avaliacao
-                                    </span>
-
                                 </div>
                             </div>
                         </div>
@@ -1151,6 +1195,6 @@ export default function App() {
                     </div>
                 </div>
             </section>
-        </main>
+        </main >
     );
 }
