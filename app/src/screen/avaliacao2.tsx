@@ -828,7 +828,7 @@ export default function App() {
                                         <div className="mb-1 grid grid-cols-[1fr_130px_130px_130px] items-center gap-3 pl-1 text-center text-2xl font-semibold italic text-zinc-500">
                                             <span className="text-left" />
                                             <span>1ª Medida</span>
-                                            <span>2a Medida</span>
+                                            <span>2ª Medida</span>
                                             <span>Media final</span>
                                         </div>
 

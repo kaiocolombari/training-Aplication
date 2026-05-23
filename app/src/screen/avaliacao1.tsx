@@ -31,7 +31,9 @@ function getReferenceByKey(
   data: ExamData
 ): number {
   const idade = Number(data.idade);
+
   const massa = parseDecimal(data.massa);
+
   const estatura = parseDecimal(data.estatura);
 
   const imc =
@@ -39,7 +41,11 @@ function getReferenceByKey(
       ? massa / (estatura * estatura)
       : 0;
 
-  const masculino = data.genero === "masculino";
+  const masculino =
+    data.genero === "masculino";
+
+  const estaturaFactor =
+    1 + ((estatura - 1.75) * 0.25);
 
   const baseValues: Record<PerimetroKey, number> = {
     bracoD: masculino ? 36 : 31,
@@ -58,16 +64,31 @@ function getReferenceByKey(
     panturrilhaE: masculino ? 36 : 33,
   };
 
-  let value = baseValues[key];
+  let value =
+    baseValues[key] * estaturaFactor;
 
-  // ajuste por IMC
-  if (imc >= 30) {
-    value += 4;
-  } else if (imc >= 25) {
-    value += 2;
-  }
+  const adiposityAdjustment:
+    Partial<Record<PerimetroKey, number>> = {
+    cintura:
+      imc >= 30 ? 12 :
+        imc >= 25 ? 6 : 0,
 
-  // ajuste por idade
+    abdomen:
+      imc >= 30 ? 14 :
+        imc >= 25 ? 7 : 0,
+
+    quadril:
+      imc >= 30 ? 8 :
+        imc >= 25 ? 4 : 0,
+
+    torax:
+      imc >= 30 ? 5 :
+        imc >= 25 ? 2 : 0,
+  };
+
+  value +=
+    adiposityAdjustment[key] ?? 0;
+
   if (idade >= 50) {
     value -= 1.5;
   }
@@ -92,6 +113,31 @@ const emptyPerimetros: Record<PerimetroKey, string> = {
   panturrilhaE: "",
 };
 
+const perimetroDesvios: Record<PerimetroKey, number> = {
+  bracoD: 4,
+  bracoE: 4,
+
+  antebracoD: 3,
+  antebracoE: 3,
+
+  torax: 8,
+
+  cintura: 10,
+
+  abdomen: 10,
+
+  quadril: 8,
+
+  coxaSupD: 6,
+  coxaSupE: 6,
+
+  coxaMediaD: 5,
+  coxaMediaE: 5,
+
+  panturrilhaD: 3,
+  panturrilhaE: 3,
+};
+
 const chartRows = 14;
 const leftAxisMarks = [1, 3, 5, 6, 7, 8, 9, 11, 13];
 const dobraChartRows = 8;
@@ -107,16 +153,93 @@ const dobrasConfig: DobraField[] = [
   { key: "panturrilha", label: "Panturrilha", index: 8 },
 ];
 
-const dobraReferences: Record<DobraKey, number> = {
-  triceps: 14,
-  subescapular: 18,
-  biceps: 8,
-  iliaca: 22,
-  supraespinhal: 15,
-  abdominal: 20,
-  coxaMedia: 28,
-  panturrilha: 18,
+type DobraReference = {
+  media: number;
+  desvio: number;
 };
+
+function getDobraReference(
+  key: DobraKey,
+  data: ExamData
+): DobraReference {
+  const masculino = data.genero === "masculino";
+
+  const idade = Number(data.idade);
+
+  const massa = parseDecimal(data.massa);
+  const estatura = parseDecimal(data.estatura);
+
+  const imc =
+    estatura > 0
+      ? massa / (estatura * estatura)
+      : 0;
+
+  const base: Record<DobraKey, DobraReference> = {
+    triceps: {
+      media: masculino ? 10 : 18,
+      desvio: 3,
+    },
+
+    subescapular: {
+      media: masculino ? 12 : 16,
+      desvio: 3,
+    },
+
+    biceps: {
+      media: masculino ? 6 : 10,
+      desvio: 2,
+    },
+
+    iliaca: {
+      media: masculino ? 14 : 22,
+      desvio: 4,
+    },
+
+    supraespinhal: {
+      media: masculino ? 10 : 16,
+      desvio: 3,
+    },
+
+    abdominal: {
+      media: masculino ? 16 : 24,
+      desvio: 5,
+    },
+
+    coxaMedia: {
+      media: masculino ? 18 : 26,
+      desvio: 4,
+    },
+
+    panturrilha: {
+      media: masculino ? 10 : 16,
+      desvio: 3,
+    },
+  };
+
+  let media = base[key].media;
+  const desvio = base[key].desvio;
+
+  if (idade >= 40) {
+    media += 2;
+  }
+
+  if (idade >= 50) {
+    media += 4;
+  }
+
+  if (imc >= 25) {
+    media += 1.5;
+  }
+
+  if (imc >= 30) {
+    media += 3;
+  }
+
+  return {
+    media,
+    desvio,
+  };
+}
 
 
 
@@ -333,10 +456,6 @@ export default function App() {
       massaMuscular = "Baixa";
     }
 
-    /*
-      MASSA ADIPOSA
-    */
-
     let massaAdiposa = "";
 
     if (imc >= 30) {
@@ -386,22 +505,48 @@ export default function App() {
       return [];
     }
 
-    return perimetroConfig.map((item, idx) => {
-      const valor = parseDecimal(perimetros[item.key]);
+    return perimetroConfig
+      .map((item, idx) => {
+        const valorTexto = perimetros[item.key];
 
-      const ref = getReferenceByKey(item.key, data);
+        if (!valorTexto) {
+          return null;
+        }
 
-      const score = Math.max(
-        -4,
-        Math.min(4, (valor - ref) / 1.6)
+        const valor = parseDecimal(valorTexto);
+
+        const ref = getReferenceByKey(
+          item.key,
+          data
+        );
+
+        const desvio =
+          perimetroDesvios[item.key];
+
+        const score = Math.max(
+          -4,
+          Math.min(
+            4,
+            (valor - ref) / desvio
+          )
+        );
+
+        return {
+          x: score,
+          y: idx + 1,
+        };
+      })
+      .filter(
+        (
+          point
+        ): point is { x: number; y: number } =>
+          point !== null
       );
-
-      return {
-        x: score,
-        y: idx + 1,
-      };
-    });
-  }, [perimetros, data, dadosAntropometricosValidos]);
+  }, [
+    perimetros,
+    data,
+    dadosAntropometricosValidos,
+  ]);
 
   const resumoDobras = useMemo(() => {
     const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>((acc, item) => {
@@ -434,13 +579,46 @@ export default function App() {
   }, [dobras]);
 
   const pontosDobras = useMemo(() => {
-    return dobrasConfig.map((item, idx) => {
-      const valor = parseDecimal(resumoDobras.mediaFinal[item.key]);
-      const ref = dobraReferences[item.key];
-      const score = Math.max(-4, Math.min(4, (valor - ref) / 4));
-      return { x: score, y: idx + 1 };
+    if (!dadosAntropometricosValidos) {
+      return [];
+    }
+
+    return dobrasConfig.flatMap((item, idx) => {
+      const valorTexto =
+        resumoDobras.mediaFinal[item.key];
+
+      if (!valorTexto) {
+        return [];
+      }
+
+      const valor = parseDecimal(valorTexto);
+
+      const referencia = getDobraReference(
+        item.key,
+        data
+      );
+
+      const score =
+        (valor - referencia.media) /
+        referencia.desvio;
+
+      const limitado = Math.max(
+        -4,
+        Math.min(4, score)
+      );
+
+      return [
+        {
+          x: limitado,
+          y: idx + 1,
+        },
+      ];
     });
-  }, [resumoDobras.mediaFinal]);
+  }, [
+    resumoDobras.mediaFinal,
+    data,
+    dadosAntropometricosValidos,
+  ]);
 
   const updateField = (field: keyof ExamData, value: string) => {
     setData((current) => ({ ...current, [field]: value }));
@@ -473,6 +651,8 @@ export default function App() {
       },
     });
   }
+
+  console.log(analiseCorporal.massaAdiposa);
 
   return (
     <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
@@ -823,7 +1003,7 @@ export default function App() {
                     <div className="mb-1 grid grid-cols-[1fr_130px_130px_130px] items-center gap-3 pl-1 text-center text-2xl font-semibold italic text-zinc-500">
                       <span className="text-left" />
                       <span>1ª Medida</span>
-                      <span>2a Medida</span>
+                      <span>2ª Medida</span>
                       <span>Media final</span>
                     </div>
 
@@ -880,7 +1060,13 @@ export default function App() {
               <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
                 Proporcionalidade - dobras cutaneas (mm)
               </h3>
-
+              {!dadosAntropometricosValidos && (
+                <div className="mb-4 rounded-md border border-red-400 bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
+                  Preencha os seguintes dados para gerar a proporcionalidade das dobras:
+                  {" "}
+                  {camposFaltando.join(", ")}
+                </div>
+              )}
               <div className="relative pb-16 pl-10 pr-2 pt-2">
                 <div className="relative h-[460px] border border-zinc-400 bg-white">
                   <div className="absolute inset-0 grid grid-cols-8">
@@ -900,14 +1086,13 @@ export default function App() {
                     ))}
                   </div>
 
-                  <div className="absolute inset-0 grid grid-rows-8">
+                  <div className="absolute inset-0 grid grid-rows-8 ">
                     {Array.from({ length: dobraChartRows }).map((_, idx) => (
                       <div key={`dobra-row-${idx}`} className="border-b border-zinc-300" />
                     ))}
                   </div>
 
                   <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-700" />
-
                   {pontosDobras.map((point, idx) => (
                     <div
                       key={`dobra-point-${idx}`}
