@@ -314,12 +314,12 @@ function parseDecimal(value: string) {
 
 function classificationBox(label: string, value: string) {
   return (
-    <div>
+    <div >
       <h4 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
         {label}
       </h4>
       <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Classificacao</span>
-      <div className="flex h-10 items-center justify-center bg-[#4f7fb7] px-3 text-[1.85rem] font-medium text-white">
+      <div className="flex h-10 items-center justify-center bg-[#4f7fb7] px-3 text-[1.25rem] font-medium text-white">
         {value}
       </div>
     </div>
@@ -1041,7 +1041,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-8 max-w-[400px]">
               {classificationBox("Massa muscular", analiseCorporal.massaMuscular)}
               {classificationBox("Massa adiposa", analiseCorporal.massaAdiposa)}
               {classificationBox("Area muscular do braco", analiseCorporal.areaBraco)}
@@ -1124,8 +1124,8 @@ export default function App() {
                   {camposFaltando.join(", ")}
                 </div>
               )}
-              <div className="relative pb-16 pl-10 pr-2 pt-2">
-                <div className="relative h-[460px] border border-zinc-400 bg-white">
+              <div className="relative overflow-visible pb-16 pl-10 pr-2 pt-2">
+                <div className="relative h-[460px] border border-zinc-400 bg-white overflow-visible">
                   <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
                     <div className="bg-[#e89a9a]" />
                     <div className="bg-[#f3b2b2]" />
@@ -1170,7 +1170,7 @@ export default function App() {
                     ))}
                   </div>
 
-                  <div className="pointer-events-none absolute left-0 top-0 h-full w-8 text-lg font-semibold text-zinc-500">
+                  <div className="pointer-events-none absolute -left-8 top-0 h-full w-8 text-lg font-semibold text-zinc-500">
                     {dobrasConfig.map((item) => (
                       <span
                         key={`dobra-left-axis-${item.index}`}
@@ -1185,7 +1185,6 @@ export default function App() {
                   <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
                     1ª Avaliacao
                   </span>
-
                 </div>
               </div>
             </div>
