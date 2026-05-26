@@ -588,12 +588,7 @@ export default function App() {
       resumoDobras
     );
 
-    const massaMuscularKg =
-      calcularMassaMuscular(
-        massa,
-        gorduraKg,
-        data.genero
-      );
+
 
     const areaBraco =
       calcularAreaBraco(
@@ -607,17 +602,21 @@ export default function App() {
         resumoDobras
       );
 
-    const refBraco =
-      getPerimetroReference(
-        "bracoD",
-        data
-      ).media;
+    const massaMuscularKg =
+      calcularMassaMuscular(
+        massa,
+        gorduraKg,
+        data.genero,
+        Number(data.idade),
+        areaBraco,
+        areaCoxa,
+        getReferenceByKey("imc" as PerimetroKey, data)
+      );
 
-    const refCoxa =
-      getPerimetroReference(
-        "coxaMediaD",
-        data
-      ).media;
+    const refBraco = getReferenceByKey("bracoD" as PerimetroKey, data);
+
+
+    const refCoxa = getReferenceByKey("coxaD" as PerimetroKey, data);
 
     const percentualMuscular =
       massa > 0
