@@ -10,6 +10,7 @@ import { calcularMassaMuscular } from "../functions/calcMassaMuscular";
 import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularAreaBraco } from "../functions/calcBraco";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from "recharts";
+import safeNumber from "../functions/safeNumber";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -220,38 +221,45 @@ function ComposicaoCorporalChart({
   const data = [
     {
       nome: "Massa muscular",
-      valor: massaMuscular,
+      valor: safeNumber(massaMuscular),
       cor: "#00cc00",
     },
     {
       nome: "Massa livre",
-      valor: massaLivre,
+      valor: safeNumber(massaLivre),
       cor: "#3366ff",
     },
     {
       nome: "Massa adiposa",
-      valor: massaAdiposa,
+      valor: safeNumber(massaAdiposa),
       cor: "#ff3333",
     },
     {
       nome: "Massa total",
-      valor: massaTotal,
+      valor: safeNumber(massaTotal),
       cor: "#ffff00",
     },
   ];
 
   return (
     <div className="w-full h-[420px]">
-      <ResponsiveContainer>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data}>
           <XAxis
             dataKey="nome"
             tick={{ fontSize: 12 }}
           />
-          <YAxis />
-          <Tooltip
-            formatter={(value) => `${value} kg`}
+
+          <YAxis
+            domain={[0, "auto"]}
           />
+
+          <Tooltip
+            formatter={(value: any) =>
+              `${safeNumber(value).toFixed(1)} kg`
+            }
+          />
+
           <Bar
             dataKey="valor"
             shape={<Cilindro />}
@@ -640,8 +648,6 @@ export default function App() {
     dadosAntropometricosValidos,
   ]);
 
-  
-
   const pontosDobras = useMemo(() => {
     if (!dadosAntropometricosValidos) {
       return [];
@@ -685,26 +691,26 @@ export default function App() {
   ]);
 
   const analiseCorporal = useMemo(() => {
-    const massa = parseDecimal(data.massa);
+    const massa =
+      parseDecimal(data.massa);
 
-    const gorduraKg = calcularMassaAdiposa(
-      data,
-      resumoDobras
-    );
-
-
+    const gorduraKg =
+      calcularMassaAdiposa(
+        data,
+        resumoDobras
+      ) || 0;
 
     const areaBraco =
       calcularAreaBraco(
         perimetros,
         resumoDobras
-      );
+      ) || 0;
 
     const areaCoxa =
       calcularAreaCoxa(
         perimetros,
         resumoDobras
-      );
+      ) || 0;
 
     const massaMuscularKg =
       calcularMassaMuscular(
@@ -812,6 +818,26 @@ export default function App() {
       );
 
     return {
+      massaMuscularKg:
+        Number(
+          massaMuscularKg.toFixed(1)
+        ) || 0,
+
+      massaLivreKg:
+        Number(
+          (massa - gorduraKg).toFixed(1)
+        ) || 0,
+
+      massaAdiposaKg:
+        Number(
+          gorduraKg.toFixed(1)
+        ) || 0,
+
+      massaTotalKg:
+        Number(
+          massa.toFixed(1)
+        ) || 0,
+
       massaMuscular:
         `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
 
@@ -1359,10 +1385,18 @@ export default function App() {
                 COMPOSIÇÃO CORPORAL
               </h3>
               <ComposicaoCorporalChart
-                massaMuscular={analiseCorporal.massaMuscular}
-                massaLivre={data.massa}
-                massaAdiposa={analiseCorporal.massaAdiposa}
-                massaTotal={data.massa}
+                massaMuscular={
+                  analiseCorporal.massaMuscularKg
+                }
+                massaLivre={
+                  analiseCorporal.massaLivreKg
+                }
+                massaAdiposa={
+                  analiseCorporal.massaAdiposaKg
+                }
+                massaTotal={
+                  analiseCorporal.massaTotalKg
+                }
               />
             </div>
             <div>
