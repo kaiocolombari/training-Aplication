@@ -9,6 +9,7 @@ import { calcularMassaAdiposa } from "../functions/calcMassaAdiposa";
 import { calcularMassaMuscular } from "../functions/calcMassaMuscular";
 import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularAreaBraco } from "../functions/calcBraco";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from "recharts";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -162,6 +163,111 @@ const emptyPerimetros: Record<PerimetroKey, string> = {
   panturrilhaD: "",
   panturrilhaE: "",
 };
+
+type Props = {
+  massaMuscular: any;
+  massaLivre: any;
+  massaAdiposa: any;
+  massaTotal: any;
+};
+
+function Cilindro({
+  fill,
+  x,
+  y,
+  width,
+  height,
+}: any) {
+  const ellipseHeight = width / 4;
+
+  return (
+    <g>
+      <ellipse
+        cx={x + width / 2}
+        cy={y}
+        rx={width / 2}
+        ry={ellipseHeight / 2}
+        fill={fill}
+        opacity={0.95}
+      />
+
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={fill}
+      />
+
+      <ellipse
+        cx={x + width / 2}
+        cy={y + height}
+        rx={width / 2}
+        ry={ellipseHeight / 2}
+        fill={fill}
+        opacity={0.8}
+      />
+    </g>
+  );
+}
+
+function ComposicaoCorporalChart({
+  massaMuscular,
+  massaLivre,
+  massaAdiposa,
+  massaTotal,
+}: Props) {
+  const data = [
+    {
+      nome: "Massa muscular",
+      valor: massaMuscular,
+      cor: "#00cc00",
+    },
+    {
+      nome: "Massa livre",
+      valor: massaLivre,
+      cor: "#3366ff",
+    },
+    {
+      nome: "Massa adiposa",
+      valor: massaAdiposa,
+      cor: "#ff3333",
+    },
+    {
+      nome: "Massa total",
+      valor: massaTotal,
+      cor: "#ffff00",
+    },
+  ];
+
+  return (
+    <div className="w-full h-[420px]">
+      <ResponsiveContainer>
+        <BarChart data={data}>
+          <XAxis
+            dataKey="nome"
+            tick={{ fontSize: 12 }}
+          />
+          <YAxis />
+          <Tooltip
+            formatter={(value) => `${value} kg`}
+          />
+          <Bar
+            dataKey="valor"
+            shape={<Cilindro />}
+          >
+            {data.map((item) => (
+              <Cell
+                key={item.nome}
+                fill={item.cor}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 const perimetroDesvios: Record<PerimetroKey, number> = {
   bracoD: 4,
@@ -473,9 +579,6 @@ export default function App() {
     };
   }, [dobras]);
 
-
-
-
   const classificacaoPressao = useMemo(() => {
     const sistolica = Number(data.sistolica);
     const diastolica = Number(data.diastolica);
@@ -537,6 +640,7 @@ export default function App() {
     dadosAntropometricosValidos,
   ]);
 
+  
 
   const pontosDobras = useMemo(() => {
     if (!dadosAntropometricosValidos) {
@@ -616,7 +720,7 @@ export default function App() {
     const refBraco = getReferenceByKey("bracoD" as PerimetroKey, data);
 
 
-    const refCoxa = getReferenceByKey("coxaD" as PerimetroKey, data);
+    const refCoxa = getReferenceByKey("coxaMediaD", data);
 
     const percentualMuscular =
       massa > 0
@@ -1102,7 +1206,7 @@ export default function App() {
             <div className="space-y-8 max-w-[400px]">
               {classificationBox("Massa muscular", analiseCorporal.massaMuscular)}
               {classificationBox("Massa adiposa", analiseCorporal.massaAdiposa)}
-              {classificationBox("Area muscular do braco", analiseCorporal.areaBraco)}
+              {classificationBox("Area muscular do braço", analiseCorporal.areaBraco)}
               {classificationBox("Area muscular da coxa", analiseCorporal.areaCoxa)}
             </div>
           </div>
@@ -1239,7 +1343,6 @@ export default function App() {
                       </span>
                     ))}
                   </div>
-
                   <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
                     1ª Avaliacao
                   </span>
@@ -1249,6 +1352,24 @@ export default function App() {
           </div>
           <div className="mt-10 flex items-end justify-end">
             <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={navigateScreen}>2ª Avaliação</button>
+          </div>
+          <div className="grid gap-5 xl:grid-cols-[2.45fr_1fr] mt-10">
+            <div>
+              <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                COMPOSIÇÃO CORPORAL
+              </h3>
+              <ComposicaoCorporalChart
+                massaMuscular={analiseCorporal.massaMuscular}
+                massaLivre={data.massa}
+                massaAdiposa={analiseCorporal.massaAdiposa}
+                massaTotal={data.massa}
+              />
+            </div>
+            <div>
+              <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                TESTE DE CARGA MÁXIMA - 1RM
+              </h3>
+            </div>
           </div>
         </div>
       </section>
