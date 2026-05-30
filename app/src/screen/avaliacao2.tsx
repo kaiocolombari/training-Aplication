@@ -6,6 +6,10 @@ import { useNavigate } from "react-router";
 import { useLocation } from "react-router";
 import type { DobraKey } from "../types/dobraKey";
 import type { DobraField } from "../types/dobraField";
+import { calcularMassaAdiposa } from "../functions/calcMassaAdiposa";
+import { calcularAreaBraco } from "../functions/calcBraco";
+import { calcularAreaCoxa } from "../functions/calcCoxa";
+import { calcularMassaMuscular } from "../functions/calcMassaMuscular";
 
 const inputBaseClass =
     "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -441,6 +445,36 @@ export default function App() {
         });
     }, [data.idade, data.genero, data.fcRepouso]);
 
+    const resumoDobras = useMemo(() => {
+        const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>((acc, item) => {
+            const primeira = parseDecimal(dobras[item.key].primeira);
+            const segunda = parseDecimal(dobras[item.key].segunda);
+            const media = segunda > 0 ? (primeira + segunda) / 2 : primeira;
+            acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
+            return acc;
+        }, {} as Record<DobraKey, string>);
+
+        const valores = dobrasConfig.map((item) => parseDecimal(mediaFinal[item.key]));
+        const somatorio = valores.reduce((total, value) => total + value, 0);
+        const periferico =
+            parseDecimal(mediaFinal.triceps) +
+            parseDecimal(mediaFinal.biceps) +
+            parseDecimal(mediaFinal.coxaMedia) +
+            parseDecimal(mediaFinal.panturrilha);
+        const central =
+            parseDecimal(mediaFinal.subescapular) +
+            parseDecimal(mediaFinal.iliaca) +
+            parseDecimal(mediaFinal.supraespinhal) +
+            parseDecimal(mediaFinal.abdominal);
+
+        return {
+            mediaFinal,
+            somatorio: somatorio ? somatorio.toFixed(1).replace(".", ",") : "",
+            periferico: periferico ? periferico.toFixed(1).replace(".", ",") : "",
+            central: central ? central.toFixed(1).replace(".", ",") : "",
+        };
+    }, [dobras]);
+
     const classificacaoPressao = useMemo(() => {
         const sistolica = Number(data.sistolica);
         const diastolica = Number(data.diastolica);
@@ -449,105 +483,7 @@ export default function App() {
         return classifyPressure(sistolica, diastolica);
     }, [data.sistolica, data.diastolica]);
 
-    const analiseCorporal = useMemo(() => {
-        const massa = parseDecimal(data.massa);
-        const estatura = parseDecimal(data.estatura);
 
-
-        const possuiDadosBasicos =
-            data.genero &&
-            data.idade &&
-            massa > 0 &&
-            estatura > 0;
-
-        const possuiPerimetros =
-            perimetros.bracoD &&
-            perimetros.bracoE &&
-            perimetros.coxaMediaD &&
-            perimetros.coxaMediaE;
-
-        if (!possuiDadosBasicos || !possuiPerimetros) {
-            return {
-                massaMuscular: "Dados insuficientes",
-                massaAdiposa: "Dados insuficientes",
-                areaBraco: "Dados insuficientes",
-                areaCoxa: "Dados insuficientes",
-            };
-        }
-
-        const imc = massa / (estatura * estatura);
-
-        const mediaBraco =
-            (parseDecimal(perimetros.bracoD) +
-                parseDecimal(perimetros.bracoE)) /
-            2;
-
-        const mediaCoxa =
-            (parseDecimal(perimetros.coxaMediaD) +
-                parseDecimal(perimetros.coxaMediaE)) /
-            2;
-
-        const refBraco =
-            data.genero === "masculino" ? 36 : 31;
-
-        const refCoxa =
-            data.genero === "masculino" ? 52 : 47;
-
-        let massaMuscular = "";
-
-        if (mediaBraco >= refBraco + 3) {
-            massaMuscular = "Muito elevada";
-        } else if (mediaBraco >= refBraco) {
-            massaMuscular = "Adequada";
-        } else if (mediaBraco >= refBraco - 2) {
-            massaMuscular = "Moderada";
-        } else {
-            massaMuscular = "Baixa";
-        }
-
-        let massaAdiposa = "";
-
-        if (imc >= 30) {
-            massaAdiposa = "Elevada";
-        } else if (imc >= 25) {
-            massaAdiposa = "Acima da media";
-        } else if (imc >= 18.5) {
-            massaAdiposa = "Adequada";
-        } else {
-            massaAdiposa = "Baixa";
-        }
-
-        let areaBraco = "";
-
-        if (mediaBraco >= refBraco + 2) {
-            areaBraco = "Excelente";
-        } else if (mediaBraco >= refBraco) {
-            areaBraco = "Boa";
-        } else if (mediaBraco >= refBraco - 2) {
-            areaBraco = "Regular";
-        } else {
-            areaBraco = "Deficit muscular";
-        }
-
-        let areaCoxa = "";
-
-        if (mediaCoxa >= refCoxa + 3) {
-            areaCoxa = "Excelente";
-        } else if (mediaCoxa >= refCoxa) {
-            areaCoxa = "Boa";
-        } else if (mediaCoxa >= refCoxa - 2) {
-            areaCoxa = "Regular";
-        } else {
-            areaCoxa = "Deficit muscular";
-        }
-
-        return {
-            massaMuscular,
-            massaAdiposa,
-            areaBraco,
-            areaCoxa,
-        };
-    }, [data, perimetros]);;
 
     const chartPoints = useMemo(() => {
         if (!dadosAntropometricosValidos) {
@@ -600,35 +536,6 @@ export default function App() {
         dadosAntropometricosValidos,
     ]);
 
-    const resumoDobras = useMemo(() => {
-        const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>((acc, item) => {
-            const primeira = parseDecimal(dobras[item.key].primeira);
-            const segunda = parseDecimal(dobras[item.key].segunda);
-            const media = segunda > 0 ? (primeira + segunda) / 2 : primeira;
-            acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
-            return acc;
-        }, {} as Record<DobraKey, string>);
-
-        const valores = dobrasConfig.map((item) => parseDecimal(mediaFinal[item.key]));
-        const somatorio = valores.reduce((total, value) => total + value, 0);
-        const periferico =
-            parseDecimal(mediaFinal.triceps) +
-            parseDecimal(mediaFinal.biceps) +
-            parseDecimal(mediaFinal.coxaMedia) +
-            parseDecimal(mediaFinal.panturrilha);
-        const central =
-            parseDecimal(mediaFinal.subescapular) +
-            parseDecimal(mediaFinal.iliaca) +
-            parseDecimal(mediaFinal.supraespinhal) +
-            parseDecimal(mediaFinal.abdominal);
-
-        return {
-            mediaFinal,
-            somatorio: somatorio ? somatorio.toFixed(1).replace(".", ",") : "",
-            periferico: periferico ? periferico.toFixed(1).replace(".", ",") : "",
-            central: central ? central.toFixed(1).replace(".", ",") : "",
-        };
-    }, [dobras]);
 
     const pontosDobras = useMemo(() => {
         if (!dadosAntropometricosValidos) {
@@ -671,6 +578,153 @@ export default function App() {
         data,
         dadosAntropometricosValidos,
     ]);
+
+    const analiseCorporal = useMemo(() => {
+        const massa = parseDecimal(data.massa);
+
+        const gorduraKg = calcularMassaAdiposa(
+            data,
+            resumoDobras
+        );
+
+
+
+        const areaBraco =
+            calcularAreaBraco(
+                perimetros,
+                resumoDobras
+            );
+
+        const areaCoxa =
+            calcularAreaCoxa(
+                perimetros,
+                resumoDobras
+            );
+
+        const massaMuscularKg =
+            calcularMassaMuscular(
+                massa,
+                gorduraKg,
+                data.genero,
+                Number(data.idade),
+                areaBraco,
+                areaCoxa,
+                getReferenceByKey("imc" as PerimetroKey, data)
+            );
+
+        const refBraco = getReferenceByKey("bracoD" as PerimetroKey, data);
+
+
+        const refCoxa = getReferenceByKey("coxaD" as PerimetroKey, data);
+
+        const percentualMuscular =
+            massa > 0
+                ? massaMuscularKg / massa
+                : 0;
+
+        const percentualGordura =
+            massa > 0
+                ? (gorduraKg / massa) * 100
+                : 0;
+
+        const classificarFaixa = (
+            valor: number,
+            referencia: number,
+            margem = 2
+        ) => {
+            if (valor >= referencia + margem * 2)
+                return "Muito elevada";
+
+            if (valor >= referencia + margem)
+                return "Elevada";
+
+            if (valor >= referencia - margem)
+                return "Normal";
+
+            return "Baixa";
+        };
+
+        let massaMuscular = "";
+
+        if (percentualMuscular >= 0.45) {
+            massaMuscular = "Muito elevada";
+        } else if (
+            percentualMuscular >= 0.38
+        ) {
+            massaMuscular = "Elevada";
+        } else if (
+            percentualMuscular >= 0.28
+        ) {
+            massaMuscular = "Normal";
+        } else {
+            massaMuscular = "Baixa";
+        }
+
+        let massaAdiposa = "";
+
+        if (data.genero === "Masculino") {
+            if (percentualGordura >= 25) {
+                massaAdiposa = "Muito elevada";
+            } else if (
+                percentualGordura >= 18
+            ) {
+                massaAdiposa = "Elevada";
+            } else if (
+                percentualGordura >= 10
+            ) {
+                massaAdiposa = "Adequada";
+            } else {
+                massaAdiposa = "Baixa";
+            }
+        } else {
+            if (percentualGordura >= 32) {
+                massaAdiposa = "Muito elevada";
+            } else if (
+                percentualGordura >= 25
+            ) {
+                massaAdiposa = "Elevada";
+            } else if (
+                percentualGordura >= 18
+            ) {
+                massaAdiposa = "Adequada";
+            } else {
+                massaAdiposa = "Baixa";
+            }
+        }
+
+        const areaBracos =
+            classificarFaixa(
+                areaBraco,
+                refBraco,
+                2
+            );
+
+        const areaCoxas =
+            classificarFaixa(
+                areaCoxa,
+                refCoxa,
+                3
+            );
+
+        return {
+            massaMuscular:
+                `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
+
+            massaAdiposa:
+                `${massaAdiposa} (${gorduraKg.toFixed(1)} kg)`,
+
+            areaBraco:
+                `${areaBracos} (${areaBraco.toFixed(1)} cm²)`,
+
+            areaCoxa:
+                `${areaCoxas} (${areaCoxa.toFixed(1)} cm²)`,
+        };
+    }, [
+        data,
+        perimetros,
+        resumoDobras,
+    ]);
+
 
     const updateField = (field: keyof ExamData, value: string) => {
         setData((current) => ({ ...current, [field]: value }));
