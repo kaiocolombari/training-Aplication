@@ -9,8 +9,8 @@ import { calcularMassaAdiposa } from "../functions/calcMassaAdiposa";
 import { calcularMassaMuscular } from "../functions/calcMassaMuscular";
 import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularAreaBraco } from "../functions/calcBraco";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from "recharts";
 import safeNumber from "../functions/safeNumber";
+import ComposicaoCorporalChart from "../components/ComposicaoChart";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -212,70 +212,7 @@ function Cilindro({
   );
 }
 
-function ComposicaoCorporalChart({
-  massaMuscular,
-  massaLivre,
-  massaAdiposa,
-  massaTotal,
-}: Props) {
-  const data = [
-    {
-      nome: "Massa muscular",
-      valor: safeNumber(massaMuscular),
-      cor: "#00cc00",
-    },
-    {
-      nome: "Massa livre",
-      valor: safeNumber(massaLivre),
-      cor: "#3366ff",
-    },
-    {
-      nome: "Massa adiposa",
-      valor: safeNumber(massaAdiposa),
-      cor: "#ff3333",
-    },
-    {
-      nome: "Massa total",
-      valor: safeNumber(massaTotal),
-      cor: "#ffff00",
-    },
-  ];
 
-  return (
-    <div className="w-full h-[420px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
-          <XAxis
-            dataKey="nome"
-            tick={{ fontSize: 12 }}
-          />
-
-          <YAxis
-            domain={[0, "auto"]}
-          />
-
-          <Tooltip
-            formatter={(value: any) =>
-              `${safeNumber(value).toFixed(1)} kg`
-            }
-          />
-
-          <Bar
-            dataKey="valor"
-            shape={<Cilindro />}
-          >
-            {data.map((item) => (
-              <Cell
-                key={item.nome}
-                fill={item.cor}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
 
 const perimetroDesvios: Record<PerimetroKey, number> = {
   bracoD: 4,
@@ -1379,24 +1316,16 @@ export default function App() {
           <div className="mt-10 flex items-end justify-end">
             <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={navigateScreen}>2ª Avaliação</button>
           </div>
-          <div className="grid gap-5 xl:grid-cols-[2.45fr_1fr] mt-10">
+          <div className="grid gap-5 xl:grid-cols-[2fr_1fr] mt-10">
             <div>
               <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
                 COMPOSIÇÃO CORPORAL
               </h3>
               <ComposicaoCorporalChart
-                massaMuscular={
-                  analiseCorporal.massaMuscularKg
-                }
-                massaLivre={
-                  analiseCorporal.massaLivreKg
-                }
-                massaAdiposa={
-                  analiseCorporal.massaAdiposaKg
-                }
-                massaTotal={
-                  analiseCorporal.massaTotalKg
-                }
+                massaMuscular={analiseCorporal.massaMuscularKg}
+                massaLivre={analiseCorporal.massaLivreKg}
+                massaAdiposa={analiseCorporal.massaAdiposaKg}
+                massaTotal={analiseCorporal.massaTotalKg}
               />
             </div>
             <div>
