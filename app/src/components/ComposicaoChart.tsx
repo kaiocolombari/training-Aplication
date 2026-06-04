@@ -163,7 +163,6 @@ export default function ComposicaoCorporalChart(props: Props) {
                     </div>
                 ))}
             </div>
-
             <div className="rounded-2xl bg-white/40 p-3">
                 <HighchartsReact
                     highcharts={Highcharts}

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ExamData } from "../types/examData";
 import type { PerimetroKey } from "../types/perimetroKey";
 import type { PerimetroField } from "../types/perimetroField";
-import { useNavigate } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import type { DobraKey } from "../types/dobraKey";
 import type { DobraField } from "../types/dobraField";
 import { calcularMassaAdiposa } from "../functions/calcMassaAdiposa";
@@ -11,6 +11,7 @@ import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularAreaBraco } from "../functions/calcBraco";
 import safeNumber from "../functions/safeNumber";
 import ComposicaoCorporalChart from "../components/ComposicaoChart";
+import { tabs } from "../routes/tabRoutes";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -565,8 +566,6 @@ export default function App() {
     { key: "remada", nome: "Remada" },
   ] as const;
 
-
-
   const resumoDobras = useMemo(() => {
     const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>((acc, item) => {
       const primeira = parseDecimal(dobras[item.key].primeira);
@@ -575,8 +574,6 @@ export default function App() {
       acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
       return acc;
     }, {} as Record<DobraKey, string>);
-
-
 
     const valores = dobrasConfig.map((item) => parseDecimal(mediaFinal[item.key]));
     const somatorio = valores.reduce((total, value) => total + value, 0);
@@ -1448,6 +1445,31 @@ export default function App() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+              <div className="flex border-b border-zinc-500 bg-[#2f2f2f]">
+                {tabs.map((tab) => (
+                  <NavLink
+                    key={tab.rota}
+                    to={tab.rota}
+                    onClick={(e) => {
+                      if (tab.rota === "/avaliacao2") {
+                        e.preventDefault();
+                        navigateScreen();
+                      }
+                    }}
+                    className={({ isActive }) =>
+                      ` px-5 py-2 text-sm font-semibold uppercase border-r border-zinc-500 transition
+                ${isActive
+                        ? "bg-white text-[#4c8b72]"
+                        : "bg-[#2f2f2f] text-white hover:bg-[#444]"
+                      } `
+                    }
+                  >
+                    {tab.nome}
+                  </NavLink>
+                ))}
+              </div>
             </div>
           </div>
         </div>

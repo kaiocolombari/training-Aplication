@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ExamData } from "../types/examData";
 import type { PerimetroKey } from "../types/perimetroKey";
 import type { PerimetroField } from "../types/perimetroField";
-import { useNavigate } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { useLocation } from "react-router";
 import type { DobraKey } from "../types/dobraKey";
 import type { DobraField } from "../types/dobraField";
@@ -11,6 +11,7 @@ import { calcularAreaBraco } from "../functions/calcBraco";
 import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularMassaMuscular } from "../functions/calcMassaMuscular";
 import ComposicaoCorporalChart from "../components/ComposicaoChart";
+import { tabs } from "../routes/tabRoutes";
 
 const inputBaseClass =
     "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -1391,6 +1392,25 @@ export default function App() {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                            <div className="flex border-b border-zinc-500 bg-[#2f2f2f]">
+                                {tabs.map((tab) => (
+                                    <NavLink
+                                        key={tab.rota}
+                                        to={tab.rota}
+                                        className={({ isActive }) =>
+                                            ` px-5 py-2 text-sm font-semibold uppercase border-r border-zinc-500 transition
+                                        ${isActive
+                                                ? "bg-white text-[#4c8b72]"
+                                                : "bg-[#2f2f2f] text-white hover:bg-[#444]"
+                                            } `
+                                        }
+                                    >
+                                        {tab.nome}
+                                    </NavLink>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
