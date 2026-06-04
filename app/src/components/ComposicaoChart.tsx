@@ -73,6 +73,8 @@ export default function ComposicaoCorporalChart(props: Props) {
                 height: 280,
                 spacingTop: 12,
                 spacingBottom: 20,
+                spacingLeft: 0,
+                spacingRight: 0,
             },
 
             title: { text: undefined },
@@ -104,9 +106,9 @@ export default function ComposicaoCorporalChart(props: Props) {
                 column: {
                     borderWidth: 0,
                     borderRadius: 18,
-                    pointPadding: 0.08,
-                    groupPadding: 0.08,
-                    pointWidth: 74,
+                    pointPadding: 0.01,
+                    groupPadding: 0,
+                    pointWidth: 90,
                     shadow: {
                         color: "rgba(0,0,0,.18)",
                         offsetX: 0,
@@ -146,7 +148,7 @@ export default function ComposicaoCorporalChart(props: Props) {
     );
 
     return (
-        <div className="relative grid w-full grid-cols-[320px_1fr] items-center gap-6">
+        <div className="relative grid w-[300px] grid-cols-[320px_1fr] items-center gap-6">
             <div className="space-y-2 pt-3">
                 {chartData.map((item) => (
                     <div

@@ -165,6 +165,8 @@ const emptyPerimetros: Record<PerimetroKey, string> = {
   panturrilhaE: "",
 };
 
+
+
 type Props = {
   massaMuscular: any;
   massaLivre: any;
@@ -408,6 +410,23 @@ export default function App() {
     diastolica: "",
   });
 
+  const [testeCarga, setTesteCarga] = useState({
+    supino: {
+      carga: "",
+      repeticoes: "",
+    },
+
+    legPress: {
+      carga: "",
+      repeticoes: "",
+    },
+
+    remada: {
+      carga: "",
+      repeticoes: "",
+    },
+  });
+
   const [perimetros, setPerimetros] = useState<Record<PerimetroKey, string>>(emptyPerimetros);
   ({
     bracoD: "",
@@ -494,6 +513,60 @@ export default function App() {
     });
   }, [data.idade, data.genero, data.fcRepouso]);
 
+  function calcular1RM(carga: number, repeticoes: number) {
+    if (!carga || !repeticoes) return 0;
+
+    return carga / (1.0278 - (0.0278 * repeticoes));
+  }
+
+  function classificarForca(valor: number) {
+    if (valor >= 180) return "Excelente";
+    if (valor >= 140) return "Muito bom";
+    if (valor >= 100) return "Bom";
+    if (valor >= 70) return "Regular";
+
+    return "Baixo";
+  }
+
+  const resultado1RM = useMemo(() => {
+    return {
+      supino: {
+        rm: Math.round(
+          calcular1RM(
+            Number(testeCarga.supino.carga),
+            Number(testeCarga.supino.repeticoes)
+          )
+        ),
+      },
+
+      legPress: {
+        rm: Math.round(
+          calcular1RM(
+            Number(testeCarga.legPress.carga),
+            Number(testeCarga.legPress.repeticoes)
+          )
+        ),
+      },
+
+      remada: {
+        rm: Math.round(
+          calcular1RM(
+            Number(testeCarga.remada.carga),
+            Number(testeCarga.remada.repeticoes)
+          )
+        ),
+      },
+    };
+  }, [testeCarga]);
+
+  const exercicios = [
+    { key: "supino", nome: "Supino reto" },
+    { key: "legPress", nome: "Leg Press" },
+    { key: "remada", nome: "Remada" },
+  ] as const;
+
+
+
   const resumoDobras = useMemo(() => {
     const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>((acc, item) => {
       const primeira = parseDecimal(dobras[item.key].primeira);
@@ -502,6 +575,8 @@ export default function App() {
       acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
       return acc;
     }, {} as Record<DobraKey, string>);
+
+
 
     const valores = dobrasConfig.map((item) => parseDecimal(mediaFinal[item.key]));
     const somatorio = valores.reduce((total, value) => total + value, 0);
@@ -1316,7 +1391,7 @@ export default function App() {
           <div className="mt-10 flex items-end justify-end">
             <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={navigateScreen}>2ª Avaliação</button>
           </div>
-          <div className="grid gap-5 xl:grid-cols-[2fr_1fr] mt-10">
+          <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr] mt-10">
             <div>
               <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
                 COMPOSIÇÃO CORPORAL
@@ -1332,10 +1407,51 @@ export default function App() {
               <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
                 TESTE DE CARGA MÁXIMA - 1RM
               </h3>
+              {exercicios.map((exercicio) => (
+                <div className="grid-cols-5 grid gap-1 pt-5">
+                  <div className="grid-rows-1 grid">
+                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Exercicios</text>
+                    <text className="text-xl font-semibold italic text-zinc-500 text-left">{exercicio.nome}</text>
+                  </div>
+                  <div className="grid-rows-1 grid ">
+                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Carga</text>
+                    <input className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600" value={testeCarga[exercicio.key].carga}
+                      onChange={(e) =>
+                        setTesteCarga((prev) => ({
+                          ...prev,
+                          [exercicio.key]: {
+                            ...prev[exercicio.key],
+                            carga: e.target.value,
+                          },
+                        }))
+                      }></input>
+                  </div>
+                  <div className="grid-rows-1 grid ">
+                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Repetições</text>
+                    <input className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600" value={testeCarga[exercicio.key].repeticoes}
+                      onChange={(e) =>
+                        setTesteCarga((prev) => ({
+                          ...prev,
+                          [exercicio.key]: {
+                            ...prev[exercicio.key],
+                            repeticoes: e.target.value,
+                          },
+                        }))} ></input>
+                  </div>
+                  <div className="grid-rows-1 grid">
+                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">1 RM Predito</text>
+                    <text className="text-xl font-semibold italic text-zinc-500">{resultado1RM[exercicio.key].rm || ""}</text>
+                  </div>
+                  <div className="grid-rows-1 grid">
+                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Força Muscular</text>
+                    <div className="flex h-8 items-center justify-center bg-[#4f7fb7] px-3 text-[1.25rem] font-medium text-white">{classificarForca(resultado1RM[exercicio.key].rm)}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
-    </main>
+    </main >
   );
 }
