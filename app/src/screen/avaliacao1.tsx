@@ -12,6 +12,7 @@ import { calcularAreaBraco } from "../functions/calcBraco";
 import safeNumber from "../functions/safeNumber";
 import ComposicaoCorporalChart from "../components/ComposicaoChart";
 import { tabs } from "../routes/tabRoutes";
+import { useAvaliacao } from "../context/avaliacaoContext";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -388,9 +389,10 @@ function classificationBox(label: string, value: string) {
 
 export default function App() {
   const navigate = useNavigate();
+  const { avaliacao, setAvaliacao } = useAvaliacao();
 
   const [data, setData] = useState<ExamData>({
-    nomeCompleto: "",
+    nomeCompleto: avaliacao.aluno.nomeCompleto,
     genero: "",
     idade: "",
     etnia: "",
@@ -868,6 +870,8 @@ export default function App() {
 
   const updateField = (field: keyof ExamData, value: string) => {
     setData((current) => ({ ...current, [field]: value }));
+    setAvaliacao(
+      (current) => ({ ...current, aluno: { ...current.aluno, [field]: value } }));
   };
 
   const updatePerimetro = (field: PerimetroKey, value: string) => {
@@ -888,22 +892,7 @@ export default function App() {
     setDobras({ ...emptyDobras });
   };
 
-  const navigateScreen = () => {
-    navigate("/avaliacao2", {
-      state: {
-        data2: data,
-        perimetros,
-        analiseCorporal,
-      },
-    });
-  }
-
-  console.log(perimetroDesvios);
-  console.log(perimetros);
-  console.log(dobras);
-  console.log(resumoDobras);
-  console.log(pontosDobras);
-  console.log(data);
+  console.log(avaliacao.aluno.nomeCompleto);
 
   return (
     <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
@@ -1386,7 +1375,7 @@ export default function App() {
             </div>
           </div>
           <div className="mt-10 flex items-end justify-end">
-            <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={navigateScreen}>2ª Avaliação</button>
+            <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={() => { navigate("/avaliacao2") }}>2ª Avaliação</button>
           </div>
           <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr] mt-10">
             <div>
@@ -1405,7 +1394,8 @@ export default function App() {
                 TESTE DE CARGA MÁXIMA - 1RM
               </h3>
               {exercicios.map((exercicio) => (
-                <div className="grid-cols-5 grid gap-1 pt-5">
+                <div key={exercicio.key}
+                  className="grid-cols-5 grid gap-1 pt-5">
                   <div className="grid-rows-1 grid">
                     <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Exercicios</text>
                     <text className="text-xl font-semibold italic text-zinc-500 text-left">{exercicio.nome}</text>
@@ -1452,12 +1442,6 @@ export default function App() {
                   <NavLink
                     key={tab.rota}
                     to={tab.rota}
-                    onClick={(e) => {
-                      if (tab.rota === "/avaliacao2") {
-                        e.preventDefault();
-                        navigateScreen();
-                      }
-                    }}
                     className={({ isActive }) =>
                       ` px-5 py-2 text-sm font-semibold uppercase border-r border-zinc-500 transition
                 ${isActive
