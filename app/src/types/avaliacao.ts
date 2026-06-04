@@ -1,14 +1,25 @@
+import type { DobrasCutaneas } from "./dobrasType";
+
 export interface Avaliacao {
     aluno: {
         nomeCompleto: string;
         genero: string;
         idade: string;
         etnia: string;
+        massa: string;
         estatura: string;
         femur: string;
         tibia: string;
         una: string;
         umero: string;
+        fcRepouso: string;
+        fcReserva: string;
+        glicose: string;
+        triglicerideos: string;
+        ldl: string;
+        hdl: string;
+        sistolica: string;
+        diastolica: string;
     };
 
     anamnese: {
@@ -37,14 +48,8 @@ export interface Avaliacao {
             panturrilhaE: string;
         }
         dobrasCutaneas: {
-            triceps: string;
-            subescapular: string;
-            biceps: string;
-            iliaca: string;
-            supraespinhal: string;
-            abdominal: string;
-            coxaMedia: string;
-            panturrilha: string;
+            medida1: DobrasCutaneas;
+            medida2: DobrasCutaneas;
         }
     };
 
@@ -68,14 +73,8 @@ export interface Avaliacao {
             panturrilhaE: string;
         }
         dobrasCutaneas: {
-            triceps: string;
-            subescapular: string;
-            biceps: string;
-            iliaca: string;
-            supraespinhal: string;
-            abdominal: string;
-            coxaMedia: string;
-            panturrilha: string;
+            medida1: DobrasCutaneas;
+            medida2: DobrasCutaneas;
         }
     };
 
@@ -83,16 +82,16 @@ export interface Avaliacao {
         supino: {
             carga: string;
             repeticoes: string;
-        };
+        }
 
         legPress: {
             carga: string;
             repeticoes: string;
-        };
+        }
 
         remada: {
             carga: string;
             repeticoes: string;
-        };
+        }
     };
 }

@@ -12,6 +12,7 @@ import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularMassaMuscular } from "../functions/calcMassaMuscular";
 import ComposicaoCorporalChart from "../components/ComposicaoChart";
 import { tabs } from "../routes/tabRoutes";
+import { useAvaliacao } from "../context/avaliacaoContext";
 
 const inputBaseClass =
     "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -338,19 +339,19 @@ function classificationBox(label: string, value: string) {
 export default function App() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { data2 } = location.state;
+    const { avaliacao, setAvaliacao } = useAvaliacao();
 
     const [data, setData] = useState<ExamData>({
-        nomeCompleto: data2.nomeCompleto,
-        genero: data2.genero,
+        nomeCompleto: avaliacao.aluno.nomeCompleto,
+        genero: avaliacao.aluno.genero,
         idade: "",
-        etnia: data2.etnia,
+        etnia: avaliacao.aluno.etnia,
         massa: "",
         estatura: "",
-        femur: data2.femur,
-        tibia: data2.tibia,
-        una: data2.una,
-        umero: data2.umero,
+        femur: avaliacao.aluno.femur,
+        tibia: avaliacao.aluno.tibia,
+        una: avaliacao.aluno.una,
+        umero: avaliacao.aluno.umero,
         fcRepouso: "",
         fcMaxima: "",
         fcReserva: "",

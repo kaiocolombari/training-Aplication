@@ -12,7 +12,7 @@ import { calcularAreaBraco } from "../functions/calcBraco";
 import safeNumber from "../functions/safeNumber";
 import ComposicaoCorporalChart from "../components/ComposicaoChart";
 import { tabs } from "../routes/tabRoutes";
-import { useAvaliacao } from "../context/avaliacaoContext";
+import { initialState, useAvaliacao } from "../context/avaliacaoContext";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -149,74 +149,6 @@ function getReferenceByKey(
 
   return Number(value.toFixed(1));
 }
-
-const emptyPerimetros: Record<PerimetroKey, string> = {
-  bracoD: "",
-  bracoE: "",
-  antebracoD: "",
-  antebracoE: "",
-  torax: "",
-  cintura: "",
-  abdomen: "",
-  quadril: "",
-  coxaSupD: "",
-  coxaSupE: "",
-  coxaMediaD: "",
-  coxaMediaE: "",
-  panturrilhaD: "",
-  panturrilhaE: "",
-};
-
-
-
-type Props = {
-  massaMuscular: any;
-  massaLivre: any;
-  massaAdiposa: any;
-  massaTotal: any;
-};
-
-function Cilindro({
-  fill,
-  x,
-  y,
-  width,
-  height,
-}: any) {
-  const ellipseHeight = width / 4;
-
-  return (
-    <g>
-      <ellipse
-        cx={x + width / 2}
-        cy={y}
-        rx={width / 2}
-        ry={ellipseHeight / 2}
-        fill={fill}
-        opacity={0.95}
-      />
-
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        fill={fill}
-      />
-
-      <ellipse
-        cx={x + width / 2}
-        cy={y + height}
-        rx={width / 2}
-        ry={ellipseHeight / 2}
-        fill={fill}
-        opacity={0.8}
-      />
-    </g>
-  );
-}
-
-
 
 const perimetroDesvios: Record<PerimetroKey, number> = {
   bracoD: 4,
@@ -393,24 +325,24 @@ export default function App() {
 
   const [data, setData] = useState<ExamData>({
     nomeCompleto: avaliacao.aluno.nomeCompleto,
-    genero: "",
-    idade: "",
-    etnia: "",
-    massa: "",
-    estatura: "",
-    femur: "",
-    tibia: "",
-    una: "",
-    umero: "",
-    fcRepouso: "",
+    genero: avaliacao.aluno.genero,
+    idade: avaliacao.aluno.idade,
+    etnia: avaliacao.aluno.etnia,
+    massa: avaliacao.aluno.massa,
+    estatura: avaliacao.aluno.estatura,
+    femur: avaliacao.aluno.femur,
+    tibia: avaliacao.aluno.tibia,
+    una: avaliacao.aluno.una,
+    umero: avaliacao.aluno.umero,
+    fcRepouso: avaliacao.aluno.fcRepouso,
     fcMaxima: "",
-    fcReserva: "",
-    glicose: "",
-    triglicerideos: "",
-    ldl: "",
-    hdl: "",
-    sistolica: "",
-    diastolica: "",
+    fcReserva: avaliacao.aluno.fcReserva,
+    glicose: avaliacao.aluno.glicose,
+    triglicerideos: avaliacao.aluno.triglicerideos,
+    ldl: avaliacao.aluno.ldl,
+    hdl: avaliacao.aluno.hdl,
+    sistolica: avaliacao.aluno.sistolica,
+    diastolica: avaliacao.aluno.diastolica,
   });
 
   const [testeCarga, setTesteCarga] = useState({
@@ -430,34 +362,49 @@ export default function App() {
     },
   });
 
-  const [perimetros, setPerimetros] = useState<Record<PerimetroKey, string>>(emptyPerimetros);
-  ({
-    bracoD: "",
-    bracoE: "",
-    antebracoD: "",
-    antebracoE: "",
-    torax: "",
-    cintura: "",
-    abdomen: "",
-    quadril: "",
-    coxaSupD: "",
-    coxaSupE: "",
-    coxaMediaD: "",
-    coxaMediaE: "",
-    panturrilhaD: "",
-    panturrilhaE: "",
-  });
+  let perimetros = avaliacao.avaliacao1.perimetros;
 
-  const [dobras, setDobras] = useState<Record<DobraKey, { primeira: string; segunda: string }>>({
-    triceps: { primeira: "", segunda: "" },
-    subescapular: { primeira: "", segunda: "" },
-    biceps: { primeira: "", segunda: "" },
-    iliaca: { primeira: "", segunda: "" },
-    supraespinhal: { primeira: "", segunda: "" },
-    abdominal: { primeira: "", segunda: "" },
-    coxaMedia: { primeira: "", segunda: "" },
-    panturrilha: { primeira: "", segunda: "" },
-  });
+  const dobras1 = avaliacao.avaliacao1.dobrasCutaneas.medida1;
+  const dobras2 = avaliacao.avaliacao1.dobrasCutaneas.medida2;
+
+
+  const updateDobra1 = (
+    field: keyof typeof avaliacao.avaliacao1.dobrasCutaneas.medida2,
+    value: string
+  ) => {
+    setAvaliacao((current) => ({
+      ...current,
+
+      avaliacao1: {
+        ...current.avaliacao1,
+
+        dobrasCutaneas1: {
+          ...current.avaliacao1.dobrasCutaneas.medida1,
+
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const updateDobra2 = (
+    field: keyof typeof avaliacao.avaliacao1.dobrasCutaneas.medida2,
+    value: string
+  ) => {
+    setAvaliacao((current) => ({
+      ...current,
+
+      avaliacao1: {
+        ...current.avaliacao1,
+
+        dobrasCutaneas2: {
+          ...current.avaliacao1.dobrasCutaneas.medida2,
+
+          [field]: value,
+        },
+      },
+    }));
+  };
 
   const emptyDobras = {
     triceps: { primeira: "", segunda: "" },
@@ -569,21 +516,41 @@ export default function App() {
   ] as const;
 
   const resumoDobras = useMemo(() => {
-    const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>((acc, item) => {
-      const primeira = parseDecimal(dobras[item.key].primeira);
-      const segunda = parseDecimal(dobras[item.key].segunda);
-      const media = segunda > 0 ? (primeira + segunda) / 2 : primeira;
-      acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
-      return acc;
-    }, {} as Record<DobraKey, string>);
+    const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>(
+      (acc, item) => {
+        const primeira = parseDecimal(dobras1[item.key]);
+        const segunda = parseDecimal(dobras2[item.key]);
 
-    const valores = dobrasConfig.map((item) => parseDecimal(mediaFinal[item.key]));
-    const somatorio = valores.reduce((total, value) => total + value, 0);
+        const media =
+          segunda > 0
+            ? (primeira + segunda) / 2
+            : primeira;
+
+        acc[item.key] =
+          media > 0
+            ? media.toFixed(1).replace(".", ",")
+            : "";
+
+        return acc;
+      },
+      {} as Record<DobraKey, string>
+    );
+
+    const valores = dobrasConfig.map((item) =>
+      parseDecimal(mediaFinal[item.key])
+    );
+
+    const somatorio = valores.reduce(
+      (total, value) => total + value,
+      0
+    );
+
     const periferico =
       parseDecimal(mediaFinal.triceps) +
       parseDecimal(mediaFinal.biceps) +
       parseDecimal(mediaFinal.coxaMedia) +
       parseDecimal(mediaFinal.panturrilha);
+
     const central =
       parseDecimal(mediaFinal.subescapular) +
       parseDecimal(mediaFinal.iliaca) +
@@ -592,11 +559,22 @@ export default function App() {
 
     return {
       mediaFinal,
-      somatorio: somatorio ? somatorio.toFixed(1).replace(".", ",") : "",
-      periferico: periferico ? periferico.toFixed(1).replace(".", ",") : "",
-      central: central ? central.toFixed(1).replace(".", ",") : "",
+      somatorio:
+        somatorio > 0
+          ? somatorio.toFixed(1).replace(".", ",")
+          : "",
+
+      periferico:
+        periferico > 0
+          ? periferico.toFixed(1).replace(".", ",")
+          : "",
+
+      central:
+        central > 0
+          ? central.toFixed(1).replace(".", ",")
+          : "",
     };
-  }, [dobras]);
+  }, [dobras1, dobras2]);
 
   const classificacaoPressao = useMemo(() => {
     const sistolica = Number(data.sistolica);
@@ -875,24 +853,37 @@ export default function App() {
   };
 
   const updatePerimetro = (field: PerimetroKey, value: string) => {
-    setPerimetros((current) => ({ ...current, [field]: value }));
+    setAvaliacao(
+      (current) => ({ ...current, avaliacao1: { ...current.avaliacao1, perimetros: { ...current.avaliacao1.perimetros, [field]: value } } }),
+    )
   };
 
   const updateDobra = (field: DobraKey, measure: "primeira" | "segunda", value: string) => {
-    setDobras((current) => ({
-      ...current, [field]: { ...current[field], [measure]: sanitizeDecimal(value), },
-    }));
+    // setDobras((current) => ({
+    //   ...current, [field]: { ...current[field], [measure]: sanitizeDecimal(value), },
+    // }));
   };
 
   const clearAllPerimetros = () => {
-    setPerimetros({ ...emptyPerimetros });
+    setAvaliacao((current) => ({
+      ...current,
+
+      avaliacao1: {
+        ...current.avaliacao1,
+
+        perimetros: {
+          ...initialState.avaliacao1.perimetros,
+        },
+      },
+    }));
   };
 
   const clearAllDobras = () => {
-    setDobras({ ...emptyDobras });
+    // setDobras({ ...emptyDobras });
   };
 
   console.log(avaliacao.aluno.nomeCompleto);
+  console.log(avaliacao.avaliacao1.perimetros);
 
   return (
     <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">

@@ -12,17 +12,26 @@ type AvaliacaoContextType = {
 const AvaliacaoContext =
     createContext<AvaliacaoContextType | null>(null);
 
-const initialState: Avaliacao = {
+export const initialState: Avaliacao = {
     aluno: {
         nomeCompleto: "",
         genero: "",
         idade: "",
         etnia: "",
+        massa: "",
         estatura: "",
         femur: "",
         tibia: "",
         una: "",
         umero: "",
+        fcRepouso: "",
+        fcReserva: "",
+        glicose: "",
+        triglicerideos: "",
+        ldl: "",
+        hdl: "",
+        sistolica: "",
+        diastolica: "",
     },
 
     anamnese: {
@@ -50,17 +59,29 @@ const initialState: Avaliacao = {
             panturrilhaD: "",
             panturrilhaE: "",
         },
-
         dobrasCutaneas: {
-            triceps: "",
-            subescapular: "",
-            biceps: "",
-            iliaca: "",
-            supraespinhal: "",
-            abdominal: "",
-            coxaMedia: "",
-            panturrilha: "",
-        }
+            medida1: {
+                triceps: "",
+                subescapular: "",
+                biceps: "",
+                iliaca: "",
+                supraespinhal: "",
+                abdominal: "",
+                coxaMedia: "",
+                panturrilha: "",
+            },
+
+            medida2: {
+                triceps: "",
+                subescapular: "",
+                biceps: "",
+                iliaca: "",
+                supraespinhal: "",
+                abdominal: "",
+                coxaMedia: "",
+                panturrilha: "",
+            },
+        },
     },
 
     avaliacao2: {
@@ -84,17 +105,29 @@ const initialState: Avaliacao = {
         },
 
         dobrasCutaneas: {
-            triceps: "",
-            subescapular: "",
-            biceps: "",
-            iliaca: "",
-            supraespinhal: "",
-            abdominal: "",
-            coxaMedia: "",
-            panturrilha: "",
-        }
-    },
+            medida1: {
+                triceps: "",
+                subescapular: "",
+                biceps: "",
+                iliaca: "",
+                supraespinhal: "",
+                abdominal: "",
+                coxaMedia: "",
+                panturrilha: "",
+            },
 
+            medida2: {
+                triceps: "",
+                subescapular: "",
+                biceps: "",
+                iliaca: "",
+                supraespinhal: "",
+                abdominal: "",
+                coxaMedia: "",
+                panturrilha: "",
+            },
+        },
+    },
     testeCarga: {
         supino: {
             carga: "",
@@ -111,7 +144,7 @@ const initialState: Avaliacao = {
             repeticoes: "",
         },
     },
-}
+};
 
 export function AvaliacaoProvider({
     children,
