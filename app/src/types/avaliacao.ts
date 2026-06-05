@@ -30,6 +30,7 @@ export interface Avaliacao {
     avaliacao1: {
         peso: string;
         altura: string;
+        idade: string;
         percentualGordura: string;
         perimetros: {
             bracoD: string;
@@ -56,6 +57,7 @@ export interface Avaliacao {
     avaliacao2: {
         peso: string;
         altura: string;
+        idade: string;
         percentualGordura: string;
         perimetros: {
             bracoD: string;
@@ -80,24 +82,48 @@ export interface Avaliacao {
     };
 
     testeCarga: {
-        supino: {
-            carga: string;
-            repeticoes: string;
+        carga1: {
+            supino: {
+                carga: string;
+                repeticoes: string;
+            }
+
+            terra: {
+                carga: string;
+                repeticoes: string;
+            }
+
+            remada: {
+                carga: string;
+                repeticoes: string;
+            }
+
+            agachamento: {
+                carga: string;
+                repeticoes: string;
+            }
         }
 
-        terra: {
-            carga: string;
-            repeticoes: string;
-        }
+        carga2: {
+            supino: {
+                carga: string;
+                repeticoes: string;
+            }
 
-        remada: {
-            carga: string;
-            repeticoes: string;
-        }
+            terra: {
+                carga: string;
+                repeticoes: string;
+            }
 
-        agachamento:{
-            carga: string;
-            repeticoes: string;
+            remada: {
+                carga: string;
+                repeticoes: string;
+            }
+
+            agachamento: {
+                carga: string;
+                repeticoes: string;
+            }
         }
     };
 }

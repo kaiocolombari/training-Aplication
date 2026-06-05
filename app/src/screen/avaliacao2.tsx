@@ -324,10 +324,10 @@ export default function App() {
     const [data, setData] = useState<ExamData>({
         nomeCompleto: avaliacao.aluno.nomeCompleto,
         genero: avaliacao.aluno.genero,
-        idade: avaliacao.aluno.idade,
+        idade: avaliacao.avaliacao2.idade,
         etnia: avaliacao.aluno.etnia,
-        massa: avaliacao.aluno.massa,
-        estatura: avaliacao.aluno.estatura,
+        massa: avaliacao.avaliacao2.peso,
+        estatura: avaliacao.avaliacao2.altura,
         femur: avaliacao.aluno.femur,
         tibia: avaliacao.aluno.tibia,
         una: avaliacao.aluno.una,
@@ -346,7 +346,8 @@ export default function App() {
     const testeCarga = avaliacao.testeCarga;
 
     const updateTesteCarga = (
-        exercicio: keyof typeof avaliacao.testeCarga,
+        carga: "carga1" | "carga2",
+        exercicio: keyof typeof avaliacao.testeCarga.carga1,
         campo: "carga" | "repeticoes",
         valor: string
     ) => {
@@ -356,19 +357,23 @@ export default function App() {
             testeCarga: {
                 ...current.testeCarga,
 
-                [exercicio]: {
-                    ...current.testeCarga[exercicio],
+                [carga]: {
+                    ...current.testeCarga[carga],
 
-                    [campo]: valor,
+                    [exercicio]: {
+                        ...current.testeCarga[carga][exercicio],
+
+                        [campo]: valor,
+                    },
                 },
             },
         }));
     };
 
-    let perimetros = avaliacao.avaliacao1.perimetros;
+    let perimetros = avaliacao.avaliacao2.perimetros;
 
-    const dobras1 = avaliacao.avaliacao1.dobrasCutaneas.medida1;
-    const dobras2 = avaliacao.avaliacao1.dobrasCutaneas.medida2;
+    const dobras1 = avaliacao.avaliacao2.dobrasCutaneas.medida1;
+    const dobras2 = avaliacao.avaliacao2.dobrasCutaneas.medida2;
 
     const observacoes = avaliacao.anamnese.observacoes;
     const updateObservacoes = (value: string) => {
@@ -390,14 +395,14 @@ export default function App() {
         setAvaliacao((current) => ({
             ...current,
 
-            avaliacao1: {
-                ...current.avaliacao1,
+            avaliacao2: {
+                ...current.avaliacao2,
 
                 dobrasCutaneas: {
-                    ...current.avaliacao1.dobrasCutaneas,
+                    ...current.avaliacao2.dobrasCutaneas,
 
                     medida1: {
-                        ...current.avaliacao1.dobrasCutaneas.medida1,
+                        ...current.avaliacao2.dobrasCutaneas.medida1,
                         [field]: value,
                     },
                 },
@@ -412,14 +417,14 @@ export default function App() {
         setAvaliacao((current) => ({
             ...current,
 
-            avaliacao1: {
-                ...current.avaliacao1,
+            avaliacao2: {
+                ...current.avaliacao2,
 
                 dobrasCutaneas: {
-                    ...current.avaliacao1.dobrasCutaneas,
+                    ...current.avaliacao2.dobrasCutaneas,
 
                     medida2: {
-                        ...current.avaliacao1.dobrasCutaneas.medida2,
+                        ...current.avaliacao2.dobrasCutaneas.medida2,
                         [field]: value,
                     },
                 },
@@ -491,8 +496,8 @@ export default function App() {
             supino: {
                 rm: Math.round(
                     calcular1RM(
-                        Number(testeCarga.supino.carga),
-                        Number(testeCarga.supino.repeticoes)
+                        Number(testeCarga.carga2.supino.carga),
+                        Number(testeCarga.carga2.supino.repeticoes)
                     )
                 ),
             },
@@ -500,8 +505,8 @@ export default function App() {
             terra: {
                 rm: Math.round(
                     calcular1RM(
-                        Number(testeCarga.terra.carga),
-                        Number(testeCarga.terra.repeticoes)
+                        Number(testeCarga.carga2.terra.carga),
+                        Number(testeCarga.carga2.terra.repeticoes)
                     )
                 ),
             },
@@ -509,8 +514,8 @@ export default function App() {
             remada: {
                 rm: Math.round(
                     calcular1RM(
-                        Number(testeCarga.remada.carga),
-                        Number(testeCarga.remada.repeticoes)
+                        Number(testeCarga.carga2.remada.carga),
+                        Number(testeCarga.carga2.remada.repeticoes)
                     )
                 ),
             },
@@ -518,8 +523,8 @@ export default function App() {
             agachamento: {
                 rm: Math.round(
                     calcular1RM(
-                        Number(testeCarga.agachamento.carga),
-                        Number(testeCarga.agachamento.repeticoes)
+                        Number(testeCarga.carga2.agachamento.carga),
+                        Number(testeCarga.carga2.agachamento.repeticoes)
                     )
                 ),
             },
@@ -881,6 +886,29 @@ export default function App() {
                     },
                 };
             }
+
+            if (field === "estatura") {
+                return {
+                    ...current,
+
+                    avaliacao2: {
+                        ...current.avaliacao2,
+                        altura: value,
+                    }
+                };
+            }
+
+            if (field === "idade") {
+                return {
+                    ...current,
+
+                    avaliacao2: {
+                        ...current.avaliacao2,
+                        idade: value
+                    }
+                };
+            }
+
             return {
                 ...current,
 
@@ -894,7 +922,7 @@ export default function App() {
 
     const updatePerimetro = (field: PerimetroKey, value: string) => {
         setAvaliacao(
-            (current) => ({ ...current, avaliacao1: { ...current.avaliacao1, perimetros: { ...current.avaliacao1.perimetros, [field]: value } } }),
+            (current) => ({ ...current, avaliacao2: { ...current.avaliacao2, perimetros: { ...current.avaliacao2.perimetros, [field]: value } } }),
         )
     };
 
@@ -902,11 +930,11 @@ export default function App() {
         setAvaliacao((current) => ({
             ...current,
 
-            avaliacao1: {
-                ...current.avaliacao1,
+            avaliacao2: {
+                ...current.avaliacao2,
 
                 perimetros: {
-                    ...initialState.avaliacao1.perimetros,
+                    ...initialState.avaliacao2.perimetros,
                 },
             },
         }));
@@ -916,18 +944,18 @@ export default function App() {
         setAvaliacao((current) => ({
             ...current,
 
-            avaliacao1: {
-                ...current.avaliacao1,
+            avaliacao2: {
+                ...current.avaliacao2,
 
                 dobrasCutaneas: {
-                    ...initialState.avaliacao1.dobrasCutaneas,
+                    ...initialState.avaliacao2.dobrasCutaneas,
                 },
             },
         }));
     };
 
     console.log(avaliacao.aluno.nomeCompleto);
-    console.log(avaliacao.avaliacao1.perimetros);
+    console.log(avaliacao.avaliacao2.perimetros);
 
     return (
         <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
@@ -1443,9 +1471,10 @@ export default function App() {
                                         <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Carga</text>
                                         <input
                                             className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
-                                            value={testeCarga[exercicio.key].carga}
+                                            value={testeCarga.carga2[exercicio.key].carga}
                                             onChange={(e) =>
                                                 updateTesteCarga(
+                                                    "carga2",
                                                     exercicio.key,
                                                     "carga",
                                                     e.target.value
@@ -1457,9 +1486,10 @@ export default function App() {
                                         <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Repetições</text>
                                         <input
                                             className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
-                                            value={testeCarga[exercicio.key].repeticoes}
+                                            value={testeCarga.carga2[exercicio.key].repeticoes}
                                             onChange={(e) =>
                                                 updateTesteCarga(
+                                                    "carga2",
                                                     exercicio.key,
                                                     "repeticoes",
                                                     e.target.value

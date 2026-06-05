@@ -42,6 +42,7 @@ export const initialState: Avaliacao = {
     avaliacao1: {
         peso: "",
         altura: "",
+        idade: "",
         percentualGordura: "",
         perimetros: {
             bracoD: "",
@@ -87,6 +88,7 @@ export const initialState: Avaliacao = {
     avaliacao2: {
         peso: "",
         altura: "",
+        idade: "",
         percentualGordura: "",
         perimetros: {
             bracoD: "",
@@ -129,25 +131,50 @@ export const initialState: Avaliacao = {
             },
         },
     },
+
     testeCarga: {
-        supino: {
-            carga: "",
-            repeticoes: "",
+        carga1: {
+            supino: {
+                carga: "",
+                repeticoes: "",
+            },
+
+            terra: {
+                carga: "",
+                repeticoes: "",
+            },
+
+            remada: {
+                carga: "",
+                repeticoes: "",
+            },
+
+            agachamento: {
+                carga: "",
+                repeticoes: "",
+            },
         },
 
-        terra: {
-            carga: "",
-            repeticoes: "",
-        },
+        carga2: {
+            supino: {
+                carga: "",
+                repeticoes: "",
+            },
 
-        remada: {
-            carga: "",
-            repeticoes: "",
-        },
+            terra: {
+                carga: "",
+                repeticoes: "",
+            },
 
-        agachamento: {
-            carga: "",
-            repeticoes: "",
+            remada: {
+                carga: "",
+                repeticoes: "",
+            },
+
+            agachamento: {
+                carga: "",
+                repeticoes: "",
+            },
         },
     },
 };

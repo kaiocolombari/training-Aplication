@@ -324,10 +324,10 @@ export default function App() {
   const [data, setData] = useState<ExamData>({
     nomeCompleto: avaliacao.aluno.nomeCompleto,
     genero: avaliacao.aluno.genero,
-    idade: avaliacao.aluno.idade,
+    idade: avaliacao.avaliacao1.idade,
     etnia: avaliacao.aluno.etnia,
     massa: avaliacao.avaliacao1.peso,
-    estatura: avaliacao.aluno.estatura,
+    estatura: avaliacao.avaliacao1.altura,
     femur: avaliacao.aluno.femur,
     tibia: avaliacao.aluno.tibia,
     una: avaliacao.aluno.una,
@@ -346,7 +346,8 @@ export default function App() {
   const testeCarga = avaliacao.testeCarga;
 
   const updateTesteCarga = (
-    exercicio: keyof typeof avaliacao.testeCarga,
+    carga: "carga1" | "carga2",
+    exercicio: keyof typeof avaliacao.testeCarga.carga1,
     campo: "carga" | "repeticoes",
     valor: string
   ) => {
@@ -356,10 +357,14 @@ export default function App() {
       testeCarga: {
         ...current.testeCarga,
 
-        [exercicio]: {
-          ...current.testeCarga[exercicio],
+        [carga]: {
+          ...current.testeCarga[carga],
 
-          [campo]: valor,
+          [exercicio]: {
+            ...current.testeCarga[carga][exercicio],
+
+            [campo]: valor,
+          },
         },
       },
     }));
@@ -491,8 +496,8 @@ export default function App() {
       supino: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.supino.carga),
-            Number(testeCarga.supino.repeticoes)
+            Number(testeCarga.carga2.supino.carga),
+            Number(testeCarga.carga2.supino.repeticoes)
           )
         ),
       },
@@ -500,8 +505,8 @@ export default function App() {
       terra: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.terra.carga),
-            Number(testeCarga.terra.repeticoes)
+            Number(testeCarga.carga2.terra.carga),
+            Number(testeCarga.carga2.terra.repeticoes)
           )
         ),
       },
@@ -509,8 +514,8 @@ export default function App() {
       remada: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.remada.carga),
-            Number(testeCarga.remada.repeticoes)
+            Number(testeCarga.carga2.remada.carga),
+            Number(testeCarga.carga2.remada.repeticoes)
           )
         ),
       },
@@ -518,8 +523,8 @@ export default function App() {
       agachamento: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.agachamento.carga),
-            Number(testeCarga.agachamento.repeticoes)
+            Number(testeCarga.carga2.agachamento.carga),
+            Number(testeCarga.carga2.agachamento.repeticoes)
           )
         ),
       },
@@ -879,6 +884,28 @@ export default function App() {
             ...current.avaliacao1,
             peso: value,
           },
+        };
+      }
+
+      if (field === "estatura") {
+        return {
+          ...current,
+
+          avaliacao1: {
+            ...current.avaliacao1,
+            altura: value,
+          }
+        };
+      }
+
+      if (field === "idade") {
+        return {
+          ...current,
+
+          avaliacao1: {
+            ...current.avaliacao1,
+            idade: value
+          }
         };
       }
 
@@ -1444,9 +1471,10 @@ export default function App() {
                     <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Carga</text>
                     <input
                       className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
-                      value={testeCarga[exercicio.key].carga}
+                      value={testeCarga.carga1[exercicio.key].carga}
                       onChange={(e) =>
                         updateTesteCarga(
+                          "carga1",
                           exercicio.key,
                           "carga",
                           e.target.value
@@ -1458,9 +1486,10 @@ export default function App() {
                     <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Repetições</text>
                     <input
                       className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
-                      value={testeCarga[exercicio.key].repeticoes}
+                      value={testeCarga.carga1[exercicio.key].repeticoes}
                       onChange={(e) =>
                         updateTesteCarga(
+                          "carga1",
                           exercicio.key,
                           "repeticoes",
                           e.target.value
@@ -1478,25 +1507,6 @@ export default function App() {
                   </div>
                 </div>
               ))}
-            </div>
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-              <div className="flex border-b border-zinc-500 bg-[#2f2f2f]">
-                {tabs.map((tab) => (
-                  <NavLink
-                    key={tab.rota}
-                    to={tab.rota}
-                    className={({ isActive }) =>
-                      ` px-5 py-2 text-sm font-semibold uppercase border-r border-zinc-500 transition
-                ${isActive
-                        ? "bg-white text-[#4c8b72]"
-                        : "bg-[#2f2f2f] text-white hover:bg-[#444]"
-                      } `
-                    }
-                  >
-                    {tab.nome}
-                  </NavLink>
-                ))}
-              </div>
             </div>
           </div>
           <div className="py-5 border-t-5 border-zinc-400 mt-6">
