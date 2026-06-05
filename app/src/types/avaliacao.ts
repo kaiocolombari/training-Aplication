@@ -55,6 +55,7 @@ export interface Avaliacao {
 
     avaliacao2: {
         peso: string;
+        altura: string;
         percentualGordura: string;
         perimetros: {
             bracoD: string;
@@ -84,12 +85,17 @@ export interface Avaliacao {
             repeticoes: string;
         }
 
-        legPress: {
+        terra: {
             carga: string;
             repeticoes: string;
         }
 
         remada: {
+            carga: string;
+            repeticoes: string;
+        }
+
+        agachamento:{
             carga: string;
             repeticoes: string;
         }

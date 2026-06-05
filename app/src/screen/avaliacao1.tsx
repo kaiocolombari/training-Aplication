@@ -317,8 +317,6 @@ function classificationBox(label: string, value: string) {
   );
 }
 
-
-
 export default function App() {
   const navigate = useNavigate();
   const { avaliacao, setAvaliacao } = useAvaliacao();
@@ -328,7 +326,7 @@ export default function App() {
     genero: avaliacao.aluno.genero,
     idade: avaliacao.aluno.idade,
     etnia: avaliacao.aluno.etnia,
-    massa: avaliacao.aluno.massa,
+    massa: avaliacao.avaliacao1.peso,
     estatura: avaliacao.aluno.estatura,
     femur: avaliacao.aluno.femur,
     tibia: avaliacao.aluno.tibia,
@@ -345,31 +343,48 @@ export default function App() {
     diastolica: avaliacao.aluno.diastolica,
   });
 
-  const [testeCarga, setTesteCarga] = useState({
-    supino: {
-      carga: "",
-      repeticoes: "",
-    },
+  const testeCarga = avaliacao.testeCarga;
 
-    legPress: {
-      carga: "",
-      repeticoes: "",
-    },
+  const updateTesteCarga = (
+    exercicio: keyof typeof avaliacao.testeCarga,
+    campo: "carga" | "repeticoes",
+    valor: string
+  ) => {
+    setAvaliacao((current) => ({
+      ...current,
 
-    remada: {
-      carga: "",
-      repeticoes: "",
-    },
-  });
+      testeCarga: {
+        ...current.testeCarga,
+
+        [exercicio]: {
+          ...current.testeCarga[exercicio],
+
+          [campo]: valor,
+        },
+      },
+    }));
+  };
 
   let perimetros = avaliacao.avaliacao1.perimetros;
 
   const dobras1 = avaliacao.avaliacao1.dobrasCutaneas.medida1;
   const dobras2 = avaliacao.avaliacao1.dobrasCutaneas.medida2;
 
+  const observacoes = avaliacao.anamnese.observacoes;
+  const updateObservacoes = (value: string) => {
+    setAvaliacao((current) => ({
+      ...current,
+
+      anamnese: {
+        ...current.anamnese,
+
+        observacoes: value,
+      },
+    }));
+  };
 
   const updateDobra1 = (
-    field: keyof typeof avaliacao.avaliacao1.dobrasCutaneas.medida2,
+    field: keyof typeof dobras1,
     value: string
   ) => {
     setAvaliacao((current) => ({
@@ -378,17 +393,20 @@ export default function App() {
       avaliacao1: {
         ...current.avaliacao1,
 
-        dobrasCutaneas1: {
-          ...current.avaliacao1.dobrasCutaneas.medida1,
+        dobrasCutaneas: {
+          ...current.avaliacao1.dobrasCutaneas,
 
-          [field]: value,
+          medida1: {
+            ...current.avaliacao1.dobrasCutaneas.medida1,
+            [field]: value,
+          },
         },
       },
     }));
   };
 
   const updateDobra2 = (
-    field: keyof typeof avaliacao.avaliacao1.dobrasCutaneas.medida2,
+    field: keyof typeof dobras1,
     value: string
   ) => {
     setAvaliacao((current) => ({
@@ -397,27 +415,17 @@ export default function App() {
       avaliacao1: {
         ...current.avaliacao1,
 
-        dobrasCutaneas2: {
-          ...current.avaliacao1.dobrasCutaneas.medida2,
+        dobrasCutaneas: {
+          ...current.avaliacao1.dobrasCutaneas,
 
-          [field]: value,
+          medida2: {
+            ...current.avaliacao1.dobrasCutaneas.medida2,
+            [field]: value,
+          },
         },
       },
     }));
   };
-
-  const emptyDobras = {
-    triceps: { primeira: "", segunda: "" },
-    subescapular: { primeira: "", segunda: "" },
-    biceps: { primeira: "", segunda: "" },
-    iliaca: { primeira: "", segunda: "" },
-    supraespinhal: { primeira: "", segunda: "" },
-    abdominal: { primeira: "", segunda: "" },
-    coxaMedia: { primeira: "", segunda: "" },
-    panturrilha: { primeira: "", segunda: "" },
-  };
-
-
 
   const dadosAntropometricosValidos =
     data.genero &&
@@ -489,11 +497,11 @@ export default function App() {
         ),
       },
 
-      legPress: {
+      terra: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.legPress.carga),
-            Number(testeCarga.legPress.repeticoes)
+            Number(testeCarga.terra.carga),
+            Number(testeCarga.terra.repeticoes)
           )
         ),
       },
@@ -506,13 +514,23 @@ export default function App() {
           )
         ),
       },
+
+      agachamento: {
+        rm: Math.round(
+          calcular1RM(
+            Number(testeCarga.agachamento.carga),
+            Number(testeCarga.agachamento.repeticoes)
+          )
+        ),
+      },
     };
   }, [testeCarga]);
 
   const exercicios = [
     { key: "supino", nome: "Supino reto" },
-    { key: "legPress", nome: "Leg Press" },
+    { key: "terra", nome: "L. Terra" },
     { key: "remada", nome: "Remada" },
+    { key: "agachamento", nome: "Agachamento" },
   ] as const;
 
   const resumoDobras = useMemo(() => {
@@ -847,21 +865,38 @@ export default function App() {
 
 
   const updateField = (field: keyof ExamData, value: string) => {
-    setData((current) => ({ ...current, [field]: value }));
-    setAvaliacao(
-      (current) => ({ ...current, aluno: { ...current.aluno, [field]: value } }));
+    setData((current) => ({
+      ...current,
+      [field]: value,
+    }));
+
+    setAvaliacao((current) => {
+      if (field === "massa") {
+        return {
+          ...current,
+
+          avaliacao1: {
+            ...current.avaliacao1,
+            peso: value,
+          },
+        };
+      }
+
+      return {
+        ...current,
+
+        aluno: {
+          ...current.aluno,
+          [field]: value,
+        },
+      };
+    });
   };
 
   const updatePerimetro = (field: PerimetroKey, value: string) => {
     setAvaliacao(
       (current) => ({ ...current, avaliacao1: { ...current.avaliacao1, perimetros: { ...current.avaliacao1.perimetros, [field]: value } } }),
     )
-  };
-
-  const updateDobra = (field: DobraKey, measure: "primeira" | "segunda", value: string) => {
-    // setDobras((current) => ({
-    //   ...current, [field]: { ...current[field], [measure]: sanitizeDecimal(value), },
-    // }));
   };
 
   const clearAllPerimetros = () => {
@@ -879,7 +914,17 @@ export default function App() {
   };
 
   const clearAllDobras = () => {
-    // setDobras({ ...emptyDobras });
+    setAvaliacao((current) => ({
+      ...current,
+
+      avaliacao1: {
+        ...current.avaliacao1,
+
+        dobrasCutaneas: {
+          ...initialState.avaliacao1.dobrasCutaneas,
+        },
+      },
+    }));
   };
 
   console.log(avaliacao.aluno.nomeCompleto);
@@ -1110,12 +1155,8 @@ export default function App() {
             </div>
           </div>
         </div>
-
         <div className="px-5 py-5">
           <h2 className="mb-3 text-3xl font-bold italic text-zinc-600">ANALISE DA COMPOSICAO CORPORAL</h2>
-
-
-
           <div className="grid gap-5 xl:grid-cols-[2.45fr_1fr]">
             <div>
               <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
@@ -1250,17 +1291,25 @@ export default function App() {
                           </div>
 
                           <input
-                            value={dobras[field.key].primeira}
-                            onChange={(event) => updateDobra(field.key, "primeira", event.target.value)}
+                            value={dobras1[field.key]}
+                            onChange={(event) =>
+                              updateDobra1(
+                                field.key,
+                                event.target.value
+                              )
+                            }
                             className={inputBaseClass}
                           />
-
                           <input
-                            value={dobras[field.key].segunda}
-                            onChange={(event) => updateDobra(field.key, "segunda", event.target.value)}
+                            value={dobras2[field.key]}
+                            onChange={(event) =>
+                              updateDobra2(
+                                field.key,
+                                event.target.value
+                              )
+                            }
                             className={inputBaseClass}
                           />
-
                           <input value={resumoDobras.mediaFinal[field.key]} readOnly className={inputBaseClass} />
                         </div>
                       ))}
@@ -1393,28 +1442,31 @@ export default function App() {
                   </div>
                   <div className="grid-rows-1 grid ">
                     <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Carga</text>
-                    <input className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600" value={testeCarga[exercicio.key].carga}
+                    <input
+                      className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
+                      value={testeCarga[exercicio.key].carga}
                       onChange={(e) =>
-                        setTesteCarga((prev) => ({
-                          ...prev,
-                          [exercicio.key]: {
-                            ...prev[exercicio.key],
-                            carga: e.target.value,
-                          },
-                        }))
-                      }></input>
+                        updateTesteCarga(
+                          exercicio.key,
+                          "carga",
+                          e.target.value
+                        )
+                      }
+                    />
                   </div>
                   <div className="grid-rows-1 grid ">
                     <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Repetições</text>
-                    <input className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600" value={testeCarga[exercicio.key].repeticoes}
+                    <input
+                      className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
+                      value={testeCarga[exercicio.key].repeticoes}
                       onChange={(e) =>
-                        setTesteCarga((prev) => ({
-                          ...prev,
-                          [exercicio.key]: {
-                            ...prev[exercicio.key],
-                            repeticoes: e.target.value,
-                          },
-                        }))} ></input>
+                        updateTesteCarga(
+                          exercicio.key,
+                          "repeticoes",
+                          e.target.value
+                        )
+                      }
+                    />
                   </div>
                   <div className="grid-rows-1 grid">
                     <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">1 RM Predito</text>
@@ -1446,6 +1498,14 @@ export default function App() {
                 ))}
               </div>
             </div>
+          </div>
+          <div className="py-5 border-t-5 border-zinc-400 mt-6">
+            <h3 className="mb-3 pb-1 text-xl font-bold italic uppercase tracking-wide text-zinc-500">Parecer Descritivo</h3>
+            <textarea className="w-full border-2 border-red-700 rounded-sm h-40 pl-1 max-h-52 outline-none transition-all duration-200 focus:border-red-400 focus:ring-4 focus:ring-indigo-500/10"
+              value={observacoes}
+              onChange={(e) => {
+                updateObservacoes(e.target.value)
+              }} />
           </div>
         </div>
       </section>

@@ -86,6 +86,7 @@ export const initialState: Avaliacao = {
 
     avaliacao2: {
         peso: "",
+        altura: "",
         percentualGordura: "",
         perimetros: {
             bracoD: "",
@@ -134,12 +135,17 @@ export const initialState: Avaliacao = {
             repeticoes: "",
         },
 
-        legPress: {
+        terra: {
             carga: "",
             repeticoes: "",
         },
 
         remada: {
+            carga: "",
+            repeticoes: "",
+        },
+
+        agachamento: {
             carga: "",
             repeticoes: "",
         },

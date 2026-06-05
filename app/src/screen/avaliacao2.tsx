@@ -3,16 +3,16 @@ import type { ExamData } from "../types/examData";
 import type { PerimetroKey } from "../types/perimetroKey";
 import type { PerimetroField } from "../types/perimetroField";
 import { NavLink, useNavigate } from "react-router";
-import { useLocation } from "react-router";
 import type { DobraKey } from "../types/dobraKey";
 import type { DobraField } from "../types/dobraField";
 import { calcularMassaAdiposa } from "../functions/calcMassaAdiposa";
-import { calcularAreaBraco } from "../functions/calcBraco";
-import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularMassaMuscular } from "../functions/calcMassaMuscular";
+import { calcularAreaCoxa } from "../functions/calcCoxa";
+import { calcularAreaBraco } from "../functions/calcBraco";
+import safeNumber from "../functions/safeNumber";
 import ComposicaoCorporalChart from "../components/ComposicaoChart";
 import { tabs } from "../routes/tabRoutes";
-import { useAvaliacao } from "../context/avaliacaoContext";
+import { initialState, useAvaliacao } from "../context/avaliacaoContext";
 
 const inputBaseClass =
     "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -149,23 +149,6 @@ function getReferenceByKey(
 
     return Number(value.toFixed(1));
 }
-
-const emptyPerimetros: Record<PerimetroKey, string> = {
-    bracoD: "",
-    bracoE: "",
-    antebracoD: "",
-    antebracoE: "",
-    torax: "",
-    cintura: "",
-    abdomen: "",
-    quadril: "",
-    coxaSupD: "",
-    coxaSupE: "",
-    coxaMediaD: "",
-    coxaMediaE: "",
-    panturrilhaD: "",
-    panturrilhaE: "",
-};
 
 const perimetroDesvios: Record<PerimetroKey, number> = {
     bracoD: 4,
@@ -322,104 +305,127 @@ function parseDecimal(value: string) {
 
 function classificationBox(label: string, value: string) {
     return (
-        <div>
+        <div >
             <h4 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
                 {label}
             </h4>
             <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Classificacao</span>
-            <div className="flex h-10 items-center justify-center bg-[#4f7fb7] px-3 text-[1.85rem] font-medium text-white">
+            <div className="flex h-10 items-center justify-center bg-[#4f7fb7] px-3 text-[1.25rem] font-medium text-white">
                 {value}
             </div>
         </div>
     );
 }
 
-
-
 export default function App() {
     const navigate = useNavigate();
-    const location = useLocation();
     const { avaliacao, setAvaliacao } = useAvaliacao();
 
     const [data, setData] = useState<ExamData>({
         nomeCompleto: avaliacao.aluno.nomeCompleto,
         genero: avaliacao.aluno.genero,
-        idade: "",
+        idade: avaliacao.aluno.idade,
         etnia: avaliacao.aluno.etnia,
-        massa: "",
-        estatura: "",
+        massa: avaliacao.aluno.massa,
+        estatura: avaliacao.aluno.estatura,
         femur: avaliacao.aluno.femur,
         tibia: avaliacao.aluno.tibia,
         una: avaliacao.aluno.una,
         umero: avaliacao.aluno.umero,
-        fcRepouso: "",
+        fcRepouso: avaliacao.aluno.fcRepouso,
         fcMaxima: "",
-        fcReserva: "",
-        glicose: "",
-        triglicerideos: "",
-        ldl: "",
-        hdl: "",
-        sistolica: "",
-        diastolica: "",
+        fcReserva: avaliacao.aluno.fcReserva,
+        glicose: avaliacao.aluno.glicose,
+        triglicerideos: avaliacao.aluno.triglicerideos,
+        ldl: avaliacao.aluno.ldl,
+        hdl: avaliacao.aluno.hdl,
+        sistolica: avaliacao.aluno.sistolica,
+        diastolica: avaliacao.aluno.diastolica,
     });
 
-    const [testeCarga, setTesteCarga] = useState({
-        supino: {
-            carga: "",
-            repeticoes: "",
-        },
+    const testeCarga = avaliacao.testeCarga;
 
-        legPress: {
-            carga: "",
-            repeticoes: "",
-        },
+    const updateTesteCarga = (
+        exercicio: keyof typeof avaliacao.testeCarga,
+        campo: "carga" | "repeticoes",
+        valor: string
+    ) => {
+        setAvaliacao((current) => ({
+            ...current,
 
-        remada: {
-            carga: "",
-            repeticoes: "",
-        },
-    });
+            testeCarga: {
+                ...current.testeCarga,
 
-    const [perimetros, setPerimetros] = useState<Record<PerimetroKey, string>>(emptyPerimetros); ({
-        bracoD: "",
-        bracoE: "",
-        antebracoD: "",
-        antebracoE: "",
-        torax: "",
-        cintura: "",
-        abdomen: "",
-        quadril: "",
-        coxaSupD: "",
-        coxaSupE: "",
-        coxaMediaD: "",
-        coxaMediaE: "",
-        panturrilhaD: "",
-        panturrilhaE: "",
-    });
+                [exercicio]: {
+                    ...current.testeCarga[exercicio],
 
-    const [dobras, setDobras] = useState<Record<DobraKey, { primeira: string; segunda: string }>>({
-        triceps: { primeira: "", segunda: "" },
-        subescapular: { primeira: "", segunda: "" },
-        biceps: { primeira: "", segunda: "" },
-        iliaca: { primeira: "", segunda: "" },
-        supraespinhal: { primeira: "", segunda: "" },
-        abdominal: { primeira: "", segunda: "" },
-        coxaMedia: { primeira: "", segunda: "" },
-        panturrilha: { primeira: "", segunda: "" },
-    });
-
-    const emptyDobras = {
-        triceps: { primeira: "", segunda: "" },
-        subescapular: { primeira: "", segunda: "" },
-        biceps: { primeira: "", segunda: "" },
-        iliaca: { primeira: "", segunda: "" },
-        supraespinhal: { primeira: "", segunda: "" },
-        abdominal: { primeira: "", segunda: "" },
-        coxaMedia: { primeira: "", segunda: "" },
-        panturrilha: { primeira: "", segunda: "" },
+                    [campo]: valor,
+                },
+            },
+        }));
     };
 
+    let perimetros = avaliacao.avaliacao1.perimetros;
 
+    const dobras1 = avaliacao.avaliacao1.dobrasCutaneas.medida1;
+    const dobras2 = avaliacao.avaliacao1.dobrasCutaneas.medida2;
+
+    const observacoes = avaliacao.anamnese.observacoes;
+    const updateObservacoes = (value: string) => {
+        setAvaliacao((current) => ({
+            ...current,
+
+            anamnese: {
+                ...current.anamnese,
+
+                observacoes: value,
+            },
+        }));
+    };
+
+    const updateDobra1 = (
+        field: keyof typeof dobras1,
+        value: string
+    ) => {
+        setAvaliacao((current) => ({
+            ...current,
+
+            avaliacao1: {
+                ...current.avaliacao1,
+
+                dobrasCutaneas: {
+                    ...current.avaliacao1.dobrasCutaneas,
+
+                    medida1: {
+                        ...current.avaliacao1.dobrasCutaneas.medida1,
+                        [field]: value,
+                    },
+                },
+            },
+        }));
+    };
+
+    const updateDobra2 = (
+        field: keyof typeof dobras1,
+        value: string
+    ) => {
+        setAvaliacao((current) => ({
+            ...current,
+
+            avaliacao1: {
+                ...current.avaliacao1,
+
+                dobrasCutaneas: {
+                    ...current.avaliacao1.dobrasCutaneas,
+
+                    medida2: {
+                        ...current.avaliacao1.dobrasCutaneas.medida2,
+                        [field]: value,
+                    },
+                },
+            },
+        }));
+    };
 
     const dadosAntropometricosValidos =
         data.genero &&
@@ -465,22 +471,104 @@ export default function App() {
         });
     }, [data.idade, data.genero, data.fcRepouso]);
 
-    const resumoDobras = useMemo(() => {
-        const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>((acc, item) => {
-            const primeira = parseDecimal(dobras[item.key].primeira);
-            const segunda = parseDecimal(dobras[item.key].segunda);
-            const media = segunda > 0 ? (primeira + segunda) / 2 : primeira;
-            acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
-            return acc;
-        }, {} as Record<DobraKey, string>);
+    function calcular1RM(carga: number, repeticoes: number) {
+        if (!carga || !repeticoes) return 0;
 
-        const valores = dobrasConfig.map((item) => parseDecimal(mediaFinal[item.key]));
-        const somatorio = valores.reduce((total, value) => total + value, 0);
+        return carga / (1.0278 - (0.0278 * repeticoes));
+    }
+
+    function classificarForca(valor: number) {
+        if (valor >= 180) return "Excelente";
+        if (valor >= 140) return "Muito bom";
+        if (valor >= 100) return "Bom";
+        if (valor >= 70) return "Regular";
+
+        return "Baixo";
+    }
+
+    const resultado1RM = useMemo(() => {
+        return {
+            supino: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.supino.carga),
+                        Number(testeCarga.supino.repeticoes)
+                    )
+                ),
+            },
+
+            terra: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.terra.carga),
+                        Number(testeCarga.terra.repeticoes)
+                    )
+                ),
+            },
+
+            remada: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.remada.carga),
+                        Number(testeCarga.remada.repeticoes)
+                    )
+                ),
+            },
+
+            agachamento: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.agachamento.carga),
+                        Number(testeCarga.agachamento.repeticoes)
+                    )
+                ),
+            },
+        };
+    }, [testeCarga]);
+
+    const exercicios = [
+        { key: "supino", nome: "Supino reto" },
+        { key: "terra", nome: "L. Terra" },
+        { key: "remada", nome: "Remada" },
+        { key: "agachamento", nome: "Agachamento" },
+    ] as const;
+
+    const resumoDobras = useMemo(() => {
+        const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>(
+            (acc, item) => {
+                const primeira = parseDecimal(dobras1[item.key]);
+                const segunda = parseDecimal(dobras2[item.key]);
+
+                const media =
+                    segunda > 0
+                        ? (primeira + segunda) / 2
+                        : primeira;
+
+                acc[item.key] =
+                    media > 0
+                        ? media.toFixed(1).replace(".", ",")
+                        : "";
+
+                return acc;
+            },
+            {} as Record<DobraKey, string>
+        );
+
+        const valores = dobrasConfig.map((item) =>
+            parseDecimal(mediaFinal[item.key])
+        );
+
+        const somatorio = valores.reduce(
+            (total, value) => total + value,
+            0
+        );
+
         const periferico =
             parseDecimal(mediaFinal.triceps) +
             parseDecimal(mediaFinal.biceps) +
             parseDecimal(mediaFinal.coxaMedia) +
             parseDecimal(mediaFinal.panturrilha);
+
         const central =
             parseDecimal(mediaFinal.subescapular) +
             parseDecimal(mediaFinal.iliaca) +
@@ -489,11 +577,22 @@ export default function App() {
 
         return {
             mediaFinal,
-            somatorio: somatorio ? somatorio.toFixed(1).replace(".", ",") : "",
-            periferico: periferico ? periferico.toFixed(1).replace(".", ",") : "",
-            central: central ? central.toFixed(1).replace(".", ",") : "",
+            somatorio:
+                somatorio > 0
+                    ? somatorio.toFixed(1).replace(".", ",")
+                    : "",
+
+            periferico:
+                periferico > 0
+                    ? periferico.toFixed(1).replace(".", ",")
+                    : "",
+
+            central:
+                central > 0
+                    ? central.toFixed(1).replace(".", ",")
+                    : "",
         };
-    }, [dobras]);
+    }, [dobras1, dobras2]);
 
     const classificacaoPressao = useMemo(() => {
         const sistolica = Number(data.sistolica);
@@ -555,58 +654,6 @@ export default function App() {
         data,
         dadosAntropometricosValidos,
     ]);
-
-    function calcular1RM(carga: number, repeticoes: number) {
-        if (!carga || !repeticoes) return 0;
-
-        return carga / (1.0278 - (0.0278 * repeticoes));
-    }
-
-    function classificarForca(valor: number) {
-        if (valor >= 180) return "Excelente";
-        if (valor >= 140) return "Muito bom";
-        if (valor >= 100) return "Bom";
-        if (valor >= 70) return "Regular";
-
-        return "Baixo";
-    }
-
-    const resultado1RM = useMemo(() => {
-        return {
-            supino: {
-                rm: Math.round(
-                    calcular1RM(
-                        Number(testeCarga.supino.carga),
-                        Number(testeCarga.supino.repeticoes)
-                    )
-                ),
-            },
-
-            legPress: {
-                rm: Math.round(
-                    calcular1RM(
-                        Number(testeCarga.legPress.carga),
-                        Number(testeCarga.legPress.repeticoes)
-                    )
-                ),
-            },
-
-            remada: {
-                rm: Math.round(
-                    calcular1RM(
-                        Number(testeCarga.remada.carga),
-                        Number(testeCarga.remada.repeticoes)
-                    )
-                ),
-            },
-        };
-    }, [testeCarga]);
-
-    const exercicios = [
-        { key: "supino", nome: "Supino reto" },
-        { key: "legPress", nome: "Leg Press" },
-        { key: "remada", nome: "Remada" },
-    ] as const;
 
     const pontosDobras = useMemo(() => {
         if (!dadosAntropometricosValidos) {
@@ -816,38 +863,80 @@ export default function App() {
         resumoDobras,
     ]);
 
+
     const updateField = (field: keyof ExamData, value: string) => {
-        setData((current) => ({ ...current, [field]: value }));
+        setData((current) => ({
+            ...current,
+            [field]: value,
+        }));
+
+        setAvaliacao((current) => {
+            if (field === "massa") {
+                return {
+                    ...current,
+
+                    avaliacao2: {
+                        ...current.avaliacao2,
+                        peso: value,
+                    },
+                };
+            }
+            return {
+                ...current,
+
+                aluno: {
+                    ...current.aluno,
+                    [field]: value,
+                },
+            };
+        });
     };
 
     const updatePerimetro = (field: PerimetroKey, value: string) => {
-        setPerimetros((current) => ({ ...current, [field]: value }));
-    };
-
-    const updateDobra = (field: DobraKey, measure: "primeira" | "segunda", value: string) => {
-        setDobras((current) => ({
-            ...current, [field]: { ...current[field], [measure]: sanitizeDecimal(value), },
-        }));
+        setAvaliacao(
+            (current) => ({ ...current, avaliacao1: { ...current.avaliacao1, perimetros: { ...current.avaliacao1.perimetros, [field]: value } } }),
+        )
     };
 
     const clearAllPerimetros = () => {
-        setPerimetros({ ...emptyPerimetros });
+        setAvaliacao((current) => ({
+            ...current,
+
+            avaliacao1: {
+                ...current.avaliacao1,
+
+                perimetros: {
+                    ...initialState.avaliacao1.perimetros,
+                },
+            },
+        }));
     };
 
     const clearAllDobras = () => {
-        setDobras({ ...emptyDobras });
+        setAvaliacao((current) => ({
+            ...current,
+
+            avaliacao1: {
+                ...current.avaliacao1,
+
+                dobrasCutaneas: {
+                    ...initialState.avaliacao1.dobrasCutaneas,
+                },
+            },
+        }));
     };
+
+    console.log(avaliacao.aluno.nomeCompleto);
+    console.log(avaliacao.avaliacao1.perimetros);
 
     return (
         <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
             <section className="mx-auto w-full border border-zinc-400 bg-[#ececec]">
                 <header className="border-b-4 border-[#a55c5d] bg-[#4f7fb7] px-5 py-6">
-                    <h1 className="text-5xl font-semibold italic tracking-wide text-white">2ª Avaliação</h1>
+                    <h1 className="text-5xl font-semibold italic tracking-wide text-white">1ª Avaliação</h1>
                 </header>
-
                 <div className="px-5 py-5">
                     <h2 className="mb-3 text-3xl font-bold italic text-zinc-600">DADOS GERAIS</h2>
-
                     <div className="space-y-5 border-b-8 border-zinc-300 pb-6">
                         <div className="grid gap-5 xl:grid-cols-[2.45fr_1fr]">
                             <div>
@@ -861,8 +950,7 @@ export default function App() {
                                         <input
                                             value={data.nomeCompleto}
                                             onChange={(event) => updateField("nomeCompleto", event.target.value)}
-                                            className={`${inputBaseClass} text-left text-lg bg-zinc-300`}
-                                            readOnly
+                                            className={`${inputBaseClass} text-left text-lg`}
                                         />
                                     </label>
 
@@ -871,8 +959,7 @@ export default function App() {
                                         <select
                                             value={data.genero}
                                             onChange={(event) => updateField("genero", event.target.value)}
-                                            className={`${inputBaseClass} text-lg bg-zinc-300`}
-                                            disabled
+                                            className={`${inputBaseClass} text-lg`}
                                         >
                                             <option value="">Selecione</option>
                                             <option value="masculino">Masculino</option>
@@ -894,8 +981,7 @@ export default function App() {
                                         <input
                                             value={data.etnia}
                                             onChange={(event) => updateField("etnia", event.target.value)}
-                                            className={`${inputBaseClass} text-lg bg-zinc-300`}
-                                            readOnly
+                                            className={`${inputBaseClass} text-lg`}
                                         />
                                     </label>
 
@@ -930,8 +1016,7 @@ export default function App() {
                                         <input
                                             value={data.femur}
                                             onChange={(event) => updateField("femur", sanitizeDecimal(event.target.value))}
-                                            className={`${inputBaseClass} bg-zinc-300`}
-                                            readOnly
+                                            className={inputBaseClass}
                                         />
                                     </label>
 
@@ -940,8 +1025,7 @@ export default function App() {
                                         <input
                                             value={data.tibia}
                                             onChange={(event) => updateField("tibia", sanitizeDecimal(event.target.value))}
-                                            className={`${inputBaseClass} bg-zinc-300`}
-                                            readOnly
+                                            className={inputBaseClass}
                                         />
                                     </label>
                                     <label>
@@ -949,8 +1033,7 @@ export default function App() {
                                         <input
                                             value={data.umero}
                                             onChange={(event) => updateField("umero", sanitizeDecimal(event.target.value))}
-                                            className={`${inputBaseClass} bg-zinc-300`}
-                                            readOnly
+                                            className={inputBaseClass}
                                         />
                                     </label>
                                     <label>
@@ -958,8 +1041,7 @@ export default function App() {
                                         <input
                                             value={data.una}
                                             onChange={(event) => updateField("una", sanitizeDecimal(event.target.value))}
-                                            className={`${inputBaseClass} bg-zinc-300`}
-                                            readOnly
+                                            className={inputBaseClass}
                                         />
                                     </label>
 
@@ -1061,7 +1143,6 @@ export default function App() {
                                             />
                                         </div>
                                     </div>
-
                                     <div>
                                         <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Classificacao</span>
                                         <div className="flex h-9 items-center justify-center bg-[#4f7fb7] px-3 text-[1.35rem] font-semibold text-white">
@@ -1073,12 +1154,8 @@ export default function App() {
                         </div>
                     </div>
                 </div>
-
                 <div className="px-5 py-5">
                     <h2 className="mb-3 text-3xl font-bold italic text-zinc-600">ANALISE DA COMPOSICAO CORPORAL</h2>
-
-
-
                     <div className="grid gap-5 xl:grid-cols-[2.45fr_1fr]">
                         <div>
                             <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
@@ -1109,6 +1186,7 @@ export default function App() {
                                 <div className="flex items-center justify-center border border-zinc-300 bg-white/40 p-2 max-w-[350px]">
                                     <img src="/app/src/assets/human.png" alt="Human" className="max-w-[300px]" />
                                 </div>
+
                                 <div className="relative h-[520px] w-[520px] border border-zinc-400 bg-white px-8 py-6">
                                     <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
                                         <div className="bg-[#e89a9a]" />
@@ -1147,7 +1225,7 @@ export default function App() {
                                             className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-sky-500 shadow"
                                             style={{
                                                 left: `${((point.x + 5) / 10) * 100}%`,
-                                                top: `${(point.y / 14) * 100}%`,
+                                                top: `${((point.y - 0.5) / 14) * 100}%`,
                                             }}
                                         />
                                     ))}
@@ -1180,15 +1258,12 @@ export default function App() {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="space-y-6">
+                        <div className="space-y-8 max-w-[400px]">
                             {classificationBox("Massa muscular", analiseCorporal.massaMuscular)}
                             {classificationBox("Massa adiposa", analiseCorporal.massaAdiposa)}
-                            {classificationBox("Area muscular do braco", analiseCorporal.areaBraco)}
+                            {classificationBox("Area muscular do braço", analiseCorporal.areaBraco)}
                             {classificationBox("Area muscular da coxa", analiseCorporal.areaCoxa)}
                         </div>
-                    </div>
-                    <div className="mt-10 flex items-end justify-end">
                     </div>
                     <div className="mt-10 grid gap-6 xl:grid-cols-[2.45fr_1fr]">
                         <div>
@@ -1215,17 +1290,25 @@ export default function App() {
                                                     </div>
 
                                                     <input
-                                                        value={dobras[field.key].primeira}
-                                                        onChange={(event) => updateDobra(field.key, "primeira", event.target.value)}
+                                                        value={dobras1[field.key]}
+                                                        onChange={(event) =>
+                                                            updateDobra1(
+                                                                field.key,
+                                                                event.target.value
+                                                            )
+                                                        }
                                                         className={inputBaseClass}
                                                     />
-
                                                     <input
-                                                        value={dobras[field.key].segunda}
-                                                        onChange={(event) => updateDobra(field.key, "segunda", event.target.value)}
+                                                        value={dobras2[field.key]}
+                                                        onChange={(event) =>
+                                                            updateDobra2(
+                                                                field.key,
+                                                                event.target.value
+                                                            )
+                                                        }
                                                         className={inputBaseClass}
                                                     />
-
                                                     <input value={resumoDobras.mediaFinal[field.key]} readOnly className={inputBaseClass} />
                                                 </div>
                                             ))}
@@ -1266,75 +1349,72 @@ export default function App() {
                                     {camposFaltando.join(", ")}
                                 </div>
                             )}
-                            <div className="relative pb-16 pl-10 pr-2 pt-2">
-                                <div className="relative overflow-visible pb-16 pl-10 pr-2 pt-2">
-                                    <div className="relative h-[460px] border border-zinc-400 bg-white overflow-visible">
-                                        <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
-                                            <div className="bg-[#e89a9a]" />
-                                            <div className="bg-[#f3b2b2]" />
-                                            <div className="bg-[#f7dfaa]" />
-                                            <div className="bg-[#f5ec99]" />
-                                            <div className="bg-[#d6e8c7]" />
+                            <div className="relative overflow-visible pb-16 pl-10 pr-2 pt-2">
+                                <div className="relative h-[460px] border border-zinc-400 bg-white overflow-visible">
+                                    <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
+                                        <div className="bg-[#e89a9a]" />
+                                        <div className="bg-[#f3b2b2]" />
+                                        <div className="bg-[#f7dfaa]" />
+                                        <div className="bg-[#f5ec99]" />
+                                        <div className="bg-[#d6e8c7]" />
 
-                                            <div className="bg-[#d6e8c7]" />
-                                            <div className="bg-[#f5ec99]" />
-                                            <div className="bg-[#f7dfaa]" />
-                                            <div className="bg-[#f3b2b2]" />
-                                            <div className="bg-[#e89a9a]" />
-                                        </div>
-
-                                        <div className="absolute inset-0 grid grid-cols-10 border-x border-zinc-400">
-                                            {Array.from({ length: 8 }).map((_, idx) => (
-                                                <div key={`dobra-col-${idx}`} className="border-r border-zinc-400/60" />
-                                            ))}
-                                        </div>
-
-                                        <div className="absolute inset-0 grid grid-rows-8 ">
-                                            {Array.from({ length: dobraChartRows }).map((_, idx) => (
-                                                <div key={`dobra-row-${idx}`} className="border-b border-zinc-300" />
-                                            ))}
-                                        </div>
-
-                                        <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
-                                        {pontosDobras.map((point, idx) => (
-                                            <div
-                                                key={`dobra-point-${idx}`}
-                                                className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-500"
-                                                style={{
-                                                    left: `${((point.x + 5) / 10) * 100}%`,
-                                                    top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
-                                                }}
-                                            />
-                                        ))}
-
-                                        <div className="absolute -bottom-7 left-0 right-0 flex justify-between px-1 text-lg font-semibold text-zinc-500">
-                                            {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((value) => (
-                                                <span key={`dobra-axis-${value}`}>{value}</span>
-                                            ))}
-                                        </div>
-
-                                        <div className="pointer-events-none absolute -left-8 top-0 h-full w-8 text-lg font-semibold text-zinc-500">
-                                            {dobrasConfig.map((item) => (
-                                                <span
-                                                    key={`dobra-left-axis-${item.index}`}
-                                                    className="absolute right-1 -translate-y-1/2"
-                                                    style={{ top: `${((item.index - 0.5) / dobraChartRows) * 100}%` }}
-                                                >
-                                                    {item.index}
-                                                </span>
-                                            ))}
-                                        </div>
-
-                                        <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
-                                            1ª Avaliacao
-                                        </span>
+                                        <div className="bg-[#d6e8c7]" />
+                                        <div className="bg-[#f5ec99]" />
+                                        <div className="bg-[#f7dfaa]" />
+                                        <div className="bg-[#f3b2b2]" />
+                                        <div className="bg-[#e89a9a]" />
                                     </div>
+
+                                    <div className="absolute inset-0 grid grid-cols-10 border-x border-zinc-400">
+                                        {Array.from({ length: 8 }).map((_, idx) => (
+                                            <div key={`dobra-col-${idx}`} className="border-r border-zinc-400/60" />
+                                        ))}
+                                    </div>
+
+                                    <div className="absolute inset-0 grid grid-rows-8 ">
+                                        {Array.from({ length: dobraChartRows }).map((_, idx) => (
+                                            <div key={`dobra-row-${idx}`} className="border-b border-zinc-300" />
+                                        ))}
+                                    </div>
+
+                                    <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
+                                    {pontosDobras.map((point, idx) => (
+                                        <div
+                                            key={`dobra-point-${idx}`}
+                                            className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-500"
+                                            style={{
+                                                left: `${((point.x + 5) / 10) * 100}%`,
+                                                top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
+                                            }}
+                                        />
+                                    ))}
+
+                                    <div className="absolute -bottom-7 left-0 right-0 flex justify-between px-1 text-lg font-semibold text-zinc-500">
+                                        {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((value) => (
+                                            <span key={`dobra-axis-${value}`}>{value}</span>
+                                        ))}
+                                    </div>
+
+                                    <div className="pointer-events-none absolute -left-8 top-0 h-full w-8 text-lg font-semibold text-zinc-500">
+                                        {dobrasConfig.map((item) => (
+                                            <span
+                                                key={`dobra-left-axis-${item.index}`}
+                                                className="absolute right-1 -translate-y-1/2"
+                                                style={{ top: `${((item.index - 0.5) / dobraChartRows) * 100}%` }}
+                                            >
+                                                {item.index}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
+                                        1ª Avaliacao
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div className="mt-10 flex items-end justify-end">
-                        <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={() => { navigate("/") }}>Voltar</button>
+                        <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={() => { navigate("/avaliacao2") }}>2ª Avaliação</button>
                     </div>
                     <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr] mt-10">
                         <div>
@@ -1353,35 +1433,39 @@ export default function App() {
                                 TESTE DE CARGA MÁXIMA - 1RM
                             </h3>
                             {exercicios.map((exercicio) => (
-                                <div className="grid-cols-5 grid gap-1 pt-5">
+                                <div key={exercicio.key}
+                                    className="grid-cols-5 grid gap-1 pt-5">
                                     <div className="grid-rows-1 grid">
                                         <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Exercicios</text>
                                         <text className="text-xl font-semibold italic text-zinc-500 text-left">{exercicio.nome}</text>
                                     </div>
                                     <div className="grid-rows-1 grid ">
                                         <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Carga</text>
-                                        <input className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600" value={testeCarga[exercicio.key].carga}
+                                        <input
+                                            className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
+                                            value={testeCarga[exercicio.key].carga}
                                             onChange={(e) =>
-                                                setTesteCarga((prev) => ({
-                                                    ...prev,
-                                                    [exercicio.key]: {
-                                                        ...prev[exercicio.key],
-                                                        carga: e.target.value,
-                                                    },
-                                                }))
-                                            }></input>
+                                                updateTesteCarga(
+                                                    exercicio.key,
+                                                    "carga",
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
                                     </div>
                                     <div className="grid-rows-1 grid ">
                                         <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Repetições</text>
-                                        <input className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600" value={testeCarga[exercicio.key].repeticoes}
+                                        <input
+                                            className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
+                                            value={testeCarga[exercicio.key].repeticoes}
                                             onChange={(e) =>
-                                                setTesteCarga((prev) => ({
-                                                    ...prev,
-                                                    [exercicio.key]: {
-                                                        ...prev[exercicio.key],
-                                                        repeticoes: e.target.value,
-                                                    },
-                                                }))} ></input>
+                                                updateTesteCarga(
+                                                    exercicio.key,
+                                                    "repeticoes",
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
                                     </div>
                                     <div className="grid-rows-1 grid">
                                         <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">1 RM Predito</text>
@@ -1402,7 +1486,7 @@ export default function App() {
                                         to={tab.rota}
                                         className={({ isActive }) =>
                                             ` px-5 py-2 text-sm font-semibold uppercase border-r border-zinc-500 transition
-                                        ${isActive
+                ${isActive
                                                 ? "bg-white text-[#4c8b72]"
                                                 : "bg-[#2f2f2f] text-white hover:bg-[#444]"
                                             } `
@@ -1413,6 +1497,14 @@ export default function App() {
                                 ))}
                             </div>
                         </div>
+                    </div>
+                    <div className="py-5 border-t-5 border-zinc-400 mt-6">
+                        <h3 className="mb-3 pb-1 text-xl font-bold italic uppercase tracking-wide text-zinc-500">Parecer Descritivo</h3>
+                        <textarea className="w-full border-2 border-red-700 rounded-sm h-40 pl-1 max-h-52 outline-none transition-all duration-200 focus:border-red-400 focus:ring-4 focus:ring-indigo-500/10"
+                            value={observacoes}
+                            onChange={(e) => {
+                                updateObservacoes(e.target.value)
+                            }} />
                     </div>
                 </div>
             </section>
