@@ -7,6 +7,10 @@ import type { PerimetroKey } from '../types/perimetroKey';
 import type { ExamData } from '../types/examData';
 import type { DobraField } from '../types/dobraField';
 import type { DobraKey } from '../types/dobraKey';
+import { calcularMassaAdiposa } from '../functions/calcMassaAdiposa';
+import { calcularAreaBraco } from '../functions/calcBraco';
+import { calcularAreaCoxa } from '../functions/calcCoxa';
+import { calcularMassaMuscular } from '../functions/calcMassaMuscular';
 
 
 
@@ -711,6 +715,369 @@ export default function comparacao() {
         dadosAntropometricosValidos,
     ]);
 
+    const analiseCorporal = useMemo(() => {
+        const massa =
+            parseDecimal(data.massa);
+
+        const gorduraKg =
+            calcularMassaAdiposa(
+                data,
+                resumoDobras
+            ) || 0;
+
+        const areaBraco =
+            calcularAreaBraco(
+                perimetros,
+                resumoDobras
+            ) || 0;
+
+        const areaCoxa =
+            calcularAreaCoxa(
+                perimetros,
+                resumoDobras
+            ) || 0;
+
+        const massaMuscularKg =
+            calcularMassaMuscular(
+                massa,
+                gorduraKg,
+                data.genero,
+                Number(data.idade),
+                areaBraco,
+                areaCoxa,
+                getReferenceByKey("imc" as PerimetroKey, data)
+            );
+
+        const refBraco = getReferenceByKey("bracoD" as PerimetroKey, data);
+
+
+        const refCoxa = getReferenceByKey("coxaMediaD", data);
+
+        const percentualMuscular =
+            massa > 0
+                ? massaMuscularKg / massa
+                : 0;
+
+        const percentualGordura =
+            massa > 0
+                ? (gorduraKg / massa) * 100
+                : 0;
+
+        const classificarFaixa = (
+            valor: number,
+            referencia: number,
+            margem = 2
+        ) => {
+            if (valor >= referencia + margem * 2)
+                return "Muito elevada";
+
+            if (valor >= referencia + margem)
+                return "Elevada";
+
+            if (valor >= referencia - margem)
+                return "Normal";
+
+            return "Baixa";
+        };
+
+        let massaMuscular = "";
+
+        if (percentualMuscular >= 0.45) {
+            massaMuscular = "Muito elevada";
+        } else if (
+            percentualMuscular >= 0.38
+        ) {
+            massaMuscular = "Elevada";
+        } else if (
+            percentualMuscular >= 0.28
+        ) {
+            massaMuscular = "Normal";
+        } else {
+            massaMuscular = "Baixa";
+        }
+
+        let massaAdiposa = "";
+
+        if (data.genero === "Masculino") {
+            if (percentualGordura >= 25) {
+                massaAdiposa = "Muito elevada";
+            } else if (
+                percentualGordura >= 18
+            ) {
+                massaAdiposa = "Elevada";
+            } else if (
+                percentualGordura >= 10
+            ) {
+                massaAdiposa = "Adequada";
+            } else {
+                massaAdiposa = "Baixa";
+            }
+        } else {
+            if (percentualGordura >= 32) {
+                massaAdiposa = "Muito elevada";
+            } else if (
+                percentualGordura >= 25
+            ) {
+                massaAdiposa = "Elevada";
+            } else if (
+                percentualGordura >= 18
+            ) {
+                massaAdiposa = "Adequada";
+            } else {
+                massaAdiposa = "Baixa";
+            }
+        }
+
+        const areaBracos =
+            classificarFaixa(
+                areaBraco,
+                refBraco,
+                2
+            );
+
+        const areaCoxas =
+            classificarFaixa(
+                areaCoxa,
+                refCoxa,
+                3
+            );
+
+        return {
+            massaMuscularKg:
+                Number(
+                    massaMuscularKg.toFixed(1)
+                ) || 0,
+
+            massaLivreKg:
+                Number(
+                    (massa - gorduraKg).toFixed(1)
+                ) || 0,
+
+            massaAdiposaKg:
+                Number(
+                    gorduraKg.toFixed(1)
+                ) || 0,
+
+            massaTotalKg:
+                Number(
+                    massa.toFixed(1)
+                ) || 0,
+
+            massaMuscular:
+                `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
+
+            massaAdiposa:
+                `${massaAdiposa} (${gorduraKg.toFixed(1)} kg)`,
+
+            areaBraco:
+                `${areaBraco.toFixed(1)}`,
+
+            areaCoxa:
+                `${areaCoxa.toFixed(1)}`,
+        };
+    }, [
+        data,
+        perimetros,
+        resumoDobras,
+    ]);
+
+    const analiseCorporal2 = useMemo(() => {
+        const massa =
+            parseDecimal(data2.massa);
+
+        const gorduraKg =
+            calcularMassaAdiposa(
+                data2,
+                resumoDobras2
+            ) || 0;
+
+        const areaBraco =
+            calcularAreaBraco(
+                perimetros2,
+                resumoDobras2
+            ) || 0;
+
+        const areaCoxa =
+            calcularAreaCoxa(
+                perimetros2,
+                resumoDobras2
+            ) || 0;
+
+        const massaMuscularKg =
+            calcularMassaMuscular(
+                massa,
+                gorduraKg,
+                data2.genero,
+                Number(data2.idade),
+                areaBraco,
+                areaCoxa,
+                getReferenceByKey("imc" as PerimetroKey, data2)
+            );
+
+        const refBraco = getReferenceByKey("bracoD" as PerimetroKey, data2);
+
+
+        const refCoxa = getReferenceByKey("coxaMediaD", data2);
+
+        const percentualMuscular =
+            massa > 0
+                ? massaMuscularKg / massa
+                : 0;
+
+        const percentualGordura =
+            massa > 0
+                ? (gorduraKg / massa) * 100
+                : 0;
+
+        const classificarFaixa = (
+            valor: number,
+            referencia: number,
+            margem = 2
+        ) => {
+            if (valor >= referencia + margem * 2)
+                return "Muito elevada";
+
+            if (valor >= referencia + margem)
+                return "Elevada";
+
+            if (valor >= referencia - margem)
+                return "Normal";
+
+            return "Baixa";
+        };
+
+        let massaMuscular = "";
+
+        if (percentualMuscular >= 0.45) {
+            massaMuscular = "Muito elevada";
+        } else if (
+            percentualMuscular >= 0.38
+        ) {
+            massaMuscular = "Elevada";
+        } else if (
+            percentualMuscular >= 0.28
+        ) {
+            massaMuscular = "Normal";
+        } else {
+            massaMuscular = "Baixa";
+        }
+
+        let massaAdiposa = "";
+
+        if (data2.genero === "Masculino") {
+            if (percentualGordura >= 25) {
+                massaAdiposa = "Muito elevada";
+            } else if (
+                percentualGordura >= 18
+            ) {
+                massaAdiposa = "Elevada";
+            } else if (
+                percentualGordura >= 10
+            ) {
+                massaAdiposa = "Adequada";
+            } else {
+                massaAdiposa = "Baixa";
+            }
+        } else {
+            if (percentualGordura >= 32) {
+                massaAdiposa = "Muito elevada";
+            } else if (
+                percentualGordura >= 25
+            ) {
+                massaAdiposa = "Elevada";
+            } else if (
+                percentualGordura >= 18
+            ) {
+                massaAdiposa = "Adequada";
+            } else {
+                massaAdiposa = "Baixa";
+            }
+        }
+
+        const areaBracos =
+            classificarFaixa(
+                areaBraco,
+                refBraco,
+                2
+            );
+
+        const areaCoxas =
+            classificarFaixa(
+                areaCoxa,
+                refCoxa,
+                3
+            );
+
+        return {
+            massaMuscularKg:
+                Number(
+                    massaMuscularKg.toFixed(1)
+                ) || 0,
+
+            massaLivreKg:
+                Number(
+                    (massa - gorduraKg).toFixed(1)
+                ) || 0,
+
+            massaAdiposaKg:
+                Number(
+                    gorduraKg.toFixed(1)
+                ) || 0,
+
+            massaTotalKg:
+                Number(
+                    massa.toFixed(1)
+                ) || 0,
+
+            massaMuscular:
+                `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
+
+            massaAdiposa:
+                `${massaAdiposa} (${gorduraKg.toFixed(1)} kg)`,
+
+            areaBraco:
+                `${areaBraco.toFixed(1)}`,
+
+            areaCoxa:
+                `${areaCoxa.toFixed(1)}`,
+        };
+    }, [
+        data2,
+        perimetros2,
+        resumoDobras2,
+    ]);
+
+    const chartRows = 2;
+
+    const pontosComposicao = [
+        {
+            x: analiseCorporal.massaMuscularKg,
+            y: 1,
+        },
+        {
+            x: analiseCorporal.massaAdiposaKg,
+            y: 2,
+        },
+    ];
+
+    const pontosComposicao2 = [
+        {
+            x: analiseCorporal2.massaMuscularKg,
+            y: 1,
+        },
+        {
+            x: analiseCorporal2.massaAdiposaKg,
+            y: 2,
+        },
+    ];
+
+    const maxValor = Math.max(
+        analiseCorporal.massaMuscularKg,
+        analiseCorporal.massaAdiposaKg,
+        analiseCorporal2.massaMuscularKg,
+        analiseCorporal2.massaAdiposaKg
+    );
+
     return (
         <main className="h-full bg-[#ececec] p-3 md:p-5 ">
             <hr className="my-4 border-3 rounded-2xl mb-5 border-zinc-400" />
@@ -749,7 +1116,6 @@ export default function comparacao() {
                                         }
                                         className={inputBaseClass}
                                     />
-
                                     <input
                                         readOnly
                                         value={perimetros2[field.key]}
@@ -1040,32 +1406,32 @@ export default function comparacao() {
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
                                     1 M. Muscular (kg)
                                 </span>
-                                <input readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={analiseCorporal.massaMuscularKg} readOnly className={inputBaseClass} />
+                                <input value={analiseCorporal2.massaMuscularKg} readOnly className={inputBaseClass} />
                                 <input readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
                                     2 M. Adiposa (kg)
                                 </span>
-                                <input readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={analiseCorporal.massaAdiposaKg} readOnly className={inputBaseClass} />
+                                <input value={analiseCorporal2.massaAdiposaKg} readOnly className={inputBaseClass} />
                                 <input readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
                                     AMB (cm)
                                 </span>
-                                <input readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={analiseCorporal.areaBraco} readOnly className={inputBaseClass} />
+                                <input value={analiseCorporal2.areaBraco} readOnly className={inputBaseClass} />
                                 <input readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
                                     AMC (cm²)
                                 </span>
-                                <input readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={analiseCorporal.areaCoxa} readOnly className={inputBaseClass} />
+                                <input value={analiseCorporal2.areaCoxa} readOnly className={inputBaseClass} />
                                 <input readOnly className={inputBaseClass} />
                             </div>
                         </div>
@@ -1076,7 +1442,8 @@ export default function comparacao() {
                     <h1 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
                         Escala de porprocionalidade
                     </h1>
-                    <div className="relative h-[520px] w-[520px] border border-zinc-400 bg-white mx-[20%] ">
+
+                    <div className="relative h-[160px] w-[650px] border border-zinc-500 bg-white ml-15">
                         <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
                             <div className="bg-[#e89a9a]" />
                             <div className="bg-[#f3b2b2]" />
@@ -1091,75 +1458,69 @@ export default function comparacao() {
                             <div className="bg-[#e89a9a]" />
                         </div>
 
-                        <div className="absolute inset-0 grid grid-cols-10 border-x border-zinc-400">
-                            {Array.from({ length: 8 }).map((_, idx) => (
-                                <div key={`col-${idx}`} className="border-r border-zinc-400/60" />
-                            ))}
-                        </div>
-
-                        <div
-                            className="absolute inset-0"
-                            style={{
-                                display: "grid",
-                                gridTemplateRows: `repeat(${dobraChartRows}, 1fr)`
-                            }}
-                        >
-                            {Array.from({ length: 8 }).map((_, idx) => (
+                        <div className="absolute inset-0 grid grid-cols-10">
+                            {Array.from({ length: 10 }).map((_, idx) => (
                                 <div
-                                    key={`row-${idx}`}
-                                    className="border-b border-zinc-300"
+                                    key={idx}
+                                    className="border-r border-zinc-500/50"
                                 />
                             ))}
                         </div>
 
-                        <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
+                        <div
+                            className="absolute left-0 right-0 border-b border-zinc-400"
+                            style={{ top: "25%" }}
+                        />
 
-                        {pontosDobras.map((point, idx) => (
+                        <div
+                            className="absolute left-0 right-0 border-b border-zinc-400"
+                            style={{ top: "75%" }}
+                        />
+                        
+                        {pontosComposicao.map((point, idx) => (
                             <div
-                                key={`point-${idx}`}
-                                className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 shadow"
+                                key={`av1-${idx}`}
+                                className="absolute z-10 h-4 w-4 rounded-full bg-red-500 border border-red-700"
                                 style={{
-                                    left: `${((point.x + 5) / 10) * 100}%`,
-                                    top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
+                                    left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
+                                    top:
+                                        point.y === 1
+                                            ? "25%"
+                                            : "75%",
+                                    transform: "translateY(-50%)",
                                 }}
                             />
                         ))}
 
-                        {pontosDobras2.map((point, idx) => (
+                        {pontosComposicao2.map((point, idx) => (
                             <div
-                                key={`point-${idx}`}
-                                className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border bg-yellow-200 shadow"
+                                key={`av2-${idx}`}
+                                className="absolute z-10 h-4 w-4 rounded-full bg-yellow-300 border border-zinc-700"
                                 style={{
-                                    left: `${((point.x + 5) / 10) * 100}%`,
-                                    top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
+                                    left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
+                                    top:
+                                        point.y === 1
+                                            ? "25%"
+                                            : "75%",
+                                    transform: "translateY(-50%)",
                                 }}
                             />
                         ))}
 
-                        <div className="absolute -bottom-8 left-0 right-0 flex justify-between px-2 text-lg font-semibold text-zinc-500">
-                            {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((value) => (
-                                <span
-                                    key={`axis-${value}`}
-                                    className="w-6 text-center"
-                                >
-                                    {value}
-                                </span>
-                            ))}
+                        <div
+                            className="absolute -translate-x-10/4 -translate-y-1/2 text-lg font-semibold text-zinc-500"
+                            style={{ top: "25%", transform: "translateY(-50%)" }}
+                        >
+                            1
                         </div>
 
-                        <div className="absolute inset-y-0 -left-8 w-6">
-                            {dobrasConfig.map((item) => (
-                                <span
-                                    key={item.key}
-                                    className="absolute right-0 -translate-y-1/2 text-lg font-semibold text-zinc-500"
-                                    style={{
-                                        top: `${((item.index - 0.5) / dobraChartRows) * 100}%`,
-                                    }}
-                                >
-                                    {item.index}
-                                </span>
-                            ))}
+                        <div
+                            className="absolute -translate-x-7/4 -translate-y-1/2 text-lg font-semibold text-zinc-500"
+                            style={{ top: "75%", transform: "translateY(-50%)" }}
+                        >
+                            2
                         </div>
+
                         <div className="absolute -bottom-16 left-0 right-0 flex items-center justify-center">
                             <div className="h-3 w-3 rounded-full bg-red-500 ml-3" />
                             <span className="text-lg font-semibold text-zinc-500 ml-3">
@@ -1171,6 +1532,7 @@ export default function comparacao() {
                             </span>
                         </div>
                     </div>
+
                 </div>
             </div>
             <div>

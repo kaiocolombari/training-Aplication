@@ -10,19 +10,15 @@ export function calcularMassaMuscular(
     const masculino =
         genero.toLowerCase() === "masculino";
 
-    // 1. massa magra
     const massaMagra =
         massa - gorduraKg;
 
-    // 2. fator base por sexo
     const fatorBase =
         masculino ? 0.54 : 0.47;
 
     let massaMuscular =
         massaMagra * fatorBase;
 
-    // 3. ajuste pela idade
-    // perda muscular progressiva
     let fatorIdade = 1;
 
     if (idade >= 60) {
@@ -35,18 +31,15 @@ export function calcularMassaMuscular(
 
     massaMuscular *= fatorIdade;
 
-    // 4. ajuste por áreas musculares
     const areaTotal =
         areaBraco + areaCoxa;
 
-    // referências aproximadas
     const referenciaArea =
         masculino ? 260 : 220;
 
     const ajusteArea =
         areaTotal / referenciaArea;
 
-    // limitar extremos
     const ajusteAreaLimitado =
         Math.min(
             Math.max(ajusteArea, 0.85),
@@ -56,7 +49,6 @@ export function calcularMassaMuscular(
     massaMuscular *=
         ajusteAreaLimitado;
 
-    // 5. ajuste leve por IMC
     if (imc) {
         if (imc < 18.5) {
             massaMuscular *= 0.96;

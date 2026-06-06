@@ -18,7 +18,7 @@ export function calcularAreaBraco(
 
     const triceps =
         parseDecimal(
-            resumoDobras.mediaFinal.triceps
+            resumoDobras?.mediaFinal?.triceps ?? ""
         ) / 10;
 
     if (!c || !triceps) {

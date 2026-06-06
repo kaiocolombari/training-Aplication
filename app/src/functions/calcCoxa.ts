@@ -19,7 +19,7 @@ export function calcularAreaCoxa(
 
     const dobra =
         parseDecimal(
-            resumoDobras.mediaFinal.coxaMedia
+            resumoDobras?.mediaFinal?.coxaMedia ?? ""
         ) / 10;
 
     if (!c || !dobra) {
