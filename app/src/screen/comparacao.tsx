@@ -392,6 +392,190 @@ export default function comparacao() {
         diastolica: avaliacao.aluno.diastolica,
     });
 
+    const dobraChartRows = 8;
+
+    type DobraReference = {
+        media: number;
+        desvio: number;
+    };
+
+    const dadosAntropometricosValidos =
+        data.genero &&
+        data.idade &&
+        data.massa &&
+        data.estatura;
+
+    const dadosAntropometricosValidos2 =
+        data2.genero &&
+        data2.idade &&
+        data2.massa &&
+        data2.estatura;
+
+    function getDobraReference(
+        key: DobraKey,
+        data: ExamData
+    ): DobraReference {
+        const masculino = data.genero === "masculino";
+
+        const idade = Number(data.idade);
+
+        const massa = parseDecimal(data.massa);
+        const estatura = parseDecimal(data.estatura);
+
+        const imc =
+            estatura > 0
+                ? massa / (estatura * estatura)
+                : 0;
+
+        const base: Record<DobraKey, DobraReference> = {
+            triceps: {
+                media: masculino ? 10 : 18,
+                desvio: 3,
+            },
+
+            subescapular: {
+                media: masculino ? 12 : 16,
+                desvio: 3,
+            },
+
+            biceps: {
+                media: masculino ? 6 : 10,
+                desvio: 2,
+            },
+
+            iliaca: {
+                media: masculino ? 14 : 22,
+                desvio: 4,
+            },
+
+            supraespinhal: {
+                media: masculino ? 10 : 16,
+                desvio: 3,
+            },
+
+            abdominal: {
+                media: masculino ? 16 : 24,
+                desvio: 5,
+            },
+
+            coxaMedia: {
+                media: masculino ? 18 : 26,
+                desvio: 4,
+            },
+
+            panturrilha: {
+                media: masculino ? 10 : 16,
+                desvio: 3,
+            },
+        };
+
+        let media = base[key].media;
+        const desvio = base[key].desvio;
+
+        if (idade >= 40) {
+            media += 2;
+        }
+
+        if (idade >= 50) {
+            media += 4;
+        }
+
+        if (imc >= 25) {
+            media += 1.5;
+        }
+
+        if (imc >= 30) {
+            media += 3;
+        }
+
+        return {
+            media,
+            desvio,
+        };
+    }
+
+    const pontosDobras = useMemo(() => {
+        if (!dadosAntropometricosValidos) {
+            return [];
+        }
+
+        return dobrasConfig.flatMap((item, idx) => {
+            const valorTexto =
+                resumoDobras.mediaFinal[item.key];
+
+            if (!valorTexto) {
+                return [];
+            }
+
+            const valor = parseDecimal(valorTexto);
+
+            const referencia = getDobraReference(
+                item.key,
+                data
+            );
+
+            const score =
+                (valor - referencia.media) /
+                referencia.desvio;
+
+            const limitado = Math.max(
+                -4,
+                Math.min(4, score)
+            );
+
+            return [
+                {
+                    x: limitado,
+                    y: idx + 1,
+                },
+            ];
+        });
+    }, [
+        resumoDobras.mediaFinal,
+        data,
+    ]);
+
+    const pontosDobras2 = useMemo(() => {
+        if (!dadosAntropometricosValidos2) {
+            return [];
+        }
+
+        return dobrasConfig.flatMap((item, idx) => {
+            const valorTexto =
+                resumoDobras2.mediaFinal2[item.key];
+
+            if (!valorTexto) {
+                return [];
+            }
+
+            const valor = parseDecimal(valorTexto);
+
+            const referencia = getDobraReference(
+                item.key,
+                data2
+            );
+
+            const score =
+                (valor - referencia.media) /
+                referencia.desvio;
+
+            const limitado = Math.max(
+                -4,
+                Math.min(4, score)
+            );
+
+            return [
+                {
+                    x: limitado,
+                    y: idx + 1,
+                },
+            ];
+        });
+    }, [
+        resumoDobras2.mediaFinal2,
+        data2,
+    ]);
+
     function parseDecimal(value: string) {
         const normalized = value.replace(",", ".");
         const parsed = Number(normalized);
@@ -423,17 +607,7 @@ export default function comparacao() {
         panturrilhaE: 3,
     };
 
-    const dadosAntropometricosValidos =
-        data.genero &&
-        data.idade &&
-        data.massa &&
-        data.estatura;
 
-    const dadosAntropometricosValidos2 =
-        data2.genero &&
-        data2.idade &&
-        data2.massa &&
-        data2.estatura;
 
     const chartPoints = useMemo(() => {
         if (!dadosAntropometricosValidos) {
@@ -697,7 +871,7 @@ export default function comparacao() {
             <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr] mt-15 ">
                 <div>
                     <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                        Perimetros corporais (cm)
+                        Dobras Cutâneas (cm)
                     </h3>
                     <div className="flex gap-6 items-start max-w-5xl">
                         <div className="flex-1">
@@ -773,8 +947,14 @@ export default function comparacao() {
                             ))}
                         </div>
 
-                        <div className="absolute inset-0 grid grid-rows-14">
-                            {Array.from({ length: 14 }).map((_, idx) => (
+                        <div
+                            className="absolute inset-0"
+                            style={{
+                                display: "grid",
+                                gridTemplateRows: `repeat(${dobraChartRows}, 1fr)`
+                            }}
+                        >
+                            {Array.from({ length: 8 }).map((_, idx) => (
                                 <div
                                     key={`row-${idx}`}
                                     className="border-b border-zinc-300"
@@ -784,24 +964,24 @@ export default function comparacao() {
 
                         <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
 
-                        {chartPoints.map((point, idx) => (
+                        {pontosDobras.map((point, idx) => (
                             <div
                                 key={`point-${idx}`}
                                 className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 shadow"
                                 style={{
                                     left: `${((point.x + 5) / 10) * 100}%`,
-                                    top: `${((point.y - 0.5) / 14) * 100}%`,
+                                    top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
                                 }}
                             />
                         ))}
 
-                        {chartPoints2.map((point, idx) => (
+                        {pontosDobras2.map((point, idx) => (
                             <div
                                 key={`point-${idx}`}
-                                className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black bg-yellow-200 shadow"
+                                className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border bg-yellow-200 shadow"
                                 style={{
                                     left: `${((point.x + 5) / 10) * 100}%`,
-                                    top: `${((point.y - 0.5) / 14) * 100}%`,
+                                    top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
                                 }}
                             />
                         ))}
@@ -817,16 +997,168 @@ export default function comparacao() {
                             ))}
                         </div>
 
-                        <div className="absolute inset-y-0 -left-8 flex flex-col justify-between py-[18px] text-lg font-semibold text-zinc-500">
-                            {Array.from({ length: 14 }).map((_, idx) => (
+                        <div className="absolute inset-y-0 -left-8 w-6">
+                            {dobrasConfig.map((item) => (
                                 <span
-                                    key={`axis-y-${idx + 1}`}
-                                    className="flex h-full items-center"
+                                    key={item.key}
+                                    className="absolute right-0 -translate-y-1/2 text-lg font-semibold text-zinc-500"
+                                    style={{
+                                        top: `${((item.index - 0.5) / dobraChartRows) * 100}%`,
+                                    }}
                                 >
-                                    {idx + 1}
+                                    {item.index}
                                 </span>
                             ))}
+                        </div>
+                        <div className="absolute -bottom-16 left-0 right-0 flex items-center justify-center">
+                            <div className="h-3 w-3 rounded-full bg-red-500 ml-3" />
+                            <span className="text-lg font-semibold text-zinc-500 ml-3">
+                                1ª Av
+                            </span>
+                            <div className="h-3 w-3 rounded-full bg-yellow-200 border ml-3" />
+                            <span className="text-lg font-semibold text-zinc-500 ml-3">
+                                2ª Av
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr] mt-20 ">
+                <div>
+                    <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                        Composição corporal
+                    </h3>
+                    <div className="flex gap-6 items-start max-w-5xl">
+                        <div className="flex-1">
+                            <div className='grid grid-cols-[200px_140px_140px_140px] items-center gap-2 text-center'>
+                                <text></text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">1ª Avaliação</text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">2ª Avaliação</text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">Diferença B-A</text>
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    1 M. Muscular (kg)
+                                </span>
+                                <input readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    2 M. Adiposa (kg)
+                                </span>
+                                <input readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    AMB (cm)
+                                </span>
+                                <input readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    AMC (cm²)
+                                </span>
+                                <input readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                            </div>
+                        </div>
+                    </div>
 
+                </div>
+                <div>
+                    <h1 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                        Escala de porprocionalidade
+                    </h1>
+                    <div className="relative h-[520px] w-[520px] border border-zinc-400 bg-white mx-[20%] ">
+                        <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
+                            <div className="bg-[#e89a9a]" />
+                            <div className="bg-[#f3b2b2]" />
+                            <div className="bg-[#f7dfaa]" />
+                            <div className="bg-[#f5ec99]" />
+                            <div className="bg-[#d6e8c7]" />
+
+                            <div className="bg-[#d6e8c7]" />
+                            <div className="bg-[#f5ec99]" />
+                            <div className="bg-[#f7dfaa]" />
+                            <div className="bg-[#f3b2b2]" />
+                            <div className="bg-[#e89a9a]" />
+                        </div>
+
+                        <div className="absolute inset-0 grid grid-cols-10 border-x border-zinc-400">
+                            {Array.from({ length: 8 }).map((_, idx) => (
+                                <div key={`col-${idx}`} className="border-r border-zinc-400/60" />
+                            ))}
+                        </div>
+
+                        <div
+                            className="absolute inset-0"
+                            style={{
+                                display: "grid",
+                                gridTemplateRows: `repeat(${dobraChartRows}, 1fr)`
+                            }}
+                        >
+                            {Array.from({ length: 8 }).map((_, idx) => (
+                                <div
+                                    key={`row-${idx}`}
+                                    className="border-b border-zinc-300"
+                                />
+                            ))}
+                        </div>
+
+                        <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
+
+                        {pontosDobras.map((point, idx) => (
+                            <div
+                                key={`point-${idx}`}
+                                className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 shadow"
+                                style={{
+                                    left: `${((point.x + 5) / 10) * 100}%`,
+                                    top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
+                                }}
+                            />
+                        ))}
+
+                        {pontosDobras2.map((point, idx) => (
+                            <div
+                                key={`point-${idx}`}
+                                className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border bg-yellow-200 shadow"
+                                style={{
+                                    left: `${((point.x + 5) / 10) * 100}%`,
+                                    top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
+                                }}
+                            />
+                        ))}
+
+                        <div className="absolute -bottom-8 left-0 right-0 flex justify-between px-2 text-lg font-semibold text-zinc-500">
+                            {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((value) => (
+                                <span
+                                    key={`axis-${value}`}
+                                    className="w-6 text-center"
+                                >
+                                    {value}
+                                </span>
+                            ))}
+                        </div>
+
+                        <div className="absolute inset-y-0 -left-8 w-6">
+                            {dobrasConfig.map((item) => (
+                                <span
+                                    key={item.key}
+                                    className="absolute right-0 -translate-y-1/2 text-lg font-semibold text-zinc-500"
+                                    style={{
+                                        top: `${((item.index - 0.5) / dobraChartRows) * 100}%`,
+                                    }}
+                                >
+                                    {item.index}
+                                </span>
+                            ))}
                         </div>
                         <div className="absolute -bottom-16 left-0 right-0 flex items-center justify-center">
                             <div className="h-3 w-3 rounded-full bg-red-500 ml-3" />
