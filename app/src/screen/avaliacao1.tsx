@@ -11,8 +11,8 @@ import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularAreaBraco } from "../functions/calcBraco";
 import safeNumber from "../functions/safeNumber";
 import ComposicaoCorporalChart from "../components/ComposicaoChart";
-import { tabs } from "../routes/tabRoutes";
 import { initialState, useAvaliacao } from "../context/avaliacaoContext";
+import navTool from "../components/navTool";
 
 const inputBaseClass =
   "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
@@ -1508,6 +1508,7 @@ export default function App() {
                 </div>
               ))}
             </div>
+            {navTool()}
           </div>
           <div className="py-5 border-t-5 border-zinc-400 mt-6">
             <h3 className="mb-3 pb-1 text-xl font-bold italic uppercase tracking-wide text-zinc-500">Parecer Descritivo</h3>
