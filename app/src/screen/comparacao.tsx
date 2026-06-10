@@ -11,6 +11,7 @@ import { calcularMassaAdiposa } from '../functions/calcMassaAdiposa';
 import { calcularAreaBraco } from '../functions/calcBraco';
 import { calcularAreaCoxa } from '../functions/calcCoxa';
 import { calcularMassaMuscular } from '../functions/calcMassaMuscular';
+import { GraficoForca } from '../components/chartForca';
 
 
 
@@ -400,6 +401,21 @@ export default function comparacao() {
     });
 
     const dobraChartRows = 8;
+
+    const observacoes = avaliacao.anamneseComparacao.observacoes;
+
+    const updateObservacoes = (value: string) => {
+        setAvaliacao((current) => ({
+            ...current,
+
+            anamneseComparacao: {
+                ...current.anamnese,
+
+                observacoes: value,
+            },
+        }));
+    };
+
 
     type DobraReference = {
         media: number;
@@ -1226,6 +1242,22 @@ export default function comparacao() {
         return diferenca;
     }
 
+    const diferencaQuimica = (type: "1" | "2" | "3" | "4") => {
+        let diferenca: number = 0;
+        switch (type) {
+            case "1":
+                diferenca = Number(data2.glicose) - Number(data.glicose);
+                break;
+            case "2":
+                diferenca = Number(data2.triglicerideos) - Number(data.triglicerideos);
+            case "3":
+                diferenca = Number(data2.ldl) - Number(data.ldl);
+            case "4":
+                diferenca = Number(data2.hdl) - Number(data.hdl);
+        }
+        return diferenca.toFixed(1).replace(".", ",");
+    }
+
     return (
         <main className="h-full bg-[#ececec] p-3 md:p-5 ">
             <hr className="my-4 border-3 rounded-2xl mb-5 border-zinc-400" />
@@ -1734,92 +1766,115 @@ export default function comparacao() {
                     <h1 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
                         Produção de Força (KG)
                     </h1>
-                    <div className="relative h-[160px] w-[650px] border border-zinc-500 bg-white ml-15">
-                        <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
-                            <div className="bg-[#e89a9a]" />
-                            <div className="bg-[#f3b2b2]" />
-                            <div className="bg-[#f7dfaa]" />
-                            <div className="bg-[#f5ec99]" />
-                            <div className="bg-[#d6e8c7]" />
-
-                            <div className="bg-[#d6e8c7]" />
-                            <div className="bg-[#f5ec99]" />
-                            <div className="bg-[#f7dfaa]" />
-                            <div className="bg-[#f3b2b2]" />
-                            <div className="bg-[#e89a9a]" />
-                        </div>
-
-                        <div className="absolute inset-0 grid grid-cols-10">
-                            {Array.from({ length: 10 }).map((_, idx) => (
-                                <div
-                                    key={idx}
-                                    className="border-r border-zinc-500/50"
-                                />
-                            ))}
-                        </div>
-
-                        <div
-                            className="absolute left-0 right-0 border-b border-zinc-400"
-                            style={{ top: "25%" }}
+                    <div className="w-[650px] border border-zinc-500 bg-white ml-15">
+                        <GraficoForca
+                            resultadoRmAV1={resultadoRmAV1}
+                            resultadoRmAV2={resultadoRmAV2}
                         />
-
-                        <div
-                            className="absolute left-0 right-0 border-b border-zinc-400"
-                            style={{ top: "75%" }}
-                        />
-
-                        {pontosComposicao.map((point, idx) => (
-                            <div
-                                key={`av1-${idx}`}
-                                className="absolute z-10 h-4 w-4 rounded-full bg-red-500 border border-red-700"
-                                style={{
-                                    left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
-                                    top:
-                                        point.y === 1
-                                            ? "25%"
-                                            : "75%",
-                                    transform: "translateY(-50%)",
-                                }}
-                            />
-                        ))}
-
-                        {pontosComposicao2.map((point, idx) => (
-                            <div
-                                key={`av2-${idx}`}
-                                className="absolute z-10 h-4 w-4 rounded-full bg-yellow-300 border border-zinc-700"
-                                style={{
-                                    left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
-                                    top:
-                                        point.y === 1
-                                            ? "25%"
-                                            : "75%",
-                                    transform: "translateY(-50%)",
-                                }}
-                            />
-                        ))}
-
-                        <div
-                            className="absolute -translate-x-10/4 -translate-y-1/2 text-lg font-semibold text-zinc-500"
-                            style={{ top: "25%", transform: "translateY(-50%)" }}
-                        >
-                            1
+                    </div>
+                </div>
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr] mt-25 ">
+                <div>
+                    <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                        Controle Bioquimico
+                    </h3>
+                    <div className="flex gap-6 items-start max-w-5xl">
+                        <div className="flex-1">
+                            <div className='grid grid-cols-[200px_140px_140px_140px] items-center gap-2 text-center'>
+                                <text></text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">1ª Avaliação</text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">2ª Avaliação</text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">Diferença B-A</text>
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    Glicose
+                                </span>
+                                <input value={data.glicose} readOnly className={inputBaseClass} />
+                                <input value={data2.glicose} readOnly className={inputBaseClass} />
+                                <input value={diferencaQuimica("1")} readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    Triglicerídeos
+                                </span>
+                                <input value={data.triglicerideos} readOnly className={inputBaseClass} />
+                                <input value={data2.triglicerideos} readOnly className={inputBaseClass} />
+                                <input value={diferencaQuimica("2")} readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    LDL-C
+                                </span>
+                                <input value={data.ldl} readOnly className={inputBaseClass} />
+                                <input value={data2.ldl} readOnly className={inputBaseClass} />
+                                <input value={diferencaQuimica("3")} readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    HDL-C
+                                </span>
+                                <input value={data.hdl} readOnly className={inputBaseClass} />
+                                <input value={data.hdl} readOnly className={inputBaseClass} />
+                                <input value={diferencaQuimica("4")} readOnly className={inputBaseClass} />
+                            </div>
                         </div>
+                    </div>
 
-                        <div
-                            className="absolute -translate-x-7/4 -translate-y-1/2 text-lg font-semibold text-zinc-500"
-                            style={{ top: "75%", transform: "translateY(-50%)" }}
-                        >
-                            2
+                </div>
+                <div>
+                    <h1 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                        Valores de Refências
+                    </h1>
+                    <div className="w-[650px] ml-15 border border-zinc-700 p-5 bg-white">
+                        <div className="grid grid-cols-[200px_200px_200px]  items-center gap-2 text-center">
+                            <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]"></text>
+                            <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">Desejável</text>
+                            <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">Limitrofes</text>
                         </div>
-
-                        <div className="absolute -bottom-16 left-0 right-0 flex items-center justify-center">
-                            <div className="h-3 w-3 rounded-full bg-red-500 ml-3" />
-                            <span className="text-lg font-semibold text-zinc-500 ml-3">
-                                1ª Av
+                        <div className="grid grid-cols-[200px_200px_200px] items-center gap-2 mt-1">
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                Glicose
                             </span>
-                            <div className="h-3 w-3 rounded-full bg-yellow-200 border ml-3" />
-                            <span className="text-lg font-semibold text-zinc-500 ml-3">
-                                2ª Av
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600 text-center">
+                                {"< 110 mg/dl"}
+                            </span>
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600 text-center">
+                                {"110 - 125 mg/dl"}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-[200px_200px_200px] items-center gap-2 mt-1">
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                Triglicerídeos
+                            </span>
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600 text-center">
+                                {"< 150 mg/dl"}
+                            </span>
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600 text-center">
+                                {"150 - 200 mg/dl"}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-[200px_200px_200px]  items-center gap-2 mt-1">
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                LDL-C
+                            </span>
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600 text-center">
+                                {"< 150 mg/dl"}
+                            </span>
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600 text-center">
+                                {"130 - 160 mg/dl"}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-[200px_200px_200px] items-center gap-2 mt-1">
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                HDL-C
+                            </span>
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600 text-center">
+                                {"> 40 mg/dl"}
+                            </span>
+                            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600 text-center">
+                                {"35 - 40 mg/dl"}
                             </span>
                         </div>
                     </div>
@@ -1827,6 +1882,14 @@ export default function comparacao() {
             </div>
             <div>
                 {navTool()}
+            </div>
+            <div className="py-5 border-t-5 border-zinc-400 mt-6">
+                <h3 className="mb-3 pb-1 text-xl font-bold italic uppercase tracking-wide text-zinc-500">Parecer Descritivo</h3>
+                <textarea className="w-full border-2 border-red-700 rounded-sm h-40 pl-1 max-h-52 outline-none transition-all duration-200 focus:border-red-400 focus:ring-4 focus:ring-indigo-500/10"
+                    value={observacoes}
+                    onChange={(e) => {
+                        updateObservacoes(e.target.value)
+                    }} />
             </div>
         </main>
     )

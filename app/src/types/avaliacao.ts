@@ -27,6 +27,16 @@ export interface Avaliacao {
         observacoes: string;
     };
 
+    anamnese2: {
+        objetivo: string;
+        observacoes: string;
+    };
+
+    anamneseComparacao: {
+        objetivo: string;
+        observacoes: string;
+    };
+
     avaliacao1: {
         peso: string;
         altura: string;

@@ -39,6 +39,16 @@ export const initialState: Avaliacao = {
         observacoes: "",
     },
 
+    anamnese2: {
+        objetivo: "",
+        observacoes: "",
+    },
+
+    anamneseComparacao: {
+        objetivo: "",
+        observacoes: "",
+    },
+
     avaliacao1: {
         peso: "",
         altura: "",

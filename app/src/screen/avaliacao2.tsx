@@ -375,12 +375,12 @@ export default function App() {
     const dobras1 = avaliacao.avaliacao2.dobrasCutaneas.medida1;
     const dobras2 = avaliacao.avaliacao2.dobrasCutaneas.medida2;
 
-    const observacoes = avaliacao.anamnese.observacoes;
+    const observacoes = avaliacao.anamnese2.observacoes;
     const updateObservacoes = (value: string) => {
         setAvaliacao((current) => ({
             ...current,
 
-            anamnese: {
+            anamnese2: {
                 ...current.anamnese,
 
                 observacoes: value,
