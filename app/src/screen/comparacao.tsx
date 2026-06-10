@@ -68,6 +68,9 @@ export default function comparacao() {
     const dobras3 = avaliacao.avaliacao2.dobrasCutaneas.medida1;
     const dobras4 = avaliacao.avaliacao2.dobrasCutaneas.medida2;
 
+    const testeCarga = avaliacao.testeCarga;
+
+
     const resumoDobras = useMemo(() => {
         const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>(
             (acc, item) => {
@@ -863,6 +866,16 @@ export default function comparacao() {
                     massa.toFixed(1)
                 ) || 0,
 
+            areaBracoValue:
+                Number(
+                    areaBraco.toFixed(1)
+                ) || 0,
+
+            areaCoxaValue:
+                Number(
+                    areaCoxa.toFixed(1)
+                ) || 0,
+
             massaMuscular:
                 `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
 
@@ -1029,6 +1042,16 @@ export default function comparacao() {
                     massa.toFixed(1)
                 ) || 0,
 
+            areaBracoValue:
+                Number(
+                    areaBraco.toFixed(1)
+                ) || 0,
+
+            areaCoxaValue:
+                Number(
+                    areaCoxa.toFixed(1)
+                ) || 0,
+
             massaMuscular:
                 `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
 
@@ -1077,6 +1100,113 @@ export default function comparacao() {
         analiseCorporal2.massaMuscularKg,
         analiseCorporal2.massaAdiposaKg
     );
+
+    function calcular1RM(carga: number, repeticoes: number) {
+        if (!carga || !repeticoes) return 0;
+
+        return carga / (1.0278 - (0.0278 * repeticoes));
+    }
+
+    const resultadoRmAV1 = useMemo(() => {
+        return {
+            supino: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.carga1.supino.carga),
+                        Number(testeCarga.carga1.supino.repeticoes)
+                    )
+                ),
+            },
+
+            terra: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.carga1.terra.carga),
+                        Number(testeCarga.carga1.terra.repeticoes)
+                    )
+                ),
+            },
+
+            remada: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.carga1.remada.carga),
+                        Number(testeCarga.carga1.remada.repeticoes)
+                    )
+                ),
+            },
+
+            agachamento: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.carga1.agachamento.carga),
+                        Number(testeCarga.carga1.agachamento.repeticoes)
+                    )
+                ),
+            },
+        };
+    }, [testeCarga]);
+
+    const resultadoRmAV2 = useMemo(() => {
+        return {
+            supino: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.carga2.supino.carga),
+                        Number(testeCarga.carga2.supino.repeticoes)
+                    )
+                ),
+            },
+
+            terra: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.carga2.terra.carga),
+                        Number(testeCarga.carga2.terra.repeticoes)
+                    )
+                ),
+            },
+
+            remada: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.carga2.remada.carga),
+                        Number(testeCarga.carga2.remada.repeticoes)
+                    )
+                ),
+            },
+
+            agachamento: {
+                rm: Math.round(
+                    calcular1RM(
+                        Number(testeCarga.carga2.agachamento.carga),
+                        Number(testeCarga.carga2.agachamento.repeticoes)
+                    )
+                ),
+            },
+        };
+    }, [testeCarga]);
+
+    const diferencaComposicao = (type: "1" | "2" | "3" | "4") => {
+        let diferenca: number = 0;
+
+        switch (type) {
+            case "1":
+                diferenca = analiseCorporal2.massaMuscularKg - analiseCorporal.massaMuscularKg;
+                break;
+            case "2":
+                diferenca = analiseCorporal2.massaAdiposaKg - analiseCorporal.massaAdiposaKg;
+                break;
+            case "3":
+                diferenca = analiseCorporal2.areaBracoValue - analiseCorporal.areaBracoValue;
+                break;
+            case "4":
+                diferenca = analiseCorporal2.areaCoxaValue - analiseCorporal.areaCoxaValue;
+                break;
+
+        }
+        return diferenca.toFixed(1).replace(".", ",");
+    }
 
     return (
         <main className="h-full bg-[#ececec] p-3 md:p-5 ">
@@ -1408,7 +1538,7 @@ export default function comparacao() {
                                 </span>
                                 <input value={analiseCorporal.massaMuscularKg} readOnly className={inputBaseClass} />
                                 <input value={analiseCorporal2.massaMuscularKg} readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={diferencaComposicao("1")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
@@ -1416,7 +1546,7 @@ export default function comparacao() {
                                 </span>
                                 <input value={analiseCorporal.massaAdiposaKg} readOnly className={inputBaseClass} />
                                 <input value={analiseCorporal2.massaAdiposaKg} readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={diferencaComposicao("2")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
@@ -1424,7 +1554,7 @@ export default function comparacao() {
                                 </span>
                                 <input value={analiseCorporal.areaBraco} readOnly className={inputBaseClass} />
                                 <input value={analiseCorporal2.areaBraco} readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={diferencaComposicao("3")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
@@ -1432,7 +1562,7 @@ export default function comparacao() {
                                 </span>
                                 <input value={analiseCorporal.areaCoxa} readOnly className={inputBaseClass} />
                                 <input value={analiseCorporal2.areaCoxa} readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={diferencaComposicao("4")} readOnly className={inputBaseClass} />
                             </div>
                         </div>
                     </div>
@@ -1442,7 +1572,6 @@ export default function comparacao() {
                     <h1 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
                         Escala de porprocionalidade
                     </h1>
-
                     <div className="relative h-[160px] w-[650px] border border-zinc-500 bg-white ml-15">
                         <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
                             <div className="bg-[#e89a9a]" />
@@ -1476,7 +1605,7 @@ export default function comparacao() {
                             className="absolute left-0 right-0 border-b border-zinc-400"
                             style={{ top: "75%" }}
                         />
-                        
+
                         {pontosComposicao.map((point, idx) => (
                             <div
                                 key={`av1-${idx}`}
@@ -1532,7 +1661,150 @@ export default function comparacao() {
                             </span>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr] mt-25 ">
+                <div>
+                    <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                        Teste de Carga Máxima - 1Rm
+                    </h3>
+                    <div className="flex gap-6 items-start max-w-5xl">
+                        <div className="flex-1">
+                            <div className='grid grid-cols-[200px_140px_140px_140px] items-center gap-2 text-center'>
+                                <text></text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">1ª Avaliação</text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">2ª Avaliação</text>
+                                <text className="pb-1 font-bold italic uppercase tracking-wide text-[#a85f60]">Diferença B-A</text>
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    Supino
+                                </span>
+                                <input value={resultadoRmAV1.supino.rm} readOnly className={inputBaseClass} />
+                                <input value={resultadoRmAV2.supino.rm} readOnly className={inputBaseClass} />
+                                <input readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    Agachamento
+                                </span>
+                                <input value={resultadoRmAV1.agachamento.rm} readOnly className={inputBaseClass} />
+                                <input value={resultadoRmAV2.agachamento.rm} readOnly className={inputBaseClass} />
+                                <input value={diferencaComposicao("2")} readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    Remada
+                                </span>
+                                <input value={resultadoRmAV1.remada.rm} readOnly className={inputBaseClass} />
+                                <input value={resultadoRmAV2.remada.rm} readOnly className={inputBaseClass} />
+                                <input value={diferencaComposicao("3")} readOnly className={inputBaseClass} />
+                            </div>
+                            <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
+                                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                                    Terra
+                                </span>
+                                <input value={resultadoRmAV1.terra.rm} readOnly className={inputBaseClass} />
+                                <input value={resultadoRmAV2.terra.rm} readOnly className={inputBaseClass} />
+                                <input value={diferencaComposicao("4")} readOnly className={inputBaseClass} />
+                            </div>
+                        </div>
+                    </div>
 
+                </div>
+                <div>
+                    <h1 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                        Escala de porprocionalidade
+                    </h1>
+                    <div className="relative h-[160px] w-[650px] border border-zinc-500 bg-white ml-15">
+                        <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
+                            <div className="bg-[#e89a9a]" />
+                            <div className="bg-[#f3b2b2]" />
+                            <div className="bg-[#f7dfaa]" />
+                            <div className="bg-[#f5ec99]" />
+                            <div className="bg-[#d6e8c7]" />
+
+                            <div className="bg-[#d6e8c7]" />
+                            <div className="bg-[#f5ec99]" />
+                            <div className="bg-[#f7dfaa]" />
+                            <div className="bg-[#f3b2b2]" />
+                            <div className="bg-[#e89a9a]" />
+                        </div>
+
+                        <div className="absolute inset-0 grid grid-cols-10">
+                            {Array.from({ length: 10 }).map((_, idx) => (
+                                <div
+                                    key={idx}
+                                    className="border-r border-zinc-500/50"
+                                />
+                            ))}
+                        </div>
+
+                        <div
+                            className="absolute left-0 right-0 border-b border-zinc-400"
+                            style={{ top: "25%" }}
+                        />
+
+                        <div
+                            className="absolute left-0 right-0 border-b border-zinc-400"
+                            style={{ top: "75%" }}
+                        />
+
+                        {pontosComposicao.map((point, idx) => (
+                            <div
+                                key={`av1-${idx}`}
+                                className="absolute z-10 h-4 w-4 rounded-full bg-red-500 border border-red-700"
+                                style={{
+                                    left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
+                                    top:
+                                        point.y === 1
+                                            ? "25%"
+                                            : "75%",
+                                    transform: "translateY(-50%)",
+                                }}
+                            />
+                        ))}
+
+                        {pontosComposicao2.map((point, idx) => (
+                            <div
+                                key={`av2-${idx}`}
+                                className="absolute z-10 h-4 w-4 rounded-full bg-yellow-300 border border-zinc-700"
+                                style={{
+                                    left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
+                                    top:
+                                        point.y === 1
+                                            ? "25%"
+                                            : "75%",
+                                    transform: "translateY(-50%)",
+                                }}
+                            />
+                        ))}
+
+                        <div
+                            className="absolute -translate-x-10/4 -translate-y-1/2 text-lg font-semibold text-zinc-500"
+                            style={{ top: "25%", transform: "translateY(-50%)" }}
+                        >
+                            1
+                        </div>
+
+                        <div
+                            className="absolute -translate-x-7/4 -translate-y-1/2 text-lg font-semibold text-zinc-500"
+                            style={{ top: "75%", transform: "translateY(-50%)" }}
+                        >
+                            2
+                        </div>
+
+                        <div className="absolute -bottom-16 left-0 right-0 flex items-center justify-center">
+                            <div className="h-3 w-3 rounded-full bg-red-500 ml-3" />
+                            <span className="text-lg font-semibold text-zinc-500 ml-3">
+                                1ª Av
+                            </span>
+                            <div className="h-3 w-3 rounded-full bg-yellow-200 border ml-3" />
+                            <span className="text-lg font-semibold text-zinc-500 ml-3">
+                                2ª Av
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div>

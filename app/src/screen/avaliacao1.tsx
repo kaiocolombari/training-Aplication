@@ -496,8 +496,8 @@ export default function App() {
       supino: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.carga2.supino.carga),
-            Number(testeCarga.carga2.supino.repeticoes)
+            Number(testeCarga.carga1.supino.carga),
+            Number(testeCarga.carga1.supino.repeticoes)
           )
         ),
       },
@@ -505,8 +505,8 @@ export default function App() {
       terra: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.carga2.terra.carga),
-            Number(testeCarga.carga2.terra.repeticoes)
+            Number(testeCarga.carga1.terra.carga),
+            Number(testeCarga.carga1.terra.repeticoes)
           )
         ),
       },
@@ -514,8 +514,8 @@ export default function App() {
       remada: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.carga2.remada.carga),
-            Number(testeCarga.carga2.remada.repeticoes)
+            Number(testeCarga.carga1.remada.carga),
+            Number(testeCarga.carga1.remada.repeticoes)
           )
         ),
       },
@@ -523,8 +523,8 @@ export default function App() {
       agachamento: {
         rm: Math.round(
           calcular1RM(
-            Number(testeCarga.carga2.agachamento.carga),
-            Number(testeCarga.carga2.agachamento.repeticoes)
+            Number(testeCarga.carga1.agachamento.carga),
+            Number(testeCarga.carga1.agachamento.repeticoes)
           )
         ),
       },
