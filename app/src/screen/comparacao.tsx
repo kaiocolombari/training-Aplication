@@ -1189,7 +1189,6 @@ export default function comparacao() {
 
     const diferencaComposicao = (type: "1" | "2" | "3" | "4") => {
         let diferenca: number = 0;
-
         switch (type) {
             case "1":
                 diferenca = analiseCorporal2.massaMuscularKg - analiseCorporal.massaMuscularKg;
@@ -1206,6 +1205,25 @@ export default function comparacao() {
 
         }
         return diferenca.toFixed(1).replace(".", ",");
+    }
+
+    const diferencaRM = (type: "1" | "2" | "3" | "4") => {
+        let diferenca: number = 0;
+        switch (type) {
+            case "1":
+                diferenca = resultadoRmAV2.supino.rm - resultadoRmAV1.supino.rm;
+                break;
+            case "2":
+                diferenca = resultadoRmAV2.terra.rm - resultadoRmAV1.terra.rm;
+                break;
+            case "3":
+                diferenca = resultadoRmAV2.remada.rm - resultadoRmAV1.remada.rm;
+                break;
+            case "4":
+                diferenca = resultadoRmAV2.agachamento.rm - resultadoRmAV1.agachamento.rm;
+                break;
+        }
+        return diferenca;
     }
 
     return (
@@ -1682,7 +1700,7 @@ export default function comparacao() {
                                 </span>
                                 <input value={resultadoRmAV1.supino.rm} readOnly className={inputBaseClass} />
                                 <input value={resultadoRmAV2.supino.rm} readOnly className={inputBaseClass} />
-                                <input readOnly className={inputBaseClass} />
+                                <input value={diferencaRM("1")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
@@ -1690,7 +1708,7 @@ export default function comparacao() {
                                 </span>
                                 <input value={resultadoRmAV1.agachamento.rm} readOnly className={inputBaseClass} />
                                 <input value={resultadoRmAV2.agachamento.rm} readOnly className={inputBaseClass} />
-                                <input value={diferencaComposicao("2")} readOnly className={inputBaseClass} />
+                                <input value={diferencaRM("2")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
@@ -1698,7 +1716,7 @@ export default function comparacao() {
                                 </span>
                                 <input value={resultadoRmAV1.remada.rm} readOnly className={inputBaseClass} />
                                 <input value={resultadoRmAV2.remada.rm} readOnly className={inputBaseClass} />
-                                <input value={diferencaComposicao("3")} readOnly className={inputBaseClass} />
+                                <input value={diferencaRM("3")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
@@ -1706,7 +1724,7 @@ export default function comparacao() {
                                 </span>
                                 <input value={resultadoRmAV1.terra.rm} readOnly className={inputBaseClass} />
                                 <input value={resultadoRmAV2.terra.rm} readOnly className={inputBaseClass} />
-                                <input value={diferencaComposicao("4")} readOnly className={inputBaseClass} />
+                                <input value={diferencaRM("4")} readOnly className={inputBaseClass} />
                             </div>
                         </div>
                     </div>
@@ -1714,7 +1732,7 @@ export default function comparacao() {
                 </div>
                 <div>
                     <h1 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                        Escala de porprocionalidade
+                        Produção de Força (KG)
                     </h1>
                     <div className="relative h-[160px] w-[650px] border border-zinc-500 bg-white ml-15">
                         <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
