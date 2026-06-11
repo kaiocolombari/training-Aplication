@@ -954,6 +954,19 @@ export default function App() {
         }));
     };
 
+    useEffect(() => {
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = "Tem certeza que deseja sair?";
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, []);
+
     console.log(avaliacao.aluno.nomeCompleto);
     console.log(avaliacao.avaliacao2.perimetros);
 

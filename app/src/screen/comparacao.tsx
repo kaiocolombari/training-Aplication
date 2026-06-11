@@ -1,5 +1,5 @@
 import { initialState, useAvaliacao } from '../context/avaliacaoContext'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import React from 'react'
 import navTool from '../components/navTool'
 import type { PerimetroField } from '../types/perimetroField';
@@ -1257,6 +1257,19 @@ export default function comparacao() {
         }
         return diferenca.toFixed(1).replace(".", ",");
     }
+
+    useEffect(() => {
+            const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+                event.preventDefault();
+                event.returnValue = "Tem certeza que deseja sair?";
+            };
+    
+            window.addEventListener("beforeunload", handleBeforeUnload);
+    
+            return () => {
+                window.removeEventListener("beforeunload", handleBeforeUnload);
+            };
+        }, []);
 
     return (
         <main className="h-full bg-[#ececec] p-3 md:p-5 ">

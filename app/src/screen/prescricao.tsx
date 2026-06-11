@@ -1,6 +1,7 @@
 import { initialState, useAvaliacao } from '../context/avaliacaoContext'
 import navTool from '../components/navTool'
 import type { ExercicioTreino } from '../interface/interfaceExercicio';
+import { useEffect } from 'react';
 
 export default function Prescricao() {
     const { avaliacao, setAvaliacao } = useAvaliacao();
@@ -67,6 +68,19 @@ export default function Prescricao() {
         }));
     };
 
+    useEffect(() => {
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = "Tem certeza que deseja sair?";
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, []);
+
     console.log(avaliacao.treino);
 
     return (
@@ -75,17 +89,15 @@ export default function Prescricao() {
 
             <div className="flex flex-col">
                 <h1 className="mb-3 text-3xl font-bold italic text-zinc-600">
-                    Prescrição de Treino
+                    Planilha de Treinamento
                 </h1>
             </div>
 
             <div className="mt-10 flex flex-col">
                 <h1 className="mb-3 text-xl font-bold italic uppercase text-zinc-600">
-                    Treino de Força
+                    Treino Mugen
                 </h1>
             </div>
-
-
 
             {Array.from({ length: 12 }).map((_, treinoIndex) => {
                 const treino = avaliacao.treino[treinoIndex];
@@ -122,13 +134,13 @@ export default function Prescricao() {
                             <table className="w-full border-collapse">
                                 <thead>
                                     <tr className="font-bold italic uppercase text-zinc-600">
-                                        <th className="w-[34%] px-2 py-1 text-center text-x">
+                                        <th className="w-[20%] px-2 py-1 text-center text-x">
                                             Exercício
                                         </th>
                                         <th className="w-[8%] px-2 py-1 text-center text-x">
                                             Séries
                                         </th>
-                                        <th className="w-[9%] px-2 py-1 text-center text-x">
+                                        <th className="w-[8%] px-2 py-1 text-center text-x">
                                             Repetições
                                         </th>
                                         <th className="w-[10%] px-2 py-1 text-center text-x">
@@ -143,7 +155,7 @@ export default function Prescricao() {
                                         <th className="w-[5%] px-2 py-1 text-center text-x">
                                             OFF
                                         </th>
-                                        <th className="w-[21%] px-2 py-1 text-center text-x">
+                                        <th className="w-[28%] px-2 py-1 text-center text-x">
                                             Observações
                                         </th>
                                     </tr>
@@ -171,7 +183,7 @@ export default function Prescricao() {
                                                                     "exercicio"
                                                                 )
                                                             }
-                                                            className="h-8 w-full bg-transparent px-2 text-xl text-black outline-none uppercase"
+                                                            className="h-8 w-full bg-transparent px-2 text-xl text-black outline-none"
                                                         />
                                                     </td>
 
@@ -209,6 +221,7 @@ export default function Prescricao() {
 
                                                     <td className="border-2 border-zinc-700">
                                                         <input
+                                                            list={`intervalos-${exercicioIndex}`}
                                                             type="text"
                                                             value={exercicio?.intervalo ?? ""}
                                                             onChange={(e) =>
@@ -221,6 +234,21 @@ export default function Prescricao() {
                                                             }
                                                             className="h-8 w-full bg-transparent px-2 text-center text-xl text-black outline-none"
                                                         />
+
+                                                        <datalist id={`intervalos-${exercicioIndex}`}>
+                                                            <option value="10 segundos" />
+                                                            <option value="15 segundos" />
+                                                            <option value="20 segundos" />
+                                                            <option value="30 segundos" />
+                                                            <option value="40 segundos" />
+                                                            <option value="1 min" />
+                                                            <option value="1 min e 30 seg" />
+                                                            <option value="2 mins" />
+                                                            <option value="2 mins e 30 seg" />
+                                                            <option value="3 mins" />
+                                                            <option value="3 mins e 30 seg" />
+                                                            <option value="4 mins" />
+                                                        </datalist>
                                                     </td>
 
                                                     <td className="border-2 border-zinc-700">

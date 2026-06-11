@@ -957,6 +957,19 @@ export default function App() {
   console.log(avaliacao.aluno.nomeCompleto);
   console.log(avaliacao.avaliacao1.perimetros);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "Tem certeza que deseja sair?";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
       <section className="mx-auto w-full border border-zinc-400 bg-[#ececec]">
