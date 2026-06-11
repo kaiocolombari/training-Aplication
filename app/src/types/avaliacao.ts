@@ -1,3 +1,4 @@
+import type { Treino } from "../interface/interfaceTreino";
 import type { DobrasCutaneas } from "./dobrasType";
 
 export interface Avaliacao {
@@ -136,4 +137,6 @@ export interface Avaliacao {
             }
         }
     };
+
+    treino: Treino[];
 }

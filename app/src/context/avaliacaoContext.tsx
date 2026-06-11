@@ -187,6 +187,23 @@ export const initialState: Avaliacao = {
             },
         },
     },
+
+    treino: [
+        {
+            id: crypto.randomUUID(),
+            nome: "",
+            exercicios: Array.from({ length: 10 }, () => ({
+                exercicio: "",
+                series: "",
+                repeticoes: "",
+                intervalo: "",
+                carga: "",
+                on: "",
+                off: "",
+                observacoes: "",
+            })),
+        },
+    ],
 };
 
 export function AvaliacaoProvider({

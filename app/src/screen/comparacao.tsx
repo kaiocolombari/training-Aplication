@@ -1287,7 +1287,7 @@ export default function comparacao() {
                                     </span>
                                     <input
                                         readOnly
-                                        value={perimetros[field.key]}
+                                        value={perimetros[field.key] || 0}
                                         onChange={(event) =>
                                             updatePerimetro(
                                                 field.key,
@@ -1298,7 +1298,7 @@ export default function comparacao() {
                                     />
                                     <input
                                         readOnly
-                                        value={perimetros2[field.key]}
+                                        value={perimetros2[field.key] || 0}
                                         onChange={(event) =>
                                             updatePerimetro2(
                                                 field.key,
@@ -1436,9 +1436,9 @@ export default function comparacao() {
                                         {field.index} {field.label}
                                     </span>
 
-                                    <input value={resumoDobras.mediaFinal[field.key]} readOnly className={inputBaseClass} />
+                                    <input value={resumoDobras.mediaFinal[field.key] || 0} readOnly className={inputBaseClass} />
 
-                                    <input value={resumoDobras2.mediaFinal2[field.key]} readOnly className={inputBaseClass} />
+                                    <input value={resumoDobras2.mediaFinal2[field.key] || 0} readOnly className={inputBaseClass} />
 
                                     <input value={diferencaDobras(field.key, "1")} readOnly className={inputBaseClass} />
                                 </div>
@@ -1446,20 +1446,20 @@ export default function comparacao() {
                             <div className="space-y-6 pt-6">
                                 <label className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                     <span className="text-xl font-semibold italic text-zinc-500 text-right">Somatorio (mm)</span>
-                                    <input value={resumoDobras.somatorio} readOnly className={inputBaseClass} />
-                                    <input value={resumoDobras2.somatorio} readOnly className={inputBaseClass} />
+                                    <input value={resumoDobras.somatorio || 0} readOnly className={inputBaseClass} />
+                                    <input value={resumoDobras2.somatorio || 0} readOnly className={inputBaseClass} />
                                     <input value={diferencaDobras(undefined, "2")} readOnly className={inputBaseClass} />
                                 </label>
                                 <label className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                     <span className="text-xl font-semibold italic text-zinc-500 text-right">Periferico (mm)</span>
-                                    <input value={resumoDobras.periferico} readOnly className={inputBaseClass} />
-                                    <input value={resumoDobras2.periferico} readOnly className={inputBaseClass} />
+                                    <input value={resumoDobras.periferico || 0} readOnly className={inputBaseClass} />
+                                    <input value={resumoDobras2.periferico || 0} readOnly className={inputBaseClass} />
                                     <input value={diferencaDobras(undefined, "3")} readOnly className={inputBaseClass} />
                                 </label>
                                 <label className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                     <span className="text-xl font-semibold italic text-zinc-500 text-right">Central (mm)</span>
-                                    <input value={resumoDobras.central} readOnly className={inputBaseClass} />
-                                    <input value={resumoDobras2.central} readOnly className={inputBaseClass} />
+                                    <input value={resumoDobras.central || 0} readOnly className={inputBaseClass} />
+                                    <input value={resumoDobras2.central || 0} readOnly className={inputBaseClass} />
                                     <input value={diferencaDobras(undefined, "4")} readOnly className={inputBaseClass} />
                                 </label>
                             </div>
@@ -1791,32 +1791,32 @@ export default function comparacao() {
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
                                     Glicose
                                 </span>
-                                <input value={data.glicose} readOnly className={inputBaseClass} />
-                                <input value={data2.glicose} readOnly className={inputBaseClass} />
+                                <input value={data.glicose || 0} readOnly className={inputBaseClass} />
+                                <input value={data2.glicose || 0} readOnly className={inputBaseClass} />
                                 <input value={diferencaQuimica("1")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
                                     Triglicerídeos
                                 </span>
-                                <input value={data.triglicerideos} readOnly className={inputBaseClass} />
-                                <input value={data2.triglicerideos} readOnly className={inputBaseClass} />
+                                <input value={data.triglicerideos || 0} readOnly className={inputBaseClass} />
+                                <input value={data2.triglicerideos || 0} readOnly className={inputBaseClass} />
                                 <input value={diferencaQuimica("2")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
                                     LDL-C
                                 </span>
-                                <input value={data.ldl} readOnly className={inputBaseClass} />
-                                <input value={data2.ldl} readOnly className={inputBaseClass} />
+                                <input value={data.ldl || 0} readOnly className={inputBaseClass} />
+                                <input value={data2.ldl || 0} readOnly className={inputBaseClass} />
                                 <input value={diferencaQuimica("3")} readOnly className={inputBaseClass} />
                             </div>
                             <div className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
                                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-600">
                                     HDL-C
                                 </span>
-                                <input value={data.hdl} readOnly className={inputBaseClass} />
-                                <input value={data.hdl} readOnly className={inputBaseClass} />
+                                <input value={data.hdl || 0} readOnly className={inputBaseClass} />
+                                <input value={data.hdl || 0} readOnly className={inputBaseClass} />
                                 <input value={diferencaQuimica("4")} readOnly className={inputBaseClass} />
                             </div>
                         </div>
@@ -1891,6 +1891,8 @@ export default function comparacao() {
                         updateObservacoes(e.target.value)
                     }} />
             </div>
+            <br />
+            <br />
         </main>
     )
 }
