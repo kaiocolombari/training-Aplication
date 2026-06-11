@@ -17,7 +17,7 @@ export default function Prescricao() {
                     id: crypto.randomUUID(),
                     nome,
                     exercicios: Array.from(
-                        { length: 10 },
+                        { length: 12 },
                         () => ({
                             exercicio: "",
                             series: "",
@@ -150,7 +150,7 @@ export default function Prescricao() {
                                 </thead>
 
                                 <tbody>
-                                    {Array.from({ length: 10 }).map(
+                                    {Array.from({ length: 12 }).map(
                                         (_, exercicioIndex) => {
                                             const exercicio =
                                                 treino?.exercicios?.[
@@ -171,7 +171,7 @@ export default function Prescricao() {
                                                                     "exercicio"
                                                                 )
                                                             }
-                                                            className="h-8 w-full bg-transparent px-2 text-xl text-black outline-none"
+                                                            className="h-8 w-full bg-transparent px-2 text-xl text-black outline-none uppercase"
                                                         />
                                                     </td>
 
@@ -299,6 +299,8 @@ export default function Prescricao() {
             <div>
                 {navTool()}
             </div>
+            <br />
+            <br />
         </main>
     )
 }

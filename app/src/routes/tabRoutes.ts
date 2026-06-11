@@ -1,5 +1,5 @@
 export const tabs = [
-    { nome: "Página Inicial", rota: "/inicial" },
+    { nome: "Página ADM", rota: "/inicial" },
     { nome: "1ª Avaliação", rota: "/" },
     { nome: "2ª Avaliação", rota: "/avaliacao2" },
     { nome: "Comparação", rota: "/comparacao" },

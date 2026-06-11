@@ -192,7 +192,7 @@ export const initialState: Avaliacao = {
         {
             id: crypto.randomUUID(),
             nome: "",
-            exercicios: Array.from({ length: 10 }, () => ({
+            exercicios: Array.from({ length: 12 }, () => ({
                 exercicio: "",
                 series: "",
                 repeticoes: "",
