@@ -1,3 +1,4 @@
+import type { Periodizacao } from "../interface/interfacePeriodizacao";
 import type { Treino } from "../interface/interfaceTreino";
 import type { DobrasCutaneas } from "./dobrasType";
 
@@ -138,5 +139,7 @@ export interface Avaliacao {
         }
     };
 
-    treino: Treino[];
+    treino: Treino[];   
+
+    periodizacao: Periodizacao;
 }

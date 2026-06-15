@@ -204,6 +204,16 @@ export const initialState: Avaliacao = {
             })),
         },
     ],
+    
+    periodizacao: {
+        semanas: Array.from({ length: 12 }, (_, semanaIndex) => ({
+            numero: semanaIndex + 1,
+            dias: Array.from({ length: 7 }, () => ({
+                data: "",
+                treinoIds: [],
+            })),
+        })),
+    },
 };
 
 export function AvaliacaoProvider({
