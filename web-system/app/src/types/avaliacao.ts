@@ -142,4 +142,5 @@ export interface Avaliacao {
     treino: Treino[];   
 
     periodizacao: Periodizacao;
+    
 }
