@@ -6,4 +6,5 @@ export default [
   route("comparacao", "src/screen/comparacao.tsx"),
   route("prescricao", "src/screen/prescricao.tsx"),
   route("periodizacao", "src/screen/periodizacao.tsx"),
+  route("calculos", "src/screen/calculos.tsx"),
 ] satisfies RouteConfig;

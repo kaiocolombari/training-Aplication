@@ -5,4 +5,5 @@ export const tabs = [
     { nome: "Comparação", rota: "/comparacao" },
     { nome: "Prescrição", rota: "/prescricao" },
     { nome: "Periodização", rota: "/periodizacao" },
+    { nome: "Volumes", rota: "/calculos" },
 ];
