@@ -1,6 +1,7 @@
 import type { Periodizacao } from "../interface/interfacePeriodizacao";
 import type { Treino } from "../interface/interfaceTreino";
 import type { VolumeMuscular } from "../interface/interfaceVolume";
+import type { VolumeSemanal } from "../interface/interfaceVolumeSemanal";
 import type { DobrasCutaneas } from "./dobrasType";
 
 export interface Avaliacao {
@@ -144,6 +145,6 @@ export interface Avaliacao {
 
     periodizacao: Periodizacao;
 
-    volume: VolumeMuscular[];
+    volume: VolumeSemanal[];
     
 }
