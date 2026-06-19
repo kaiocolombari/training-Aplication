@@ -146,5 +146,6 @@ export interface Avaliacao {
     periodizacao: Periodizacao;
 
     volume: VolumeSemanal[];
+
     
 }
