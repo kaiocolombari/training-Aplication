@@ -1,103 +1,16 @@
-import { initialState, useAvaliacao } from '../context/avaliacaoContext'
-import navTool from '../components/navTool'
-import type { ExercicioTreino } from '../interface/interfaceExercicio';
-import { useEffect } from 'react';
+import { useState, useMemo } from "react";
+import { useAvaliacao } from "../context/avaliacaoContext";
+import navTool from "../components/navTool";
 
-export default function Prescricao() {
+
+export default function intensidade() {
     const { avaliacao, setAvaliacao } = useAvaliacao();
-
-    const atualizarNomeTreino = (
-        treinoIndex: number,
-        nome: string
-    ) => {
-        setAvaliacao((prev) => {
-            const treinos = [...prev.treino];
-
-            if (!treinos[treinoIndex]) {
-                treinos[treinoIndex] = {
-                    id: crypto.randomUUID(),
-                    nome,
-                    exercicios: Array.from(
-                        { length: 12 },
-                        () => ({
-                            exercicio: "",
-                            series: "",
-                            repeticoes: "",
-                            intervalo: "",
-                            carga: "",
-                            rirMax: "",
-                            observacoes: "",
-                        })
-                    ),
-                };
-            } else {
-                treinos[treinoIndex] = {
-                    ...treinos[treinoIndex],
-                    nome,
-                };
-            }
-
-            return {
-                ...prev,
-                treino: treinos,
-            };
-        });
-    };
-
-    const adicionarExercicio = (treinoId: string, exercicioIndex: number, valor: string, campo: keyof ExercicioTreino) => {
-        setAvaliacao((prev) => ({
-            ...prev,
-            treino: prev.treino.map((treino) => {
-                if (treino.id !== treinoId) {
-                    return treino;
-                }
-
-                return {
-                    ...treino,
-                    exercicios: treino.exercicios.map((exercicio, index) =>
-                        index === exercicioIndex
-                            ? {
-                                ...exercicio,
-                                [campo]: valor
-                            }
-                            : exercicio
-                    ),
-                }
-            }),
-        }));
-    };
-
-    useEffect(() => {
-        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-            event.preventDefault();
-            event.returnValue = "Tem certeza que deseja sair?";
-        };
-
-        window.addEventListener("beforeunload", handleBeforeUnload);
-
-        return () => {
-            window.removeEventListener("beforeunload", handleBeforeUnload);
-        };
-    }, []);
-
-    console.log(avaliacao.treino);
 
     return (
         <main className="h-full bg-[#ececec] p-3 md:p-5">
-            <hr className="mb-5 my-4 rounded-2xl border-[3px] border-zinc-400" />
-
-            <div className="flex flex-col">
-                <h1 className="mb-3 text-3xl font-bold italic text-zinc-600">
-                    Planilha de Treinamento
-                </h1>
-            </div>
-
-            <div className="mt-10 flex flex-col">
-                <h1 className="mb-3 text-xl font-bold italic uppercase text-zinc-600">
-                    Treino Mugen
-                </h1>
-            </div>
-
+            <h1 className="w-full border-b-2 border-[#b88b8b] pb-1 text-2xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+                Intensidade
+            </h1>
             {Array.from({ length: 12 }).map((_, treinoIndex) => {
                 const treino = avaliacao.treino[treinoIndex];
 
@@ -120,12 +33,6 @@ export default function Prescricao() {
                                 <input
                                     type="text"
                                     value={treino?.nome ?? ""}
-                                    onChange={(e) =>
-                                        atualizarNomeTreino(
-                                            treinoIndex,
-                                            e.target.value
-                                        )
-                                    }
                                     className="h-9 w-full border-2 border-zinc-700 bg-white px-2 text-center text-lg text-zinc-700 outline-none"
                                 />
                             </div>
@@ -171,14 +78,6 @@ export default function Prescricao() {
                                                         <input
                                                             type="text"
                                                             value={exercicio?.exercicio ?? ""}
-                                                            onChange={(e) =>
-                                                                adicionarExercicio(
-                                                                    treino.id,
-                                                                    exercicioIndex,
-                                                                    e.target.value,
-                                                                    "exercicio"
-                                                                )
-                                                            }
                                                             className="h-8 w-full bg-transparent px-2 text-xl text-black outline-none"
                                                         />
                                                     </td>
@@ -187,14 +86,6 @@ export default function Prescricao() {
                                                         <input
                                                             type="text"
                                                             value={exercicio?.series ?? ""}
-                                                            onChange={(e) =>
-                                                                adicionarExercicio(
-                                                                    treino.id,
-                                                                    exercicioIndex,
-                                                                    e.target.value,
-                                                                    "series"
-                                                                )
-                                                            }
                                                             className="h-8 w-full bg-transparent px-2 text-center text-xl text-black outline-none"
                                                         />
                                                     </td>
@@ -203,14 +94,6 @@ export default function Prescricao() {
                                                         <input
                                                             type="text"
                                                             value={exercicio?.repeticoes ?? ""}
-                                                            onChange={(e) =>
-                                                                adicionarExercicio(
-                                                                    treino.id,
-                                                                    exercicioIndex,
-                                                                    e.target.value,
-                                                                    "repeticoes"
-                                                                )
-                                                            }
                                                             className="h-8 w-full bg-transparent px-2 text-center text-xl text-black outline-none"
                                                         />
                                                     </td>
@@ -220,14 +103,6 @@ export default function Prescricao() {
                                                             list={`intervalos-${exercicioIndex}`}
                                                             type="text"
                                                             value={exercicio?.intervalo ?? ""}
-                                                            onChange={(e) =>
-                                                                adicionarExercicio(
-                                                                    treino.id,
-                                                                    exercicioIndex,
-                                                                    e.target.value,
-                                                                    "intervalo"
-                                                                )
-                                                            }
                                                             className="h-8 w-full bg-transparent px-2 text-center text-xl text-black outline-none"
                                                         />
 
@@ -251,14 +126,6 @@ export default function Prescricao() {
                                                         <input
                                                             type="text"
                                                             value={exercicio?.carga ?? ""}
-                                                            onChange={(e) =>
-                                                                adicionarExercicio(
-                                                                    treino.id,
-                                                                    exercicioIndex,
-                                                                    e.target.value,
-                                                                    "carga"
-                                                                )
-                                                            }
                                                             className="h-8 w-full bg-transparent px-2 text-center text-xl text-black outline-none"
                                                         />
                                                     </td>
@@ -267,14 +134,6 @@ export default function Prescricao() {
                                                         <input
                                                             type="text"
                                                             value={exercicio?.rirMax ?? ""}
-                                                            onChange={(e) =>
-                                                                adicionarExercicio(
-                                                                    treino.id,
-                                                                    exercicioIndex,
-                                                                    e.target.value,
-                                                                    "rirMax"
-                                                                )
-                                                            }
                                                             className="h-8 w-full bg-transparent px-2 text-center text-xl text-black outline-none"
                                                         />
                                                     </td>
@@ -283,14 +142,6 @@ export default function Prescricao() {
                                                         <input
                                                             type="text"
                                                             value={exercicio?.observacoes ?? ""}
-                                                            onChange={(e) =>
-                                                                adicionarExercicio(
-                                                                    treino.id,
-                                                                    exercicioIndex,
-                                                                    e.target.value,
-                                                                    "observacoes"
-                                                                )
-                                                            }
                                                             className="h-8 w-full bg-transparent px-2  text-xl text-black outline-none"
                                                         />
                                                     </td>
@@ -303,12 +154,11 @@ export default function Prescricao() {
                         </div>
                     </div>
                 );
-            })}
+            })
+            }
             <div>
                 {navTool()}
             </div>
-            <br />
-            <br />
         </main>
     )
 }

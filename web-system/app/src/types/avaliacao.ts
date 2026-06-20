@@ -1,4 +1,6 @@
+import type { ExecucaoTreino } from "../interface/execucaoTreino";
 import type { Periodizacao } from "../interface/interfacePeriodizacao";
+import type Serie from "../interface/interfaceSeriesRIR";
 import type { Treino } from "../interface/interfaceTreino";
 import type { VolumeMuscular } from "../interface/interfaceVolume";
 import type { VolumeSemanal } from "../interface/interfaceVolumeSemanal";
@@ -141,11 +143,11 @@ export interface Avaliacao {
         }
     };
 
-    treino: Treino[];   
+    treino: Treino[];
 
     periodizacao: Periodizacao;
 
     volume: VolumeSemanal[];
 
-    
+    seriesRIR: ExecucaoTreino[];
 }

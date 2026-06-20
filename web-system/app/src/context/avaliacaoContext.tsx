@@ -199,8 +199,7 @@ export const initialState: Avaliacao = {
                 repeticoes: "",
                 intervalo: "",
                 carga: "",
-                on: "",
-                off: "",
+                rirMax: "",
                 observacoes: "",
             })),
         },
@@ -223,6 +222,7 @@ export const initialState: Avaliacao = {
         })),
     })),
 
+    seriesRIR: [],
 };
 
 export function AvaliacaoProvider({

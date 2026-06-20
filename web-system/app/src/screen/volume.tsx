@@ -203,8 +203,11 @@ export default function calculos() {
                 {navTool()}
             </div>
             <br />
-            <br />
-            <br />
+            <div className="mt-20 flex flex-col">
+                <h1 className="w-full border-b-2 border-[#b88b8b] pb-1 text-lg font-bold italic uppercase tracking-wide text-[#a85f60]">
+                    Intensidade
+                </h1>
+            </div>
         </main>
     )
 }

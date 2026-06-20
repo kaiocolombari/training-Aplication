@@ -4,7 +4,6 @@ export interface ExercicioTreino {
     repeticoes: string;
     intervalo: string;
     carga: string;
-    on: string;
-    off: string;
+    rirMax: string;
     observacoes: string;
 }
