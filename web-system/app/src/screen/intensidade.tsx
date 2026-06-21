@@ -246,6 +246,7 @@ export default function Intensidade() {
         });
     }
 
+
     return (
         <main className="min-h-full bg-[#ececec] p-3 md:p-5">
             <h1 className="w-full border-b-2 border-[#b88b8b] pb-1 text-2xl font-bold italic uppercase tracking-wide text-[#a85f60]">
@@ -273,13 +274,8 @@ export default function Intensidade() {
                                 </div>
 
                                 <div className="flex flex-wrap gap-3 text-sm font-bold uppercase text-zinc-700">
-                                    <span>
-                                        Intensidade do treino:{" "}
-                                        {formatarPercentual(resumoTreino.intensidade)}
-                                    </span>
                                     <span>Exercícios: {resumoTreino.exerciciosValidos}</span>
                                     <span>Séries válidas: {resumoTreino.seriesValidas}</span>
-                                    <span>Hard sets: {resumoTreino.hardSets}</span>
                                 </div>
                             </div>
 
@@ -328,15 +324,6 @@ export default function Intensidade() {
                                                     </p>
                                                 </div>
 
-                                                <div>
-                                                    <span className="text-xs font-bold uppercase text-zinc-500">
-                                                        Intensidade
-                                                    </span>
-                                                    <p className="text-lg font-bold text-[#a85f60]">
-                                                        {formatarPercentual(resumoExercicio.intensidade)}
-                                                    </p>
-                                                </div>
-
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -373,9 +360,6 @@ export default function Intensidade() {
                                                                 </th>
                                                                 <th className="px-2 py-1 text-center text-x">
                                                                     %Esforço
-                                                                </th>
-                                                                <th className="px-2 py-1 text-center text-x">
-                                                                    Intensidade
                                                                 </th>
                                                             </tr>
                                                         </thead>
@@ -482,18 +466,6 @@ export default function Intensidade() {
                                                                                     className="h-9 w-full bg-transparent px-2 text-center text-lg font-bold text-zinc-700 outline-none"
                                                                                 />
                                                                             </td>
-
-                                                                            <td className="border-2 border-zinc-700 bg-white/60">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={formatarPercentual(
-                                                                                        intensidadeSerie?.intensidade ??
-                                                                                        null
-                                                                                    )}
-                                                                                    readOnly
-                                                                                    className="h-9 w-full bg-transparent px-2 text-center text-lg font-bold text-[#a85f60] outline-none"
-                                                                                />
-                                                                            </td>
                                                                         </tr>
                                                                     );
                                                                 }
@@ -502,12 +474,6 @@ export default function Intensidade() {
                                                     </table>
 
                                                     <div className="mt-3 flex flex-wrap justify-end gap-4 text-sm font-bold uppercase text-zinc-700">
-                                                        <span>
-                                                            Intensidade do exercício:{" "}
-                                                            {formatarPercentual(
-                                                                resumoExercicio.intensidade
-                                                            )}
-                                                        </span>
                                                         <span>
                                                             Séries válidas:{" "}
                                                             {resumoExercicio.seriesValidas}
@@ -525,16 +491,13 @@ export default function Intensidade() {
                                     Intensidade do treino:{" "}
                                     {formatarPercentual(resumoTreino.intensidade)}
                                 </span>
-                                <span>
-                                    Média de {resumoTreino.exerciciosValidos} exercícios
-                                </span>
                             </div>
                         </article>
                     );
                 })}
             </section>
             <br />
-            
+
             <div className="mt-10">{navTool()}</div>
 
         </main>

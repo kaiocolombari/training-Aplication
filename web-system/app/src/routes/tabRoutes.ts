@@ -7,4 +7,5 @@ export const tabs = [
     { nome: "Periodização", rota: "/periodizacao" },
     { nome: "Volume", rota: "/volume" },
     { nome: "Intensidade", rota: "/intensidade" },
+    { nome: "Salvar", rota: "/salvar" },
 ];

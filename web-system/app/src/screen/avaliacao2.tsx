@@ -1356,12 +1356,12 @@ export default function App() {
                                         </div>
                                         <div className="space-y-6 pt-6">
                                             <label className="grid grid-cols-[1fr_130px] items-center gap-4">
-                                                <span className="text-xl font-semibold italic text-zinc-500 text-right">Somatorio (mm)</span>
+                                                <span className="text-xl font-semibold italic text-zinc-500 text-right">Somatório (mm)</span>
                                                 <input value={resumoDobras.somatorio} readOnly className={inputBaseClass} />
                                             </label>
 
                                             <label className="grid grid-cols-[1fr_130px] items-center gap-4">
-                                                <span className="text-xl font-semibold italic text-zinc-500 text-right">Periferico (mm)</span>
+                                                <span className="text-xl font-semibold italic text-zinc-500 text-right">Periférico (mm)</span>
                                                 <input value={resumoDobras.periferico} readOnly className={inputBaseClass} />
                                             </label>
 

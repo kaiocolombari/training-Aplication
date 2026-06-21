@@ -1458,13 +1458,13 @@ export default function comparacao() {
                             ))}
                             <div className="space-y-6 pt-6">
                                 <label className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
-                                    <span className="text-xl font-semibold italic text-zinc-500 text-right">Somatorio (mm)</span>
+                                    <span className="text-xl font-semibold italic text-zinc-500 text-right">Somatório (mm)</span>
                                     <input value={resumoDobras.somatorio || 0} readOnly className={inputBaseClass} />
                                     <input value={resumoDobras2.somatorio || 0} readOnly className={inputBaseClass} />
                                     <input value={diferencaDobras(undefined, "2")} readOnly className={inputBaseClass} />
                                 </label>
                                 <label className="grid grid-cols-[200px_140px_140px_140px] items-center gap-2">
-                                    <span className="text-xl font-semibold italic text-zinc-500 text-right">Periferico (mm)</span>
+                                    <span className="text-xl font-semibold italic text-zinc-500 text-right">Periférico (mm)</span>
                                     <input value={resumoDobras.periferico || 0} readOnly className={inputBaseClass} />
                                     <input value={resumoDobras2.periferico || 0} readOnly className={inputBaseClass} />
                                     <input value={diferencaDobras(undefined, "3")} readOnly className={inputBaseClass} />

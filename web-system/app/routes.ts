@@ -8,4 +8,5 @@ export default [
   route("periodizacao", "src/screen/periodizacao.tsx"),
   route("volume", "src/screen/volume.tsx"),
   route("intensidade", "src/screen/intensidade.tsx"),
+  route("salvar", "src/screen/salvar.tsx"),
 ] satisfies RouteConfig;
