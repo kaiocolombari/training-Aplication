@@ -1,0 +1,6 @@
+@TreinoAPI_HostAddress = http://localhost:5187
+
+GET {{TreinoAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
