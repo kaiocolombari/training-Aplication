@@ -1,13 +1,10 @@
 CREATE TABLE usuarios (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
     email VARCHAR(255) NOT NULL UNIQUE,
     senha_hash TEXT NOT NULL,
-
+    telefone VARCHAR(20),
     tipo VARCHAR(20) NOT NULL,
-
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT usuario_tipo_check
         CHECK (tipo IN ('PERSONAL', 'ALUNO'))
 );
@@ -27,7 +24,6 @@ CREATE TABLE alunos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     usuario_id UUID NOT NULL UNIQUE,
-	personal_id UUID NOT NULL,
 
     nome_completo VARCHAR(200) NOT NULL,
     genero VARCHAR(50),
@@ -58,11 +54,28 @@ CREATE TABLE alunos (
 
 	FOREIGN KEY (usuario_id)
         REFERENCES usuarios(id)
-        ON DELETE CASCADE,
-		
-	FOREIGN KEY (personal_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE personal_alunos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    personal_id UUID NOT NULL,
+    aluno_id UUID NOT NULL,
+
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+
+    FOREIGN KEY (personal_id)
         REFERENCES personais(id)
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (aluno_id)
+        REFERENCES alunos(id)
+        ON DELETE CASCADE,
+
+    UNIQUE (personal_id, aluno_id)
 );
 
 CREATE TABLE anamneses (
