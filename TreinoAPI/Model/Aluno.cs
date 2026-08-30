@@ -47,6 +47,6 @@ public class Aluno
     public Usuario Usuario { get; set; } = null!;
 
     public ICollection<PersonalAluno> Personais { get; set; } = new List<PersonalAluno>();
-
     public ICollection<Anamnese> Anamneses { get; set; } = new List<Anamnese>();
+    public ICollection<Avaliacao> Avaliacoes { get; set; } = new List<Avaliacao>();
 }
