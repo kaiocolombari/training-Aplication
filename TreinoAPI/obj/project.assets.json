@@ -2683,11 +2683,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
+      "projectUniqueName": "C:\\code\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
       "projectName": "TreinoAPI",
-      "projectPath": "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
+      "projectPath": "C:\\code\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
       "packagesPath": "C:\\Users\\Kaio\\.nuget\\packages\\",
-      "outputPath": "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\obj\\",
+      "outputPath": "C:\\code\\training-Aplication\\TreinoAPI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Kaio\\AppData\\Roaming\\NuGet\\NuGet.Config"
