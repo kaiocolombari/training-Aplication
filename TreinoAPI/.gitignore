@@ -1,0 +1,16 @@
+# Environment
+.env
+
+# Build
+bin/
+obj/
+
+# Visual Studio
+.vs/
+
+# VS Code
+.vscode/
+
+# User-specific
+*.user
+*.suo

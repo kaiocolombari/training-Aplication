@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Aluno> Alunos { get; set; }
     public DbSet<Personal> Personais { get; set; }
     public DbSet<PersonalAluno> PersonalAlunos { get; set; }
+    public DbSet<Anamnese> Anamnese { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,5 +49,11 @@ public class AppDbContext : DbContext
                 pa.AlunoId
             })
             .IsUnique();
+            
+        modelBuilder.Entity<Anamnese>()
+            .HasOne(a => a.Aluno)
+            .WithMany(a => a.Anamneses)
+            .HasForeignKey(a => a.AlunoId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

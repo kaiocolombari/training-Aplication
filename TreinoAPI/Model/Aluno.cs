@@ -1,4 +1,5 @@
 namespace TreinoAPI.Model;
+
 public class Aluno
 {
     public Guid Id { get; set; }
@@ -45,6 +46,7 @@ public class Aluno
 
     public Usuario Usuario { get; set; } = null!;
 
-    public ICollection<PersonalAluno> Personais { get; set; }
-        = new List<PersonalAluno>();
+    public ICollection<PersonalAluno> Personais { get; set; } = new List<PersonalAluno>();
+
+    public ICollection<Anamnese> Anamneses { get; set; } = new List<Anamnese>();
 }
