@@ -6,7 +6,7 @@ namespace TreinoAPI.Model
         public string Email { get; set; } = string.Empty;
         public string SenhaHashed { get; set; } = string.Empty;
         public string? Telefone { get; set; }
-        public string Tipo { get; set; } = string.Empty;
+        public TipoUsuario Tipo { get; set; }
         public DateTime CriadoEm { get; set; }
         public Personal? Personal { get; set; }
 

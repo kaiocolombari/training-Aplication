@@ -141,6 +141,19 @@ public class AppDbContext : DbContext
             .HasForeignKey(v => v.GrupoMuscularId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<Usuario>()
+            .Property(u => u.Tipo)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<Usuario>()
+            .ToTable("Usuarios", t =>
+            {
+                t.HasCheckConstraint(
+                    "usuario_tipo_check",
+                    "\"Tipo\" IN ('PERSONAL', 'ALUNO', 'ADMIN')"
+                );
+            });
+
 
     }
 }

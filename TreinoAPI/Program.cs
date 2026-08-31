@@ -1,10 +1,13 @@
 using DotNetEnv;
 using TreinoAPI.Data;
 using Microsoft.EntityFrameworkCore;
+using TreinoAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 Env.Load();
+
+builder.Services.AddScoped<PersonalAlunoService>();
 
 var connectionString =
     $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
