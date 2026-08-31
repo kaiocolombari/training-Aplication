@@ -10,5 +10,7 @@ namespace TreinoAPI.Model
         public double? PerceltualGordura { get; set; }
         public DateTime RealizadaEm { get; set; }
         public Aluno Aluno { get; set; } = null!;
+        public Perimetro? Perimetro { get; set; } = null!;
+        public ICollection<DobraCutanea> DobrasCutaneas { get; set; } = new List<DobraCutanea>();
     }
 }

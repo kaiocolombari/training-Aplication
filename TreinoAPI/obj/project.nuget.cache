@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "6Gjrjw7xzxQ=",
+  "dgSpecHash": "Ku1Ka1yUi1I=",
   "success": true,
-  "projectFilePath": "C:\\code\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
+  "projectFilePath": "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Kaio\\.nuget\\packages\\dotnetenv\\3.2.0\\dotnetenv.3.2.0.nupkg.sha512",
     "C:\\Users\\Kaio\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",

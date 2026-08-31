@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\code\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj": {}
+    "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj": {}
   },
   "projects": {
-    "C:\\code\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj": {
+    "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\code\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
+        "projectUniqueName": "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
         "projectName": "TreinoAPI",
-        "projectPath": "C:\\code\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
+        "projectPath": "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\TreinoAPI.csproj",
         "packagesPath": "C:\\Users\\Kaio\\.nuget\\packages\\",
-        "outputPath": "C:\\code\\training-Aplication\\TreinoAPI\\obj\\",
+        "outputPath": "D:\\Code\\GG67\\corporal\\training-Aplication\\TreinoAPI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Kaio\\AppData\\Roaming\\NuGet\\NuGet.Config"

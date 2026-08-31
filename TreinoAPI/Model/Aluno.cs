@@ -49,4 +49,7 @@ public class Aluno
     public ICollection<PersonalAluno> Personais { get; set; } = new List<PersonalAluno>();
     public ICollection<Anamnese> Anamneses { get; set; } = new List<Anamnese>();
     public ICollection<Avaliacao> Avaliacoes { get; set; } = new List<Avaliacao>();
+    public ICollection<TesteCarga> TestesCarga { get; set; } = new List<TesteCarga>();
+    public ICollection<Treino> Treinos { get; set; } = new List<Treino>();
+
 }
