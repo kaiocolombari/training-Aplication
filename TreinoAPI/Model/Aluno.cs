@@ -51,5 +51,6 @@ public class Aluno
     public ICollection<Avaliacao> Avaliacoes { get; set; } = new List<Avaliacao>();
     public ICollection<TesteCarga> TestesCarga { get; set; } = new List<TesteCarga>();
     public ICollection<Treino> Treinos { get; set; } = new List<Treino>();
+    public ICollection<Periodizacao> Periodizacoes { get; set; } = new List<Periodizacao>();
 
 }

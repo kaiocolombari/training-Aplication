@@ -21,6 +21,11 @@ public class AppDbContext : DbContext
     public DbSet<CargaExercicio> CargasExercicios { get; set; }
     public DbSet<Treino> Treinos { get; set; }
     public DbSet<TreinoExercicio> TreinosExercicios { get; set; }
+    public DbSet<Periodizacao> Periodizacoes { get; set; }
+    public DbSet<PeriodizacaoSemana> PeriodizacaoSemanas { get; set; }
+    public DbSet<PeriodizacaoDia> PeriodizacaoDias { get; set; }
+    public DbSet<GrupoMuscular> GruposMusculares { get; set; }
+    public DbSet<VolumeSemanal> VolumesSemanais { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -105,6 +110,37 @@ public class AppDbContext : DbContext
             .WithMany(t => t.TreinoExercicios)
             .HasForeignKey(te => te.TreinoId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Periodizacao>()
+            .HasOne(p => p.Aluno)
+            .WithMany(a => a.Periodizacoes)
+            .HasForeignKey(p => p.AlunoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PeriodizacaoSemana>()
+            .HasOne(ps => ps.Periodizacao)
+            .WithMany(p => p.PeriodizacaoSemanas)
+            .HasForeignKey(ps => ps.PeriodizacaoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PeriodizacaoDia>()
+            .HasOne(pd => pd.Semana)
+            .WithMany(ps => ps.PeriodizacaoDias)
+            .HasForeignKey(pd => pd.SemanaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<VolumeSemanal>()
+            .HasOne(v => v.GrupoMuscular)
+            .WithMany(g => g.VolumesSemanais)
+            .HasForeignKey(v => v.GrupoMuscularId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GrupoMuscular>()
+            .HasMany(g => g.VolumesSemanais)
+            .WithOne(v => v.GrupoMuscular)
+            .HasForeignKey(v => v.GrupoMuscularId)
+            .OnDelete(DeleteBehavior.Cascade);
+
 
     }
 }
