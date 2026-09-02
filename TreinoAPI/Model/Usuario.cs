@@ -9,7 +9,6 @@ namespace TreinoAPI.Model
         public TipoUsuario Tipo { get; set; }
         public DateTime CriadoEm { get; set; }
         public Personal? Personal { get; set; }
-
         public Aluno? Aluno { get; set; }
     }
 
