@@ -65,7 +65,7 @@ public class PersonalService
         .ToListAsync();
     }
 
-    public async Task<PersonalDTO?> BuscarId(Guid id)
+    public async Task<PersonalDTO?> BuscarPorId(Guid id)
     {
         var personal = await _context.Personais
             .Include(p => p.Usuario)

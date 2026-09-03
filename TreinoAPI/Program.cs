@@ -17,6 +17,7 @@ var connectionString =
     $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}";
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<PersonalService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(

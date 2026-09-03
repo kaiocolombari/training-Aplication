@@ -10,7 +10,7 @@ public class Aluno
 
     public string? Genero { get; set; }
 
-    public DateTime? DataNascimento { get; set; }
+    public DateOnly? DataNascimento { get; set; }
 
     public string? Etnia { get; set; }
 

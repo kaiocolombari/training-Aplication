@@ -8,7 +8,7 @@ namespace TreinoAPI.DTOs.Aluno
         public string? Telefone { get; set; }
 
         public string? Genero { get; set; }
-        public DateTime? DataNascimento { get; set; }
+        public DateOnly? DataNascimento { get; set; }
         public string? Etnia { get; set; }
 
         public Guid PersonalId { get; set; }

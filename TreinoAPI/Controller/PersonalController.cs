@@ -39,7 +39,7 @@ public class PersonalController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> BuscarPorId(Guid id)
     {
-        var personal = await _service.BuscarId(id);
+        var personal = await _service.BuscarPorId(id);
 
         if (personal == null)
             return NotFound();
