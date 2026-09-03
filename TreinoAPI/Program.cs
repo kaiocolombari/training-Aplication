@@ -18,6 +18,9 @@ var connectionString =
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<PersonalService>();
+builder.Services.AddScoped<AnamneseService>();
+builder.Services.AddScoped<TreinoService>();
+builder.Services.AddScoped<TreinoExercicioService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(

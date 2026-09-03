@@ -54,7 +54,7 @@ public class AnamneseService
         }).ToListAsync();
     }
 
-    public async Task<AnamneseDTO?> ObterPorId(Guid id)
+    public async Task<AnamneseDTO?> BuscarPorId(Guid id)
     {
         var anamnese = await _context.Anamnese
             .Include(a => a.Aluno)
@@ -90,7 +90,7 @@ public class AnamneseService
         anamnese.Observacoes = dto.Observacoes;
         await _context.SaveChangesAsync();
         return true;
-
+        
     }
 
     public async Task<bool> Deletar(Guid id)
