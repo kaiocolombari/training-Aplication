@@ -8,6 +8,5 @@ namespace TreinoAPI.Model
         public DateTime RealizadaEm {get;set;}
         public Aluno Aluno {get;set;} = null!;
         public ICollection<CargaExercicio> CargasExercicios {get;set;} = new List<CargaExercicio>();
-
     }
 }
