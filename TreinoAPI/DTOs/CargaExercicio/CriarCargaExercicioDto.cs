@@ -1,6 +1,6 @@
 namespace treinoAPI.DTOs.CargaExercicio;
 
-public class CriarCargaExercicioDto
+public class CriarCargaExercicioDTO
 {
     public string Exercicio { get; set; } = string.Empty;
     public double? Repeticoes { get; set; }

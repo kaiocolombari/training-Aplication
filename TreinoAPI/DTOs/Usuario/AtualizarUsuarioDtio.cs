@@ -1,6 +1,6 @@
 namespace TreinoAPI.DTOs.Usuario
 {
-    public class AtualizarUsuarioDto
+    public class AtualizarUsuarioDTO
     {
         public string? Email { get; set; }
 

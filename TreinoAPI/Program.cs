@@ -20,6 +20,8 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<PersonalService>();
 builder.Services.AddScoped<AnamneseService>();
 builder.Services.AddScoped<TreinoService>();
+builder.Services.AddScoped<CargaExercicioService>();
+builder.Services.AddScoped<TesteCargaService>();
 builder.Services.AddScoped<TreinoExercicioService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>

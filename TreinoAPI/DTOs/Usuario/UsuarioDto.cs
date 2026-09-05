@@ -1,6 +1,6 @@
 namespace TreinoAPI.DTOs.Usuario;
 
-public class UsuarioDto
+public class UsuarioDTO
 {
     public Guid Id { get; set; }
 

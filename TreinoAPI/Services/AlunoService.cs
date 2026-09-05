@@ -14,7 +14,7 @@ public class AlunoService
         _context = context;
     }
 
-    public async Task<AlunoDto> Criar(CriarAlunoDTO dto)
+    public async Task<AlunoDTO> Criar(CriarAlunoDTO dto)
     {
         var usuario = new Usuario
         {
@@ -49,7 +49,7 @@ public class AlunoService
 
         await _context.SaveChangesAsync();
 
-        return new AlunoDto
+        return new AlunoDTO
         {
             Id = aluno.Id,
             NomeCompleto = aluno.NomeCompleto,
@@ -59,11 +59,11 @@ public class AlunoService
         };
     }
 
-    public async Task<List<AlunoDto>> Listar()
+    public async Task<List<AlunoDTO>> Listar()
     {
         return await _context.Alunos
         .Include(a => a.Usuario)
-        .Select(a => new AlunoDto
+        .Select(a => new AlunoDTO
         {
             Id = a.Id,
             NomeCompleto = a.NomeCompleto,
@@ -73,7 +73,7 @@ public class AlunoService
         .ToListAsync();
     }
 
-    public async Task<AlunoDto?> BuscarPorId(Guid id)
+    public async Task<AlunoDTO?> BuscarPorId(Guid id)
     {
         var aluno = await _context.Alunos
             .Include(a => a.Usuario)
@@ -84,7 +84,7 @@ public class AlunoService
             return null;
         }
 
-        return new AlunoDto
+        return new AlunoDTO
         {
             Id = aluno.Id,
             NomeCompleto = aluno.NomeCompleto,
@@ -93,7 +93,7 @@ public class AlunoService
         };
     }
 
-    public async Task<AlunoDto> Atualizar(Guid id, AtualizarAlunoDto dto)
+    public async Task<AlunoDTO> Atualizar(Guid id, AtualizarAlunoDTO dto)
     {
         var aluno = await _context.Alunos
             .Include(a => a.Usuario)
@@ -111,7 +111,7 @@ public class AlunoService
 
         await _context.SaveChangesAsync();
 
-        return new AlunoDto
+        return new AlunoDTO
         {
             Id = aluno.Id,
             NomeCompleto = aluno.NomeCompleto,

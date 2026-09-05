@@ -17,7 +17,7 @@ public class CargaExercicioService
 
     public async Task<CargaExercicioDTO> Criar(
         Guid testeCargaId,
-        CriarCargaExercicioDto dto)
+        CriarCargaExercicioDTO dto)
     {
         var testeCarga = await _context.TestesCarga
             .FirstOrDefaultAsync(t => t.Id == testeCargaId);
@@ -83,7 +83,7 @@ public class CargaExercicioService
 
     public async Task<CargaExercicioDTO?> Atualizar(
         Guid id,
-        AtualizarCargaExercicioDto dto)
+        AtualizarCargaExercicioDTO dto)
     {
         var cargaExercicio = await _context.CargasExercicios
             .FirstOrDefaultAsync(c => c.Id == id);

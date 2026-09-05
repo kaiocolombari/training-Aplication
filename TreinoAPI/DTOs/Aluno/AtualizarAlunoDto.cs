@@ -1,6 +1,6 @@
 namespace TreinoAPI.DTOs.Aluno;
 
-public class AtualizarAlunoDto
+public class AtualizarAlunoDTO
 {
     public string NomeCompleto { get; set; } = string.Empty;
 

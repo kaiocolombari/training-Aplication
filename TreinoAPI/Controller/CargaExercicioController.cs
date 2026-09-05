@@ -17,7 +17,7 @@ public class CargaExercicioController : ControllerBase
     [HttpPost("api/carga-exercicio/{testeCargaId}")]
     public async Task<IActionResult> Criar(
         Guid testeCargaId,
-        CriarCargaExercicioDto dto)
+        CriarCargaExercicioDTO dto)
     {
         var cargaExercicio = await _cargaExercicioService.Criar(testeCargaId, dto);
 
@@ -50,7 +50,7 @@ public class CargaExercicioController : ControllerBase
     [HttpPut("api/carga-exercicio/{id}")]
     public async Task<IActionResult> Atualizar(
         Guid id,
-        AtualizarCargaExercicioDto dto)
+        AtualizarCargaExercicioDTO dto)
     {
         var cargaExercicio = await _cargaExercicioService.Atualizar(id, dto);
 

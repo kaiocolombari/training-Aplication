@@ -25,7 +25,7 @@ public class PersonalAlunoController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> VincularAluno(
-        VincularAlunoDto dto
+        VincularAlunoDTO dto
     )
     {
         var resultado = await _service.VincularAluno(dto);
@@ -35,7 +35,7 @@ public class PersonalAlunoController : ControllerBase
     [HttpPatch("{id}")]
     public async Task<IActionResult> AtualizarVinculo(
         Guid id,
-        AtualizarPersonalAlunoDto dto)
+        AtualizarPersonalAlunoDTO dto)
     {
         var resultado = await _service.AtualizarVinculo(id, dto);
 

@@ -1,6 +1,6 @@
 namespace TreinoAPI.DTOs.PersonalAluno;
 
-public class PersonalAlunoDto
+public class PersonalAlunoDTO
 {
     public Guid Id { get; set; }
 

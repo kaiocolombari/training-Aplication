@@ -15,7 +15,7 @@ public class PersonalService
         _context = context;
     }
 
-    public async Task<PersonalDTO> Criar(CriarPersonalDto dto)
+    public async Task<PersonalDTO> Criar(CriarPersonalDTO dto)
     {
         var usuario = new Usuario
         {

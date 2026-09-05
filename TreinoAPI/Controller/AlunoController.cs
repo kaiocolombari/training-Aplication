@@ -50,7 +50,7 @@ public class AlunoController : ControllerBase
     [HttpPatch("{id}")]
     public async Task<IActionResult> Atualizar(
         Guid id,
-        AtualizarAlunoDto dto)
+        AtualizarAlunoDTO dto)
     {
         var aluno = await _service.Atualizar(id, dto);
 

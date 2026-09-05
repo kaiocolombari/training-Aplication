@@ -1,6 +1,6 @@
 namespace TreinoAPI.DTOs.Personal
 {
-    public class CriarPersonalDto
+    public class CriarPersonalDTO
     {
         public string NomeCompleto { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;

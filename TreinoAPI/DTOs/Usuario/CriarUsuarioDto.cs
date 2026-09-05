@@ -1,6 +1,6 @@
 namespace TreinoAPI.DTOs.Usuario;
 
-public class CriarUsuarioDto
+public class CriarUsuarioDTO
 {
     public string Email { get; set; } = string.Empty;
 

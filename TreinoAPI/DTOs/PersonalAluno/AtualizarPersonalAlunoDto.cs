@@ -1,6 +1,6 @@
 namespace TreinoAPI.DTOs.PersonalAluno;
 
-public class AtualizarPersonalAlunoDto
+public class AtualizarPersonalAlunoDTO
 {
     public bool Ativo { get; set; }
 }

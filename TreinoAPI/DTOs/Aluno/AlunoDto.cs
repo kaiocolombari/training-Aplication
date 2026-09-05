@@ -1,6 +1,6 @@
 namespace TreinoAPI.DTOs.Aluno;
 
-public class AlunoDto
+public class AlunoDTO
 {
     public Guid Id { get; set; }
 

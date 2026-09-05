@@ -16,11 +16,11 @@ public class PersonalAlunoService
         _context = context;
     }
 
-    public async Task<List<PersonalAlunoDto>> BuscarAlunos(Guid personalId)
+    public async Task<List<PersonalAlunoDTO>> BuscarAlunos(Guid personalId)
     {
         return await _context.PersonalAlunos
         .Where(pa => pa.PersonalId == personalId && pa.Ativo)
-        .Select(pa => new PersonalAlunoDto
+        .Select(pa => new PersonalAlunoDTO
         {
             Id = pa.Id,
             PersonalId = pa.PersonalId,
@@ -31,7 +31,7 @@ public class PersonalAlunoService
         .ToListAsync();
     }
 
-    public async Task<PersonalAlunoDto?> VincularAluno(VincularAlunoDto dto)
+    public async Task<PersonalAlunoDTO?> VincularAluno(VincularAlunoDTO dto)
     {
         var personal = await _context.Personais
         .FirstOrDefaultAsync(p => p.Id == dto.PersonalId);
@@ -68,7 +68,7 @@ public class PersonalAlunoService
 
         await _context.SaveChangesAsync();
 
-        return new PersonalAlunoDto
+        return new PersonalAlunoDTO
         {
             Id = vinculo.Id,
             PersonalId = vinculo.PersonalId,
@@ -78,7 +78,7 @@ public class PersonalAlunoService
         };
     }
 
-    public async Task<PersonalAlunoDto?> AtualizarVinculo(Guid id, AtualizarPersonalAlunoDto dto)
+    public async Task<PersonalAlunoDTO?> AtualizarVinculo(Guid id, AtualizarPersonalAlunoDTO dto)
     {
         var vinculo = await _context.PersonalAlunos.FirstOrDefaultAsync(pa => pa.Id == id);
 
@@ -89,7 +89,7 @@ public class PersonalAlunoService
 
         await _context.SaveChangesAsync();
 
-        return new PersonalAlunoDto
+        return new PersonalAlunoDTO
         {
             Id = vinculo.Id,
             PersonalId = vinculo.PersonalId,

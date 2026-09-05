@@ -17,7 +17,7 @@ public class PersonalController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Criar(CriarPersonalDto dto)
+    public async Task<IActionResult> Criar(CriarPersonalDTO dto)
     {
         var personal = await _service.Criar(dto);
 
