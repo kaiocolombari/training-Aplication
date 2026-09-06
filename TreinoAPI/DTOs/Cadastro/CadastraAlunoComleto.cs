@@ -1,5 +1,6 @@
 using TreinoAPI.DTOs.Aluno;
 using TreinoAPI.DTOs.Anamnese;
+using TreinoAPI.DTOs.Periodizacao;
 using TreinoAPI.DTOs.TesteCarga;
 using TreinoAPI.DTOs.Treino;
 
