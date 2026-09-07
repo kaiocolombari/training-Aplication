@@ -1,22 +1,22 @@
-using TreinoAPI.DTOs.Aluno;
-using TreinoAPI.DTOs.Anamnese;
-using TreinoAPI.DTOs.Periodizacao;
-using TreinoAPI.DTOs.TesteCarga;
-using TreinoAPI.DTOs.Treino;
+// using TreinoAPI.DTOs.Aluno;
+// using TreinoAPI.DTOs.Anamnese;
+// using TreinoAPI.DTOs.Periodizacao;
+// using TreinoAPI.DTOs.TesteCarga;
+// using TreinoAPI.DTOs.Treino;
 
-namespace TreinoAPI.DTOs.CadastroCompleto;
+// namespace TreinoAPI.DTOs.CadastroCompleto;
 
-public class CriarAlunoCompletoDTO
-{
-    public CriarAlunoDTO Aluno { get; set; } = new();
+// public class CriarAlunoCompletoDTO
+// {
+//     public CriarAlunoDTO Aluno { get; set; } = new();
 
-    public CriarAnamneseDTO? Anamnese { get; set; }
+//     public CriarAnamneseDTO? Anamnese { get; set; }
 
-    public CriarAvaliacaoDTO? Avaliacao { get; set; }
+//     public CriarAvaliacaoDTO? Avaliacao { get; set; }
 
-    public CriarTesteCargaDTO? TesteCarga { get; set; }
+//     public CriarTesteCargaDTO? TesteCarga { get; set; }
 
-    public CriarTreinoDTO? Treino { get; set; }
+//     public CriarTreinoDTO? Treino { get; set; }
 
-    public CriarPeriodizacaoDTO? Periodizacao { get; set; }
-}
+//     public CriarPeriodizacaoDTO? Periodizacao { get; set; }
+// }

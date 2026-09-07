@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<CargaExercicio> CargasExercicios { get; set; }
     public DbSet<Treino> Treinos { get; set; }
     public DbSet<TreinoExercicio> TreinosExercicios { get; set; }
+    public DbSet<DiaTreino> DiaTreinos { get; set; }
     public DbSet<Periodizacao> Periodizacoes { get; set; }
     public DbSet<PeriodizacaoSemana> PeriodizacaoSemanas { get; set; }
     public DbSet<PeriodizacaoDia> PeriodizacaoDias { get; set; }
@@ -144,6 +145,18 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Usuario>()
             .Property(u => u.Tipo)
             .HasConversion<string>();
+
+        modelBuilder.Entity<DiaTreino>()
+            .HasOne(td => td.PeriodizacaoDia)
+            .WithMany(d => d.TreinosDias)
+            .HasForeignKey(td => td.DiaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DiaTreino>()
+            .HasOne(td => td.Treino)
+            .WithMany()
+            .HasForeignKey(td => td.TreinoId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Usuario>()
             .ToTable("Usuarios", t =>

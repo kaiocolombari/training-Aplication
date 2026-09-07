@@ -22,6 +22,9 @@ builder.Services.AddScoped<AnamneseService>();
 builder.Services.AddScoped<TreinoService>();
 builder.Services.AddScoped<CargaExercicioService>();
 builder.Services.AddScoped<TesteCargaService>();
+builder.Services.AddScoped<PeriodizacaoService>();
+builder.Services.AddScoped<PeriodizacaoDiaService>();
+builder.Services.AddScoped<PeriodizacaoSemanaService>();
 builder.Services.AddScoped<TreinoExercicioService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>

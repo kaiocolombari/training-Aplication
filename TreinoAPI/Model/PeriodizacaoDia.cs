@@ -7,5 +7,7 @@ namespace TreinoAPI.Model
         public DateTime Data { get; set; }
         public int DiaSemana { get; set; }
         public PeriodizacaoSemana Semana { get; set; } = null!;
+        public ICollection<DiaTreino> TreinosDias { get; set; }
+    = new List<DiaTreino>();
     }
 }
