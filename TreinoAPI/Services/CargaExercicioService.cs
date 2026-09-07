@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using treinoAPI.DTOs.CargaExercicio;
-using TreinoAPI.Data;
 using TreinoAPI.DTOs.CargaExercicio;
+using TreinoAPI.Data;
 using TreinoAPI.Model;
 
 namespace TreinoAPI.Services;

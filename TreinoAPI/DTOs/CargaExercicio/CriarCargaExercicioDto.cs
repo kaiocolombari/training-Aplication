@@ -1,4 +1,4 @@
-namespace treinoAPI.DTOs.CargaExercicio;
+namespace TreinoAPI.DTOs.CargaExercicio;
 
 public class CriarCargaExercicioDTO
 {

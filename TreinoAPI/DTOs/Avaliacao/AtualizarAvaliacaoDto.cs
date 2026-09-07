@@ -1,8 +1,7 @@
 namespace TreinoAPI.DTOs.Avaliacao;
 
-public class AvaliacaoDTO
+public class AtualizarAvaliacaoDTO
 {
-    public Guid Id { get; set; }
     public Guid AlunoId { get; set; }
     public int Numero { get; set; }
     public double? Peso { get; set; }

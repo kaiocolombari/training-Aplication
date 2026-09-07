@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using treinoAPI.DTOs.CargaExercicio;
 using TreinoAPI.DTOs.CargaExercicio;
 using TreinoAPI.Services;
 
