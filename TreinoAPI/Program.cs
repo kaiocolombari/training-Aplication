@@ -28,6 +28,8 @@ builder.Services.AddScoped<PeriodizacaoSemanaService>();
 builder.Services.AddScoped<PerimetroService>();
 builder.Services.AddScoped<TreinoDiaService>();
 builder.Services.AddScoped<TreinoExercicioService>();
+builder.Services.AddScoped<VolumeSemanalService>();
+builder.Services.AddScoped<GrupoMuscularService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(

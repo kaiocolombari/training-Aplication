@@ -136,6 +136,20 @@ public class AppDbContext : DbContext
             .HasForeignKey(v => v.GrupoMuscularId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<VolumeSemanal>()
+            .HasIndex(v => new
+            {
+                v.PeriodizacaoSemanaId,
+                v.GrupoMuscularId
+            })
+            .IsUnique();
+
+        modelBuilder.Entity<VolumeSemanal>()
+            .HasOne(v => v.PeriodizacaoSemana)
+            .WithMany()
+            .HasForeignKey(v => v.PeriodizacaoSemanaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<GrupoMuscular>()
             .HasMany(g => g.VolumesSemanais)
             .WithOne(v => v.GrupoMuscular)
