@@ -16,7 +16,7 @@ public class TreinoDiaService
 
     public async Task<TreinoDiaDTO> Criar(
         Guid diaId,
-        TreinoDiaDTO dto)
+        CriarTreinoDiaDTO dto)
     {
         var dia = await _context.PeriodizacaoDias
             .FirstOrDefaultAsync(d => d.Id == diaId);
@@ -81,7 +81,7 @@ public class TreinoDiaService
 
     public async Task<TreinoDiaDTO?> Atualizar(
         Guid id,
-        TreinoDiaDTO dto)
+        AtualizarTreinoDiaDTO dto)
     {
         var treinoDia = await _context.DiaTreinos
             .FirstOrDefaultAsync(td => td.Id == id);

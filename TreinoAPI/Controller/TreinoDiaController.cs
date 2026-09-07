@@ -18,7 +18,7 @@ public class TreinoDiaController : ControllerBase
     [HttpPost("/api/periodizacao-dias/{diaId}/treinos")]
     public async Task<IActionResult> Criar(
         Guid diaId,
-        TreinoDiaDTO dto)
+        CriarTreinoDiaDTO dto)
     {
         var resultado = await _service.Criar(diaId, dto);
 
@@ -47,7 +47,7 @@ public class TreinoDiaController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Atualizar(
         Guid id,
-        TreinoDiaDTO dto)
+        AtualizarTreinoDiaDTO dto)
     {
         var resultado = await _service.Atualizar(id, dto);
 
