@@ -1,23 +1,34 @@
 using TreinoAPI.DTOs.Aluno;
 using TreinoAPI.DTOs.Anamnese;
 using TreinoAPI.DTOs.Avaliacao;
+using TreinoAPI.DTOs.DobraCutanea;
+using TreinoAPI.DTOs.PersonalAluno;
 using TreinoAPI.DTOs.Periodizacao;
 using TreinoAPI.DTOs.TesteCarga;
 using TreinoAPI.DTOs.Treino;
+using TreinoAPI.DTOs.VolumeSemanal;
 
 namespace TreinoAPI.DTOs.CadastroCompleto;
 
-public class CriarAlunoCompletoDTO
+public class CadastroCompletoDTO
 {
-    public CriarAlunoDTO Aluno { get; set; } = new();
+    public AlunoCompletoDTO Aluno { get; set; } = new();
 
-    public CriarAnamneseDTO? Anamnese { get; set; }
+    public List<PersonalAlunoDTO> Personais { get; set; } = new();
 
-    public CriarAvaliacaoDTO? Avaliacao { get; set; }
+    public List<AnamneseDTO> Anamneses { get; set; } = new();
 
-    public CriarTesteCargaDTO? TesteCarga { get; set; }
+    public List<AvaliacaoDTO> Avaliacoes { get; set; } = new();
 
-    public CriarTreinoDTO? Treino { get; set; }
+    public List<DobraCutaneaDTO> DobrasCutaneas { get; set; } = new();
 
-    public CriarPeriodizacaoDTO? Periodizacao { get; set; }
+    public List<TesteCargaDTO> TestesCarga { get; set; } = new();
+
+    public List<TreinoDTO> Treinos { get; set; } = new();
+
+    public List<PeriodizacaoDTO> Periodizacoes { get; set; } = new();
+    
+    public List<PeriodizacaoSemanaDTO> Semanas { get; set; } = new();
+
+    public List<VolumeSemanalDTO> VolumesSemanais { get; set; } = new();
 }
