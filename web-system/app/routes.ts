@@ -9,4 +9,7 @@ export default [
   route("volume", "src/screen/volume.tsx"),
   route("intensidade", "src/screen/intensidade.tsx"),
   route("salvar", "src/screen/salvar.tsx"),
+  route("login", "src/screen/login.tsx"),
+  route("register", "src/screen/register.tsx")
+
 ] satisfies RouteConfig;
