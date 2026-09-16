@@ -251,4 +251,9 @@ public class CadastroCompletoService
             DataInicio = periodizacao.DataInicio
         };
     }
+
+    internal async Task Obter(Guid alunoId)
+    {
+        throw new NotImplementedException();
+    }
 }

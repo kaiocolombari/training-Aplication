@@ -1,22 +1,24 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 
-export default function Connection() {
-    const [isOnline, setIsOnline] = useState(false);
+export async function api(
+    endpoint: string,
+    options?: RequestInit
+) {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: {
+            "Content-Type": "application/json",
+            ...options?.headers,
+        },
+    });
 
-    useEffect(() => {
-        const connectionChangeHandler =  async () => {
-            try {
-                const response = await axios.get("http://localhost:3000");
-                setIsOnline(true);
-            } catch (e) {
-                console.error('API Error:', e);
-                setIsOnline(false);
-            } 
-        };
+    if (!response.ok) {
+        throw new Error(`Erro na API: ${response.status}`);
+    }
 
-        connectionChangeHandler();
-    },[]);
+    if (response.status === 204) {
+        return null;
+    }
 
-    return isOnline
+    return response.json();
 }

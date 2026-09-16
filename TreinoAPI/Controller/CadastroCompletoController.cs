@@ -17,7 +17,7 @@ public class CadastroCompletoController : ControllerBase
     [HttpGet("alunos/{alunoId}")]
     public async Task<IActionResult> Obter(Guid alunoId)
     {
-        var cadastro = await _service.Obter(alunoId);
+        var cadastro = await _service.ObterCadastro(alunoId);
 
         if (cadastro == null)
             return NotFound("Aluno não encontrado");
