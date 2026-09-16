@@ -58,11 +58,11 @@ export default function Login() {
       <div className="w-full max-w-md">
 
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-16 items-center justify-center rounded-2xl bg-white shadow-md">
+          {/* <div className="mx-auto mb-4 flex h-12 w-16 items-center justify-center rounded-2xl bg-white shadow-md">
             <span className="text-2xl font-bold text-white">
               <img src={logo} alt="Logo" />
             </span>
-          </div>
+          </div> */}
 
           <h1 className="text-3xl font-bold italic text-zinc-700">
             Treino System
@@ -122,7 +122,7 @@ export default function Login() {
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder="Digite sua senha"
                   autoComplete="current-password"
-                  className="w-full rounded-xl border-2 border-zinc-200 bg-zinc-50 px-4 py-3 pr-20 text-zinc-700 outline-none transition placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white"
+                  className="w-full rounded-xl border-2 border-zinc-200 bg-zinc-50 px-4 py-3 pr-20 text-zinc-700 outline-none transition placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white "
                 />
 
                 <button
@@ -130,7 +130,7 @@ export default function Login() {
                   onClick={() =>
                     setMostrarSenha(!mostrarSenha)
                   }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#a85f60] hover:text-[#914f50]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#a85f60] hover:text-[#914f50] cursor-pointer"
                 >
                   {mostrarSenha ? 'OCULTAR' : 'MOSTRAR'}
                 </button>
@@ -140,7 +140,7 @@ export default function Login() {
             <div className="mb-7 text-right">
               <button
                 type="button"
-                className="text-sm font-semibold text-[#a85f60] hover:underline"
+                className="text-sm font-semibold text-[#a85f60] hover:underline cursor-pointer"
               >
                 Esqueci minha senha
               </button>
@@ -151,7 +151,7 @@ export default function Login() {
               disabled={carregando}
               className={`w-full rounded-xl px-5 py-4 font-bold uppercase tracking-wide transition ${carregando
                 ? 'cursor-not-allowed bg-zinc-300 text-zinc-500'
-                : 'bg-[#a85f60] text-white shadow-md hover:bg-[#914f50] hover:shadow-lg'
+                : 'bg-[#a85f60] text-white shadow-md hover:bg-[#914f50] cursor-pointer hover:shadow-lg'
                 }`}
             >
               {carregando ? 'Entrando...' : 'Entrar'}
