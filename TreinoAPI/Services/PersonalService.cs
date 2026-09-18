@@ -77,7 +77,7 @@ public class PersonalService
         return new PersonalDTO
         {
             Id = personal.Id,
-            UsuarioId = personal.Id,
+            UsuarioId = personal.UsuarioId,
             NomeCompleto = personal.Nome,
             Email = personal.Usuario.Email,
             Telefone = personal.Usuario.Telefone,

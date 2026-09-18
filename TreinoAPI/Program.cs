@@ -31,6 +31,7 @@ builder.Services.AddScoped<TreinoExercicioService>();
 builder.Services.AddScoped<VolumeSemanalService>();
 builder.Services.AddScoped<GrupoMuscularService>();
 builder.Services.AddScoped<DobraCutaneaService>();
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         connectionString

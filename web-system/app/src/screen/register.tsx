@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { criarPersonal } from '../service/personalService'
 
 export default function Register() {
     const navigate = useNavigate()
@@ -9,66 +10,54 @@ export default function Register() {
     const [telefone, setTelefone] = useState('')
     const [senha, setSenha] = useState('')
     const [confirmarSenha, setConfirmarSenha] = useState('')
+
+    const [erro, setErro] = useState("")
+
     const [mostrarSenha, setMostrarSenha] = useState(false)
     const [carregando, setCarregando] = useState(false)
 
     const handleRegister = async (e: { preventDefault: () => void }) => {
         e.preventDefault()
 
+        setErro("")
+
         if (!nome || !email || !telefone || !senha || !confirmarSenha) {
-            alert('Preencha todos os campos.')
+            setErro('Preencha todos os campos.')
             return
         }
 
         if (senha !== confirmarSenha) {
-            alert('As senhas não coincidem.')
+            setErro('As senhas não coincidem.')
             return
         }
 
         if (senha.length < 6) {
-            alert('A senha deve possuir pelo menos 6 caracteres.')
+            setErro('A senha deve possuir pelo menos 6 caracteres.')
             return
         }
 
         try {
             setCarregando(true)
 
-            // Futuramente:
-            //
-            // const response = await fetch(
-            //     'http://localhost:xxxx/api/auth/register',
-            //     {
-            //         method: 'POST',
-            //         headers: {
-            //             'Content-Type': 'application/json'
-            //         },
-            //         body: JSON.stringify({
-            //             nome,
-            //             email,
-            //             telefone,
-            //             senha
-            //         })
-            //     }
-            // )
-            //
-            // const data = await response.json()
-
-            console.log({
-                nome,
-                email,
-                telefone,
-                senha
+            const personal = await criarPersonal({
+                email: email,
+                nomeCompleto: nome,
+                telefone: telefone,
+                senha: senha
             })
 
-            alert('Conta criada com sucesso!')
+            console.log("Personal criado:", personal)
 
             navigate('/login')
 
         } catch (error) {
-            console.error(error)
-            alert('Erro ao criar a conta.')
+            if (error instanceof Error) {
+                setErro(error.message)
+            } else {
+                setErro("Erro ao criar conta.")
+            }
         } finally {
-            setCarregando(false)
+            setCarregando(false);
         }
     }
 
@@ -214,6 +203,8 @@ export default function Register() {
                                 className="w-full rounded-xl border-2 border-zinc-200 bg-zinc-50 px-4 py-3 text-zinc-700 outline-none transition placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white"
                             />
                         </div>
+
+                        {erro && <p>{erro}</p>}
 
                         <button
                             type="submit"
