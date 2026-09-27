@@ -1,9 +1,7 @@
 import navTool from "../components/navTool";
 import { useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
-import { FaSearch } from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
-import { LuOctagonAlert } from "react-icons/lu";
+import { FaSearch, FaRegTrashAlt, FaTrashAlt } from "react-icons/fa";
 
 const regioesMusculares = [
     {
@@ -54,7 +52,11 @@ function calcularTotalRegiao(grupos: any[], ids: string[]) {
 export default function Volume() {
     const { avaliacao, setAvaliacao } = useAvaliacao();
 
-    const [semanaAtual, setSemanaAtual] = useState(0);
+    const [semanaAtual, setSemanaAtual] = useState(0)
+
+    const [animandoSemana, setAnimandoSemana] = useState(false);
+
+    const [direcao, setDirecao] = useState<"esquerda" | "direita">("direita");
 
     const [modalAberto, setModalAberto] = useState(false);
 
@@ -76,6 +78,27 @@ export default function Volume() {
             total + Number(grupo.seriesDiretas || 0),
         0
     );
+
+    const trocarSemana = (novaSemana: number) => {
+        if (novaSemana === semanaAtual || animandoSemana) return;
+
+        setDirecao(
+            novaSemana > semanaAtual
+                ? "direita"
+                : "esquerda"
+        );
+
+        setAnimandoSemana(true);
+
+        setTimeout(() => {
+            setSemanaAtual(novaSemana);
+
+            setTimeout(() => {
+                setAnimandoSemana(false);
+            }, 50);
+
+        }, 200);
+    };
 
     const totalLivresSemana = semana.grupos.reduce(
         (total: number, grupo: any) =>
@@ -149,6 +172,34 @@ export default function Volume() {
                 ...grupos[grupoIndex],
                 [tipo]: valor,
             };
+
+            volume[semanaAtual] = {
+                ...volume[semanaAtual],
+                grupos,
+            };
+
+            return {
+                ...prev,
+                volume,
+            };
+        });
+    };
+
+    const limparRegiao = (idsRegiao: string[]) => {
+        setAvaliacao((prev: any) => {
+            const volume = [...prev.volume];
+
+            const grupos = volume[semanaAtual].grupos.map((grupo: any) => {
+                if (idsRegiao.includes(grupo.id)) {
+                    return {
+                        ...grupo,
+                        seriesDiretas: 0,
+                        seriesLivres: 0,
+                    };
+                }
+
+                return grupo;
+            });
 
             volume[semanaAtual] = {
                 ...volume[semanaAtual],
@@ -245,19 +296,22 @@ export default function Volume() {
                         <h2 className="text-2xl font-bold italic uppercase text-[#a85f60]">
                             Semana {semanaAtual + 1} / 12
                         </h2>
-
+                        <div className="mt-2 h-1.5 w-full max-w-xs overflow-hidden bg-zinc-300">
+                            <div
+                                className="h-full bg-[#a85f60] transition-all duration-500"
+                                style={{
+                                    width: `${((semanaAtual + 1) / 12) * 100}%`
+                                }}
+                            />
+                        </div>
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row">
 
                         <button
                             onClick={() => {
-                                setSemanaAtual((semana) =>
-                                    Math.max(0, semana - 1)
-                                )
-
-                            }
-                            }
+                                trocarSemana(semanaAtual - 1);
+                            }}
                             disabled={semanaAtual === 0}
                             className="h-10 border-2 border-zinc-700 bg-zinc-700 px-4 text-sm font-bold uppercase text-white hover:cursor-pointer hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -266,11 +320,8 @@ export default function Volume() {
 
                         <button
                             onClick={() => {
-                                setSemanaAtual((semana) =>
-                                    Math.min(11, semana + 1)
-                                );
-                            }
-                            }
+                                trocarSemana(semanaAtual + 1);
+                            }}
                             disabled={semanaAtual === 11}
                             className="h-10 border-2 border-zinc-700 bg-zinc-700 px-4 text-sm font-bold uppercase text-white hover:cursor-pointer hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -354,7 +405,18 @@ export default function Volume() {
 
             </section>
 
-            <section className="mt-5 grid gap-4 xl:grid-cols-2">
+            <section
+                className={`
+        mt-5 grid gap-4 xl:grid-cols-2
+        transition-all duration-200 ease-in-out
+        ${animandoSemana
+                        ? direcao === "direita"
+                            ? "translate-x-8 opacity-0"
+                            : "-translate-x-8 opacity-0"
+                        : "translate-x-0 opacity-100"
+                    }
+    `}
+            >
 
                 {regioesMusculares.map((regiao) => {
 
@@ -372,9 +434,28 @@ export default function Volume() {
 
                             <div className="mb-3 flex items-center justify-between border-b-2 border-[#b88b8b] pb-2">
 
-                                <h3 className="text-lg font-bold italic uppercase tracking-wide text-[#a85f60]">
-                                    {regiao.titulo}
-                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-lg font-bold italic uppercase tracking-wide text-[#a85f60]">
+                                        {regiao.titulo}
+                                    </h3>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => limparRegiao(regiao.ids)}
+                                        title={`Limpar ${regiao.titulo}`}
+                                        className="group p-0.5 text-zinc-500 transition-colors hover:cursor-pointer hover:text-red-600 hover:animate-bounce hover:[animation-duration:1s]"
+                                    >
+                                        <FaRegTrashAlt
+                                            size={15}
+                                            className="block transition-all duration-150 group-hover:hidden"
+                                        />
+
+                                        <FaTrashAlt
+                                            size={15}
+                                            className="hidden transition-all duration-150 group-hover:block"
+                                        />
+                                    </button>
+                                </div>
 
                                 <span className="bg-[#ececec] px-3 py-1 text-sm font-bold uppercase text-zinc-700">
                                     Total {totalRegiao}
