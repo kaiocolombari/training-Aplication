@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import navTool from "../components/navTool";
 import { useAvaliacao } from "../context/avaliacaoContext";
-
+import { FaRegTrashAlt } from "react-icons/fa";
 
 
 export default function periodizacao() {
@@ -188,6 +188,60 @@ export default function periodizacao() {
 
         return total;
     };
+
+    const limparSemana = (semanaIndex: number) => {
+        setAvaliacao((prev) => {
+            const semanas = [...prev.periodizacao.semanas];
+
+            semanas[semanaIndex] = {
+                ...semanas[semanaIndex],
+
+                dias: semanas[semanaIndex].dias.map((dia) => ({
+                    ...dia,
+                    treinoIds: dia.treinoIds.map(() => ""),
+                })),
+            };
+
+            return {
+                ...prev,
+                periodizacao: {
+                    ...prev.periodizacao,
+                    semanas,
+                },
+            };
+        });
+    };
+
+    const limparDia = (
+        semanaIndex: number,
+        diaIndex: number
+    ) => {
+        setAvaliacao((prev) => {
+            const semanas = [...prev.periodizacao.semanas];
+
+            semanas[semanaIndex] = {
+                ...semanas[semanaIndex],
+
+                dias: semanas[semanaIndex].dias.map((dia, index) =>
+                    index === diaIndex
+                        ? {
+                            ...dia,
+                            treinoIds: dia.treinoIds.map(() => ""),
+                        }
+                        : dia
+                ),
+            };
+
+            return {
+                ...prev,
+                periodizacao: {
+                    ...prev.periodizacao,
+                    semanas,
+                },
+            };
+        });
+    };
+
     return (
         <main className="h-full bg-[#ececec] p-3 md:p-5">
             <hr className="mb-5 my-4 rounded-2xl border-[3px] border-zinc-400" />
@@ -244,8 +298,19 @@ export default function periodizacao() {
                         </div>
 
                         <div className="grid grid-cols-8 gap-2 mt-10">
-                            <div className="flex text-xl text-[#a85f60] justify-center font-bold">
-                                Semana {semana.numero}
+                            <div className="flex items-center justify-center gap-2 text-xl text-[#a85f60] font-bold">
+                                <span>
+                                    Semana {semana.numero}
+                                </span>
+
+                                <button
+                                    type="button"
+                                    onClick={() => limparSemana(semanaIndex)}
+                                    title={`Limpar toda a semana ${semana.numero}`}
+                                    className="p-1.5 text-zinc-500 hover:cursor-pointer hover:text-red-600 transition"
+                                >
+                                    <FaRegTrashAlt />
+                                </button>
                             </div>
 
                             {[
@@ -263,6 +328,13 @@ export default function periodizacao() {
                                 >
                                     <div className="mb-2 text-center text-sm font-bold">
                                         {datasPeriodizacao[semanaIndex][diaIndex].texto}
+                                        <button
+                                            type="button"
+                                            onClick={() => limparDia(semanaIndex, diaIndex)}
+                                            className="p-1.5 text-center hover:cursor-pointer hover:text-zinc-600"
+                                        >
+                                            <FaRegTrashAlt />
+                                        </button>
                                     </div>
 
                                     <div className="flex flex-col border">
@@ -291,10 +363,14 @@ export default function periodizacao() {
                                             </select>
                                         ))}
                                     </div>
+
                                 </div>
+
                             ))}
                         </div>
+
                     </div>
+
                     <div className="mt-10 p-3">
                         <div className="mt-5">
                             <h1 className="w-full border-b-2 border-[#b88b8b] pb-1 text-lg font-bold italic uppercase tracking-wide text-[#a85f60]">
