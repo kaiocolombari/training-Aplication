@@ -1,7 +1,7 @@
 import navTool from "../components/navTool";
 import { useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
-import { FaSearch, FaRegTrashAlt, FaTrashAlt } from "react-icons/fa";
+import { FaSearch, FaRegTrashAlt, FaTrashAlt, FaRunning } from "react-icons/fa";
 
 const regioesMusculares = [
     {
@@ -52,11 +52,12 @@ function calcularTotalRegiao(grupos: any[], ids: string[]) {
 export default function Volume() {
     const { avaliacao, setAvaliacao } = useAvaliacao();
 
-    const [semanaAtual, setSemanaAtual] = useState(0)
+    const [semanaAtual, setSemanaAtual] = useState(0);
 
     const [animandoSemana, setAnimandoSemana] = useState(false);
 
-    const [direcao, setDirecao] = useState<"esquerda" | "direita">("direita");
+    const [direcao, setDirecao] =
+        useState<"esquerda" | "direita">("direita");
 
     const [modalAberto, setModalAberto] = useState(false);
 
@@ -156,6 +157,7 @@ export default function Volume() {
         setSeriesDiretasModal("");
         setSeriesLivresModal("");
     };
+
     const atualizarVolume = (
         grupoIndex: number,
         tipo: "seriesDiretas" | "seriesLivres",
@@ -215,7 +217,6 @@ export default function Volume() {
 
     const puxarDadosSemanaAnterior = () => {
         try {
-            // Não existe semana anterior para a primeira semana
             if (semanaAtual === 0) {
                 return;
             }
@@ -223,11 +224,14 @@ export default function Volume() {
             setAvaliacao((prev: any) => {
                 const volume = [...prev.volume];
 
-                const gruposAnterior = volume[semanaAtual - 1].grupos;
+                const gruposAnterior =
+                    volume[semanaAtual - 1].grupos;
 
-                const novosGrupos = gruposAnterior.map((grupo: any) => ({
-                    ...grupo
-                }));
+                const novosGrupos = gruposAnterior.map(
+                    (grupo: any) => ({
+                        ...grupo
+                    })
+                );
 
                 volume[semanaAtual] = {
                     ...volume[semanaAtual],
@@ -241,7 +245,10 @@ export default function Volume() {
             });
 
         } catch (err) {
-            console.log("Erro ao puxar dados da semana anterior:", err);
+            console.log(
+                "Erro ao puxar dados da semana anterior:",
+                err
+            );
         }
     };
 
@@ -269,133 +276,420 @@ export default function Volume() {
     return (
         <main className="min-h-full bg-[#ececec] p-3 md:p-5">
 
-            <hr className="mb-5 my-4 rounded-2xl border-[3px] border-zinc-400" />
+            <div className="
+                mb-6
+                flex flex-col gap-4
+                rounded-3xl
+                border border-zinc-300
+                bg-[#f7f7f7]
+                p-6
+                shadow-[0_4px_18px_rgba(0,0,0,0.06)]
+                md:flex-row
+                md:items-center
+                md:justify-between
+            ">
 
-            <header className="flex flex-col gap-2 border-b-2 border-[#b88b8b] pb-3">
-
-                <h1 className="text-3xl font-bold italic text-zinc-600">
-                    Volume - Intensidade
-                </h1>
-
-                <p className="text-sm font-bold uppercase tracking-wide text-[#a85f60]">
-                    Volume semanal por região muscular
-                </p>
-
-            </header>
-
-            <section className="mt-6 border-2 border-zinc-700 bg-white p-4">
-
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center gap-4">
 
                     <div>
 
-                        <span className="text-xs font-bold uppercase tracking-wide text-zinc-500">
-                            Semana selecionada
-                        </span>
+                        <p className="
+                            mb-1
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-[0.2em]
+                            text-[#8f4f51]
+                        ">
+                            Volume
+                        </p>
 
-                        <h2 className="text-2xl font-bold italic uppercase text-[#a85f60]">
-                            Semana {semanaAtual + 1} / 12
-                        </h2>
-                        <div className="mt-2 h-1.5 w-full max-w-xs overflow-hidden bg-zinc-300">
-                            <div
-                                className="h-full bg-[#a85f60] transition-all duration-500"
-                                style={{
-                                    width: `${((semanaAtual + 1) / 12) * 100}%`
-                                }}
-                            />
-                        </div>
-                    </div>
+                        <h1 className="
+                            text-2xl
+                            font-black
+                            tracking-tight
+                            text-zinc-800
+                            md:text-3xl
+                        ">
+                            Volume - Intensidade
+                        </h1>
 
-                    <div className="flex flex-col gap-2 sm:flex-row">
-
-                        <button
-                            onClick={() => {
-                                trocarSemana(semanaAtual - 1);
-                            }}
-                            disabled={semanaAtual === 0}
-                            className="h-10 border-2 border-zinc-700 bg-zinc-700 px-4 text-sm font-bold uppercase text-white hover:cursor-pointer hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            Semana anterior
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                trocarSemana(semanaAtual + 1);
-                            }}
-                            disabled={semanaAtual === 11}
-                            className="h-10 border-2 border-zinc-700 bg-zinc-700 px-4 text-sm font-bold uppercase text-white hover:cursor-pointer hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            Próxima semana
-                        </button>
-
-                        {semanaAtual > 0 && (
-                            <button
-                                onClick={puxarDadosSemanaAnterior}
-                                className="flex h-10 items-center justify-center gap-2 border-2 border-[#a85f60] bg-white px-4 text-sm font-bold uppercase text-[#a85f60] hover:cursor-pointer hover:bg-[#f7eeee]"
-
-                            >
-                                Puxar Dados Da Semana Anterior
-                            </button>
-                        )}
-
-
-                        <button
-                            onClick={abrirModal}
-                            className="flex h-10 items-center justify-center gap-2 border-2 border-[#a85f60] bg-white px-4 text-sm font-bold uppercase text-[#a85f60] hover:cursor-pointer hover:bg-[#f7eeee]"
-                        >
-                            <span>Setar valores</span>
-                            <FaSearch size={14} />
-                        </button>
+                        <p className="
+                            mt-1
+                            text-sm
+                            text-zinc-500
+                        ">
+                            Configure o volume para cada músculo
+                            dos conjuntos musculares.
+                        </p>
 
                     </div>
 
                 </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-4">
+                <div className="
+                    flex items-center gap-3
+                    rounded-2xl
+                    border border-zinc-300
+                    bg-[#eeeeee]
+                    px-4 py-3
+                ">
 
-                    <div className="border border-zinc-300 bg-[#f7f7f7] p-3">
+                    <div className="
+                        flex h-10 w-10
+                        items-center justify-center
+                        rounded-xl
+                        bg-[#8f4f51]
+                        text-white
+                    ">
+                        <FaRunning />
+                    </div>
 
-                        <span className="text-xs font-bold uppercase text-zinc-500">
+                    <div>
+
+                        <p className="
+                            text-xs
+                            font-semibold
+                            uppercase
+                            tracking-wide
+                            text-zinc-500
+                        ">
+                            Treinos
+                        </p>
+
+                        <p className="
+                            text-sm
+                            font-black
+                            text-zinc-700
+                        ">
+                            12 disponíveis
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <section className="
+                mt-5
+                overflow-hidden
+                rounded-3xl
+                border border-zinc-300
+                bg-[#f7f7f7]
+                shadow-[0_4px_18px_rgba(0,0,0,0.06)]
+            ">
+
+                <div className="
+                    border-b
+                    border-zinc-300
+                    bg-[#eeeeee]
+                    p-5
+                ">
+
+                    <div className="
+                        flex flex-col gap-4
+                        lg:flex-row
+                        lg:items-center
+                        lg:justify-between
+                    ">
+
+                        <div>
+
+                            <span className="
+                                text-xs
+                                font-bold
+                                uppercase
+                                tracking-wide
+                                text-zinc-500
+                            ">
+                                Semana selecionada
+                            </span>
+
+                            <h2 className="
+                                mt-1
+                                text-2xl
+                                font-black
+                                italic
+                                uppercase
+                                tracking-tight
+                                text-[#8f4f51]
+                            ">
+                                Semana {semanaAtual + 1} / 12
+                            </h2>
+
+                            <div className="
+                                mt-3
+                                h-2
+                                w-full
+                                max-w-xs
+                                overflow-hidden
+                                rounded-full
+                                bg-zinc-300
+                            ">
+                                <div
+                                    className="
+                                        h-full
+                                        rounded-full
+                                        bg-[#8f4f51]
+                                        transition-all
+                                        duration-500
+                                    "
+                                    style={{
+                                        width: `${((semanaAtual + 1) / 12) * 100}%`
+                                    }}
+                                />
+                            </div>
+
+                        </div>
+
+                        <div className="
+                            flex flex-wrap
+                            gap-2
+                        ">
+
+                            <button
+                                onClick={() => {
+                                    trocarSemana(
+                                        semanaAtual - 1
+                                    );
+                                }}
+                                disabled={semanaAtual === 0}
+                                className="
+                                    h-10
+                                    rounded-xl
+                                    border
+                                    border-zinc-400
+                                    bg-zinc-700
+                                    px-4
+                                    text-sm
+                                    font-bold
+                                    uppercase
+                                    text-white
+                                    transition-all
+                                    hover:cursor-pointer
+                                    hover:bg-zinc-600
+                                    hover:shadow-sm
+                                    disabled:cursor-not-allowed
+                                    disabled:opacity-40
+                                "
+                            >
+                                Semana anterior
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    trocarSemana(
+                                        semanaAtual + 1
+                                    );
+                                }}
+                                disabled={semanaAtual === 11}
+                                className="
+                                    h-10
+                                    rounded-xl
+                                    border
+                                    border-zinc-400
+                                    bg-zinc-700
+                                    px-4
+                                    text-sm
+                                    font-bold
+                                    uppercase
+                                    text-white
+                                    transition-all
+                                    hover:cursor-pointer
+                                    hover:bg-zinc-600
+                                    hover:shadow-sm
+                                    disabled:cursor-not-allowed
+                                    disabled:opacity-40
+                                "
+                            >
+                                Próxima semana
+                            </button>
+
+                            {semanaAtual > 0 && (
+                                <button
+                                    onClick={
+                                        puxarDadosSemanaAnterior
+                                    }
+                                    className="
+                                        flex
+                                        h-10
+                                        items-center
+                                        justify-center
+                                        gap-2
+                                        rounded-xl
+                                        border
+                                        border-[#a87576]
+                                        bg-[#f7eeee]
+                                        px-4
+                                        text-sm
+                                        font-bold
+                                        uppercase
+                                        text-[#8f4f51]
+                                        transition-all
+                                        hover:cursor-pointer
+                                        hover:bg-[#eadada]
+                                    "
+                                >
+                                    Puxar dados
+                                </button>
+                            )}
+
+                            <button
+                                onClick={abrirModal}
+                                className="
+                                    flex
+                                    h-10
+                                    items-center
+                                    justify-center
+                                    gap-2
+                                    rounded-xl
+                                    border
+                                    border-[#8f4f51]
+                                    bg-[#8f4f51]
+                                    px-4
+                                    text-sm
+                                    font-bold
+                                    uppercase
+                                    text-white
+                                    transition-all
+                                    hover:cursor-pointer
+                                    hover:bg-[#713b3d]
+                                    hover:shadow-sm
+                                "
+                            >
+                                <span>
+                                    Setar valores
+                                </span>
+
+                                <FaSearch size={14} />
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div className="
+                    grid
+                    gap-3
+                    p-5
+                    sm:grid-cols-2
+                    xl:grid-cols-4
+                ">
+
+                    <div className="
+                        rounded-2xl
+                        border
+                        border-zinc-300
+                        bg-[#eeeeee]
+                        p-4
+                    ">
+
+                        <span className="
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-wide
+                            text-zinc-500
+                        ">
                             Total da semana
                         </span>
 
-                        <p className="text-2xl font-bold text-zinc-800">
+                        <p className="
+                            mt-1
+                            text-2xl
+                            font-black
+                            text-zinc-800
+                        ">
                             {totalSemana}
                         </p>
 
                     </div>
 
-                    <div className="border border-zinc-300 bg-[#f7f7f7] p-3">
+                    <div className="
+                        rounded-2xl
+                        border
+                        border-zinc-300
+                        bg-[#eeeeee]
+                        p-4
+                    ">
 
-                        <span className="text-xs font-bold uppercase text-zinc-500">
+                        <span className="
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-wide
+                            text-zinc-500
+                        ">
                             Séries diretas
                         </span>
 
-                        <p className="text-2xl font-bold text-zinc-800">
+                        <p className="
+                            mt-1
+                            text-2xl
+                            font-black
+                            text-[#8f4f51]
+                        ">
                             {totalDiretasSemana}
                         </p>
 
                     </div>
 
-                    <div className="border border-zinc-300 bg-[#f7f7f7] p-3">
+                    <div className="
+                        rounded-2xl
+                        border
+                        border-zinc-300
+                        bg-[#eeeeee]
+                        p-4
+                    ">
 
-                        <span className="text-xs font-bold uppercase text-zinc-500">
+                        <span className="
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-wide
+                            text-zinc-500
+                        ">
                             Séries livres
                         </span>
 
-                        <p className="text-2xl font-bold text-zinc-800">
+                        <p className="
+                            mt-1
+                            text-2xl
+                            font-black
+                            text-[#8f4f51]
+                        ">
                             {totalLivresSemana}
                         </p>
 
                     </div>
 
-                    <div className="border border-zinc-300 bg-[#f7f7f7] p-3">
+                    <div className="
+                        rounded-2xl
+                        border
+                        border-zinc-300
+                        bg-[#eeeeee]
+                        p-4
+                    ">
 
-                        <span className="text-xs font-bold uppercase text-zinc-500">
+                        <span className="
+                            text-xs
+                            font-bold
+                            uppercase
+                            tracking-wide
+                            text-zinc-500
+                        ">
                             Grupos preenchidos
                         </span>
 
-                        <p className="text-2xl font-bold text-zinc-800">
+                        <p className="
+                            mt-1
+                            text-2xl
+                            font-black
+                            text-zinc-800
+                        ">
                             {gruposPreenchidos}
                         </p>
 
@@ -407,15 +701,20 @@ export default function Volume() {
 
             <section
                 className={`
-        mt-5 grid gap-4 xl:grid-cols-2
-        transition-all duration-200 ease-in-out
-        ${animandoSemana
+                    mt-5
+                    grid
+                    gap-4
+                    xl:grid-cols-2
+                    transition-all
+                    duration-200
+                    ease-in-out
+                    ${animandoSemana
                         ? direcao === "direita"
                             ? "translate-x-8 opacity-0"
                             : "-translate-x-8 opacity-0"
                         : "translate-x-0 opacity-100"
                     }
-    `}
+                `}
             >
 
                 {regioesMusculares.map((regiao) => {
@@ -429,59 +728,161 @@ export default function Volume() {
                     return (
                         <article
                             key={regiao.titulo}
-                            className="border-2 border-zinc-700 bg-white p-4"
+                            className="
+                                overflow-hidden
+                                rounded-3xl
+                                border
+                                border-zinc-300
+                                bg-[#f7f7f7]
+                                shadow-[0_4px_18px_rgba(0,0,0,0.06)]
+                                transition-shadow
+                                duration-200
+                                hover:shadow-[0_6px_24px_rgba(0,0,0,0.09)]
+                            "
                         >
 
-                            <div className="mb-3 flex items-center justify-between border-b-2 border-[#b88b8b] pb-2">
+                            <div className="
+                                flex
+                                items-center
+                                justify-between
+                                border-b
+                                border-zinc-300
+                                bg-[#eeeeee]
+                                px-5
+                                py-4
+                            ">
 
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-lg font-bold italic uppercase tracking-wide text-[#a85f60]">
+                                <div className="
+                                    flex
+                                    items-center
+                                    gap-2
+                                ">
+
+                                    <h3 className="
+                                        text-lg
+                                        font-black
+                                        italic
+                                        uppercase
+                                        tracking-wide
+                                        text-[#8f4f51]
+                                    ">
                                         {regiao.titulo}
                                     </h3>
 
                                     <button
                                         type="button"
-                                        onClick={() => limparRegiao(regiao.ids)}
+                                        onClick={() =>
+                                            limparRegiao(
+                                                regiao.ids
+                                            )
+                                        }
                                         title={`Limpar ${regiao.titulo}`}
-                                        className="group p-0.5 text-zinc-500 transition-colors hover:cursor-pointer hover:text-red-600 hover:animate-bounce hover:[animation-duration:1s]"
+                                        className="
+                                            group
+                                            rounded-lg
+                                            p-1.5
+                                            text-zinc-500
+                                            transition-all
+                                            hover:cursor-pointer
+                                            hover:bg-[#f3dddd]
+                                            hover:text-[#8f4f51]
+                                        "
                                     >
+
                                         <FaRegTrashAlt
                                             size={15}
-                                            className="block transition-all duration-150 group-hover:hidden"
+                                            className="
+                                                block
+                                                transition-all
+                                                duration-150
+                                                group-hover:hidden
+                                            "
                                         />
 
                                         <FaTrashAlt
                                             size={15}
-                                            className="hidden transition-all duration-150 group-hover:block"
+                                            className="
+                                                hidden
+                                                transition-all
+                                                duration-150
+                                                group-hover:block
+                                            "
                                         />
+
                                     </button>
+
                                 </div>
 
-                                <span className="bg-[#ececec] px-3 py-1 text-sm font-bold uppercase text-zinc-700">
+                                <span className="
+                                    rounded-xl
+                                    border
+                                    border-zinc-300
+                                    bg-[#e4e4e4]
+                                    px-3
+                                    py-1.5
+                                    text-xs
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-700
+                                ">
                                     Total {totalRegiao}
                                 </span>
 
                             </div>
 
-                            <div className="mb-2 grid grid-cols-[1fr_90px_90px_70px] gap-2 px-3">
+                            <div className="
+                                grid
+                                grid-cols-[1fr_90px_90px_70px]
+                                gap-2
+                                px-5
+                                pt-4
+                                pb-2
+                            ">
 
                                 <span />
 
-                                <span className="text-center text-[10px] font-bold uppercase text-zinc-500">
+                                <span className="
+                                    text-center
+                                    text-[10px]
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-500
+                                ">
                                     Diretas
                                 </span>
 
-                                <span className="text-center text-[10px] font-bold uppercase text-zinc-500">
+                                <span className="
+                                    text-center
+                                    text-[10px]
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-500
+                                ">
                                     Livres
                                 </span>
 
-                                <span className="text-center text-[10px] font-bold uppercase text-zinc-500">
+                                <span className="
+                                    text-center
+                                    text-[10px]
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-500
+                                ">
                                     Total
                                 </span>
 
                             </div>
 
-                            <div className="grid gap-2">
+                            <div className="
+                                grid
+                                gap-2
+                                px-5
+                                pb-5
+                            ">
 
                                 {regiao.ids.map((id) => {
 
@@ -506,17 +907,56 @@ export default function Volume() {
                                     return (
                                         <div
                                             key={`${semanaAtual}-${grupo.id}`}
-                                            className="grid grid-cols-[1fr_90px_90px_70px] items-center gap-2 border border-zinc-300 bg-[#f7f7f7] px-3 py-2"
+                                            className="
+                                                grid
+                                                grid-cols-[1fr_90px_90px_70px]
+                                                items-center
+                                                gap-2
+                                                rounded-xl
+                                                border
+                                                border-zinc-300
+                                                bg-[#eeeeee]
+                                                px-3
+                                                py-2
+                                                transition-colors
+                                                hover:border-zinc-400
+                                                hover:bg-[#e8e8e8]
+                                            "
                                         >
 
-                                            <span className="text-sm font-bold uppercase tracking-wide text-zinc-700">
+                                            <span className="
+                                                text-sm
+                                                font-bold
+                                                uppercase
+                                                tracking-wide
+                                                text-zinc-700
+                                            ">
                                                 {grupo.grupo}
                                             </span>
 
                                             <input
                                                 type="number"
                                                 min={0}
-                                                className="h-10 w-full border-2 border-[#b88b8b] bg-white px-1 text-center text-lg font-bold text-[#a85f60] outline-none focus:border-[#a85f60]"
+                                                className="
+                                                    h-10
+                                                    w-full
+                                                    rounded-lg
+                                                    border
+                                                    border-zinc-400
+                                                    bg-[#f7f7f7]
+                                                    px-1
+                                                    text-center
+                                                    text-lg
+                                                    font-black
+                                                    text-[#8f4f51]
+                                                    outline-none
+                                                    transition-all
+                                                    hover:border-zinc-500
+                                                    focus:border-[#713b3d]
+                                                    focus:bg-[#f5eeee]
+                                                    focus:ring-2
+                                                    focus:ring-[#8f4f51]/20
+                                                "
                                                 value={
                                                     grupo.seriesDiretas ?? 0
                                                 }
@@ -536,7 +976,26 @@ export default function Volume() {
                                             <input
                                                 type="number"
                                                 min={0}
-                                                className="h-10 w-full border-2 border-[#b88b8b] bg-white px-1 text-center text-lg font-bold text-[#a85f60] outline-none focus:border-[#a85f60]"
+                                                className="
+                                                    h-10
+                                                    w-full
+                                                    rounded-lg
+                                                    border
+                                                    border-zinc-400
+                                                    bg-[#f7f7f7]
+                                                    px-1
+                                                    text-center
+                                                    text-lg
+                                                    font-black
+                                                    text-[#8f4f51]
+                                                    outline-none
+                                                    transition-all
+                                                    hover:border-zinc-500
+                                                    focus:border-[#713b3d]
+                                                    focus:bg-[#f5eeee]
+                                                    focus:ring-2
+                                                    focus:ring-[#8f4f51]/20
+                                                "
                                                 value={
                                                     grupo.seriesLivres ?? 0
                                                 }
@@ -552,7 +1011,13 @@ export default function Volume() {
                                                     )
                                                 }
                                             />
-                                            <span className="text-center text-lg font-bold text-zinc-700">
+
+                                            <span className="
+                                                text-center
+                                                text-lg
+                                                font-black
+                                                text-zinc-700
+                                            ">
                                                 {totalGrupo}
                                             </span>
 
@@ -570,215 +1035,431 @@ export default function Volume() {
 
             {modalAberto && (
 
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="
+                    fixed
+                    inset-0
+                    z-50
+                    flex
+                    items-center
+                    justify-center
+                    bg-black/50
+                    p-4
+                    backdrop-blur-[2px]
+                ">
 
-                    <div className="w-full max-w-md border-2 border-zinc-700 bg-white p-6 shadow-xl">
+                    <div className="
+                        w-full
+                        max-w-md
+                        overflow-hidden
+                        rounded-3xl
+                        border
+                        border-zinc-300
+                        bg-[#f7f7f7]
+                        shadow-[0_12px_40px_rgba(0,0,0,0.20)]
+                    ">
 
-                        <h2 className="mb-5 border-b-2 border-[#b88b8b] pb-2 text-2xl font-bold italic uppercase text-[#a85f60]">
-                            Definir valores específicos
-                        </h2>
+                        <div className="
+                            border-b
+                            border-zinc-300
+                            bg-[#eeeeee]
+                            px-6
+                            py-5
+                        ">
 
-                        <label className="mb-3 block">
+                            <h2 className="
+                                text-2xl
+                                font-black
+                                italic
+                                uppercase
+                                tracking-tight
+                                text-[#8f4f51]
+                            ">
+                                Definir valores específicos
+                            </h2>
 
-                            <span className="mb-1 block text-xs font-bold uppercase text-zinc-500">
-                                Grupo muscular
-                            </span>
-
-                            <select
-                                className="h-11 w-full border-2 border-zinc-300 bg-white px-3 font-bold text-zinc-700 outline-none focus:border-[#a85f60]"
-                                value={grupoSelecionado}
-                                onChange={(evento) => {
-
-                                    const novoGrupo =
-                                        evento.target.value;
-
-                                    setGrupoSelecionado(
-                                        novoGrupo
-                                    );
-
-                                    const grupo =
-                                        avaliacao.volume[
-                                            semanaModal - 1
-                                        ].grupos.find(
-                                            (grupo: any) =>
-                                                grupo.id ===
-                                                novoGrupo
-                                        );
-
-                                    setSeriesDiretasModal(
-                                        String(
-                                            grupo?.seriesDiretas ||
-                                            ""
-                                        )
-                                    );
-
-                                    setSeriesLivresModal(
-                                        String(
-                                            grupo?.seriesLivres ||
-                                            ""
-                                        )
-                                    );
-                                }}
-                            >
-
-                                {avaliacao.volume[
-                                    0
-                                ].grupos.map(
-                                    (grupo: any) => (
-                                        <option
-                                            key={grupo.id}
-                                            value={grupo.id}
-                                        >
-                                            {grupo.grupo}
-                                        </option>
-                                    )
-                                )}
-
-                            </select>
-
-                        </label>
-
-                        <label className="mb-3 block">
-
-                            <span className="mb-1 block text-xs font-bold uppercase text-zinc-500">
-                                Semana
-                            </span>
-
-                            <select
-                                className="h-11 w-full border-2 border-zinc-300 bg-white px-3 font-bold text-zinc-700 outline-none focus:border-[#a85f60]"
-                                value={semanaModal}
-                                onChange={(evento) => {
-
-                                    const novaSemana =
-                                        Number(
-                                            evento.target.value
-                                        );
-
-                                    setSemanaModal(
-                                        novaSemana
-                                    );
-
-                                    const grupo =
-                                        avaliacao.volume[
-                                            novaSemana - 1
-                                        ].grupos.find(
-                                            (grupo: any) =>
-                                                grupo.id ===
-                                                grupoSelecionado
-                                        );
-
-                                    setSeriesDiretasModal(
-                                        String(
-                                            grupo?.seriesDiretas ||
-                                            ""
-                                        )
-                                    );
-
-                                    setSeriesLivresModal(
-                                        String(
-                                            grupo?.seriesLivres ||
-                                            ""
-                                        )
-                                    );
-                                }}
-                            >
-
-                                {avaliacao.volume.map(
-                                    (
-                                        _: any,
-                                        index: number
-                                    ) => (
-                                        <option
-                                            key={index}
-                                            value={index + 1}
-                                        >
-                                            Semana {index + 1}
-                                        </option>
-                                    )
-                                )}
-
-                            </select>
-
-                        </label>
-
-                        <label className="mb-3 block">
-
-                            <span className="mb-1 block text-xs font-bold uppercase text-zinc-500">
-                                Séries diretas
-                            </span>
-
-                            <input
-                                type="number"
-                                min={0}
-                                value={seriesDiretasModal}
-                                onChange={(evento) =>
-                                    setSeriesDiretasModal(
-                                        evento.target.value
-                                    )
-                                }
-                                className="h-11 w-full border-2 border-zinc-300 bg-white px-3 font-bold text-zinc-700 outline-none focus:border-[#a85f60]"
-                                placeholder="Digite as séries diretas"
-                            />
-
-                        </label>
-
-                        <label className="mb-5 block">
-
-                            <span className="mb-1 block text-xs font-bold uppercase text-zinc-500">
-                                Séries livres
-                            </span>
-
-                            <input
-                                type="number"
-                                min={0}
-                                value={seriesLivresModal}
-                                onChange={(evento) =>
-                                    setSeriesLivresModal(
-                                        evento.target.value
-                                    )
-                                }
-                                className="h-11 w-full border-2 border-zinc-300 bg-white px-3 font-bold text-zinc-700 outline-none focus:border-[#a85f60]"
-                                placeholder="Digite as séries livres"
-                            />
-
-                        </label>
-
-                        <div className="mb-5 border border-zinc-300 bg-[#f7f7f7] p-3">
-
-                            <span className="text-xs font-bold uppercase text-zinc-500">
-                                Volume total
-                            </span>
-
-                            <p className="text-2xl font-bold text-zinc-800">
-                                {
-                                    (Number(
-                                        seriesDiretasModal
-                                    ) || 0) +
-                                    (Number(
-                                        seriesLivresModal
-                                    ) || 0)
-                                }
+                            <p className="
+                                mt-1
+                                text-sm
+                                text-zinc-500
+                            ">
+                                Selecione o grupo e a semana
+                                que deseja configurar.
                             </p>
 
                         </div>
 
-                        <div className="flex justify-end gap-2">
 
-                            <button
-                                onClick={() =>
-                                    setModalAberto(false)
-                                }
-                                className="h-10 border-2 border-red-500 bg-white px-4 text-sm font-bold uppercase text-red-500 hover:cursor-pointer hover:bg-red-50"
-                            >
-                                Cancelar
-                            </button>
+                        <div className="p-6">
 
-                            <button
-                                onClick={aplicarValor}
-                                className="h-10 border-2 border-green-600 bg-green-600 px-4 text-sm font-bold uppercase text-white hover:cursor-pointer hover:bg-green-500"
-                            >
-                                Aplicar
-                            </button>
+                            <label className="
+                                mb-4
+                                block
+                            ">
+
+                                <span className="
+                                    mb-1.5
+                                    block
+                                    text-xs
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-500
+                                ">
+                                    Grupo muscular
+                                </span>
+
+                                <select
+                                    className="
+                                        h-11
+                                        w-full
+                                        rounded-xl
+                                        border
+                                        border-zinc-400
+                                        bg-[#eeeeee]
+                                        px-3
+                                        font-bold
+                                        text-zinc-700
+                                        outline-none
+                                        transition-all
+                                        focus:border-[#8f4f51]
+                                        focus:bg-[#f5eeee]
+                                        focus:ring-2
+                                        focus:ring-[#8f4f51]/20
+                                    "
+                                    value={grupoSelecionado}
+                                    onChange={(evento) => {
+
+                                        const novoGrupo =
+                                            evento.target.value;
+
+                                        setGrupoSelecionado(
+                                            novoGrupo
+                                        );
+
+                                        const grupo =
+                                            avaliacao.volume[
+                                                semanaModal - 1
+                                            ].grupos.find(
+                                                (grupo: any) =>
+                                                    grupo.id ===
+                                                    novoGrupo
+                                            );
+
+                                        setSeriesDiretasModal(
+                                            String(
+                                                grupo?.seriesDiretas ||
+                                                ""
+                                            )
+                                        );
+
+                                        setSeriesLivresModal(
+                                            String(
+                                                grupo?.seriesLivres ||
+                                                ""
+                                            )
+                                        );
+                                    }}
+                                >
+
+                                    {avaliacao.volume[
+                                        0
+                                    ].grupos.map(
+                                        (grupo: any) => (
+                                            <option
+                                                key={grupo.id}
+                                                value={grupo.id}
+                                            >
+                                                {grupo.grupo}
+                                            </option>
+                                        )
+                                    )}
+
+                                </select>
+
+                            </label>
+
+
+                            <label className="
+                                mb-4
+                                block
+                            ">
+
+                                <span className="
+                                    mb-1.5
+                                    block
+                                    text-xs
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-500
+                                ">
+                                    Semana
+                                </span>
+
+                                <select
+                                    className="
+                                        h-11
+                                        w-full
+                                        rounded-xl
+                                        border
+                                        border-zinc-400
+                                        bg-[#eeeeee]
+                                        px-3
+                                        font-bold
+                                        text-zinc-700
+                                        outline-none
+                                        transition-all
+                                        focus:border-[#8f4f51]
+                                        focus:bg-[#f5eeee]
+                                        focus:ring-2
+                                        focus:ring-[#8f4f51]/20
+                                    "
+                                    value={semanaModal}
+                                    onChange={(evento) => {
+
+                                        const novaSemana =
+                                            Number(
+                                                evento.target.value
+                                            );
+
+                                        setSemanaModal(
+                                            novaSemana
+                                        );
+
+                                        const grupo =
+                                            avaliacao.volume[
+                                                novaSemana - 1
+                                            ].grupos.find(
+                                                (grupo: any) =>
+                                                    grupo.id ===
+                                                    grupoSelecionado
+                                            );
+
+                                        setSeriesDiretasModal(
+                                            String(
+                                                grupo?.seriesDiretas ||
+                                                ""
+                                            )
+                                        );
+
+                                        setSeriesLivresModal(
+                                            String(
+                                                grupo?.seriesLivres ||
+                                                ""
+                                            )
+                                        );
+                                    }}
+                                >
+
+                                    {avaliacao.volume.map(
+                                        (
+                                            _: any,
+                                            index: number
+                                        ) => (
+                                            <option
+                                                key={index}
+                                                value={index + 1}
+                                            >
+                                                Semana {index + 1}
+                                            </option>
+                                        )
+                                    )}
+
+                                </select>
+
+                            </label>
+
+
+                            <label className="
+                                mb-4
+                                block
+                            ">
+
+                                <span className="
+                                    mb-1.5
+                                    block
+                                    text-xs
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-500
+                                ">
+                                    Séries diretas
+                                </span>
+
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={seriesDiretasModal}
+                                    onChange={(evento) =>
+                                        setSeriesDiretasModal(
+                                            evento.target.value
+                                        )
+                                    }
+                                    className="
+                                        h-11
+                                        w-full
+                                        rounded-xl
+                                        border
+                                        border-zinc-400
+                                        bg-[#eeeeee]
+                                        px-3
+                                        font-black
+                                        text-[#8f4f51]
+                                        outline-none
+                                        transition-all
+                                        placeholder:text-zinc-400
+                                        focus:border-[#8f4f51]
+                                        focus:bg-[#f5eeee]
+                                        focus:ring-2
+                                        focus:ring-[#8f4f51]/20
+                                    "
+                                    placeholder="Digite as séries diretas"
+                                />
+
+                            </label>
+
+
+                            <label className="
+                                mb-5
+                                block
+                            ">
+
+                                <span className="
+                                    mb-1.5
+                                    block
+                                    text-xs
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-500
+                                ">
+                                    Séries livres
+                                </span>
+
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={seriesLivresModal}
+                                    onChange={(evento) =>
+                                        setSeriesLivresModal(
+                                            evento.target.value
+                                        )
+                                    }
+                                    className="
+                                        h-11
+                                        w-full
+                                        rounded-xl
+                                        border
+                                        border-zinc-400
+                                        bg-[#eeeeee]
+                                        px-3
+                                        font-black
+                                        text-[#8f4f51]
+                                        outline-none
+                                        transition-all
+                                        placeholder:text-zinc-400
+                                        focus:border-[#8f4f51]
+                                        focus:bg-[#f5eeee]
+                                        focus:ring-2
+                                        focus:ring-[#8f4f51]/20
+                                    "
+                                    placeholder="Digite as séries livres"
+                                />
+
+                            </label>
+
+                            <div className="
+                                mb-5
+                                rounded-2xl
+                                border
+                                border-zinc-300
+                                bg-[#eeeeee]
+                                p-4
+                            ">
+
+                                <span className="
+                                    text-xs
+                                    font-black
+                                    uppercase
+                                    tracking-wide
+                                    text-zinc-500
+                                ">
+                                    Volume total
+                                </span>
+
+                                <p className="
+                                    mt-1
+                                    text-3xl
+                                    font-black
+                                    text-[#8f4f51]
+                                ">
+                                    {
+                                        (Number(
+                                            seriesDiretasModal
+                                        ) || 0) +
+                                        (Number(
+                                            seriesLivresModal
+                                        ) || 0)
+                                    }
+                                </p>
+
+                            </div>
+
+                            <div className="
+                                flex
+                                justify-end
+                                gap-2
+                            ">
+
+                                <button
+                                    onClick={() =>
+                                        setModalAberto(false)
+                                    }
+                                    className="
+                                        h-10
+                                        rounded-xl
+                                        border
+                                        border-zinc-400
+                                        bg-[#eeeeee]
+                                        px-4
+                                        text-sm
+                                        font-bold
+                                        uppercase
+                                        text-zinc-600
+                                        transition-all
+                                        hover:cursor-pointer
+                                        hover:border-red-400
+                                        hover:bg-red-50
+                                        hover:text-red-600
+                                    "
+                                >
+                                    Cancelar
+                                </button>
+
+                                <button
+                                    onClick={aplicarValor}
+                                    className="
+                                        h-10
+                                        rounded-xl
+                                        border
+                                        border-[#8f4f51]
+                                        bg-[#8f4f51]
+                                        px-5
+                                        text-sm
+                                        font-bold
+                                        uppercase
+                                        text-white
+                                        transition-all
+                                        hover:cursor-pointer
+                                        hover:bg-[#713b3d]
+                                        hover:shadow-sm
+                                    "
+                                >
+                                    Aplicar
+                                </button>
+
+                            </div>
 
                         </div>
 
@@ -787,10 +1468,11 @@ export default function Volume() {
                 </div>
             )}
 
+
             <div className="mt-10">
                 {navTool()}
             </div>
 
-        </main >
+        </main>
     );
 }

@@ -1,396 +1,865 @@
-import { useState, useEffect, useMemo } from "react";
-import navTool from "../components/navTool";
-import { useAvaliacao } from "../context/avaliacaoContext";
-import { FaRegTrashAlt } from "react-icons/fa";
+import { initialState, useAvaliacao } from '../context/avaliacaoContext'
+import navTool from '../components/navTool'
+import type { ExercicioTreino } from '../interface/interfaceExercicio';
+import { useEffect } from 'react';
 
+import {
+    FaDumbbell,
+    FaClock,
+    FaWeightHanging,
+    FaRedo,
+    FaLayerGroup,
+    FaNotesMedical,
+    FaRunning
+} from "react-icons/fa";
 
-export default function periodizacao() {
+export default function Prescricao() {
+
+    const { avaliacao, setAvaliacao } = useAvaliacao();
+
+    const atualizarNomeTreino = (
+        treinoIndex: number,
+        nome: string
+    ) => {
+
+        setAvaliacao((prev) => {
+
+            const treinos = [...prev.treino];
+
+            if (!treinos[treinoIndex]) {
+
+                treinos[treinoIndex] = {
+                    id: crypto.randomUUID(),
+                    nome,
+                    exercicios: Array.from(
+                        { length: 12 },
+                        () => ({
+                            exercicio: "",
+                            series: "",
+                            repeticoes: "",
+                            intervalo: "",
+                            carga: "",
+                            rirMax: "",
+                            observacoes: "",
+                        })
+                    ),
+                };
+
+            } else {
+
+                treinos[treinoIndex] = {
+                    ...treinos[treinoIndex],
+                    nome,
+                };
+
+            }
+
+            return {
+                ...prev,
+                treino: treinos,
+            };
+        });
+    };
+
+    const adicionarExercicio = (
+        treinoId: string,
+        exercicioIndex: number,
+        valor: string,
+        campo: keyof ExercicioTreino
+    ) => {
+
+        setAvaliacao((prev) => ({
+            ...prev,
+
+            treino: prev.treino.map((treino) => {
+
+                if (treino.id !== treinoId) {
+                    return treino;
+                }
+
+                return {
+                    ...treino,
+
+                    exercicios: treino.exercicios.map(
+                        (exercicio, index) =>
+                            index === exercicioIndex
+                                ? {
+                                    ...exercicio,
+                                    [campo]: valor
+                                }
+                                : exercicio
+                    ),
+                }
+
+            }),
+        }));
+    };
+
     useEffect(() => {
-        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+
+        const handleBeforeUnload = (
+            event: BeforeUnloadEvent
+        ) => {
+
             event.preventDefault();
-            event.returnValue = "";
+            event.returnValue = "Tem certeza que deseja sair?";
+
         };
-        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        window.addEventListener(
+            "beforeunload",
+            handleBeforeUnload
+        );
+
         return () => {
-            window.removeEventListener("beforeunload", handleBeforeUnload);
+
+            window.removeEventListener(
+                "beforeunload",
+                handleBeforeUnload
+            );
+
         };
 
     }, []);
 
-    const [dataInicio, setDataInicio] = useState(new Date());
-    const { avaliacao, setAvaliacao } = useAvaliacao();
-
-    let exercicios = avaliacao.treino.map((treino) => treino.nome);
-    console.log(exercicios);
-
-    const formatDateInput = (date: Date) => {
-        return date.toISOString().split("T")[0];
-    };
-
-    const opcoesTreino = avaliacao.treino.map((treino) => ({
-        id: treino.id,
-        nome: treino.nome,
-    }));
-    const nomesDias = [
-        "Dom",
-        "Seg",
-        "Ter",
-        "Qua",
-        "Qui",
-        "Sex",
-        "Sab",
-    ];
-
-    const atualizarDia = (
-        semanaIndex: number,
-        diaIndex: number,
-        slotIndex: number,
-        treinoId: string
-    ) => {
-        setAvaliacao((prev) => {
-            const semanas = [...prev.periodizacao.semanas];
-
-            const treinoIds = [
-                ...semanas[semanaIndex].dias[diaIndex].treinoIds,
-            ];
-
-            treinoIds[slotIndex] = treinoId;
-
-            semanas[semanaIndex].dias[diaIndex] = {
-                ...semanas[semanaIndex].dias[diaIndex],
-                treinoIds,
-            };
-
-            return {
-                ...prev,
-                periodizacao: {
-                    ...prev.periodizacao,
-                    semanas,
-                },
-            };
-        });
-    };
-
-    const datasPeriodizacao = useMemo(() => {
-        if (isNaN(dataInicio.getTime())) {
-            return [];
-        }
-
-        return Array.from({ length: 12 }, (_, semanaIndex) =>
-            Array.from({ length: 7 }, (_, diaIndex) => {
-                const data = new Date(dataInicio);
-
-                data.setDate(
-                    data.getDate() +
-                    semanaIndex * 7 +
-                    diaIndex
-                );
-
-                return {
-                    data,
-                    texto: `${data.toLocaleDateString("pt-BR")} (${nomesDias[data.getDay()]})`,
-                };
-            })
-        );
-    }, [dataInicio]);
-
-    const dataFim = useMemo(() => {
-        const fim = new Date(dataInicio);
-
-        fim.setDate(fim.getDate() + 83);
-
-        return fim;
-    }, [dataInicio]);
-
-    const calcularQuilagemTreino = (treinoId: string) => {
-        const treino = avaliacao.treino.find(
-            (t) => t.id === treinoId
-        );
-
-        if (!treino) return 0;
-
-        return treino.exercicios.reduce(
-            (total, exercicio) => {
-                const carga =
-                    Number(exercicio.carga) || 0;
-
-                return (
-                    total + carga
-                );
-            },
-            0
-        );
-    };
-
-    const calcularQuilagemSemana = (
-        semanaIndex: number
-    ) => {
-        const semana =
-            avaliacao.periodizacao.semanas[
-            semanaIndex
-            ];
-
-        let total = 0;
-
-        semana.dias.forEach((dia) => {
-            dia.treinoIds.forEach((treinoId) => {
-                total += calcularQuilagemTreino(
-                    treinoId
-                );
-            });
-        });
-
-        return total;
-    };
-
-    const calcularVolumeTreino = (treinoId: string) => {
-        const treino = avaliacao.treino.find(
-            (t) => t.id === treinoId
-        );
-
-        if (!treino) return 0;
-
-        return treino.exercicios.reduce(
-            (total, exercicio) => {
-                const carga =
-                    Number(exercicio.carga) || 0;
-                const series =
-                    Number(exercicio.series) || 0;
-
-                const repeticoes =
-                    Number(exercicio.repeticoes) || 0;
-
-                return (
-                    total + (carga * series * repeticoes)
-                );
-            },
-            0
-        );
-    };
-
-    const calcularVolumeSemana = (
-        semanaIndex: number
-    ) => {
-        const semana =
-            avaliacao.periodizacao.semanas[
-            semanaIndex
-            ];
-
-        let total = 0;
-
-        semana.dias.forEach((dia) => {
-            dia.treinoIds.forEach((treinoId) => {
-                total += calcularVolumeTreino(
-                    treinoId
-                );
-            });
-        });
-
-        return total;
-    };
-
-    const limparSemana = (semanaIndex: number) => {
-        setAvaliacao((prev) => {
-            const semanas = [...prev.periodizacao.semanas];
-
-            semanas[semanaIndex] = {
-                ...semanas[semanaIndex],
-
-                dias: semanas[semanaIndex].dias.map((dia) => ({
-                    ...dia,
-                    treinoIds: dia.treinoIds.map(() => ""),
-                })),
-            };
-
-            return {
-                ...prev,
-                periodizacao: {
-                    ...prev.periodizacao,
-                    semanas,
-                },
-            };
-        });
-    };
-
-    const limparDia = (
-        semanaIndex: number,
-        diaIndex: number
-    ) => {
-        setAvaliacao((prev) => {
-            const semanas = [...prev.periodizacao.semanas];
-
-            semanas[semanaIndex] = {
-                ...semanas[semanaIndex],
-
-                dias: semanas[semanaIndex].dias.map((dia, index) =>
-                    index === diaIndex
-                        ? {
-                            ...dia,
-                            treinoIds: dia.treinoIds.map(() => ""),
-                        }
-                        : dia
-                ),
-            };
-
-            return {
-                ...prev,
-                periodizacao: {
-                    ...prev.periodizacao,
-                    semanas,
-                },
-            };
-        });
-    };
 
     return (
-        <main className="h-full bg-[#ececec] p-3 md:p-5">
-            <hr className="mb-5 my-4 rounded-2xl border-[3px] border-zinc-400" />
 
-            <div className="flex flex-col">
-                <h1 className="mb-3 text-3xl font-bold italic text-zinc-600">
-                    Periodização do Treino
-                </h1>
-            </div>
+        <main className="min-h-full bg-[#ececec] p-4 md:p-6 lg:p-8">
 
-            <div className="mt-10 flex flex-col">
-                <h1 className="w-full border-b-2 border-[#b88b8b] pb-1 text-lg font-bold italic uppercase tracking-wide text-[#a85f60]">
-                    Informações do Treino
-                </h1>
-            </div>
-            <div className="grid grid-cols-[0.3fr_0.3fr_1.5fr_0.3fr_0.3fr] gap-3 mt-2">
-                <div className="pb-1 py-1 text-x font-bold italic uppercase text-zinc-600 flex flex-col gap-2">
-                    <text className="text-center">Início</text>
-                    <input
-                        type="date"
-                        className="h-9 w-full border border-zinc-950 bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
-                        value={formatDateInput(dataInicio)}
-                        onChange={(e) => {
-                            setDataInicio(new Date(`${e.target.value}T00:00:00`));
-                        }}
-                    />
-                </div>
-                <div className="pb-1 py-1 text-x font-bold italic uppercase text-zinc-600 flex flex-col gap-2">
-                    <text className="text-center">Término</text>
-                    <input
-                        type="date"
-                        value={formatDateInput(dataFim)}
-                        readOnly
-                        className="h-9 w-full border border-zinc-950 bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none"
-                    />
-                </div>
-                <div className="pb-1 py-1 text-x font-bold italic uppercase text-zinc-600 flex flex-col gap-2 ">
-                    <text className="">Objetivo Geral</text>
-                    <input className="h-9 w-full border border-zinc-950 bg-white px-3  text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
-                        type="text"
-                    />
-                </div>
-            </div>
-            {avaliacao.periodizacao.semanas.map((semana, semanaIndex) => (
-                <div className="grid grid-cols-[1fr_0.3fr]">
-                    <div
-                        key={semana.numero}
-                        className="mt-10 p-3"
-                    >
-                        <div className="mt-5 ">
-                            <h1 className="w-full border-b-2 border-[#b88b8b] pb-1 text-lg font-bold italic uppercase tracking-wide text-[#a85f60]">
-                                Informações do Treino
+            <div className="mx-auto max-w-[1500px]">
+
+                <div className="
+                    mb-8
+                    flex flex-col gap-4
+                    rounded-3xl
+                    border border-zinc-200
+                    bg-white
+                    p-6
+                    shadow-sm
+                    md:flex-row
+                    md:items-center
+                    md:justify-between
+                ">
+
+                    <div className="flex items-center gap-4">
+
+                        {/* <div className="
+                            flex h-14 w-14 shrink-0
+                            items-center justify-center
+                            rounded-2xl
+                            bg-[#a85f60]
+                            text-white
+                            shadow-md
+                            font-bold
+                            text-2xl
+
+                        ">
+                            G
+                        </div> */}
+
+                        <div>
+
+                            <p className="
+                                mb-1
+                                text-xs
+                                font-bold
+                                uppercase
+                                tracking-[0.2em]
+                                text-[#a85f60]
+                            ">
+                                Prescrição
+                            </p>
+
+                            <h1 className="
+                                text-2xl
+                                font-black
+                                tracking-tight
+                                text-zinc-800
+                                md:text-3xl
+                            ">
+                                Planilha de Treinamento
                             </h1>
-                        </div>
 
-                        <div className="grid grid-cols-8 gap-2 mt-10">
-                            <div className="flex items-center justify-center gap-2 text-xl text-[#a85f60] font-bold">
-                                <span>
-                                    Semana {semana.numero}
-                                </span>
+                            <p className="
+                                mt-1
+                                text-sm
+                                text-zinc-500
+                            ">
+                                Configure os exercícios e parâmetros de cada treino.
+                            </p>
 
-                                <button
-                                    type="button"
-                                    onClick={() => limparSemana(semanaIndex)}
-                                    title={`Limpar toda a semana ${semana.numero}`}
-                                    className="p-1.5 text-zinc-500 hover:cursor-pointer hover:text-red-600 transition"
-                                >
-                                    <FaRegTrashAlt />
-                                </button>
-                            </div>
-
-                            {[
-                                "Dom",
-                                "Seg",
-                                "Ter",
-                                "Qua",
-                                "Qui",
-                                "Sex",
-                                "Sab",
-                            ].map((dia, diaIndex) => (
-                                <div
-                                    key={diaIndex}
-                                    className="p-2"
-                                >
-                                    <div className="mb-2 text-center text-sm font-bold">
-                                        {datasPeriodizacao[semanaIndex][diaIndex].texto}
-                                        <button
-                                            type="button"
-                                            onClick={() => limparDia(semanaIndex, diaIndex)}
-                                            className="p-1.5 text-center hover:cursor-pointer hover:text-zinc-600"
-                                        >
-                                            <FaRegTrashAlt />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex flex-col border">
-                                        {[0, 1, 2].map((slot) => (
-                                            <select
-                                                key={slot}
-                                                className="border p-1 text-sm"
-                                                value={
-                                                    semana.dias[diaIndex].treinoIds[slot] || ""
-                                                }
-                                                onChange={(e) => { atualizarDia(semanaIndex, diaIndex, slot, e.target.value) }}
-
-                                            >
-                                                <option value="">
-                                                    ---
-                                                </option>
-
-                                                {opcoesTreino.map((treino) => (
-                                                    <option
-                                                        key={treino.id}
-                                                        value={treino.id}
-                                                    >
-                                                        {treino.nome}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        ))}
-                                    </div>
-
-                                </div>
-
-                            ))}
                         </div>
 
                     </div>
 
-                    <div className="mt-10 p-3">
-                        <div className="mt-5">
-                            <h1 className="w-full border-b-2 border-[#b88b8b] pb-1 text-lg font-bold italic uppercase tracking-wide text-[#a85f60]">
-                                Controle Semanal
-                            </h1>
-                            <div className="grid grid-cols-[2fr_2fr] gap-2 items-center justify-center text-center">
-                                <div className="mt-3">
-                                    <h1 className="text-sm font-semibold uppercase tracking-wide text-zinc-600">Quilagem</h1>
-                                    <h2 className="text-xl font-semibold uppercase tracking-wide text-zinc-600">{calcularQuilagemSemana(semanaIndex)} kg</h2>
-                                </div>
-                                <div className="mt-3">
-                                    <h1 className="text-sm font-semibold uppercase tracking-wide text-zinc-600">Volume Load</h1>
-                                    <h2 className="text-xl font-semibold uppercase tracking-wide text-zinc-600">{calcularVolumeSemana(semanaIndex)} kg</h2>
-                                </div>
-                            </div>
+                    <div className="
+                        flex items-center gap-3
+                        rounded-2xl
+                        bg-zinc-50
+                        px-4 py-3
+                        ring-1 ring-zinc-200
+                    ">
+
+                        <div className="
+                            flex h-9 w-9
+                            items-center justify-center
+                            rounded-xl
+                            bg-[#8f4f51]
+                            text-white
+                        ">
+                            <FaRunning />
                         </div>
+
+                        <div>
+
+                            <p className="
+                                text-xs
+                                font-semibold
+                                uppercase
+                                tracking-wide
+                                text-zinc-400
+                            ">
+                                Treinos
+                            </p>
+
+                            <p className="
+                                text-sm
+                                font-black
+                                text-zinc-700
+                            ">
+                                12 disponíveis
+                            </p>
+
+                        </div>
+
                     </div>
+
                 </div>
-            ))}
-            <div>{navTool()}</div>
+
+                <div className="space-y-8">
+
+                    {Array.from({ length: 12 }).map(
+                        (_, treinoIndex) => {
+
+                            const treino =
+                                avaliacao.treino[treinoIndex];
+
+                            const exerciciosPreenchidos =
+                                treino?.exercicios?.filter(
+                                    (exercicio) =>
+                                        exercicio?.exercicio?.trim()
+                                ).length ?? 0;
+
+                            return (
+
+                                <section
+                                    key={treinoIndex}
+                                    className="
+                                        overflow-hidden
+                                        rounded-3xl
+                                        border
+                                        border-zinc-300
+                                        bg-[#f7f7f7]
+                                        shadow-[0_4px_18px_rgba(0,0,0,0.06)]
+                                        transition-shadow
+                                        duration-200
+                                        hover:shadow-[0_6px_24px_rgba(0,0,0,0.09)]"
+                                >
+
+                                    <div className="
+                                        flex flex-col
+                                        gap-4
+                                        border-b
+                                        border-zinc-300
+                                        bg-[#eeeeee]
+                                        p-5
+                                        md:flex-row
+                                        md:items-center
+                                        md:justify-between
+                                    ">
+
+                                        <div className="flex items-center gap-4">
+
+                                            <div className="
+                                                flex h-12 w-12
+                                                shrink-0
+                                                items-center justify-center
+                                                rounded-2xl
+                                                bg-[#8f4f51]
+                                                text-lg
+                                                font-black
+                                                text-white
+                                                shadow-[0_3px_8px_rgba(143,79,81,0.25)]
+                                            ">
+                                                {String(
+                                                    treinoIndex + 1
+                                                ).padStart(2, "0")}
+                                            </div>
+
+                                            <div>
+
+                                                <p className="
+                                                    text-[10px]
+                                                    font-black
+                                                    uppercase
+                                                    tracking-[0.2em]
+                                                    text-zinc-400
+                                                ">
+                                                    Treino
+                                                </p>
+
+                                                <div className="
+                                                    mt-1
+                                                    flex
+                                                    items-center
+                                                    gap-2
+                                                ">
+
+                                                    <FaDumbbell
+                                                        className="
+                                                            text-sm
+                                                            text-[#a85f60]
+                                                        "
+                                                    />
+
+                                                    <span className="
+                                                        text-lg
+                                                        font-black
+                                                        text-zinc-800
+                                                    ">
+                                                        {treino?.nome ||
+                                                            `Treino ${treinoIndex + 1}`}
+                                                    </span>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <div className="
+                                            flex
+                                            flex-col
+                                            gap-3
+                                            sm:flex-row
+                                            sm:items-center
+                                        ">
+
+                                            <div className="
+                                                flex items-center gap-2
+                                                rounded-xl
+                                                border
+                                                border-zinc-200
+                                                bg-white
+                                                px-3 py-2
+                                            ">
+
+                                                <span className="
+                                                    text-[10px]
+                                                    font-bold
+                                                    uppercase
+                                                    tracking-wide
+                                                    text-zinc-400
+                                                ">
+                                                    Nome
+                                                </span>
+
+                                                <input
+                                                    type="text"
+                                                    value={
+                                                        treino?.nome ?? ""
+                                                    }
+                                                    onChange={(e) =>
+                                                        atualizarNomeTreino(
+                                                            treinoIndex,
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    placeholder={`Treino ${treinoIndex + 1}`}
+                                                    className="
+                                                        w-36
+                                                        border-none
+                                                        bg-transparent
+                                                        text-sm
+                                                        font-bold
+                                                        text-zinc-700
+                                                        outline-none
+                                                        placeholder:text-zinc-300
+                                                    "
+                                                />
+
+                                            </div>
+
+                                            <div className="
+                                                flex items-center gap-2
+                                                rounded-xl
+                                                bg-zinc-100
+                                                px-3 py-2
+                                                text-xs
+                                                font-bold
+                                                text-zinc-500
+                                            ">
+
+                                                <FaLayerGroup
+                                                    className="text-[#a85f60]"
+                                                />
+
+                                                {exerciciosPreenchidos}/12
+                                                exercícios
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div className="overflow-x-auto">
+
+                                        <table className="
+                                            w-full
+                                            min-w-[1100px]
+                                            border-collapse
+                                        ">
+
+                                            <thead>
+
+                                                <tr className="
+                                                    bg-zinc-50
+                                                    text-[10px]
+                                                    font-black
+                                                    uppercase
+                                                    tracking-wider
+                                                    text-zinc-500
+                                                ">
+
+                                                    <th className="
+                                                        w-[24%]
+                                                        px-4 py-3
+                                                        text-left
+                                                    ">
+                                                        <div className="flex items-center gap-2">
+                                                            <FaDumbbell />
+                                                            Exercício
+                                                        </div>
+                                                    </th>
+
+                                                    <th className="
+                                                        w-[8%]
+                                                        px-3 py-3
+                                                    ">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <FaLayerGroup />
+                                                            Séries
+                                                        </div>
+                                                    </th>
+
+                                                    <th className="
+                                                        w-[9%]
+                                                        px-3 py-3
+                                                    ">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <FaRedo />
+                                                            Reps
+                                                        </div>
+                                                    </th>
+
+                                                    <th className="
+                                                        w-[12%]
+                                                        px-3 py-3
+                                                    ">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <FaClock />
+                                                            Intervalo
+                                                        </div>
+                                                    </th>
+
+                                                    <th className="
+                                                        w-[9%]
+                                                        px-3 py-3
+                                                    ">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <FaWeightHanging />
+                                                            Carga
+                                                        </div>
+                                                    </th>
+
+                                                    <th className="
+                                                        w-[8%]
+                                                        px-3 py-3
+                                                    ">
+                                                        RIR
+                                                    </th>
+
+                                                    <th className="
+                                                        w-[30%]
+                                                        px-4 py-3
+                                                        text-left
+                                                    ">
+                                                        <div className="flex items-center gap-2">
+                                                            <FaNotesMedical />
+                                                            Observações
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {Array.from({
+                                                    length: 12
+                                                }).map(
+                                                    (_, exercicioIndex) => {
+
+                                                        const exercicio =
+                                                            treino?.exercicios?.[
+                                                            exercicioIndex
+                                                            ];
+
+                                                        return (
+
+                                                            <tr
+                                                                key={exercicioIndex}
+                                                                className="
+                                                                    border-t
+                                                                    border-zinc-100
+                                                                    transition-colors
+                                                                    hover:bg-[#a85f60]/[0.025]
+                                                                "
+                                                            >
+
+                                                                <td className="px-3 py-1.5">
+
+                                                                    <div className="flex items-center gap-2">
+
+                                                                        <span className="
+                                                                            flex h-7 w-7
+                                                                            shrink-0
+                                                                            items-center
+                                                                            justify-center
+                                                                            rounded-lg
+                                                                            bg-zinc-100
+                                                                            text-[10px]
+                                                                            font-black
+                                                                            text-zinc-400
+                                                                        ">
+                                                                            {String(
+                                                                                exercicioIndex + 1
+                                                                            ).padStart(2, "0")}
+                                                                        </span>
+
+                                                                        <input
+                                                                            type="text"
+                                                                            value={
+                                                                                exercicio?.exercicio ?? ""
+                                                                            }
+                                                                            onChange={(e) =>
+                                                                                adicionarExercicio(
+                                                                                    treino.id,
+                                                                                    exercicioIndex,
+                                                                                    e.target.value,
+                                                                                    "exercicio"
+                                                                                )
+                                                                            }
+                                                                            placeholder="Nome do exercício"
+                                                                            className="
+                                                                            h-10
+                                                                            w-full
+                                                                            rounded-lg
+                                                                            border
+                                                                            border-zinc-400
+                                                                            bg-[#eeeeee]
+                                                                            px-3
+                                                                            text-sm
+                                                                            font-semibold
+                                                                            text-zinc-700
+                                                                            outline-none
+                                                                            transition-all
+                                                                            duration-150
+                                                                            placeholder:text-zinc-400
+                                                                            hover:border-zinc-500
+                                                                            hover:bg-[#e8e8e8]
+                                                                            focus:border-[#8f4f51]
+                                                                            focus:bg-[#f5eeee]
+                                                                            focus:ring-2
+                                                                            focus:ring-[#8f4f51]/20
+                                                                            "
+                                                                        />
+
+                                                                    </div>
+
+                                                                </td>
+
+                                                                <td className="px-2 py-1.5">
+
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            exercicio?.series ?? ""
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            adicionarExercicio(
+                                                                                treino.id,
+                                                                                exercicioIndex,
+                                                                                e.target.value,
+                                                                                "series"
+                                                                            )
+                                                                        }
+                                                                        className="
+                                                                        h-10
+                                                                        w-full
+                                                                        rounded-lg
+                                                                        border
+                                                                        border-zinc-400
+                                                                        bg-[#eeeeee]
+                                                                        text-center
+                                                                        text-sm
+                                                                        font-bold
+                                                                        text-zinc-700
+                                                                        outline-none
+                                                                        transition-all
+                                                                        duration-150
+                                                                        hover:border-zinc-500
+                                                                        hover:bg-[#e8e8e8]
+                                                                        focus:border-[#8f4f51]
+                                                                        focus:bg-[#f5eeee]
+                                                                        focus:ring-2
+                                                                        focus:ring-[#8f4f51]/20
+                                                                    "
+                                                                    />
+
+                                                                </td>
+
+                                                                <td className="px-2 py-1.5">
+
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            exercicio?.repeticoes ?? ""
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            adicionarExercicio(
+                                                                                treino.id,
+                                                                                exercicioIndex,
+                                                                                e.target.value,
+                                                                                "repeticoes"
+                                                                            )
+                                                                        }
+                                                                        className="
+                                                                            h-10
+                                                                            w-full
+                                                                            rounded-lg
+                                                                            border
+                                                                            border-zinc-400
+                                                                            bg-[#eeeeee]
+                                                                            text-center
+                                                                            text-sm
+                                                                            font-bold
+                                                                            text-zinc-700
+                                                                            outline-none
+                                                                            transition-all
+                                                                            duration-150
+                                                                            hover:border-zinc-500
+                                                                            hover:bg-[#e8e8e8]
+                                                                            focus:border-[#8f4f51]
+                                                                            focus:bg-[#f5eeee]
+                                                                            focus:ring-2
+                                                                            focus:ring-[#8f4f51]/20
+                                                                        "
+                                                                    />
+
+                                                                </td>
+
+                                                                <td className="px-2 py-1.5">
+
+                                                                    <input
+                                                                        list={`intervalos-${treinoIndex}-${exercicioIndex}`}
+                                                                        type="text"
+                                                                        value={
+                                                                            exercicio?.intervalo ?? ""
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            adicionarExercicio(
+                                                                                treino.id,
+                                                                                exercicioIndex,
+                                                                                e.target.value,
+                                                                                "intervalo"
+                                                                            )
+                                                                        }
+                                                                        className="
+                                                                            h-10
+                                                                            w-full
+                                                                            rounded-lg
+                                                                            border
+                                                                            border-zinc-400
+                                                                            bg-[#eeeeee]
+                                                                            px-2
+                                                                            text-center
+                                                                            text-sm
+                                                                            font-semibold
+                                                                            text-zinc-700
+                                                                            outline-none
+                                                                            transition-all
+                                                                            duration-150
+                                                                            hover:border-zinc-500
+                                                                            hover:bg-[#e8e8e8]
+                                                                            focus:border-[#8f4f51]
+                                                                            focus:bg-[#f5eeee]
+                                                                            focus:ring-2
+                                                                            focus:ring-[#8f4f51]/20
+                                                                        "
+                                                                    />
+
+                                                                    <datalist
+                                                                        id={`intervalos-${treinoIndex}-${exercicioIndex}`}
+                                                                    >
+                                                                        <option value="10 segundos" />
+                                                                        <option value="15 segundos" />
+                                                                        <option value="20 segundos" />
+                                                                        <option value="30 segundos" />
+                                                                        <option value="40 segundos" />
+                                                                        <option value="1 min" />
+                                                                        <option value="1 min e 30 seg" />
+                                                                        <option value="2 mins" />
+                                                                        <option value="2 mins e 30 seg" />
+                                                                        <option value="3 mins" />
+                                                                        <option value="3 mins e 30 seg" />
+                                                                        <option value="4 mins" />
+                                                                    </datalist>
+
+                                                                </td>
+
+                                                                <td className="px-2 py-1.5">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            exercicio?.carga ?? ""
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            adicionarExercicio(
+                                                                                treino.id,
+                                                                                exercicioIndex,
+                                                                                e.target.value,
+                                                                                "carga"
+                                                                            )
+                                                                        }
+                                                                        className="
+                                                                            h-10
+                                                                            w-full
+                                                                            rounded-lg
+                                                                            border
+                                                                            border-zinc-400
+                                                                            bg-[#eeeeee]
+                                                                            text-center
+                                                                            text-sm
+                                                                            font-bold
+                                                                            text-zinc-700
+                                                                            outline-none
+                                                                            transition-all
+                                                                            duration-150
+                                                                            hover:border-zinc-500
+                                                                            hover:bg-[#e8e8e8]
+                                                                            focus:border-[#8f4f51]
+                                                                            focus:bg-[#f5eeee]
+                                                                            focus:ring-2
+                                                                            focus:ring-[#8f4f51]/20
+                                                                        "
+                                                                    />
+
+                                                                </td>
+                                                                <td className="px-2 py-1.5">
+
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            exercicio?.rirMax ?? ""
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            adicionarExercicio(
+                                                                                treino.id,
+                                                                                exercicioIndex,
+                                                                                e.target.value,
+                                                                                "rirMax"
+                                                                            )
+                                                                        }
+                                                                        className="
+                                                                            h-10
+                                                                            w-full
+                                                                            rounded-lg
+                                                                            border
+                                                                            border-[#a87576]
+                                                                            bg-[#f0e4e4]
+                                                                            text-center
+                                                                            text-sm
+                                                                            font-black
+                                                                            text-[#7d4547]
+                                                                            outline-none
+                                                                            transition-all
+                                                                            duration-150
+                                                                            hover:border-[#8f4f51]
+                                                                            hover:bg-[#eadada]
+                                                                            focus:border-[#713b3d]
+                                                                            focus:bg-[#eadada]
+                                                                            focus:ring-2
+                                                                            focus:ring-[#8f4f51]/20
+                                                                        "
+                                                                    />
+                                                                </td>
+                                                                <td className="px-3 py-1.5">
+
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            exercicio?.observacoes ?? ""
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            adicionarExercicio(
+                                                                                treino.id,
+                                                                                exercicioIndex,
+                                                                                e.target.value,
+                                                                                "observacoes"
+                                                                            )
+                                                                        }
+                                                                        placeholder="Observações..."
+                                                                        className="
+                                                                            h-10
+                                                                            w-full
+                                                                            rounded-lg
+                                                                            border
+                                                                            border-zinc-400
+                                                                            bg-[#eeeeee]
+                                                                            px-3
+                                                                            text-sm
+                                                                            text-zinc-600
+                                                                            outline-none
+                                                                            transition-all
+                                                                            duration-150
+                                                                            placeholder:text-zinc-400
+                                                                            hover:border-zinc-500
+                                                                            hover:bg-[#e8e8e8]
+                                                                            focus:border-[#8f4f51]
+                                                                            focus:bg-[#f5eeee]
+                                                                            focus:ring-2
+                                                                            focus:ring-[#8f4f51]/20
+                                                                        "
+                                                                    />
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    }
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </section>
+                            );
+                        }
+                    )}
+                </div>
+            </div>
+            <div>
+                {navTool()}
+            </div>
+            <div className="h-24" />
         </main>
-    )
+    );
 }

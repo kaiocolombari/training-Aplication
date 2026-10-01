@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
 import navTool from "../components/navTool";
+import { FaRunning } from "react-icons/fa";
 
 const STIMULO_MAX_POSSIVEL = 15 * 1 * 1.1;
 
@@ -105,9 +106,20 @@ function calcularIntensidadeSerie(serie: SerieIntensidade) {
     const esforco = (5 - rir) / 5;
     const fatorCarga = calcularFatorCarga(reps);
     const stimulo = reps * esforco * fatorCarga;
-    const intensidade = limitarNumero((stimulo / STIMULO_MAX_POSSIVEL) * 100, 0, 100);
-    const umRmEstimado = carga ? carga * (1 + (reps + rir) / 30) : 0;
-    const percentualUmRm = carga && umRmEstimado ? (carga / umRmEstimado) * 100 : null;
+    const intensidade = limitarNumero(
+        (stimulo / STIMULO_MAX_POSSIVEL) * 100,
+        0,
+        100
+    );
+
+    const umRmEstimado = carga
+        ? carga * (1 + (reps + rir) / 30)
+        : 0;
+
+    const percentualUmRm =
+        carga && umRmEstimado
+            ? (carga / umRmEstimado) * 100
+            : null;
 
     return {
         reps,
@@ -133,6 +145,7 @@ function montarSeriesDoExercicio(exercicio: any) {
 
 function calcularResumoExercicio(exercicio: any) {
     const series = montarSeriesDoExercicio(exercicio);
+
     const intensidades = series
         .map((serie) => calcularIntensidadeSerie(serie))
         .filter(Boolean) as NonNullable<
@@ -148,8 +161,10 @@ function calcularResumoExercicio(exercicio: any) {
     }
 
     const intensidade =
-        intensidades.reduce((total, serie) => total + serie.intensidade, 0) /
-        intensidades.length;
+        intensidades.reduce(
+            (total, serie) => total + serie.intensidade,
+            0
+        ) / intensidades.length;
 
     return {
         seriesValidas: intensidades.length,
@@ -160,8 +175,11 @@ function calcularResumoExercicio(exercicio: any) {
 
 function calcularResumoTreino(treino: any) {
     const exercicios = (treino?.exercicios ?? []).filter(
-        (exercicio: any) => exercicio?.exercicio || calcularSeries(exercicio?.series)
+        (exercicio: any) =>
+            exercicio?.exercicio ||
+            calcularSeries(exercicio?.series)
     );
+
     const resumosExercicio = exercicios
         .map((exercicio: any) => calcularResumoExercicio(exercicio))
         .filter((resumo: any) => resumo.intensidade !== null);
@@ -177,17 +195,23 @@ function calcularResumoTreino(treino: any) {
 
     return {
         exerciciosValidos: resumosExercicio.length,
+
         seriesValidas: resumosExercicio.reduce(
-            (total: number, resumo: any) => total + resumo.seriesValidas,
+            (total: number, resumo: any) =>
+                total + resumo.seriesValidas,
             0
         ),
+
         hardSets: resumosExercicio.reduce(
-            (total: number, resumo: any) => total + resumo.hardSets,
+            (total: number, resumo: any) =>
+                total + resumo.hardSets,
             0
         ),
+
         intensidade:
             resumosExercicio.reduce(
-                (total: number, resumo: any) => total + resumo.intensidade,
+                (total: number, resumo: any) =>
+                    total + resumo.intensidade,
                 0
             ) / resumosExercicio.length,
     };
@@ -195,18 +219,26 @@ function calcularResumoTreino(treino: any) {
 
 export default function Intensidade() {
     const { avaliacao, setAvaliacao } = useAvaliacao();
-    const [exerciciosAbertos, setExerciciosAbertos] = useState<Record<string, boolean>>({});
+
+    const [exerciciosAbertos, setExerciciosAbertos] =
+        useState<Record<string, boolean>>({});
 
     const resumosTreino = useMemo(
         () =>
             Array.from({ length: 12 }).map((_, treinoIndex) =>
-                calcularResumoTreino(avaliacao?.treino?.[treinoIndex])
+                calcularResumoTreino(
+                    avaliacao?.treino?.[treinoIndex]
+                )
             ),
         [avaliacao?.treino]
     );
 
-    function alternarDetalhes(treinoIndex: number, exercicioIndex: number) {
+    function alternarDetalhes(
+        treinoIndex: number,
+        exercicioIndex: number
+    ) {
         const chave = `${treinoIndex}-${exercicioIndex}`;
+
         setExerciciosAbertos((estadoAtual) => ({
             ...estadoAtual,
             [chave]: !estadoAtual[chave],
@@ -221,11 +253,25 @@ export default function Intensidade() {
         valor: string
     ) {
         setAvaliacao((avaliacaoAtual: any) => {
-            const treinos = [...(avaliacaoAtual?.treino ?? [])];
-            const treino = { ...(treinos[treinoIndex] ?? {}) };
-            const exercicios = [...(treino.exercicios ?? [])];
-            const exercicio = { ...(exercicios[exercicioIndex] ?? {}) };
-            const seriesIntensidade = [...(exercicio.seriesIntensidade ?? [])];
+            const treinos = [
+                ...(avaliacaoAtual?.treino ?? []),
+            ];
+
+            const treino = {
+                ...(treinos[treinoIndex] ?? {}),
+            };
+
+            const exercicios = [
+                ...(treino.exercicios ?? []),
+            ];
+
+            const exercicio = {
+                ...(exercicios[exercicioIndex] ?? {}),
+            };
+
+            const seriesIntensidade = [
+                ...(exercicio.seriesIntensidade ?? []),
+            ];
 
             seriesIntensidade[serieIndex] = {
                 ...(seriesIntensidade[serieIndex] ?? {}),
@@ -236,6 +282,7 @@ export default function Intensidade() {
                 ...exercicio,
                 seriesIntensidade,
             };
+
             treino.exercicios = exercicios;
             treinos[treinoIndex] = treino;
 
@@ -246,260 +293,723 @@ export default function Intensidade() {
         });
     }
 
-
     return (
         <main className="min-h-full bg-[#ececec] p-3 md:p-5">
-            <h1 className="w-full border-b-2 border-[#b88b8b] pb-1 text-2xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                Intensidade
-            </h1>
-
-            <section className="mt-6 grid gap-5">
-                {Array.from({ length: 12 }).map((_, treinoIndex) => {
-                    const treino = avaliacao?.treino?.[treinoIndex];
-                    const resumoTreino = resumosTreino[treinoIndex];
-
-                    return (
-                        <article
-                            className="border-2 border-zinc-700 bg-white p-4 shadow-sm"
-                            key={treinoIndex}
+            <div
+                className="
+                    mb-10
+                    flex flex-col gap-4
+                    rounded-3xl
+                    border border-zinc-300
+                    bg-[#f7f7f7]
+                    p-6
+                    shadow-sm
+                    md:flex-row
+                    md:items-center
+                    md:justify-between
+                "
+            >
+                <div className="flex items-center gap-4">
+                    <div>
+                        <p
+                            className="
+                                mb-1
+                                text-xs
+                                font-bold
+                                uppercase
+                                tracking-[0.2em]
+                                text-[#a85f60]
+                            "
                         >
-                            <div className="flex flex-col gap-3 border-b-2 border-[#b88b8b] pb-3 md:flex-row md:items-end md:justify-between">
-                                <div>
-                                    <span className="text-xs font-bold uppercase tracking-wide text-zinc-500">
-                                        Treino {treinoIndex + 1}
-                                    </span>
-                                    <h2 className="text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                                        {treino?.nome || "Sem nome"}
-                                    </h2>
-                                </div>
+                            Intensidade
+                        </p>
 
-                                <div className="flex flex-wrap gap-3 text-sm font-bold uppercase text-zinc-700">
-                                    <span>Exercícios: {resumoTreino.exerciciosValidos}</span>
-                                    <span>Séries válidas: {resumoTreino.seriesValidas}</span>
-                                </div>
-                            </div>
+                        <h1
+                            className="
+                                text-2xl
+                                font-black
+                                tracking-tight
+                                text-zinc-800
+                                md:text-3xl
+                            "
+                        >
+                            Volume - Intensidade
+                        </h1>
 
-                            <div className="mt-4 grid gap-3">
-                                {Array.from({ length: 12 }).map((_, exercicioIndex) => {
-                                    const exercicio = treino?.exercicios?.[exercicioIndex];
-                                    const totalSeries = calcularSeries(exercicio?.series);
-                                    const resumoExercicio = calcularResumoExercicio(exercicio);
-                                    const chave = `${treinoIndex}-${exercicioIndex}`;
-                                    const aberto = exerciciosAbertos[chave];
+                        <p className="mt-1 text-sm text-zinc-500">
+                            Configure e acompanhe a intensidade dos exercícios
+                            de cada treino.
+                        </p>
+                    </div>
+                </div>
+                <div
+                    className="
+                        flex items-center gap-3
+                        rounded-2xl
+                        border border-zinc-300
+                        bg-[#eeeeee]
+                        px-4 py-3
+                    "
+                >
+                    <div
+                        className="
+                            flex h-10 w-10
+                            items-center justify-center
+                            rounded-xl
+                            bg-[#8f4f51]
+                            text-white
+                        "
+                    >
+                        <FaRunning />
+                    </div>
 
-                                    if (!exercicio?.exercicio && !totalSeries) {
-                                        return null;
-                                    }
+                    <div>
+                        <p
+                            className="
+                                text-xs
+                                font-semibold
+                                uppercase
+                                tracking-wide
+                                text-zinc-400
+                            "
+                        >
+                            Treinos
+                        </p>
 
-                                    return (
-                                        <div
-                                            className="border-2 border-zinc-700 bg-[#f7f7f7]"
-                                            key={exercicioIndex}
+                        <p
+                            className="
+                                text-sm
+                                font-black
+                                text-zinc-700
+                            "
+                        >
+                            12 disponíveis
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <section className="mt-6 grid gap-5">
+                {Array.from({ length: 12 }).map(
+                    (_, treinoIndex) => {
+                        const treino =
+                            avaliacao?.treino?.[treinoIndex];
+
+                        const resumoTreino =
+                            resumosTreino[treinoIndex];
+
+                        return (
+                            <article
+                                className="
+                                    overflow-hidden
+                                    rounded-3xl
+                                    border
+                                    border-zinc-300
+                                    bg-[#f7f7f7]
+                                    p-4
+                                    shadow-sm
+                                "
+                                key={treinoIndex}
+                            >
+                                <div
+                                    className="
+                                        flex flex-col gap-3
+                                        rounded-2xl
+                                        border
+                                        border-zinc-300
+                                        bg-[#eeeeee]
+                                        p-4
+                                        md:flex-row
+                                        md:items-end
+                                        md:justify-between
+                                    "
+                                >
+                                    <div>
+                                        <span
+                                            className="
+                                                text-xs
+                                                font-bold
+                                                uppercase
+                                                tracking-wide
+                                                text-zinc-500
+                                            "
                                         >
-                                            <div className="grid gap-3 p-3 md:grid-cols-[1.5fr_90px_110px_110px_120px] md:items-center">
-                                                <div>
-                                                    <span className="text-xs font-bold uppercase text-zinc-500">
-                                                        Exercício
-                                                    </span>
-                                                    <p className="text-lg font-bold text-zinc-800">
-                                                        {exercicio?.exercicio || "-"}
-                                                    </p>
-                                                </div>
+                                            Treino {treinoIndex + 1}
+                                        </span>
 
-                                                <div>
-                                                    <span className="text-xs font-bold uppercase text-zinc-500">
-                                                        Séries
-                                                    </span>
-                                                    <p className="text-lg font-bold text-zinc-800">
-                                                        {totalSeries || "-"}
-                                                    </p>
-                                                </div>
+                                        <h2
+                                            className="
+                                                text-xl
+                                                font-bold
+                                                italic
+                                                uppercase
+                                                tracking-wide
+                                                text-[#a85f60]
+                                            "
+                                        >
+                                            {treino?.nome ||
+                                                "Sem nome"}
+                                        </h2>
+                                    </div>
 
-                                                <div>
-                                                    <span className="text-xs font-bold uppercase text-zinc-500">
-                                                        Reps base
-                                                    </span>
-                                                    <p className="text-lg font-bold text-zinc-800">
-                                                        {exercicio?.repeticoes || "-"}
-                                                    </p>
-                                                </div>
+                                    <div
+                                        className="
+                                            flex flex-wrap
+                                            gap-3
+                                            text-sm
+                                            font-bold
+                                            uppercase
+                                            text-zinc-600
+                                        "
+                                    >
+                                        <span
+                                            className="
+                                                rounded-xl
+                                                border
+                                                border-zinc-300
+                                                bg-[#e2e2e2]
+                                                px-3
+                                                py-2
+                                            "
+                                        >
+                                            Exercícios:{" "}
+                                            {resumoTreino.exerciciosValidos}
+                                        </span>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        alternarDetalhes(treinoIndex, exercicioIndex)
-                                                    }
-                                                    className="h-10 border-2 border-[#a85f60] bg-white px-3 text-sm font-bold uppercase text-[#a85f60] hover:cursor-pointer hover:bg-[#a85f60] hover:text-white"
+                                        <span
+                                            className="
+                                                rounded-xl
+                                                border
+                                                border-zinc-300
+                                                bg-[#e2e2e2]
+                                                px-3
+                                                py-2
+                                            "
+                                        >
+                                            Séries válidas:{" "}
+                                            {resumoTreino.seriesValidas}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 grid gap-3">
+                                    {Array.from({ length: 12 }).map(
+                                        (_, exercicioIndex) => {
+                                            const exercicio =
+                                                treino?.exercicios?.[
+                                                exercicioIndex
+                                                ];
+
+                                            const totalSeries =
+                                                calcularSeries(
+                                                    exercicio?.series
+                                                );
+
+                                            const resumoExercicio =
+                                                calcularResumoExercicio(
+                                                    exercicio
+                                                );
+
+                                            const chave = `${treinoIndex}-${exercicioIndex}`;
+
+                                            const aberto =
+                                                exerciciosAbertos[
+                                                chave
+                                                ];
+
+                                            if (
+                                                !exercicio?.exercicio &&
+                                                !totalSeries
+                                            ) {
+                                                return null;
+                                            }
+
+                                            return (
+                                                <div
+                                                    className="
+                                                        overflow-hidden
+                                                        rounded-2xl
+                                                        border
+                                                        border-zinc-300
+                                                        bg-[#eeeeee]
+                                                        shadow-sm
+                                                    "
+                                                    key={exercicioIndex}
                                                 >
-                                                    {aberto ? "Fechar" : "Detalhes"}
-                                                </button>
-                                            </div>
+                                                    <div
+                                                        className="
+                                                            grid gap-3
+                                                            p-4
+                                                            md:grid-cols-[1.5fr_90px_110px_120px]
+                                                            md:items-center
+                                                        "
+                                                    >
+                                                        <div>
+                                                            <span
+                                                                className="
+                                                                    text-xs
+                                                                    font-bold
+                                                                    uppercase
+                                                                    text-zinc-500
+                                                                "
+                                                            >
+                                                                Exercício
+                                                            </span>
 
-                                            {aberto && (
-                                                <div className="overflow-x-auto border-t-2 border-zinc-700 bg-white p-3">
-                                                    <table className="w-full min-w-[900px] border-collapse">
-                                                        <thead>
-                                                            <tr className="font-bold italic uppercase text-zinc-600">
-                                                                <th className="px-2 py-1 text-center text-x">
-                                                                    Série
-                                                                </th>
-                                                                <th className="px-2 py-1 text-center text-x">
-                                                                    Reps
-                                                                </th>
-                                                                <th className="px-2 py-1 text-center text-x">
-                                                                    Carga
-                                                                </th>
-                                                                <th className="px-2 py-1 text-center text-x">
-                                                                    %1RM
-                                                                </th>
-                                                                <th className="px-2 py-1 text-center text-x">
-                                                                    RIR
-                                                                </th>
-                                                                <th className="px-2 py-1 text-center text-x">
-                                                                    Esforço
-                                                                </th>
-                                                                <th className="px-2 py-1 text-center text-x">
-                                                                    %Esforço
-                                                                </th>
-                                                            </tr>
-                                                        </thead>
+                                                            <p
+                                                                className="
+                                                                    text-lg
+                                                                    font-bold
+                                                                    text-zinc-800
+                                                                "
+                                                            >
+                                                                {exercicio?.exercicio ||
+                                                                    "-"}
+                                                            </p>
+                                                        </div>
 
-                                                        <tbody>
-                                                            {montarSeriesDoExercicio(exercicio).map(
-                                                                (serie, serieIndex) => {
-                                                                    const intensidadeSerie =
-                                                                        calcularIntensidadeSerie(serie);
+                                                        <div>
+                                                            <span
+                                                                className="
+                                                                    text-xs
+                                                                    font-bold
+                                                                    uppercase
+                                                                    text-zinc-500
+                                                                "
+                                                            >
+                                                                Séries
+                                                            </span>
 
-                                                                    return (
-                                                                        <tr key={serieIndex}>
-                                                                            <td className="border-2 border-zinc-700">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={serieIndex + 1}
-                                                                                    readOnly
-                                                                                    className="h-9 w-full bg-transparent px-2 text-center text-lg font-bold text-black outline-none"
-                                                                                />
-                                                                            </td>
+                                                            <p
+                                                                className="
+                                                                    text-lg
+                                                                    font-bold
+                                                                    text-zinc-800
+                                                                "
+                                                            >
+                                                                {totalSeries ||
+                                                                    "-"}
+                                                            </p>
+                                                        </div>
 
-                                                                            <td className="border-2 border-zinc-700">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={serie.reps ?? ""}
-                                                                                    onChange={(evento) =>
-                                                                                        alterarSerie(
-                                                                                            treinoIndex,
-                                                                                            exercicioIndex,
-                                                                                            serieIndex,
-                                                                                            "reps",
-                                                                                            evento.target.value
-                                                                                        )
-                                                                                    }
-                                                                                    className="h-9 w-full bg-transparent px-2 text-center text-lg text-black outline-none"
-                                                                                />
-                                                                            </td>
+                                                        <div>
+                                                            <span
+                                                                className="
+                                                                    text-xs
+                                                                    font-bold
+                                                                    uppercase
+                                                                    text-zinc-500
+                                                                "
+                                                            >
+                                                                Reps base
+                                                            </span>
 
-                                                                            <td className="border-2 border-zinc-700">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={serie.carga ?? ""}
-                                                                                    onChange={(evento) =>
-                                                                                        alterarSerie(
-                                                                                            treinoIndex,
-                                                                                            exercicioIndex,
-                                                                                            serieIndex,
-                                                                                            "carga",
-                                                                                            evento.target.value
-                                                                                        )
-                                                                                    }
-                                                                                    className="h-9 w-full bg-transparent px-2 text-center text-lg text-black outline-none"
-                                                                                />
-                                                                            </td>
+                                                            <p
+                                                                className="
+                                                                    text-lg
+                                                                    font-bold
+                                                                    text-zinc-800
+                                                                "
+                                                            >
+                                                                {exercicio?.repeticoes ||
+                                                                    "-"}
+                                                            </p>
+                                                        </div>
 
-                                                                            <td className="border-2 border-zinc-700 bg-white/60">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={formatarPercentual(
-                                                                                        intensidadeSerie?.percentualUmRm ??
-                                                                                        null
-                                                                                    )}
-                                                                                    readOnly
-                                                                                    className="h-9 w-full bg-transparent px-2 text-center text-lg font-bold text-zinc-700 outline-none"
-                                                                                />
-                                                                            </td>
-
-                                                                            <td className="border-2 border-zinc-700">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={serie.rir ?? ""}
-                                                                                    onChange={(evento) =>
-                                                                                        alterarSerie(
-                                                                                            treinoIndex,
-                                                                                            exercicioIndex,
-                                                                                            serieIndex,
-                                                                                            "rir",
-                                                                                            evento.target.value
-                                                                                        )
-                                                                                    }
-                                                                                    className="h-9 w-full bg-transparent px-2 text-center text-lg text-black outline-none"
-                                                                                />
-                                                                            </td>
-
-                                                                            <td className="border-2 border-zinc-700 bg-white/60">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={formatarDecimal(
-                                                                                        intensidadeSerie?.esforco ?? null
-                                                                                    )}
-                                                                                    readOnly
-                                                                                    className="h-9 w-full bg-transparent px-2 text-center text-lg font-bold text-zinc-700 outline-none"
-                                                                                />
-                                                                            </td>
-
-                                                                            <td className="border-2 border-zinc-700 bg-white/60">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={formatarPercentual(
-                                                                                        intensidadeSerie?.percentualEsforco ??
-                                                                                        null
-                                                                                    )}
-                                                                                    readOnly
-                                                                                    className="h-9 w-full bg-transparent px-2 text-center text-lg font-bold text-zinc-700 outline-none"
-                                                                                />
-                                                                            </td>
-                                                                        </tr>
-                                                                    );
-                                                                }
-                                                            )}
-                                                        </tbody>
-                                                    </table>
-
-                                                    <div className="mt-3 flex flex-wrap justify-end gap-4 text-sm font-bold uppercase text-zinc-700">
-                                                        <span>
-                                                            Séries válidas:{" "}
-                                                            {resumoExercicio.seriesValidas}
-                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                alternarDetalhes(
+                                                                    treinoIndex,
+                                                                    exercicioIndex
+                                                                )
+                                                            }
+                                                            className="
+                                                                h-10
+                                                                rounded-xl
+                                                                border
+                                                                border-[#a87576]
+                                                                bg-[#f0e4e4]
+                                                                px-4
+                                                                text-sm
+                                                                font-bold
+                                                                uppercase
+                                                                text-[#7d4547]
+                                                                outline-none
+                                                                transition-all
+                                                                duration-150
+                                                                hover:border-[#8f4f51]
+                                                                hover:bg-[#eadada]
+                                                                hover:text-[#713b3d]
+                                                            "
+                                                        >
+                                                            {aberto
+                                                                ? "Fechar"
+                                                                : "Detalhes"}
+                                                        </button>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
 
-                            <div className="mt-4 flex flex-wrap justify-end gap-4 border-t-2 border-[#b88b8b] pt-3 text-sm font-bold uppercase text-zinc-700 ">
-                                <span>
-                                    Intensidade do treino:{" "}
-                                    {formatarPercentual(resumoTreino.intensidade)}
-                                </span>
-                            </div>
-                        </article>
-                    );
-                })}
+                                                    {aberto && (
+                                                        <div
+                                                            className="
+                                                                overflow-x-auto
+                                                                border-t
+                                                                border-zinc-300
+                                                                bg-[#f7f7f7]
+                                                                p-4
+                                                            "
+                                                        >
+                                                            <table
+                                                                className="
+                                                                    w-full
+                                                                    min-w-[900px]
+                                                                    border-separate
+                                                                    border-spacing-0
+                                                                    overflow-hidden
+                                                                    rounded-xl
+                                                                "
+                                                            >
+                                                                <thead>
+                                                                    <tr
+                                                                        className="
+                                                                            bg-[#eeeeee]
+                                                                            font-bold
+                                                                            italic
+                                                                            uppercase
+                                                                            text-zinc-600
+                                                                        "
+                                                                    >
+                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                            Série
+                                                                        </th>
+
+                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                            Reps
+                                                                        </th>
+
+                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                            Carga
+                                                                        </th>
+
+                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                            %1RM
+                                                                        </th>
+
+                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                            RIR
+                                                                        </th>
+
+                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                            Esforço
+                                                                        </th>
+
+                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                            %Esforço
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+
+                                                                <tbody>
+                                                                    {montarSeriesDoExercicio(
+                                                                        exercicio
+                                                                    ).map(
+                                                                        (
+                                                                            serie,
+                                                                            serieIndex
+                                                                        ) => {
+                                                                            const intensidadeSerie =
+                                                                                calcularIntensidadeSerie(
+                                                                                    serie
+                                                                                );
+
+                                                                            return (
+                                                                                <tr
+                                                                                    key={
+                                                                                        serieIndex
+                                                                                    }
+                                                                                >
+                                                                                    <td className="border border-zinc-300 bg-[#eeeeee]">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={
+                                                                                                serieIndex +
+                                                                                                1
+                                                                                            }
+                                                                                            readOnly
+                                                                                            className="
+                                                                                                h-10
+                                                                                                w-full
+                                                                                                bg-transparent
+                                                                                                px-2
+                                                                                                text-center
+                                                                                                text-lg
+                                                                                                font-bold
+                                                                                                text-zinc-700
+                                                                                                outline-none
+                                                                                            "
+                                                                                        />
+                                                                                    </td>
+
+                                                                                    <td className="border border-zinc-300 bg-[#e2e2e2]">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={
+                                                                                                serie.reps ??
+                                                                                                ""
+                                                                                            }
+                                                                                            onChange={(
+                                                                                                evento
+                                                                                            ) =>
+                                                                                                alterarSerie(
+                                                                                                    treinoIndex,
+                                                                                                    exercicioIndex,
+                                                                                                    serieIndex,
+                                                                                                    "reps",
+                                                                                                    evento
+                                                                                                        .target
+                                                                                                        .value
+                                                                                                )
+                                                                                            }
+                                                                                            className="
+                                                                                                h-10
+                                                                                                w-full
+                                                                                                bg-transparent
+                                                                                                px-2
+                                                                                                text-center
+                                                                                                text-lg
+                                                                                                font-bold
+                                                                                                text-[#8f4f51]
+                                                                                                outline-none
+                                                                                                transition-all
+                                                                                                focus:bg-[#f3e5e5]
+                                                                                            "
+                                                                                        />
+                                                                                    </td>
+
+                                                                                    <td className="border border-zinc-300 bg-[#e2e2e2]">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={
+                                                                                                serie.carga ??
+                                                                                                ""
+                                                                                            }
+                                                                                            onChange={(
+                                                                                                evento
+                                                                                            ) =>
+                                                                                                alterarSerie(
+                                                                                                    treinoIndex,
+                                                                                                    exercicioIndex,
+                                                                                                    serieIndex,
+                                                                                                    "carga",
+                                                                                                    evento
+                                                                                                        .target
+                                                                                                        .value
+                                                                                                )
+                                                                                            }
+                                                                                            className="
+                                                                                                h-10
+                                                                                                w-full
+                                                                                                bg-transparent
+                                                                                                px-2
+                                                                                                text-center
+                                                                                                text-lg
+                                                                                                font-bold
+                                                                                                text-[#8f4f51]
+                                                                                                outline-none
+                                                                                                transition-all
+                                                                                                focus:bg-[#f3e5e5]
+                                                                                            "
+                                                                                        />
+                                                                                    </td>
+
+                                                                                    <td className="border border-zinc-300 bg-[#eeeeee]">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={formatarPercentual(
+                                                                                                intensidadeSerie?.percentualUmRm ??
+                                                                                                null
+                                                                                            )}
+                                                                                            readOnly
+                                                                                            className="
+                                                                                                h-10
+                                                                                                w-full
+                                                                                                bg-transparent
+                                                                                                px-2
+                                                                                                text-center
+                                                                                                text-lg
+                                                                                                font-bold
+                                                                                                text-zinc-600
+                                                                                                outline-none
+                                                                                            "
+                                                                                        />
+                                                                                    </td>
+
+                                                                                    <td className="border border-zinc-300 bg-[#e2e2e2]">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={
+                                                                                                serie.rir ??
+                                                                                                ""
+                                                                                            }
+                                                                                            onChange={(
+                                                                                                evento
+                                                                                            ) =>
+                                                                                                alterarSerie(
+                                                                                                    treinoIndex,
+                                                                                                    exercicioIndex,
+                                                                                                    serieIndex,
+                                                                                                    "rir",
+                                                                                                    evento
+                                                                                                        .target
+                                                                                                        .value
+                                                                                                )
+                                                                                            }
+                                                                                            className="
+                                                                                                h-10
+                                                                                                w-full
+                                                                                                bg-transparent
+                                                                                                px-2
+                                                                                                text-center
+                                                                                                text-lg
+                                                                                                font-bold
+                                                                                                text-[#8f4f51]
+                                                                                                outline-none
+                                                                                                transition-all
+                                                                                                focus:bg-[#f3e5e5]
+                                                                                            "
+                                                                                        />
+                                                                                    </td>
+
+                                                                                    <td className="border border-zinc-300 bg-[#eeeeee]">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={formatarDecimal(
+                                                                                                intensidadeSerie?.esforco ??
+                                                                                                null
+                                                                                            )}
+                                                                                            readOnly
+                                                                                            className="
+                                                                                                h-10
+                                                                                                w-full
+                                                                                                bg-transparent
+                                                                                                px-2
+                                                                                                text-center
+                                                                                                text-lg
+                                                                                                font-bold
+                                                                                                text-zinc-600
+                                                                                                outline-none
+                                                                                            "
+                                                                                        />
+                                                                                    </td>
+
+                                                                                    <td className="border border-zinc-300 bg-[#eeeeee]">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={formatarPercentual(
+                                                                                                intensidadeSerie?.percentualEsforco ??
+                                                                                                null
+                                                                                            )}
+                                                                                            readOnly
+                                                                                            className="
+                                                                                                h-10
+                                                                                                w-full
+                                                                                                bg-transparent
+                                                                                                px-2
+                                                                                                text-center
+                                                                                                text-lg
+                                                                                                font-bold
+                                                                                                text-zinc-600
+                                                                                                outline-none
+                                                                                            "
+                                                                                        />
+                                                                                    </td>
+                                                                                </tr>
+                                                                            );
+                                                                        }
+                                                                    )}
+                                                                </tbody>
+                                                            </table>
+
+                                                            <div
+                                                                className="
+                                                                    mt-4
+                                                                    flex flex-wrap
+                                                                    justify-end
+                                                                    gap-3
+                                                                    text-sm
+                                                                    font-bold
+                                                                    uppercase
+                                                                    text-zinc-600
+                                                                "
+                                                            >
+                                                                <span
+                                                                    className="
+                                                                        rounded-xl
+                                                                        border
+                                                                        border-zinc-300
+                                                                        bg-[#eeeeee]
+                                                                        px-4
+                                                                        py-2
+                                                                    "
+                                                                >
+                                                                    Séries
+                                                                    válidas:{" "}
+                                                                    {
+                                                                        resumoExercicio.seriesValidas
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        }
+                                    )}
+                                </div>
+
+                                <div
+                                    className="
+                                        mt-4
+                                        flex flex-wrap
+                                        justify-end
+                                        gap-3
+                                        border-t
+                                        border-zinc-300
+                                        pt-4
+                                        text-sm
+                                        font-bold
+                                        uppercase
+                                        text-zinc-600
+                                    "
+                                >
+                                    <span
+                                        className="
+                                            rounded-xl
+                                            border
+                                            border-zinc-300
+                                            bg-[#eeeeee]
+                                            px-4
+                                            py-2
+                                        "
+                                    >
+                                        Intensidade do treino:{" "}
+                                        <span className="text-[#8f4f51]">
+                                            {formatarPercentual(
+                                                resumoTreino.intensidade
+                                            )}
+                                        </span>
+                                    </span>
+                                </div>
+                            </article>
+                        );
+                    }
+                )}
             </section>
+
             <br />
 
-            <div className="mt-10">{navTool()}</div>
-
+            <div className="mt-10">
+                {navTool()}
+            </div>
         </main>
     );
 }
