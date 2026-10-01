@@ -10,7 +10,8 @@ import {
     BsBoxArrowUpRight,
     BsDownload,
     BsFolder2Open,
-    BsTrash3Fill
+    BsTrash3Fill,
+
 } from "react-icons/bs";
 
 import {
@@ -18,10 +19,14 @@ import {
     FaCalendarAlt,
     FaFileImport,
     FaPlus,
-    FaSearch
+    FaSearch,
+    FaSignOutAlt,
+    FaCog,
+    FaUser
 } from "react-icons/fa";
 
-import navTool from "../components/navTool";
+import { FaPeopleGroup } from "react-icons/fa6";
+
 import warn from "../assets/preditiva1.gif";
 import manutencao from "../assets/manutencao.gif";
 import { useEffect, useRef, useState } from "react";
@@ -40,10 +45,10 @@ const CHAVE_ALUNOS = "painel_alunos";
 
 export default function Painel() {
 
-    // const {
-    //     avaliacao,
-    //     carregarAvaliacao
-    // } = useAvaliacao();
+    const {
+        avaliacao,
+        carregarAvaliacao
+    } = useAvaliacao();
 
     const navigate = useNavigate();
 
@@ -58,12 +63,29 @@ export default function Painel() {
 
     const inputImportarRef = useRef<HTMLInputElement>(null);
 
+    const [isOpen, setIsOpen] = useState(false);
+
+    const menuRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         const numero = Math.floor(Math.random() * 100) + 1;
         setPorcento(numero);
-
         carregarAlunos();
     }, []);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+
 
     // =========================================================
     // ALUNOS
@@ -260,9 +282,9 @@ export default function Painel() {
             aluno.id
         );
 
-        // carregarAvaliacao(
-        //     aluno.dados as Avaliacao
-        // );
+        carregarAvaliacao(
+            aluno.dados as Avaliacao
+        );
 
         console.log(
             "Aluno aberto:",
@@ -286,6 +308,11 @@ export default function Painel() {
             id: "alunos",
             nome: "Alunos",
             icone: <BsPeopleFill />
+        },
+        {
+            id: "equipe",
+            nome: "Equipe",
+            icone: <FaPeopleGroup />
         },
         {
             id: "avaliacoes",
@@ -713,6 +740,13 @@ export default function Painel() {
             case "alunos":
                 return renderAlunos();
 
+            case "equipe":
+                return renderSecaoVazia(
+                    "Equipe",
+                    "Aqui ficará a lista de profissionais, treinadores e demais membros da equipe. E dará controle e gestão ampla a usuarios administrativos. Demais usuários terão acesso apenas a seus alunos e avaliações.",
+                    <FaPeopleGroup />
+                );
+
             case "avaliacoes":
                 return renderSecaoVazia(
                     "Avaliações",
@@ -876,14 +910,201 @@ export default function Painel() {
                                 Personal
                             </p>
 
+
                             <p className="text-xs text-slate-400">
                                 Administrador
                             </p>
 
                         </div>
 
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 font-black text-white hover:cursor-pointer hover:bg-slate-800">
-                            P
+                        <div ref={menuRef} className="relative">
+                            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 font-black text-white hover:cursor-pointer hover:bg-slate-800"
+                                onClick={() => { setIsOpen(!isOpen) }}>
+                                P
+                            </button>
+
+                            {isOpen && (
+                                <div
+                                    className="
+                absolute right-0 top-full z-50 mt-3
+                w-64
+                origin-top-right
+                overflow-visible
+                rounded-2xl
+                border border-slate-200
+                bg-white
+                shadow-[0_12px_35px_rgba(0,0,0,0.12)]
+                ring-1 ring-black/5
+            "
+                                >
+                                    {/* SETA */}
+                                    <div
+                                        className="
+                    absolute -top-2 right-3
+                    h-4 w-4
+                    rotate-45
+                    border-l border-t border-slate-200
+                    bg-white
+                "
+                                    />
+
+                                    {/* Cabeçalho */}
+                                    <div className="relative px-4 pt-4 pb-3">
+                                        <div className="flex items-center gap-3">
+
+                                            {/* Avatar */}
+                                            <div
+                                                className="
+                            flex h-11 w-11 shrink-0
+                            items-center justify-center
+                            rounded-full
+                            bg-slate-700
+                            text-white
+                            shadow-sm
+                        "
+                                            >
+                                                <FaUser className="text-sm" />
+                                            </div>
+
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-bold text-slate-800">
+                                                    Personal
+                                                </p>
+
+                                                <p className="truncate text-xs text-slate-500">
+                                                    personal@example.com
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Separador */}
+                                    <div className="mx-3 border-t border-slate-100" />
+
+                                    {/* Opções */}
+                                    <div className="p-2">
+
+                                        {/* Perfil */}
+                                        <a
+                                            href="#perfil"
+                                            className="
+                        group flex items-center gap-3
+                        rounded-xl px-3 py-2.5
+                        text-sm font-medium text-slate-700
+                        transition-all duration-150
+                        hover:bg-[#E8F1F2]
+                        hover:text-[#1B98E0]
+                    "
+                                        >
+                                            <div
+                                                className="
+                            flex h-9 w-9 items-center justify-center
+                            rounded-lg
+                            bg-slate-100
+                            text-slate-500
+                            transition-colors
+                            group-hover:bg-white
+                            group-hover:text-[#1B98E0]
+                        "
+                                            >
+                                                <FaUser className="text-sm" />
+                                            </div>
+
+                                            <div className="flex-1">
+                                                <p>Meu Perfil</p>
+                                                <span className="text-[11px] font-normal text-slate-400">
+                                                    Visualizar seu perfil
+                                                </span>
+                                            </div>
+
+                                            <span className="text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-[#1B98E0]">
+                                                →
+                                            </span>
+                                        </a>
+
+                                        {/* Configurações */}
+                                        <a
+                                            href="#configuracoes"
+                                            className="
+                        group flex items-center gap-3
+                        rounded-xl px-3 py-2.5
+                        text-sm font-medium text-slate-700
+                        transition-all duration-150
+                        hover:bg-[#E8F1F2]
+                        hover:text-[#1B98E0]
+                    "
+                                        >
+                                            <div
+                                                className="
+                            flex h-9 w-9 items-center justify-center
+                            rounded-lg
+                            bg-slate-100
+                            text-slate-500
+                            transition-colors
+                            group-hover:bg-white
+                            group-hover:text-[#1B98E0]
+                        "
+                                            >
+                                                <FaCog className="text-sm" />
+                                            </div>
+
+                                            <div className="flex-1">
+                                                <p>Configurações</p>
+                                                <span className="text-[11px] font-normal text-slate-400">
+                                                    Preferências da conta
+                                                </span>
+                                            </div>
+
+                                            <span className="text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-[#1B98E0]">
+                                                →
+                                            </span>
+                                        </a>
+                                    </div>
+
+                                    {/* Separador */}
+                                    <div className="mx-3 border-t border-slate-100" />
+
+                                    {/* Sair */}
+                                    <div className="p-2">
+                                        <button
+                                            onClick={() => {
+                                                alert("Saindo...");
+                                                setIsOpen(false);
+                                            }}
+                                            className="
+                        group flex w-full items-center gap-3
+                        rounded-xl px-3 py-2.5
+                        text-left text-sm font-medium
+                        text-red-500
+                        transition-all duration-150
+                        hover:bg-red-50
+                        hover:text-red-600
+                    "
+                                        >
+                                            <div
+                                                className="
+                            flex h-9 w-9 items-center justify-center
+                            rounded-lg
+                            bg-red-50
+                            text-red-400
+                            transition-colors
+                            group-hover:bg-white
+                            group-hover:text-red-500
+                        "
+                                            >
+                                                <FaSignOutAlt className="text-sm" />
+                                            </div>
+
+                                            <div>
+                                                <p>Sair da conta</p>
+                                                <span className="text-[11px] font-normal text-red-300">
+                                                    Encerrar sessão
+                                                </span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                     </div>
