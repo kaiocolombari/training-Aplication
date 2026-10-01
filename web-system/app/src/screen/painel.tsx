@@ -45,10 +45,10 @@ const CHAVE_ALUNOS = "painel_alunos";
 
 export default function Painel() {
 
-    const {
-        avaliacao,
-        carregarAvaliacao
-    } = useAvaliacao();
+    // const {
+    //     avaliacao,
+    //     carregarAvaliacao
+    // } = useAvaliacao();
 
     const navigate = useNavigate();
 
@@ -282,9 +282,9 @@ export default function Painel() {
             aluno.id
         );
 
-        carregarAvaliacao(
-            aluno.dados as Avaliacao
-        );
+        // carregarAvaliacao(
+        //     aluno.dados as Avaliacao
+        // );
 
         console.log(
             "Aluno aberto:",
