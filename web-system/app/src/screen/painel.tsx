@@ -11,8 +11,11 @@ import {
     BsDownload,
     BsFolder2Open,
     BsTrash3Fill,
-
+    
 } from "react-icons/bs";
+
+
+import { IoChatbubblesSharp } from "react-icons/io5";
 
 import {
     FaDumbbell,
@@ -22,10 +25,14 @@ import {
     FaSearch,
     FaSignOutAlt,
     FaCog,
-    FaUser
+    FaUser,
+    FaRegQuestionCircle,
+    FaRegFileAlt
+
 } from "react-icons/fa";
 
 import { FaPeopleGroup } from "react-icons/fa6";
+import { VscFeedback } from "react-icons/vsc";
 
 import warn from "../assets/preditiva1.gif";
 import manutencao from "../assets/manutencao.gif";
@@ -320,6 +327,11 @@ export default function Painel() {
             icone: <BsClipboard2PulseFill />
         },
         {
+            id: "chat",
+            nome: "Chat",
+            icone: <IoChatbubblesSharp />
+        },
+        {
             id: "periodizacao",
             nome: "Periodização",
             icone: <FaCalendarAlt />
@@ -328,6 +340,21 @@ export default function Painel() {
             id: "relatorios",
             nome: "Relatórios",
             icone: <BsBarChartFill />
+        },
+        {
+            id: "ajuda",
+            nome: "Ajuda",
+            icone: <FaRegQuestionCircle />
+        },
+        {
+            id: "feedback",
+            nome: "Feedback",
+            icone: <VscFeedback />
+        },
+        {
+            id: "log",
+            nome: "Registro de Atividades",
+            icone: <FaRegFileAlt  />
         },
         {
             id: "configuracoes",
@@ -752,6 +779,30 @@ export default function Painel() {
                     "Avaliações",
                     "Aqui ficarão as avaliações físicas, anamneses, medidas, dobras cutâneas e demais informações dos alunos.",
                     <BsClipboard2PulseFill />
+                );
+            case "ajuda":
+                return renderSecaoVazia(
+                    "Ajuda",
+                    "Aqui ficará a ajuda do sistema, com tutoriais, vídeos e explicações de como usar o sistema.",
+                    <FaRegQuestionCircle />
+                );
+            case "feedback":
+                return renderSecaoVazia(
+                    "Feedback",
+                    "Aqui ficará o feedback dos alunos, com sugestões, críticas e elogios.",
+                    <VscFeedback />
+                );
+            case "log":
+                return renderSecaoVazia(
+                    "Registro de Atividades",
+                    "Aqui ficará o registro de atividades do sistema, com logs de ações, erros e eventos.",
+                    <FaRegFileAlt g />
+                );
+            case "chat":
+                return renderSecaoVazia(
+                    "Chat de Suporte",
+                    "Dúvidas de alunos sobre treino, execuções, funcionamento, limitações e mudanças de treino, serão respondidas aqui. O chat será integrado com o WhatsApp e Telegram.",
+                    <IoChatbubblesSharp />
                 );
 
             case "periodizacao":
