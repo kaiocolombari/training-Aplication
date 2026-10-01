@@ -1,26 +1,56 @@
-import { tabs } from '../routes/tabRoutes'
-import { NavLink } from 'react-router'
+import { tabs } from "../routes/tabRoutes";
+import { NavLink } from "react-router";
 
 export default function navTool() {
+
+    function confirmarNavegacao(rota: string) {
+
+        if (rota !== "/painel") {
+            return true;
+        }
+
+        return window.confirm(
+            "Você está saindo da avaliação.\n\n" +
+            "Certifique-se de que todas as alterações foram salvas antes de continuar.\n\n" +
+            "Deseja realmente ir para a área administrativa?"
+        );
+    }
+
     return (
         <div className="w-[55%] fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+
             <div className="flex w-full border-b border-zinc-500 bg-[#2f2f2f]">
+
                 {tabs.map((tab) => (
+
                     <NavLink
                         key={tab.rota}
                         to={tab.rota}
+                        onClick={(evento) => {
+
+                            const podeNavegar =
+                                confirmarNavegacao(tab.rota);
+
+                            if (!podeNavegar) {
+                                evento.preventDefault();
+                            }
+
+                        }}
                         className={({ isActive }) =>
                             `flex-1 text-center py-2 text-sm font-semibold uppercase border-r border-zinc-500 transition
-                ${isActive
+                            ${isActive
                                 ? "bg-white text-[#4c8b72]"
                                 : "bg-[#2f2f2f] text-white hover:bg-[#444]"
-                            } `
+                            }`
                         }
                     >
                         {tab.nome}
                     </NavLink>
+
                 ))}
+
             </div>
+
         </div>
-    )
+    );
 }
