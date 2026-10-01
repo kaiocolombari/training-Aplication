@@ -34,120 +34,162 @@ const perimetroConfig: PerimetroField[] = [
     { key: "panturrilhaE", label: "Panturrilha E", index: 14 },
 ];
 
-function getReferenceByKey(
-    key: PerimetroKey,
-    data: ExamData
+function calcularEfeitoEstrutural(
+    data: ExamData,
+    key: PerimetroKey
 ): number {
+
+    const estatura = parseEstatura(data.estatura);
+
+    if (estatura <= 0) {
+        return 0;
+    }
+
+    const alturaCm = estatura * 100;
 
     const umero = parseDecimal(data.umero);
     const femur = parseDecimal(data.femur);
     const tibia = parseDecimal(data.tibia);
     const una = parseDecimal(data.una);
 
-    const idade = Number(data.idade);
-
-    const massa = parseDecimal(data.massa);
-
-    const estatura = parseDecimal(data.estatura);
-
-    const imc =
-        estatura > 0
-            ? massa / (estatura * estatura)
-            : 0;
-
-    const masculino =
-        data.genero === "masculino";
-
-    const estaturaFactor =
-        1 + ((estatura - 1.75) * 0.25);
-
-    const estruturaBraco =
-        umero > 0
-            ? (umero - 7) * 1.2
-            : 0;
-
-    const estruturaPerna =
-        femur > 0
-            ? (femur - 9) * 1.4
-            : 0;
-
-    const estruturaAntebraco =
-        una > 0
-            ? (una - 5.5) * 0.8
-            : 0;
-
-    const baseValues: Record<PerimetroKey, number> = {
-        bracoD: masculino ? 36 : 31,
-        bracoE: masculino ? 36 : 31,
-        antebracoD: masculino ? 28 : 24,
-        antebracoE: masculino ? 28 : 24,
-        torax: masculino ? 100 : 90,
-        cintura: masculino ? 86 : 76,
-        abdomen: masculino ? 88 : 80,
-        quadril: masculino ? 98 : 102,
-        coxaSupD: masculino ? 56 : 52,
-        coxaSupE: masculino ? 56 : 52,
-        coxaMediaD: masculino ? 51 : 47,
-        coxaMediaE: masculino ? 51 : 47,
-        panturrilhaD: masculino ? 36 : 33,
-        panturrilhaE: masculino ? 36 : 33,
+    const referencias = {
+        umero: alturaCm * 0.17,
+        una: alturaCm * 0.15,
+        femur: alturaCm * 0.26,
+        tibia: alturaCm * 0.22,
     };
 
-    let value =
-        baseValues[key] * estaturaFactor;
-
     switch (key) {
+
         case "bracoD":
-        case "bracoE":
-            value += estruturaBraco;
-            break;
+        case "bracoE": {
+            if (umero <= 0) return 0;
+
+            const proporcao =
+                (umero / referencias.umero) - 1;
+
+            return proporcao * 10;
+        }
 
         case "antebracoD":
-        case "antebracoE":
-            value += estruturaAntebraco;
-            break;
+        case "antebracoE": {
+            if (una <= 0) return 0;
+
+            const proporcao =
+                (una / referencias.una) - 1;
+
+            return proporcao * 7;
+        }
 
         case "coxaSupD":
         case "coxaSupE":
         case "coxaMediaD":
-        case "coxaMediaE":
+        case "coxaMediaE": {
+            if (femur <= 0) return 0;
+
+            const proporcao =
+                (femur / referencias.femur) - 1;
+
+            return proporcao * 12;
+        }
+
         case "panturrilhaD":
-        case "panturrilhaE":
-            value += estruturaPerna;
-            break;
+        case "panturrilhaE": {
+            if (tibia <= 0) return 0;
 
-        case "torax":
-            value += estruturaBraco * 0.7;
-            break;
+            const proporcao =
+                (tibia / referencias.tibia) - 1;
+
+            return proporcao * 8;
+        }
+
+        default:
+            return 0;
     }
+}
 
-    const adiposityAdjustment:
-        Partial<Record<PerimetroKey, number>> = {
-        cintura:
-            imc >= 30 ? 12 :
-                imc >= 25 ? 6 : 0,
+function getReferenceByKey(
+    key: PerimetroKey,
+    data: ExamData
+): number {
 
-        abdomen:
-            imc >= 30 ? 14 :
-                imc >= 25 ? 7 : 0,
+    const idade = parseDecimal(data.idade);
+    const estatura = parseEstatura(data.estatura);
+    const imc = calcularIMC(
+        data.massa,
+        data.estatura
+    );
 
-        quadril:
-            imc >= 30 ? 8 :
-                imc >= 25 ? 4 : 0,
+    const masculino =
+        data.genero === "masculino";
 
-        torax:
-            imc >= 30 ? 5 :
-                imc >= 25 ? 2 : 0,
+    const baseValues: Record<PerimetroKey, number> = {
+        bracoD: masculino ? 36 : 31,
+        bracoE: masculino ? 36 : 31,
+
+        antebracoD: masculino ? 28 : 24,
+        antebracoE: masculino ? 28 : 24,
+
+        torax: masculino ? 100 : 90,
+        cintura: masculino ? 86 : 76,
+        abdomen: masculino ? 88 : 80,
+        quadril: masculino ? 98 : 102,
+
+        coxaSupD: masculino ? 56 : 52,
+        coxaSupE: masculino ? 56 : 52,
+
+        coxaMediaD: masculino ? 51 : 47,
+        coxaMediaE: masculino ? 51 : 47,
+
+        panturrilhaD: masculino ? 36 : 33,
+        panturrilhaE: masculino ? 36 : 33,
     };
 
-    value +=
-        adiposityAdjustment[key] ?? 0;
+    const estaturaFactor =
+        estatura > 0
+            ? 1 + ((estatura - 1.75) * 0.25)
+            : 1;
 
+    let value =
+        baseValues[key] * estaturaFactor;
+
+    // Estrutura óssea
+    value += calcularEfeitoEstrutural(
+        data,
+        key
+    );
+
+    // IMC
+    if (imc >= 25) {
+
+        switch (key) {
+
+            case "cintura":
+                value += imc >= 30 ? 12 : 6;
+                break;
+
+            case "abdomen":
+                value += imc >= 30 ? 14 : 7;
+                break;
+
+            case "quadril":
+                value += imc >= 30 ? 8 : 4;
+                break;
+
+            case "torax":
+                value += imc >= 30 ? 5 : 2;
+                break;
+        }
+    }
+
+    // Idade
     if (idade >= 50) {
         value -= 1.5;
     }
 
-    return Number(value.toFixed(1));
+    return Number(
+        value.toFixed(1)
+    );
 }
 
 const perimetroDesvios: Record<PerimetroKey, number> = {
@@ -297,10 +339,50 @@ function sanitizeInteger(value: string) {
     return value.replace(/\D/g, "");
 }
 
-function parseDecimal(value: string) {
-    const normalized = value.replace(",", ".");
+function parseDecimal(
+    value: string | number | undefined | null
+): number {
+    if (value === undefined || value === null || value === "") {
+        return 0;
+    }
+
+    const normalized = String(value)
+        .replace(",", ".")
+        .replace(/[^\d.-]/g, "");
+
     const parsed = Number(normalized);
+
     return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function parseEstatura(
+    value: string | number | undefined | null
+): number {
+    const estatura = parseDecimal(value);
+
+    if (estatura <= 0) {
+        return 0;
+    }
+
+    if (estatura > 3) {
+        return estatura / 100;
+    }
+
+    return estatura;
+}
+
+function calcularIMC(
+    massa: string | number | undefined | null,
+    estatura: string | number | undefined | null
+): number {
+    const peso = parseDecimal(massa);
+    const altura = parseEstatura(estatura);
+
+    if (peso <= 0 || altura <= 0) {
+        return 0;
+    }
+
+    return peso / (altura * altura);
 }
 
 function classificationBox(label: string, value: string) {
@@ -660,6 +742,20 @@ export default function App() {
         dadosAntropometricosValidos,
     ]);
 
+    function calcularAreaCircular(
+        perimetro: number
+    ): number {
+
+        if (perimetro <= 0) {
+            return 0;
+        }
+
+        return (
+            (perimetro * perimetro) /
+            (4 * Math.PI)
+        );
+    }
+
     const pontosDobras = useMemo(() => {
         if (!dadosAntropometricosValidos) {
             return [];
@@ -724,6 +820,11 @@ export default function App() {
                 resumoDobras
             ) || 0;
 
+        const imc = calcularIMC(
+            data.massa,
+            data.estatura
+        );
+
         const massaMuscularKg =
             calcularMassaMuscular(
                 massa,
@@ -732,7 +833,7 @@ export default function App() {
                 Number(data.idade),
                 areaBraco,
                 areaCoxa,
-                getReferenceByKey("imc" as PerimetroKey, data)
+                imc
             );
 
         const refBraco = getReferenceByKey("bracoD" as PerimetroKey, data);
@@ -785,7 +886,7 @@ export default function App() {
 
         let massaAdiposa = "";
 
-        if (data.genero === "Masculino") {
+        if (data.genero === "masculino") {
             if (percentualGordura >= 25) {
                 massaAdiposa = "Muito elevada";
             } else if (
@@ -815,17 +916,29 @@ export default function App() {
             }
         }
 
+        const refPerimetroBraco =
+            getReferenceByKey("bracoD", data);
+
+        const refPerimetroCoxa =
+            getReferenceByKey("coxaMediaD", data);
+
+        const refAreaBraco =
+            calcularAreaCircular(refPerimetroBraco);
+
+        const refAreaCoxa =
+            calcularAreaCircular(refPerimetroCoxa);
+
         const areaBracos =
             classificarFaixa(
                 areaBraco,
-                refBraco,
+                refAreaBraco,
                 2
             );
 
         const areaCoxas =
             classificarFaixa(
                 areaCoxa,
-                refCoxa,
+                refAreaCoxa,
                 3
             );
 
@@ -974,7 +1087,7 @@ export default function App() {
         <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
             <section className="mx-auto w-full border border-zinc-400 bg-[#ececec]">
                 <header className="border-b-4 border-[#a55c5d] bg-[#4f7fb7] px-5 py-6">
-                    <h1 className="text-5xl font-semibold italic tracking-wide text-white">1ª Avaliação</h1>
+                    <h1 className="text-5xl font-semibold italic tracking-wide text-white">2ª Avaliação</h1>
                 </header>
                 <div className="px-5 py-5">
                     <h2 className="mb-3 text-3xl font-bold italic text-zinc-600">DADOS GERAIS</h2>

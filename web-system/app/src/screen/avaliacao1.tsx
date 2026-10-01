@@ -34,115 +34,148 @@ const perimetroConfig: PerimetroField[] = [
   { key: "panturrilhaE", label: "Panturrilha E", index: 14 },
 ];
 
-function getReferenceByKey(
-  key: PerimetroKey,
-  data: ExamData
+function calcularEfeitoEstrutural(
+  data: ExamData,
+  key: PerimetroKey
 ): number {
+
+  const estatura = parseEstatura(data.estatura);
+
+  if (estatura <= 0) {
+    return 0;
+  }
+
+  const alturaCm = estatura * 100;
 
   const umero = parseDecimal(data.umero);
   const femur = parseDecimal(data.femur);
   const tibia = parseDecimal(data.tibia);
   const una = parseDecimal(data.una);
 
-  const idade = Number(data.idade);
-
-  const massa = parseDecimal(data.massa);
-
-  const estatura = parseDecimal(data.estatura);
-
-  const imc =
-    estatura > 0
-      ? massa / (estatura * estatura)
-      : 0;
-
-  const masculino =
-    data.genero === "masculino";
-
-  const estaturaFactor =
-    1 + ((estatura - 1.75) * 0.25);
-
-  const estruturaBraco =
-    umero > 0
-      ? (umero - 7) * 1.2
-      : 0;
-
-  const estruturaPerna =
-    femur > 0
-      ? (femur - 9) * 1.4
-      : 0;
-
-  const estruturaAntebraco =
-    una > 0
-      ? (una - 5.5) * 0.8
-      : 0;
-
-  const baseValues: Record<PerimetroKey, number> = {
-    bracoD: masculino ? 36 : 31,
-    bracoE: masculino ? 36 : 31,
-    antebracoD: masculino ? 28 : 24,
-    antebracoE: masculino ? 28 : 24,
-    torax: masculino ? 100 : 90,
-    cintura: masculino ? 86 : 76,
-    abdomen: masculino ? 88 : 80,
-    quadril: masculino ? 98 : 102,
-    coxaSupD: masculino ? 56 : 52,
-    coxaSupE: masculino ? 56 : 52,
-    coxaMediaD: masculino ? 51 : 47,
-    coxaMediaE: masculino ? 51 : 47,
-    panturrilhaD: masculino ? 36 : 33,
-    panturrilhaE: masculino ? 36 : 33,
+  const referencias = {
+    umero: alturaCm * 0.17,
+    una: alturaCm * 0.15,
+    femur: alturaCm * 0.26,
+    tibia: alturaCm * 0.22,
   };
 
-  let value =
-    baseValues[key] * estaturaFactor;
-
   switch (key) {
+
     case "bracoD":
-    case "bracoE":
-      value += estruturaBraco;
-      break;
+    case "bracoE": {
+      if (umero <= 0) return 0;
+
+      const proporcao =
+        (umero / referencias.umero) - 1;
+
+      return proporcao * 10;
+    }
 
     case "antebracoD":
-    case "antebracoE":
-      value += estruturaAntebraco;
-      break;
+    case "antebracoE": {
+      if (una <= 0) return 0;
+
+      const proporcao =
+        (una / referencias.una) - 1;
+
+      return proporcao * 7;
+    }
 
     case "coxaSupD":
     case "coxaSupE":
     case "coxaMediaD":
-    case "coxaMediaE":
+    case "coxaMediaE": {
+      if (femur <= 0) return 0;
+
+      const proporcao =
+        (femur / referencias.femur) - 1;
+
+      return proporcao * 12;
+    }
+
     case "panturrilhaD":
-    case "panturrilhaE":
-      value += estruturaPerna;
-      break;
+    case "panturrilhaE": {
+      if (tibia <= 0) return 0;
 
-    case "torax":
-      value += estruturaBraco * 0.7;
-      break;
+      const proporcao =
+        (tibia / referencias.tibia) - 1;
+
+      return proporcao * 8;
+    }
+
+    default:
+      return 0;
   }
+}
 
-  const adiposityAdjustment:
-    Partial<Record<PerimetroKey, number>> = {
-    cintura:
-      imc >= 30 ? 12 :
-        imc >= 25 ? 6 : 0,
+function getReferenceByKey(
+  key: PerimetroKey,
+  data: ExamData
+): number {
 
-    abdomen:
-      imc >= 30 ? 14 :
-        imc >= 25 ? 7 : 0,
+  const idade = parseDecimal(data.idade);
+  const estatura = parseEstatura(data.estatura);
+  const imc = calcularIMC(data.massa, data.estatura);
 
-    quadril:
-      imc >= 30 ? 8 :
-        imc >= 25 ? 4 : 0,
+  const masculino = data.genero === "masculino";
 
-    torax:
-      imc >= 30 ? 5 :
-        imc >= 25 ? 2 : 0,
+  const baseValues: Record<PerimetroKey, number> = {
+    bracoD: masculino ? 36 : 31,
+    bracoE: masculino ? 36 : 31,
+
+    antebracoD: masculino ? 28 : 24,
+    antebracoE: masculino ? 28 : 24,
+
+    torax: masculino ? 100 : 90,
+    cintura: masculino ? 86 : 76,
+    abdomen: masculino ? 88 : 80,
+    quadril: masculino ? 98 : 102,
+
+    coxaSupD: masculino ? 56 : 52,
+    coxaSupE: masculino ? 56 : 52,
+
+    coxaMediaD: masculino ? 51 : 47,
+    coxaMediaE: masculino ? 51 : 47,
+
+    panturrilhaD: masculino ? 36 : 33,
+    panturrilhaE: masculino ? 36 : 33,
   };
 
-  value +=
-    adiposityAdjustment[key] ?? 0;
+  // Efeito da estatura
+  const estaturaFactor =
+    estatura > 0
+      ? 1 + ((estatura - 1.75) * 0.25)
+      : 1;
 
+  let value = baseValues[key] * estaturaFactor;
+
+  // Efeito da estrutura óssea
+  value += calcularEfeitoEstrutural(data, key);
+
+  // Efeito do IMC
+  if (imc >= 25) {
+
+    switch (key) {
+
+      case "cintura":
+        value += imc >= 30 ? 12 : 6;
+        break;
+
+      case "abdomen":
+        value += imc >= 30 ? 14 : 7;
+        break;
+
+      case "quadril":
+        value += imc >= 30 ? 8 : 4;
+        break;
+
+      case "torax":
+        value += imc >= 30 ? 5 : 2;
+        break;
+    }
+  }
+
+  // Efeito da idade
   if (idade >= 50) {
     value -= 1.5;
   }
@@ -297,10 +330,46 @@ function sanitizeInteger(value: string) {
   return value.replace(/\D/g, "");
 }
 
-function parseDecimal(value: string) {
-  const normalized = value.replace(",", ".");
+function parseDecimal(value: string | number | undefined | null): number {
+  if (value === undefined || value === null || value === "") {
+    return 0;
+  }
+
+  const normalized = String(value)
+    .replace(",", ".")
+    .replace(/[^\d.-]/g, "");
+
   const parsed = Number(normalized);
+
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function parseEstatura(value: string | number | undefined | null): number {
+  const estatura = parseDecimal(value);
+
+  if (estatura <= 0) {
+    return 0;
+  }
+
+  if (estatura > 3) {
+    return estatura / 100;
+  }
+
+  return estatura;
+}
+
+function calcularIMC(
+  massa: string | number | undefined | null,
+  estatura: string | number | undefined | null
+): number {
+  const peso = parseDecimal(massa);
+  const altura = parseEstatura(estatura);
+
+  if (peso <= 0 || altura <= 0) {
+    return 0;
+  }
+
+  return peso / (altura * altura);
 }
 
 function classificationBox(label: string, value: string) {
@@ -321,7 +390,7 @@ export default function App() {
   const navigate = useNavigate();
   const { avaliacao, setAvaliacao } = useAvaliacao();
 
-  const [data, setData] = useState<ExamData>({
+  const data: ExamData = {
     nomeCompleto: avaliacao.aluno.nomeCompleto,
     genero: avaliacao.aluno.genero,
     idade: avaliacao.avaliacao1.idade,
@@ -341,7 +410,7 @@ export default function App() {
     hdl: avaliacao.aluno.hdl,
     sistolica: avaliacao.aluno.sistolica,
     diastolica: avaliacao.aluno.diastolica,
-  });
+  };
 
   const testeCarga = avaliacao.testeCarga;
 
@@ -445,36 +514,29 @@ export default function App() {
   if (!data.massa) camposFaltando.push("Massa");
   if (!data.estatura) camposFaltando.push("Estatura");
 
-  useEffect(() => {
+  const fcMaxima = useMemo(() => {
     const idade = Number(data.idade);
 
     if (!idade || !data.genero) {
-      setData((current) => ({
-        ...current,
-        fcMaxima: "",
-        fcReserva: "",
-      }));
-      return;
+      return "";
     }
 
-    const fcMaxima = data.genero === "feminino" ? 226 - idade : 220 - idade;
-    const fcReserva = data.fcRepouso ? fcMaxima - Number(data.fcRepouso) : 0;
+    return String(
+      data.genero === "feminino"
+        ? 226 - idade
+        : 220 - idade
+    );
+  }, [data.idade, data.genero]);
 
-    setData((current) => {
-      const nextMaxima = String(fcMaxima);
-      const nextReserva = data.fcRepouso ? String(fcReserva) : "";
+  const fcReserva = useMemo(() => {
+    if (!fcMaxima || !data.fcRepouso) {
+      return "";
+    }
 
-      if (current.fcMaxima === nextMaxima && current.fcReserva === nextReserva) {
-        return current;
-      }
-
-      return {
-        ...current,
-        fcMaxima: nextMaxima,
-        fcReserva: nextReserva,
-      };
-    });
-  }, [data.idade, data.genero, data.fcRepouso]);
+    return String(
+      Number(fcMaxima) - Number(data.fcRepouso)
+    );
+  }, [fcMaxima, data.fcRepouso]);
 
   function calcular1RM(carga: number, repeticoes: number) {
     if (!carga || !repeticoes) return 0;
@@ -626,33 +688,85 @@ export default function App() {
 
         const valor = parseDecimal(valorTexto);
 
-        const ref = getReferenceByKey(
+        if (valor <= 0) {
+          return null;
+        }
+
+        const referencia = getReferenceByKey(
           item.key,
           data
         );
 
-        const desvio =
-          perimetroDesvios[item.key as PerimetroKey] *
-          (1 + (massa - 70) / 200);
+        const desvioBase =
+          perimetroDesvios[item.key];
 
-        const score = Math.max(
-          -5,
-          Math.min(
-            5,
-            (valor - ref) / desvio
-          )
-        );
+        /*
+         * Ajuste muito pequeno conforme a massa.
+         *
+         * Para 70 kg:
+         * 1 + ((70 - 70) / 200) = 1
+         *
+         * Portanto o desvio permanece igual.
+         */
+        const fatorMassa =
+          1 + ((massa - 70) / 200);
+
+        const desvio =
+          desvioBase * fatorMassa;
+
+        /*
+         * Segurança contra divisão por zero.
+         */
+        if (desvio <= 0) {
+          return null;
+        }
+
+        /*
+         * Distância da medida em relação à referência.
+         *
+         * Exemplo:
+         *
+         * medida = 35
+         * referência = 36,4
+         * desvio = 4
+         *
+         * score = -0,35
+         */
+        const scoreBruto =
+          (valor - referencia) / desvio;
+
+        /*
+         * Limita o gráfico entre -5 e +5.
+         */
+        const score =
+          Math.max(
+            -5,
+            Math.min(5, scoreBruto)
+          );
 
         return {
           x: score,
           y: idx + 1,
+
+          /*
+           * Deixo essas informações no objeto
+           * porque facilitam muito o debug.
+           */
+          valor,
+          referencia,
+          desvio,
         };
       })
       .filter(
         (
           point
-        ): point is { x: number; y: number } =>
-          point !== null
+        ): point is {
+          x: number;
+          y: number;
+          valor: number;
+          referencia: number;
+          desvio: number;
+        } => point !== null
       );
   }, [
     perimetros,
@@ -702,9 +816,23 @@ export default function App() {
     dadosAntropometricosValidos,
   ]);
 
+  function calcularAreaCircular(
+    perimetro: number
+  ): number {
+    if (perimetro <= 0) {
+      return 0;
+    }
+
+    return (
+      (perimetro * perimetro) /
+      (4 * Math.PI)
+    );
+  }
+
   const analiseCorporal = useMemo(() => {
-    const massa =
-      parseDecimal(data.massa);
+    const massa = parseDecimal(data.massa);
+
+    const idade = Number(data.idade);
 
     const gorduraKg =
       calcularMassaAdiposa(
@@ -724,22 +852,62 @@ export default function App() {
         resumoDobras
       ) || 0;
 
+    /*
+     * IMC calculado diretamente.
+     *
+     * Não passa mais por getReferenceByKey().
+     */
+    const imc = calcularIMC(
+      data.massa,
+      data.estatura
+    );
+
+    /*
+     * Massa muscular.
+     */
     const massaMuscularKg =
       calcularMassaMuscular(
         massa,
         gorduraKg,
         data.genero,
-        Number(data.idade),
+        idade,
         areaBraco,
         areaCoxa,
-        getReferenceByKey("imc" as PerimetroKey, data)
+        imc
       );
 
-    const refBraco = getReferenceByKey("bracoD" as PerimetroKey, data);
+    /*
+     * Referências dos perímetros.
+     */
+    const refPerimetroBraco =
+      getReferenceByKey(
+        "bracoD",
+        data
+      );
 
+    const refPerimetroCoxa =
+      getReferenceByKey(
+        "coxaMediaD",
+        data
+      );
 
-    const refCoxa = getReferenceByKey("coxaMediaD", data);
+    /*
+     * Converte as referências de perímetro
+     * para referências de área.
+     */
+    const refAreaBraco =
+      calcularAreaCircular(
+        refPerimetroBraco
+      );
 
+    const refAreaCoxa =
+      calcularAreaCircular(
+        refPerimetroCoxa
+      );
+
+    /*
+     * Percentuais.
+     */
     const percentualMuscular =
       massa > 0
         ? massaMuscularKg / massa
@@ -750,51 +918,32 @@ export default function App() {
         ? (gorduraKg / massa) * 100
         : 0;
 
-    const classificarFaixa = (
-      valor: number,
-      referencia: number,
-      margem = 2
-    ) => {
-      if (valor >= referencia + margem * 2)
-        return "Muito elevada";
-
-      if (valor >= referencia + margem)
-        return "Elevada";
-
-      if (valor >= referencia - margem)
-        return "Normal";
-
-      return "Baixa";
-    };
-
+    /*
+     * Classificação da massa muscular.
+     */
     let massaMuscular = "";
 
     if (percentualMuscular >= 0.45) {
       massaMuscular = "Muito elevada";
-    } else if (
-      percentualMuscular >= 0.38
-    ) {
+    } else if (percentualMuscular >= 0.38) {
       massaMuscular = "Elevada";
-    } else if (
-      percentualMuscular >= 0.28
-    ) {
+    } else if (percentualMuscular >= 0.28) {
       massaMuscular = "Normal";
     } else {
       massaMuscular = "Baixa";
     }
 
+    /*
+     * Classificação da massa adiposa.
+     */
     let massaAdiposa = "";
 
-    if (data.genero === "Masculino") {
+    if (data.genero === "masculino") {
       if (percentualGordura >= 25) {
         massaAdiposa = "Muito elevada";
-      } else if (
-        percentualGordura >= 18
-      ) {
+      } else if (percentualGordura >= 18) {
         massaAdiposa = "Elevada";
-      } else if (
-        percentualGordura >= 10
-      ) {
+      } else if (percentualGordura >= 10) {
         massaAdiposa = "Adequada";
       } else {
         massaAdiposa = "Baixa";
@@ -802,34 +951,64 @@ export default function App() {
     } else {
       if (percentualGordura >= 32) {
         massaAdiposa = "Muito elevada";
-      } else if (
-        percentualGordura >= 25
-      ) {
+      } else if (percentualGordura >= 25) {
         massaAdiposa = "Elevada";
-      } else if (
-        percentualGordura >= 18
-      ) {
+      } else if (percentualGordura >= 18) {
         massaAdiposa = "Adequada";
       } else {
         massaAdiposa = "Baixa";
       }
     }
 
+    /*
+     * Classificação genérica de faixa.
+     */
+    const classificarFaixa = (
+      valor: number,
+      referencia: number,
+      margem = 2
+    ) => {
+      if (
+        valor >=
+        referencia + margem * 2
+      ) {
+        return "Muito elevada";
+      }
+
+      if (
+        valor >=
+        referencia + margem
+      ) {
+        return "Elevada";
+      }
+
+      if (
+        valor >=
+        referencia - margem
+      ) {
+        return "Normal";
+      }
+
+      return "Baixa";
+    };
+
     const areaBracos =
       classificarFaixa(
         areaBraco,
-        refBraco,
-        2
+        refAreaBraco,
+        5
       );
 
     const areaCoxas =
       classificarFaixa(
         areaCoxa,
-        refCoxa,
-        3
+        refAreaCoxa,
+        10
       );
 
     return {
+      imc: Number(imc.toFixed(2)),
+
       massaMuscularKg:
         Number(
           massaMuscularKg.toFixed(1)
@@ -868,13 +1047,7 @@ export default function App() {
     resumoDobras,
   ]);
 
-
   const updateField = (field: keyof ExamData, value: string) => {
-    setData((current) => ({
-      ...current,
-      [field]: value,
-    }));
-
     setAvaliacao((current) => {
       if (field === "massa") {
         return {
@@ -955,7 +1128,9 @@ export default function App() {
   };
 
   console.log(avaliacao.aluno.nomeCompleto);
-  console.log(avaliacao.avaliacao1.perimetros);
+  console.log(avaliacao.avaliacao1.perimetros.bracoD);
+  console.log(data.estatura, data.massa);
+  console.log(chartPoints);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -1108,12 +1283,12 @@ export default function App() {
 
                   <label>
                     <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Maxima</span>
-                    <input value={data.fcMaxima} className={inputBaseClass} readOnly />
+                    <input value={fcMaxima} className={inputBaseClass} readOnly />
                   </label>
 
                   <label>
                     <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">De reserva</span>
-                    <input value={data.fcReserva} className={inputBaseClass} readOnly />
+                    <input value={fcReserva} className={inputBaseClass} readOnly />
                   </label>
                 </div>
               </div>
@@ -1266,7 +1441,7 @@ export default function App() {
                       className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-sky-500 shadow"
                       style={{
                         left: `${((point.x + 5) / 10) * 100}%`,
-                        top: `${((point.y - 0.5) / 14) * 100}%`,
+                        top: `${((point.y - 0.5) / chartRows) * 100}%`,
                       }}
                     />
                   ))}
