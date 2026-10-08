@@ -796,7 +796,7 @@ export default function Painel() {
                 return renderSecaoVazia(
                     "Registro de Atividades",
                     "Aqui ficará o registro de atividades do sistema, com logs de ações, erros e eventos.",
-                    <FaRegFileAlt g />
+                    <FaRegFileAlt />
                 );
             case "chat":
                 return renderSecaoVazia(

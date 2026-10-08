@@ -1,7 +1,8 @@
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
-  index("src/screen/avaliacao1.tsx"),
+  index("src/screen/painel.tsx"),
+  route("avaliacao1", "src/screen/avaliacao1.tsx"),
   route("avaliacao2", "src/screen/avaliacao2.tsx"),
   route("comparacao", "src/screen/comparacao.tsx"),
   route("prescricao", "src/screen/prescricao.tsx"),
@@ -11,6 +12,5 @@ export default [
   route("salvar", "src/screen/salvar.tsx"),
   route("login", "src/screen/login.tsx"),
   route("register", "src/screen/register.tsx"),
-  route("painel", "src/screen/painel.tsx")
 
 ] satisfies RouteConfig;

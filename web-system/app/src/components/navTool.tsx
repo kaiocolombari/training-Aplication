@@ -5,14 +5,14 @@ export default function navTool() {
 
     function confirmarNavegacao(rota: string) {
 
-        if (rota !== "/painel") {
+        if (rota !== "/") {
             return true;
         }
 
         return window.confirm(
             "Você está saindo da avaliação.\n\n" +
             "Certifique-se de que todas as alterações foram salvas antes de continuar.\n\n" +
-            "Deseja realmente ir para a área administrativa?"
+            "Deseja voltar ao Painel de Controle?"
         );
     }
 
