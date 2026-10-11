@@ -591,9 +591,7 @@ export default function Prescricao() {
     return (
 
         <main className="min-h-full bg-[#ececec] p-4 md:p-6 lg:p-8">
-
-
-            <div className="mx-auto max-w-[1500px]">
+            <div className="mx-auto w-full max-w-none">
 
                 <div className="
                     mb-8
@@ -879,19 +877,27 @@ export default function Prescricao() {
 
                                 <div className="overflow-x-auto">
 
-                                    <table className="w-full min-w-[1200px] border-collapse">
+                                    <table className="w-full min-w-[1350px] table-fixed border-collapse">
+                                        <colgroup>
+                                            <col className="w-[24%]" /> {/* Exercício */}
+                                            <col className="w-[7%]" />  {/* Séries */}
+                                            <col className="w-[7%]" />  {/* Reps */}
+                                            <col className="w-[10%]" /> {/* Intervalo */}
+                                            <col className="w-[7%]" />  {/* Carga */}
+                                            <col className="w-[5%]" />  {/* RIR */}
+                                            <col className="w-[40%]" /> {/* Observações */}
+                                        </colgroup>
 
                                         <thead>
                                             <tr
                                                 className="
-                                bg-zinc-50
-                                text-[10px]
-                                font-black
-                                uppercase
-                                tracking-wider
-                                text-zinc-500
-                            "
-                                            >
+                                                    bg-zinc-50
+                                                    text-[10px]
+                                                    font-black
+                                                    uppercase
+                                                    tracking-wider
+                                                    text-zinc-500
+                                                ">
                                                 <th className="w-[25%] px-4 py-3 text-left">
                                                     <div className="flex items-center gap-2">
                                                         <FaDumbbell />
