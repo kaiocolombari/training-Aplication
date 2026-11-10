@@ -46,7 +46,7 @@ public class TreinoExercicioController : ControllerBase
         Guid treinoId,
         Guid id)
     {
-        var resultado = await _service.ObterPorId(id);
+        var resultado = await _service.ObterPorId(treinoId, id);
 
         if (resultado == null)
             return NotFound("Exercício não encontrado");
@@ -60,7 +60,10 @@ public class TreinoExercicioController : ControllerBase
         Guid id,
         AtualizarTreinoExercicioDTO dto)
     {
-        var resultado = await _service.Atualizar(id, dto);
+        var resultado = await _service.Atualizar(treinoId, id, dto);
+
+        if (resultado == null)
+            return NotFound("Exercício não encontrado");
 
         return Ok(resultado);
     }
@@ -70,7 +73,7 @@ public class TreinoExercicioController : ControllerBase
         Guid treinoId,
         Guid id)
     {
-        var sucesso = await _service.Deletar(id);
+        var sucesso = await _service.Deletar(treinoId, id);
 
         if (!sucesso)
             return NotFound("Exercício não encontrado");

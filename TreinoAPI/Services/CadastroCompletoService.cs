@@ -188,7 +188,8 @@ public class CadastroCompletoService
             Id = volume.Id,
             GrupoMuscularId = volume.GrupoMuscularId,
             PeriodizacaoSemanaId = volume.PeriodizacaoSemanaId,
-            Series = volume.Series
+            SeriesDiretas = volume.SeriesDiretas,
+            SeriesLivres = volume.SeriesLivres
         };
     }
 

@@ -10,6 +10,7 @@ public class TreinoExercicioDTO
     public int? Repeticoes { get; set; }
     public int? Intervalo { get; set; }
     public double? Carga { get; set; }
-    public int? RiRMAX { get; set; }
+    public int? RirMax { get; set; }
     public string? Observacoes { get; set; } = string.Empty;
+    public List<TreinoExercicioVariacaoDTO> Variacoes { get; set; } = new();
 }

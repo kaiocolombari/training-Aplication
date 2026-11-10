@@ -7,4 +7,5 @@ export default defineConfig({
     tailwindcss(),
     reactRouter(),
   ],
+  base: "/training-Aplication/",
 });

@@ -2678,7 +2678,8 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Kaio\\.nuget\\packages\\": {}
+    "C:\\Users\\Kaio\\.nuget\\packages\\": {},
+    "D:\\VisualStudioShare\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
@@ -2689,8 +2690,12 @@
       "packagesPath": "C:\\Users\\Kaio\\.nuget\\packages\\",
       "outputPath": "D:\\Code\\GGP_V1\\training-Aplication\\TreinoAPI\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "D:\\VisualStudioShare\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\Kaio\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Kaio\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -2768,7 +2773,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.401/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.403/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

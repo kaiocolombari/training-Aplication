@@ -15,7 +15,7 @@ import { GraficoForca } from '../components/chartForca';
 
 
 
-const valorClass =
+const valorClass =    
     "flex h-10 items-center justify-center rounded-xl border border-zinc-300 bg-[#e2e2e2] px-3 text-sm font-bold text-zinc-700";
 
 const diferencaClass = (valor: number | string) => {

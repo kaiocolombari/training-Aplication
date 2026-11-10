@@ -11,11 +11,8 @@ import {
     BsDownload,
     BsFolder2Open,
     BsTrash3Fill,
-    
+
 } from "react-icons/bs";
-
-
-import { IoChatbubblesSharp } from "react-icons/io5";
 
 import {
     FaDumbbell,
@@ -32,7 +29,9 @@ import {
 } from "react-icons/fa";
 
 import { FaPeopleGroup } from "react-icons/fa6";
+
 import { VscFeedback } from "react-icons/vsc";
+
 
 import warn from "../assets/preditiva1.gif";
 import manutencao from "../assets/manutencao.gif";
@@ -40,6 +39,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAvaliacao, initialState } from "../context/avaliacaoContext";
 import type { Avaliacao } from "../types/avaliacao";
 import { useNavigate } from "react-router";
+import { IoChatbubblesSharp } from "react-icons/io5";
 
 interface AlunoPainel {
     id: string;
@@ -52,10 +52,10 @@ const CHAVE_ALUNOS = "painel_alunos";
 
 export default function Painel() {
 
-    // const {
-    //     avaliacao,
-    //     carregarAvaliacao
-    // } = useAvaliacao();
+    const {
+        avaliacao,
+        carregarAvaliacao
+    } = useAvaliacao();
 
     const navigate = useNavigate();
 
@@ -289,16 +289,16 @@ export default function Painel() {
             aluno.id
         );
 
-        // carregarAvaliacao(
-        //     aluno.dados as Avaliacao
-        // );
+        carregarAvaliacao(
+            aluno.dados as Avaliacao
+        );
 
         console.log(
             "Aluno aberto:",
             aluno
         );
 
-        navigate("/");
+        navigate("/avaliacao1");
     }
 
     // =========================================================
@@ -796,7 +796,7 @@ export default function Painel() {
                 return renderSecaoVazia(
                     "Registro de Atividades",
                     "Aqui ficará o registro de atividades do sistema, com logs de ações, erros e eventos.",
-                    <FaRegFileAlt />
+                    <FaRegFileAlt  />
                 );
             case "chat":
                 return renderSecaoVazia(
@@ -804,7 +804,6 @@ export default function Painel() {
                     "Dúvidas de alunos sobre treino, execuções, funcionamento, limitações e mudanças de treino, serão respondidas aqui. O chat será integrado com o WhatsApp e Telegram.",
                     <IoChatbubblesSharp />
                 );
-
             case "periodizacao":
                 return renderSecaoVazia(
                     "Periodização",

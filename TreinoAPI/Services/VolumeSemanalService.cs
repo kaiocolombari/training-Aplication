@@ -43,7 +43,8 @@ public class VolumeSemanalService
         {
             PeriodizacaoSemanaId = semanaId,
             GrupoMuscularId = dto.GrupoMuscularId,
-            Series = dto.Series
+            SeriesDiretas = dto.SeriesDiretas,
+            SeriesLivres = dto.SeriesLivres
         };
 
         _context.VolumesSemanais.Add(volume);
@@ -63,7 +64,8 @@ public class VolumeSemanalService
                 Id = v.Id,
                 PeriodizacaoSemanaId = v.PeriodizacaoSemanaId,
                 GrupoMuscularId = v.GrupoMuscularId,
-                Series = v.Series
+                SeriesDiretas = v.SeriesDiretas,
+                SeriesLivres = v.SeriesLivres
             })
             .ToListAsync();
     }
@@ -106,7 +108,8 @@ public class VolumeSemanalService
                 "Esse grupo muscular já possui volume nessa semana");
 
         volume.GrupoMuscularId = dto.GrupoMuscularId;
-        volume.Series = dto.Series;
+        volume.SeriesDiretas = dto.SeriesDiretas;
+        volume.SeriesLivres = dto.SeriesLivres;
 
         await _context.SaveChangesAsync();
 
@@ -136,7 +139,8 @@ public class VolumeSemanalService
             Id = volume.Id,
             PeriodizacaoSemanaId = volume.PeriodizacaoSemanaId,
             GrupoMuscularId = volume.GrupoMuscularId,
-            Series = volume.Series
+            SeriesDiretas = volume.SeriesDiretas,
+            SeriesLivres = volume.SeriesLivres
         };
     }
 }

@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<CargaExercicio> CargasExercicios { get; set; }
     public DbSet<Treino> Treinos { get; set; }
     public DbSet<TreinoExercicio> TreinosExercicios { get; set; }
+    public DbSet<TreinoExercicioVariacao> TreinoExercicioVariacoes { get; set; }
     public DbSet<DiaTreino> DiaTreinos { get; set; }
     public DbSet<Periodizacao> Periodizacoes { get; set; }
     public DbSet<PeriodizacaoSemana> PeriodizacaoSemanas { get; set; }
@@ -110,6 +111,12 @@ public class AppDbContext : DbContext
             .HasOne(te => te.Treino)
             .WithMany(t => t.TreinoExercicios)
             .HasForeignKey(te => te.TreinoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TreinoExercicioVariacao>()
+            .HasOne(v => v.TreinoExercicio)
+            .WithMany(te => te.Variacoes)
+            .HasForeignKey(v => v.TreinoExercicioId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Periodizacao>()

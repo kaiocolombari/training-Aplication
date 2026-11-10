@@ -13,5 +13,6 @@ namespace TreinoAPI.Model
         public int? RiRMAX { get; set; }
         public string? Observacoes { get; set; } = string.Empty;
         public Treino Treino { get; set; } = null!;
+        public ICollection<TreinoExercicioVariacao> Variacoes { get; set; } = new List<TreinoExercicioVariacao>();
     }
 }

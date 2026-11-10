@@ -520,6 +520,47 @@ namespace TreinoAPI.Migrations
                     b.ToTable("TreinosExercicios");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.TreinoExercicioVariacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double?>("Carga")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Exercicio")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Intervalo")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Observacoes")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Ordem")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Repeticoes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RiRMAX")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Series")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TreinoExercicioId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TreinoExercicioId");
+
+                    b.ToTable("TreinoExercicioVariacoes");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.Usuario", b =>
                 {
                     b.Property<Guid>("Id")
@@ -564,7 +605,10 @@ namespace TreinoAPI.Migrations
                     b.Property<Guid>("PeriodizacaoSemanaId")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("Series")
+                    b.Property<int?>("SeriesDiretas")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SeriesLivres")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -758,6 +802,17 @@ namespace TreinoAPI.Migrations
                     b.Navigation("Treino");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.TreinoExercicioVariacao", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.TreinoExercicio", "TreinoExercicio")
+                        .WithMany("Variacoes")
+                        .HasForeignKey("TreinoExercicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TreinoExercicio");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.VolumeSemanal", b =>
                 {
                     b.HasOne("TreinoAPI.Model.GrupoMuscular", "GrupoMuscular")
@@ -832,6 +887,11 @@ namespace TreinoAPI.Migrations
             modelBuilder.Entity("TreinoAPI.Model.Treino", b =>
                 {
                     b.Navigation("TreinoExercicios");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.TreinoExercicio", b =>
+                {
+                    b.Navigation("Variacoes");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.Usuario", b =>
