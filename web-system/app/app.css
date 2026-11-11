@@ -7,6 +7,7 @@
    Neutral SaaS / Modern Dashboard
 ========================================= */
 
+
 :root {
   --surface-raised: #ffffff;
   --surface-sunken: #f3f4f6;
@@ -17,47 +18,36 @@
   --text-muted: #888888;
 }
 
-.dark {
-  --surface-raised: #202124;
-  --surface-sunken: #292b30;
-  --border: #383a40;
-  --border-strong: #484b53;
-  --text: #f3f4f6;
-  --text-secondary: #c1c4cc;
-  --text-muted: #9296a1;
-}
-
 .painel-theme {
-  /* Superfícies */
   --surface: #ffffff;
+  --surface-raised: #ffffff;
   --surface-secondary: #f5f6f8;
+  --surface-sunken: #f3f4f6;
   --surface-tertiary: #eceef2;
   --surface-hover: #f0f1f4;
 
-  /* Textos */
+  --text: #191b22;
   --text-primary: #191b22;
   --text-secondary: #555966;
   --text-muted: #858995;
 
-  /* Bordas */
   --border: #e5e7eb;
   --border-strong: #d5d8df;
 
-  /* Identidade */
   --accent: #5558d9;
   --accent-hover: #4548c5;
   --accent-soft: #eeeeff;
+  --accent-on: #ffffff;
+  --on-accent: #ffffff;
+  --ring: rgb(85 88 217 / 20%);
 
-  /* Estados */
   --success: #16845b;
   --success-soft: #e8f5ee;
-
   --danger: #d44747;
   --danger-soft: #fceeee;
-
   --warning: #b7791f;
   --warning-soft: #fff5df;
-  /* Componentes do painel */
+
   --sidebar: #ffffff;
   --header: #ffffff;
   --row-hover: #f5f6f8;
@@ -71,54 +61,52 @@
   --overlay: rgb(15 17 24 / 45%);
   --shadow-color: rgb(15 17 24 / 12%);
 
+  min-height: 100%;
+  background-color: var(--surface-sunken);
+  color: var(--text);
+
   color-scheme: light;
-  background-color: var(--surface-secondary);
-  color: var(--text-primary);
 
   transition:
     background-color 180ms ease,
     color 180ms ease;
 }
 
-/* =========================================
-   TEMA ESCURO
-========================================= */
-
+/* TEMA ESCURO */
 .painel-theme[data-theme="dark"] {
-  /* Superfícies */
   --surface: #1d1f25;
+  --surface-raised: #22242b;
   --surface-secondary: #15161b;
+  --surface-sunken: #15161b;
   --surface-tertiary: #292b33;
   --surface-hover: #30323c;
 
-  /* Textos */
+  --text: #f1f2f5;
   --text-primary: #f1f2f5;
   --text-secondary: #c0c2cc;
   --text-muted: #9295a3;
 
-  /* Bordas */
   --border: #343640;
   --border-strong: #454854;
 
-  /* Identidade */
   --accent: #9293ff;
   --accent-hover: #aaaaff;
   --accent-soft: #30304e;
+  --accent-on: #191b22;
+  --on-accent: #191b22;
+  --ring: rgb(146 147 255 / 25%);
 
-  /* Estados */
   --success: #48c995;
   --success-soft: #1e3930;
-
   --danger: #ff7777;
   --danger-soft: #45292c;
-
   --warning: #e9b85f;
   --warning-soft: #403522;
-  /* Componentes do painel */
+
   --sidebar: #1d1f25;
   --header: #1d1f25;
   --row-hover: #292b33;
-  --input-bg: #1d1f25;
+  --input-bg: #22242b;
   --menu-bg: #22242b;
   --modal-bg: #22242b;
 
@@ -129,6 +117,25 @@
   --shadow-color: rgb(0 0 0 / 35%);
 
   color-scheme: dark;
+}
+
+/* Campos de formulário */
+.painel-theme input,
+.painel-theme select,
+.painel-theme textarea {
+  color: var(--text);
+  color-scheme: inherit;
+}
+
+.painel-theme input::placeholder,
+.painel-theme textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.painel-theme option {
+  background-color: var(--surface-raised);
+  color: var(--text);
 }
 
 /* =========================================
