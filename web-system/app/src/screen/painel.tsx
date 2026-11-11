@@ -1,1243 +1,1377 @@
 import {
-    BsFillHouseDoorFill,
-    BsSliders,
-    BsPeopleFill,
-    BsClipboard2PulseFill,
-    BsBarChartFill,
-    BsGearFill,
-    BsPersonPlusFill,
-    BsFiletypeJson,
-    BsBoxArrowUpRight,
-    BsDownload,
-    BsFolder2Open,
-    BsTrash3Fill,
-
+  BsHouseDoor,
+  BsPeople,
+  BsClipboard2Pulse,
+  BsCalendar3,
+  BsBarChart,
+  BsChatDots,
+  BsQuestionCircle,
+  BsGear,
+  BsFileEarmarkText,
+  BsDownload,
+  BsTrash3,
+  BsPlusLg,
+  BsSearch,
+  BsThreeDots,
+  BsPersonCircle,
+  BsFiletypeJson,
+  BsFolder2Open,
+  BsUpload,
+  BsArrowUpRight,
+  BsX,
+  BsMoonStars,
+  BsSun,
 } from "react-icons/bs";
-
-import {
-    FaDumbbell,
-    FaCalendarAlt,
-    FaFileImport,
-    FaPlus,
-    FaSearch,
-    FaSignOutAlt,
-    FaCog,
-    FaUser,
-    FaRegQuestionCircle,
-    FaRegFileAlt
-
-} from "react-icons/fa";
-
-import { FaPeopleGroup } from "react-icons/fa6";
-
+import { FaPeopleGroup, FaRegCircleQuestion } from "react-icons/fa6";
 import { VscFeedback } from "react-icons/vsc";
-
-
-import warn from "../assets/preditiva1.gif";
-import manutencao from "../assets/manutencao.gif";
-import { useEffect, useRef, useState } from "react";
+import { IoChatbubblesSharp } from "react-icons/io5";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAvaliacao, initialState } from "../context/avaliacaoContext";
 import type { Avaliacao } from "../types/avaliacao";
 import { useNavigate } from "react-router";
-import { IoChatbubblesSharp } from "react-icons/io5";
 
 interface AlunoPainel {
-    id: string;
-    nome: string;
-    dados: Avaliacao;
-    criadoEm: string;
+  id: string;
+  nome: string;
+  dados: Avaliacao;
+  criadoEm: string;
 }
 
 const CHAVE_ALUNOS = "painel_alunos";
 
+const secoes = [
+  {
+    id: "inicio",
+    nome: "Visão geral",
+    grupo: "Workspace",
+    icone: <BsHouseDoor />,
+  },
+  { id: "alunos", nome: "Alunos", grupo: "Workspace", icone: <BsPeople /> },
+  {
+    id: "equipe",
+    nome: "Equipe",
+    grupo: "Workspace",
+    icone: <FaPeopleGroup />,
+  },
+  {
+    id: "avaliacoes",
+    nome: "Avaliações",
+    grupo: "Treinamento",
+    icone: <BsClipboard2Pulse />,
+  },
+  {
+    id: "periodizacao",
+    nome: "Periodização",
+    grupo: "Treinamento",
+    icone: <BsCalendar3 />,
+  },
+  {
+    id: "relatorios",
+    nome: "Relatórios",
+    grupo: "Treinamento",
+    icone: <BsBarChart />,
+  },
+  {
+    id: "chat",
+    nome: "Central de mensagens",
+    grupo: "Comunicação",
+    icone: <IoChatbubblesSharp />,
+  },
+  {
+    id: "feedback",
+    nome: "Feedback",
+    grupo: "Comunicação",
+    icone: <VscFeedback />,
+  },
+  {
+    id: "ajuda",
+    nome: "Central de ajuda",
+    grupo: "Sistema",
+    icone: <FaRegCircleQuestion />,
+  },
+  {
+    id: "log",
+    nome: "Atividades",
+    grupo: "Sistema",
+    icone: <BsFileEarmarkText />,
+  },
+  {
+    id: "configuracoes",
+    nome: "Configurações",
+    grupo: "Sistema",
+    icone: <BsGear />,
+  },
+];
+
+const gruposNavegacao = ["Workspace", "Treinamento", "Comunicação", "Sistema"];
+
+const cores = {
+  primaryButton:
+    "rounded-lg bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]",
+  secondaryButton:
+    "rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--row-hover)]",
+  input:
+    "rounded-lg border border-[var(--border-strong)] bg-[var(--input-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/15",
+  subtleText: "text-[var(--text-muted)]",
+  bodyText: "text-[var(--text-secondary)]",
+  heading: "text-[var(--text-primary)]",
+  divider: "border-[var(--border)]",
+};
+
+function formatarData(data: string) {
+  const valor = new Date(data);
+  if (Number.isNaN(valor.getTime())) return "Data não disponível";
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(valor);
+}
+
 export default function Painel() {
+  const { carregarAvaliacao } = useAvaliacao();
+  const navigate = useNavigate();
 
-    const {
-        avaliacao,
-        carregarAvaliacao
-    } = useAvaliacao();
+  const [tema, setTema] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    return localStorage.getItem("painel_tema") === "dark" ? "dark" : "light";
+  });
 
-    const navigate = useNavigate();
+  const [secaoAtual, setSecaoAtual] = useState("alunos");
+  const [alunos, setAlunos] = useState<AlunoPainel[]>([]);
+  const [alunoParaExcluir, setAlunoParaExcluir] = useState<AlunoPainel | null>(
+    null,
+  );
+  const [busca, setBusca] = useState("");
+  const [menuPerfilAberto, setMenuPerfilAberto] = useState(false);
+  const [menuAlunoAberto, setMenuAlunoAberto] = useState<string | null>(null);
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
-    const [porcento, setPorcento] = useState(0);
+  const inputImportarRef = useRef<HTMLInputElement>(null);
+  const menuPerfilRef = useRef<HTMLDivElement>(null);
 
-    const [secaoAtual, setSecaoAtual] = useState("alunos");
+  useEffect(() => {
+    carregarAlunos();
+  }, []);
 
-    const [alunos, setAlunos] = useState<AlunoPainel[]>([]);
+  useEffect(() => {
+    localStorage.setItem("painel_tema", tema);
+  }, [tema]);
 
-    const [alunoParaExcluir, setAlunoParaExcluir] =
-        useState<AlunoPainel | null>(null);
+  useEffect(() => {
+    function fecharMenus(event: MouseEvent) {
+      if (
+        menuPerfilRef.current &&
+        !menuPerfilRef.current.contains(event.target as Node)
+      ) {
+        setMenuPerfilAberto(false);
+      }
 
-    const inputImportarRef = useRef<HTMLInputElement>(null);
-
-    const [isOpen, setIsOpen] = useState(false);
-
-    const menuRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const numero = Math.floor(Math.random() * 100) + 1;
-        setPorcento(numero);
-        carregarAlunos();
-    }, []);
-
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-
-
-    // =========================================================
-    // ALUNOS
-    // =========================================================
-
-    function carregarAlunos() {
-        try {
-            const dadosSalvos = localStorage.getItem(CHAVE_ALUNOS);
-
-            if (!dadosSalvos) {
-                setAlunos([]);
-                return;
-            }
-
-            const dados: AlunoPainel[] = JSON.parse(dadosSalvos);
-
-            setAlunos(dados);
-        } catch (erro) {
-            console.error("Erro ao carregar alunos:", erro);
-            setAlunos([]);
-        }
-    }
-    function criarAvaliacaoInicial(): Avaliacao {
-        const nova = structuredClone(initialState);
-
-        nova.treino = nova.treino.map(treino => ({
-            ...treino,
-            id: crypto.randomUUID()
-        }));
-
-        return nova;
+      const alvo = event.target as HTMLElement;
+      if (!alvo.closest("[data-aluno-menu]")) setMenuAlunoAberto(null);
     }
 
-    function excluirAluno() {
-
-        if (!alunoParaExcluir) {
-            return;
-        }
-
-        const novaLista = alunos.filter(
-            aluno => aluno.id !== alunoParaExcluir.id
-        );
-
-        salvarAlunos(novaLista);
-
-        // Se o aluno excluído estava selecionado,
-        // remove a seleção atual.
-        const alunoSelecionado =
-            localStorage.getItem("aluno_selecionado_id");
-
-        if (
-            alunoSelecionado === alunoParaExcluir.id
-        ) {
-            localStorage.removeItem(
-                "aluno_selecionado_id"
-            );
-
-            localStorage.removeItem(
-                "avaliacao_temp"
-            );
-        }
-
+    function fecharComEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuPerfilAberto(false);
+        setMenuAlunoAberto(null);
+        setMenuMobileAberto(false);
         setAlunoParaExcluir(null);
+      }
     }
 
-    function salvarAlunos(lista: AlunoPainel[]) {
-        localStorage.setItem(
-            CHAVE_ALUNOS,
-            JSON.stringify(lista)
-        );
+    document.addEventListener("mousedown", fecharMenus);
+    document.addEventListener("keydown", fecharComEscape);
 
-        setAlunos(lista);
+    return () => {
+      document.removeEventListener("mousedown", fecharMenus);
+      document.removeEventListener("keydown", fecharComEscape);
+    };
+  }, []);
+
+  const alunosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLocaleLowerCase("pt-BR");
+    if (!termo) return alunos;
+
+    return alunos.filter(
+      (aluno) =>
+        aluno.nome.toLocaleLowerCase("pt-BR").includes(termo) ||
+        aluno.id.toLowerCase().includes(termo),
+    );
+  }, [alunos, busca]);
+
+  function carregarAlunos() {
+    try {
+      const dadosSalvos = localStorage.getItem(CHAVE_ALUNOS);
+      setAlunos(dadosSalvos ? (JSON.parse(dadosSalvos) as AlunoPainel[]) : []);
+    } catch (erro) {
+      console.error("Erro ao carregar alunos:", erro);
+      setAlunos([]);
     }
+  }
 
-    function criarAluno() {
+  function salvarAlunos(lista: AlunoPainel[]) {
+    localStorage.setItem(CHAVE_ALUNOS, JSON.stringify(lista));
+    setAlunos(lista);
+  }
 
-        const dadosIniciais = criarAvaliacaoInicial();
+  function criarAvaliacaoInicial(): Avaliacao {
+    const nova = structuredClone(initialState);
+    nova.treino = nova.treino.map((treino) => ({
+      ...treino,
+      id: crypto.randomUUID(),
+    }));
+    return nova;
+  }
 
-        dadosIniciais.aluno.nomeCompleto = "Novo aluno";
+  function criarAluno() {
+    const dadosIniciais = criarAvaliacaoInicial();
+    dadosIniciais.aluno.nomeCompleto = "Novo aluno";
+
+    const novoAluno: AlunoPainel = {
+      id: crypto.randomUUID(),
+      nome: "Novo aluno",
+      criadoEm: new Date().toISOString(),
+      dados: dadosIniciais,
+    };
+
+    salvarAlunos([...alunos, novoAluno]);
+    setSecaoAtual("alunos");
+    setBusca("");
+  }
+
+  function importarAluno(evento: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = evento.target.files?.[0];
+    if (!arquivo) return;
+
+    const leitor = new FileReader();
+
+    leitor.onload = (e) => {
+      try {
+        const texto = e.target?.result;
+        if (typeof texto !== "string") throw new Error("Arquivo inválido.");
+
+        const dados = JSON.parse(texto);
+        const nome =
+          dados?.aluno?.nome || dados?.aluno?.nomeCompleto || "Aluno sem nome";
 
         const novoAluno: AlunoPainel = {
-            id: crypto.randomUUID(),
-            nome: "Novo aluno",
-            criadoEm: new Date().toISOString(),
-            dados: dadosIniciais
+          id: crypto.randomUUID(),
+          nome,
+          dados,
+          criadoEm: new Date().toISOString(),
         };
 
-        salvarAlunos([
-            ...alunos,
-            novoAluno
-        ]);
-
+        salvarAlunos([...alunos, novoAluno]);
         setSecaoAtual("alunos");
+        setBusca("");
+      } catch (erro) {
+        console.error("Erro ao importar aluno:", erro);
+        alert("Não foi possível importar o arquivo JSON.");
+      }
+    };
+
+    leitor.readAsText(arquivo);
+    evento.target.value = "";
+  }
+
+  function exportarAluno(aluno: AlunoPainel) {
+    const blob = new Blob([JSON.stringify(aluno.dados, null, 2)], {
+      type: "application/json",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${aluno.nome || "aluno"}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setMenuAlunoAberto(null);
+  }
+
+  function abrirAluno(aluno: AlunoPainel) {
+    localStorage.setItem("aluno_selecionado_id", aluno.id);
+    carregarAvaliacao(aluno.dados as Avaliacao);
+    navigate("/avaliacao1");
+  }
+
+  function excluirAluno() {
+    if (!alunoParaExcluir) return;
+
+    const novaLista = alunos.filter(
+      (aluno) => aluno.id !== alunoParaExcluir.id,
+    );
+
+    salvarAlunos(novaLista);
+
+    const alunoSelecionado = localStorage.getItem("aluno_selecionado_id");
+    if (alunoSelecionado === alunoParaExcluir.id) {
+      localStorage.removeItem("aluno_selecionado_id");
+      localStorage.removeItem("avaliacao_temp");
     }
 
-    function importarAluno(
-        evento: React.ChangeEvent<HTMLInputElement>
-    ) {
-
-        const arquivo = evento.target.files?.[0];
-
-        if (!arquivo) {
-            return;
-        }
-
-        const leitor = new FileReader();
-
-        leitor.onload = (e) => {
-
-            try {
-
-                const texto = e.target?.result;
-
-                if (typeof texto !== "string") {
-                    throw new Error("Arquivo inválido.");
-                }
-
-                const dados = JSON.parse(texto);
-
-                const nome =
-                    dados?.aluno?.nome ||
-                    "Aluno sem nome";
-
-                const novoAluno: AlunoPainel = {
-                    id: crypto.randomUUID(),
-                    nome,
-                    dados,
-                    criadoEm: new Date().toISOString()
-                };
-
-                salvarAlunos([
-                    ...alunos,
-                    novoAluno
-                ]);
-
-                setSecaoAtual("alunos");
-
-            } catch (erro) {
-
-                console.error(
-                    "Erro ao importar aluno:",
-                    erro
-                );
-
-                alert(
-                    "Não foi possível importar o arquivo JSON."
-                );
-            }
-        };
-
-        leitor.readAsText(arquivo);
-
-        // Permite importar o mesmo arquivo novamente
-        evento.target.value = "";
-    }
-
-    function exportarAluno(aluno: AlunoPainel) {
-
-        const json = JSON.stringify(
-            aluno.dados,
-            null,
-            2
-        );
-
-        const blob = new Blob(
-            [json],
-            {
-                type: "application/json"
-            }
-        );
-
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-
-        link.href = url;
-
-        link.download =
-            `${aluno.nome || "aluno"}.json`;
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        document.body.removeChild(link);
-
-        URL.revokeObjectURL(url);
-    }
-
-    function abrirAluno(aluno: AlunoPainel) {
-
-        localStorage.setItem(
-            "aluno_selecionado_id",
-            aluno.id
-        );
-
-        carregarAvaliacao(
-            aluno.dados as Avaliacao
-        );
-
-        console.log(
-            "Aluno aberto:",
-            aluno
-        );
-
-        navigate("/avaliacao1");
-    }
-
-    // =========================================================
-    // NAVEGAÇÃO
-    // =========================================================
-
-    const secoes = [
-        {
-            id: "inicio",
-            nome: "Início",
-            icone: <BsFillHouseDoorFill />
-        },
-        {
-            id: "alunos",
-            nome: "Alunos",
-            icone: <BsPeopleFill />
-        },
-        {
-            id: "equipe",
-            nome: "Equipe",
-            icone: <FaPeopleGroup />
-        },
-        {
-            id: "avaliacoes",
-            nome: "Avaliações",
-            icone: <BsClipboard2PulseFill />
-        },
-        {
-            id: "chat",
-            nome: "Chat",
-            icone: <IoChatbubblesSharp />
-        },
-        {
-            id: "periodizacao",
-            nome: "Periodização",
-            icone: <FaCalendarAlt />
-        },
-        {
-            id: "relatorios",
-            nome: "Relatórios",
-            icone: <BsBarChartFill />
-        },
-        {
-            id: "ajuda",
-            nome: "Ajuda",
-            icone: <FaRegQuestionCircle />
-        },
-        {
-            id: "feedback",
-            nome: "Feedback",
-            icone: <VscFeedback />
-        },
-        {
-            id: "log",
-            nome: "Registro de Atividades",
-            icone: <FaRegFileAlt  />
-        },
-        {
-            id: "configuracoes",
-            nome: "Configurações",
-            icone: <BsGearFill />
-        }
-    ];
-
-    function navegar(secao: string) {
-        setSecaoAtual(secao);
-    }
-
-    // =========================================================
-    // INÍCIO
-    // =========================================================
-
-    function renderInicio() {
-
-        return (
-            <section className="relative w-full max-w-5xl overflow-hidden rounded-3xl border border-yellow-300/30 bg-gradient-to-br from-yellow-50 via-white to-orange-50 p-10 shadow-xl">
-
-                <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-yellow-300/20 blur-2xl" />
-
-                <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-orange-300/20 blur-2xl" />
-
-                <div className="absolute left-0 top-0 w-full overflow-hidden">
-                    <div className="bg-yellow-400 py-2 text-center text-sm font-black tracking-[0.3em] text-yellow-950">
-                        ⚠️ ÁREA EM MANUTENÇÃO ⚠️
-                    </div>
-                </div>
-
-                <div className="relative flex flex-col items-center gap-8 pt-8">
-
-                    <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-
-                        <img
-                            src={warn}
-                            alt="Aviso"
-                            className="h-52 w-52 object-contain drop-shadow-lg transition-transform duration-300 hover:rotate-3 hover:scale-105"
-                        />
-
-                        <img
-                            src={manutencao}
-                            alt="Em manutenção"
-                            className="h-52 w-52 object-contain drop-shadow-lg transition-transform duration-300 hover:-rotate-3 hover:scale-105"
-                        />
-
-                    </div>
-
-                    <div className="max-w-2xl space-y-4">
-
-                        <h1 className="text-4xl font-black text-gray-800 sm:text-5xl">
-                            Opa! 👷‍♂️
-                        </h1>
-
-                        <h2 className="text-2xl font-bold text-yellow-600">
-                            Essa parte está em manutenção!
-                        </h2>
-
-                        <p className="text-base leading-relaxed text-gray-600 sm:text-lg">
-                            Não tive tempo nem paciência para terminar tudo isso, porém quando fizer minha tatuagem posso acabar rapidamente o site inteiro.
-                        </p>
-
-                        <p className="font-semibold text-gray-500">
-                            Em breve estará tudo funcionando novamente (talvez). 🚧
-                        </p>
-
-                    </div>
-
-                    <div className="flex flex-wrap justify-center gap-3">
-
-                        <span className="rounded-full bg-yellow-100 px-4 py-2 text-sm font-bold text-yellow-700">
-                            🔧 Ajustando algumas coisas
-                        </span>
-
-                        <span className="rounded-full bg-orange-100 px-4 py-2 text-sm font-bold text-orange-700">
-                            ☕ Café sendo preparado
-                        </span>
-
-                        <span className="rounded-full bg-green-100 px-4 py-2 text-sm font-bold text-green-700">
-                            🚀 Voltaremos em breve
-                        </span>
-
-                    </div>
-
-                    <div className="w-full max-w-md">
-
-                        <div className="mb-2 flex justify-between text-xs font-bold text-gray-500">
-
-                            <span>
-                                Consertando...
-                            </span>
-
-                            <span>
-                                {porcento}%
-                            </span>
-
-                        </div>
-
-                        <div className="h-3 overflow-hidden rounded-full bg-gray-200">
-
-                            <div
-                                className="h-full animate-pulse rounded-full bg-gradient-to-r from-yellow-400 to-orange-400"
-                                style={{
-                                    width: `${porcento}%`
-                                }}
-                            />
-
-                        </div>
-
-                    </div>
-
-                    <div className="rounded-2xl bg-gray-900 px-6 py-4 text-center text-sm text-gray-200 shadow-lg">
-
-                        <span className="font-mono">
-                            &gt; Pagar o Kaio
-                        </span>
-
-                        <div className="mt-1 text-gray-400">
-                            "Talvez Funcione Mais Rapido"
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-        );
-    }
-
-    // =========================================================
-    // ALUNOS
-    // =========================================================
-
-    function renderAlunos() {
-
-        return (
-            <section className="w-full max-w-6xl">
-
-                {/* Cabeçalho */}
-
-                <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
-                    <div>
-
-                        <h1 className="text-3xl font-black text-slate-800">
-                            Alunos
-                        </h1>
-
-                        <p className="mt-1 text-sm text-slate-500">
-                            Gerencie os alunos cadastrados no sistema.
-                        </p>
-
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-
-                        <input
-                            ref={inputImportarRef}
-                            type="file"
-                            accept=".json,application/json"
-                            className="hidden"
-                            onChange={importarAluno}
-                        />
-
-                        <button
-                            onClick={() =>
-                                inputImportarRef.current?.click()
-                            }
-                            className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:cursor-pointer hover:bg-slate-50 hover:shadow"
-                        >
-                            <FaFileImport />
-
-                            Importar JSON
-                        </button>
-
-                        <button
-                            onClick={criarAluno}
-                            className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:cursor-pointer hover:bg-slate-800"
-                        >
-                            <FaPlus />
-
-                            Criar aluno
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                {/* Informações rápidas */}
-
-                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-                        <div className="mb-2 flex items-center gap-3 text-slate-400">
-                            <BsPeopleFill />
-
-                            <span className="text-xs font-bold uppercase tracking-wider">
-                                Total de alunos
-                            </span>
-                        </div>
-
-                        <p className="text-3xl font-black text-slate-800">
-                            {alunos.length}
-                        </p>
-
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-                        <div className="mb-2 flex items-center gap-3 text-slate-400">
-                            <BsFiletypeJson />
-
-                            <span className="text-xs font-bold uppercase tracking-wider">
-                                Formato
-                            </span>
-                        </div>
-
-                        <p className="text-lg font-black text-slate-800">
-                            JSON
-                        </p>
-
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-                        <div className="mb-2 flex items-center gap-3 text-slate-400">
-                            <BsFolder2Open />
-
-                            <span className="text-xs font-bold uppercase tracking-wider">
-                                Armazenamento
-                            </span>
-                        </div>
-
-                        <p className="text-lg font-black text-slate-800">
-                            Local
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                {/* Lista */}
-
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-                    <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-
-                        <h2 className="font-black text-slate-700">
-                            Lista de alunos
-                        </h2>
-
-                    </div>
-
-
-                    {alunos.length === 0 ? (
-
-                        <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-
-                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-2xl text-slate-400">
-                                <BsPeopleFill />
-                            </div>
-
-                            <h3 className="text-lg font-black text-slate-700">
-                                Nenhum aluno cadastrado
-                            </h3>
-
-                            <p className="mt-1 max-w-md text-sm text-slate-500">
-                                Crie um novo aluno ou importe um arquivo JSON para começar.
-                            </p>
-
-                        </div>
-
-                    ) : (
-
-                        <div className="divide-y divide-slate-100">
-
-                            {alunos.map((aluno) => (
-
-                                <div
-                                    key={aluno.id}
-                                    className="flex flex-col gap-4 px-6 py-5 transition hover:bg-slate-50 md:flex-row md:items-center md:justify-between"
-                                >
-
-                                    <div className="flex min-w-0 items-center gap-4">
-
-                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 font-black text-white">
-                                            {aluno.nome
-                                                ?.charAt(0)
-                                                ?.toUpperCase() || "A"}
-                                        </div>
-
-                                        <div className="min-w-0">
-
-                                            <h3 className="truncate font-black text-slate-800">
-                                                {aluno.nome}
-                                            </h3>
-
-                                            <p className="text-xs text-slate-400">
-                                                ID: {aluno.id}
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <div className="flex shrink-0 gap-2">
-
-                                        <button
-                                            onClick={() =>
-                                                abrirAluno(aluno)
-                                            }
-                                            className="flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:cursor-pointer hover:bg-slate-800"
-                                        >
-                                            <BsBoxArrowUpRight />
-
-                                            Abrir
-                                        </button>
-
-                                        <button
-                                            onClick={() =>
-                                                exportarAluno(aluno)
-                                            }
-                                            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:cursor-pointer hover:bg-slate-50"
-                                        >
-                                            <BsDownload />
-
-                                            Exportar
-                                        </button>
-
-                                        <button
-                                            onClick={() =>
-                                                setAlunoParaExcluir(aluno)
-                                            }
-                                            className="flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-600 transition hover:cursor-pointer hover:bg-red-50"
-                                        >
-                                            <BsTrash3Fill />
-
-                                            Excluir
-                                        </button>
-
-                                    </div>
-
-                                </div>
-
-                            ))}
-
-                        </div>
-
-                    )}
-
-                </div>
-
-            </section>
-        );
-    }
-
-    // =========================================================
-    // SEÇÕES TEMPORÁRIAS
-    // =========================================================
-
-    function renderSecaoVazia(
-        titulo: string,
-        descricao: string,
-        icone: React.ReactNode
-    ) {
-
-        return (
-            <section className="flex w-full max-w-5xl items-center justify-center">
-
-                <div className="w-full rounded-3xl border border-slate-200 bg-white p-16 text-center shadow-sm">
-
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 text-3xl text-slate-400">
-                        {icone}
-                    </div>
-
-                    <h1 className="text-3xl font-black text-slate-800">
-                        {titulo}
-                    </h1>
-
-                    <p className="mx-auto mt-3 max-w-lg text-slate-500">
-                        {descricao}
-                    </p>
-
-                    <span className="mt-6 inline-block rounded-full bg-yellow-100 px-4 py-2 text-xs font-black uppercase tracking-wider text-yellow-700">
-                        Em desenvolvimento
+    setAlunoParaExcluir(null);
+  }
+
+  function navegar(secao: string) {
+    setSecaoAtual(secao);
+    setMenuMobileAberto(false);
+    setMenuPerfilAberto(false);
+  }
+
+  const secaoSelecionada =
+    secoes.find((secao) => secao.id === secaoAtual) ?? secoes[1];
+
+  function renderAlunos() {
+    return (
+      <section className="w-full max-w-[1440px]">
+        {/* Cabeçalho */}
+        <div className="mb-7 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-text)]">
+              <span>Workspace</span>
+              <span className="text-[var(--text-muted)]">/</span>
+              <span>Alunos</span>
+            </div>
+
+            <h1
+              className={`text-[28px] font-semibold tracking-[-0.045em] ${cores.heading}`}
+            >
+              Seus alunos
+            </h1>
+
+            <p className={`mt-2 text-[13px] ${cores.bodyText}`}>
+              Gerencie os cadastros, avaliações e fichas de acompanhamento.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <input
+              ref={inputImportarRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={importarAluno}
+            />
+
+            <button
+              onClick={() => inputImportarRef.current?.click()}
+              className={`inline-flex h-10 items-center justify-center gap-2 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
+            >
+              <BsUpload />
+              Importar
+            </button>
+
+            <button
+              onClick={criarAluno}
+              className={`inline-flex h-10 items-center justify-center gap-2 px-4 text-[11px] font-semibold ${cores.primaryButton}`}
+            >
+              <BsPlusLg />
+              Novo aluno
+            </button>
+          </div>
+        </div>
+
+        {/* Indicadores */}
+        <div className="mb-7 grid gap-3 sm:grid-cols-3">
+          <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
+              <BsPeople className="text-lg" />
+            </span>
+
+            <div>
+              <p className="text-[10px] text-[var(--text-muted)]">
+                Total de alunos
+              </p>
+              <p
+                className={`mt-0.5 text-[20px] font-semibold tracking-[-0.04em] ${cores.heading}`}
+              >
+                {alunos.length}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--surface-tertiary)] text-[var(--text-secondary)]">
+              <BsFiletypeJson className="text-lg" />
+            </span>
+
+            <div>
+              <p className="text-[10px] text-[var(--text-muted)]">
+                Formato de intercâmbio
+              </p>
+              <p className={`mt-1 text-[13px] font-semibold ${cores.heading}`}>
+                JSON
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--surface-tertiary)] text-[var(--text-secondary)]">
+              <BsFolder2Open className="text-lg" />
+            </span>
+
+            <div>
+              <p className="text-[10px] text-[var(--text-muted)]">
+                Armazenamento
+              </p>
+              <p className={`mt-1 text-[13px] font-semibold ${cores.heading}`}>
+                Neste dispositivo
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Diretório */}
+        <div className="overflow-visible rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex flex-col justify-between gap-4 rounded-t-xl border-b border-[var(--border)] p-5 sm:flex-row sm:items-center">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className={`text-[14px] font-semibold ${cores.heading}`}>
+                  Diretório de alunos
+                </h2>
+
+                <span className="rounded-md bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent-text)]">
+                  {alunosFiltrados.length}
+                </span>
+              </div>
+
+              <p className={`mt-1 text-[11px] ${cores.subtleText}`}>
+                Selecione um aluno para acessar sua ficha.
+              </p>
+            </div>
+
+            <label className="relative block w-full sm:w-[290px]">
+              <BsSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-[var(--text-muted)]" />
+
+              <input
+                type="search"
+                value={busca}
+                onChange={(event) => setBusca(event.target.value)}
+                placeholder="Buscar aluno..."
+                aria-label="Buscar alunos"
+                className={`h-10 w-full pl-9 pr-3 text-[11px] outline-none transition ${cores.input}`}
+              />
+            </label>
+          </div>
+
+          {/* Lista vazia */}
+          {alunos.length === 0 ? (
+            <div className="flex min-h-[300px] flex-col items-center justify-center px-5 py-10 text-center">
+              <span className="grid h-14 w-14 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <BsPeople className="text-2xl" />
+              </span>
+
+              <h3 className={`mt-4 text-[15px] font-semibold ${cores.heading}`}>
+                Sua base começa aqui.
+              </h3>
+
+              <p
+                className={`mt-2 max-w-sm text-[12px] leading-5 ${cores.bodyText}`}
+              >
+                Cadastre seu primeiro aluno e comece a organizar suas fichas de
+                avaliação e treinamento.
+              </p>
+
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <button
+                  onClick={criarAluno}
+                  className={`h-10 rounded-lg px-5 text-[11px] font-semibold ${cores.primaryButton}`}
+                >
+                  <BsPlusLg className="mr-2 inline" />
+                  Cadastrar aluno
+                </button>
+
+                <button
+                  onClick={() => inputImportarRef.current?.click()}
+                  className={`h-10 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
+                >
+                  Importar JSON
+                </button>
+              </div>
+            </div>
+          ) : alunosFiltrados.length === 0 ? (
+            <div className="flex min-h-[220px] flex-col items-center justify-center px-5 text-center">
+              <BsSearch className="text-2xl text-[var(--text-muted)]" />
+
+              <p className={`mt-3 text-[13px] font-semibold ${cores.heading}`}>
+                Nenhum aluno encontrado.
+              </p>
+
+              <p className={`mt-1 text-[11px] ${cores.bodyText}`}>
+                Não encontramos resultados para "{busca}".
+              </p>
+
+              <button
+                onClick={() => setBusca("")}
+                className="mt-3 text-[11px] font-semibold text-[var(--accent-text)] hover:underline"
+              >
+                Limpar pesquisa
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-[var(--border)]">
+              {alunosFiltrados.map((aluno) => (
+                <article
+                  key={aluno.id}
+                  className="group flex flex-col gap-4 p-4 transition-colors hover:bg-[var(--row-hover)] sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                >
+                  {/* Identificação */}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[14px] font-semibold text-[var(--accent-text)]">
+                      {aluno.nome?.charAt(0)?.toLocaleUpperCase("pt-BR") || "A"}
                     </span>
 
-                </div>
+                    <div className="min-w-0">
+                      <h3
+                        className={`truncate text-[13px] font-semibold ${cores.heading}`}
+                      >
+                        {aluno.nome}
+                      </h3>
 
-            </section>
-        );
-    }
+                      <p className="mt-1 truncate font-mono text-[10px] text-[var(--text-muted)]">
+                        ID: {aluno.id}
+                      </p>
+                    </div>
+                  </div>
 
-    // =========================================================
-    // CONTEÚDO
-    // =========================================================
+                  {/* Informações e ações */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+                    <div className="mr-2 hidden min-w-[115px] flex-col gap-1 lg:flex">
+                      <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                        Cadastro
+                      </span>
 
-    function renderConteudo() {
-
-        switch (secaoAtual) {
-
-            case "inicio":
-                return renderInicio();
-
-            case "alunos":
-                return renderAlunos();
-
-            case "equipe":
-                return renderSecaoVazia(
-                    "Equipe",
-                    "Aqui ficará a lista de profissionais, treinadores e demais membros da equipe. E dará controle e gestão ampla a usuarios administrativos. Demais usuários terão acesso apenas a seus alunos e avaliações.",
-                    <FaPeopleGroup />
-                );
-
-            case "avaliacoes":
-                return renderSecaoVazia(
-                    "Avaliações",
-                    "Aqui ficarão as avaliações físicas, anamneses, medidas, dobras cutâneas e demais informações dos alunos.",
-                    <BsClipboard2PulseFill />
-                );
-            case "ajuda":
-                return renderSecaoVazia(
-                    "Ajuda",
-                    "Aqui ficará a ajuda do sistema, com tutoriais, vídeos e explicações de como usar o sistema.",
-                    <FaRegQuestionCircle />
-                );
-            case "feedback":
-                return renderSecaoVazia(
-                    "Feedback",
-                    "Aqui ficará o feedback dos alunos, com sugestões, críticas e elogios.",
-                    <VscFeedback />
-                );
-            case "log":
-                return renderSecaoVazia(
-                    "Registro de Atividades",
-                    "Aqui ficará o registro de atividades do sistema, com logs de ações, erros e eventos.",
-                    <FaRegFileAlt  />
-                );
-            case "chat":
-                return renderSecaoVazia(
-                    "Chat de Suporte",
-                    "Dúvidas de alunos sobre treino, execuções, funcionamento, limitações e mudanças de treino, serão respondidas aqui. O chat será integrado com o WhatsApp e Telegram.",
-                    <IoChatbubblesSharp />
-                );
-            case "periodizacao":
-                return renderSecaoVazia(
-                    "Periodização",
-                    "Aqui ficará o planejamento das semanas, dias, sessões e distribuição de volume.",
-                    <FaCalendarAlt />
-                );
-
-            case "relatorios":
-                return renderSecaoVazia(
-                    "Relatórios",
-                    "Aqui ficarão os relatórios e indicadores dos alunos.",
-                    <BsBarChartFill />
-                );
-
-            case "configuracoes":
-                return renderSecaoVazia(
-                    "Configurações",
-                    "Aqui ficarão as configurações gerais do sistema.",
-                    <BsGearFill />
-                );
-
-            default:
-                return renderInicio();
-        }
-    }
-
-    // =========================================================
-    // RENDER
-    // =========================================================
-
-    return (
-
-        <div className="flex h-screen overflow-hidden bg-gray-100">
-
-            {/* =================================================
-                SIDEBAR
-            ================================================= */}
-
-            <aside className="flex w-64 shrink-0 flex-col bg-slate-900 text-white">
-
-                {/* Logo */}
-
-                <div className="border-b border-slate-800 p-5">
-
-                    <div className="text-xl font-black">
-                        Gabriel Fernando
+                      <span className={`text-[11px] ${cores.bodyText}`}>
+                        {formatarData(aluno.criadoEm)}
+                      </span>
                     </div>
 
-                    <div className="mt-1 text-xs font-medium text-slate-500">
-                        Gestão de Academia
-                    </div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-soft)] px-2.5 py-1.5 text-[10px] font-medium text-[var(--success)]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
+                      Salvo
+                    </span>
 
-                </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        onClick={() => abrirAluno(aluno)}
+                        className="inline-flex h-9 min-w-[112px] items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-[11px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+                      >
+                        Abrir ficha
+                        <BsArrowUpRight />
+                      </button>
 
+                      <div className="relative" data-aluno-menu>
+                        <button
+                          aria-label={`Mais opções para ${aluno.nome}`}
+                          aria-expanded={menuAlunoAberto === aluno.id}
+                          onClick={() =>
+                            setMenuAlunoAberto(
+                              menuAlunoAberto === aluno.id ? null : aluno.id,
+                            )
+                          }
+                          className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text-secondary)] transition hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-primary)]"
+                        >
+                          <BsThreeDots />
+                        </button>
 
-                {/* Navegação */}
-
-                <nav className="flex-1 overflow-y-auto p-4">
-
-                    <div className="mb-3 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                        Menu
-                    </div>
-
-                    <div className="space-y-1">
-
-                        {secoes.map((secao) => {
-
-                            const selecionada =
-                                secaoAtual === secao.id;
-
-                            return (
-
-                                <button
-                                    key={secao.id}
-                                    onClick={() =>
-                                        navegar(secao.id)
-                                    }
-                                    className={`
-                                        flex w-full items-center gap-4 rounded-xl px-4 py-3
-                                        text-left text-sm font-bold
-                                        hover: cursor-pointer
-                                        transition
-                                        ${selecionada
-                                            ? "bg-slate-700 text-white shadow-sm"
-                                            : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                                        }
-                                    `}
-                                >
-
-                                    <span className="text-base">
-                                        {secao.icone}
-                                    </span>
-
-                                    <span>
-                                        {secao.nome}
-                                    </span>
-
-                                </button>
-
-                            );
-
-                        })}
-
-                    </div>
-
-                </nav>
-
-
-                {/* Rodapé */}
-
-                <div className="border-t border-slate-800 p-4">
-
-                    <button
-                        className="w-full rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-400 transition hover:bg-slate-800 hover:text-white"
-                    >
-                        Sair
-                    </button>
-
-                </div>
-
-            </aside>
-
-
-            {/* =================================================
-                ÁREA PRINCIPAL
-            ================================================= */}
-
-            <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-
-                {/* Topbar */}
-
-                <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/90 px-8 backdrop-blur">
-
-                    <div>
-
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                            Painel
-                        </p>
-
-                        <h2 className="font-black text-slate-800">
-                            {secoes.find(
-                                (secao) =>
-                                    secao.id === secaoAtual
-                            )?.nome}
-                        </h2>
-
-                    </div>
-
-                    <div className="flex items-center gap-3">
-
-                        <div className="hidden text-right sm:block">
-
-                            <p className="text-sm font-black text-slate-700">
-                                Personal
-                            </p>
-
-
-                            <p className="text-xs text-slate-400">
-                                Administrador
-                            </p>
-
-                        </div>
-
-                        <div ref={menuRef} className="relative">
-                            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 font-black text-white hover:cursor-pointer hover:bg-slate-800"
-                                onClick={() => { setIsOpen(!isOpen) }}>
-                                P
+                        {menuAlunoAberto === aluno.id && (
+                          <div className="absolute right-0 top-11 z-30 w-44 rounded-lg border border-[var(--border)] bg-[var(--menu-bg)] py-1 shadow-xl">
+                            <button
+                              onClick={() => exportarAluno(aluno)}
+                              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[11px] text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
+                            >
+                              <BsDownload />
+                              Exportar JSON
                             </button>
 
-                            {isOpen && (
-                                <div
-                                    className="
-                absolute right-0 top-full z-50 mt-3
-                w-64
-                origin-top-right
-                overflow-visible
-                rounded-2xl
-                border border-slate-200
-                bg-white
-                shadow-[0_12px_35px_rgba(0,0,0,0.12)]
-                ring-1 ring-black/5
-            "
-                                >
-                                    {/* SETA */}
-                                    <div
-                                        className="
-                    absolute -top-2 right-3
-                    h-4 w-4
-                    rotate-45
-                    border-l border-t border-slate-200
-                    bg-white
-                "
-                                    />
+                            <div className="my-1 border-t border-[var(--border)]" />
 
-                                    {/* Cabeçalho */}
-                                    <div className="relative px-4 pt-4 pb-3">
-                                        <div className="flex items-center gap-3">
-
-                                            {/* Avatar */}
-                                            <div
-                                                className="
-                            flex h-11 w-11 shrink-0
-                            items-center justify-center
-                            rounded-full
-                            bg-slate-700
-                            text-white
-                            shadow-sm
-                        "
-                                            >
-                                                <FaUser className="text-sm" />
-                                            </div>
-
-                                            <div className="min-w-0">
-                                                <p className="truncate text-sm font-bold text-slate-800">
-                                                    Personal
-                                                </p>
-
-                                                <p className="truncate text-xs text-slate-500">
-                                                    personal@example.com
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Separador */}
-                                    <div className="mx-3 border-t border-slate-100" />
-
-                                    {/* Opções */}
-                                    <div className="p-2">
-
-                                        {/* Perfil */}
-                                        <a
-                                            href="#perfil"
-                                            className="
-                        group flex items-center gap-3
-                        rounded-xl px-3 py-2.5
-                        text-sm font-medium text-slate-700
-                        transition-all duration-150
-                        hover:bg-[#E8F1F2]
-                        hover:text-[#1B98E0]
-                    "
-                                        >
-                                            <div
-                                                className="
-                            flex h-9 w-9 items-center justify-center
-                            rounded-lg
-                            bg-slate-100
-                            text-slate-500
-                            transition-colors
-                            group-hover:bg-white
-                            group-hover:text-[#1B98E0]
-                        "
-                                            >
-                                                <FaUser className="text-sm" />
-                                            </div>
-
-                                            <div className="flex-1">
-                                                <p>Meu Perfil</p>
-                                                <span className="text-[11px] font-normal text-slate-400">
-                                                    Visualizar seu perfil
-                                                </span>
-                                            </div>
-
-                                            <span className="text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-[#1B98E0]">
-                                                →
-                                            </span>
-                                        </a>
-
-                                        {/* Configurações */}
-                                        <a
-                                            href="#configuracoes"
-                                            className="
-                        group flex items-center gap-3
-                        rounded-xl px-3 py-2.5
-                        text-sm font-medium text-slate-700
-                        transition-all duration-150
-                        hover:bg-[#E8F1F2]
-                        hover:text-[#1B98E0]
-                    "
-                                        >
-                                            <div
-                                                className="
-                            flex h-9 w-9 items-center justify-center
-                            rounded-lg
-                            bg-slate-100
-                            text-slate-500
-                            transition-colors
-                            group-hover:bg-white
-                            group-hover:text-[#1B98E0]
-                        "
-                                            >
-                                                <FaCog className="text-sm" />
-                                            </div>
-
-                                            <div className="flex-1">
-                                                <p>Configurações</p>
-                                                <span className="text-[11px] font-normal text-slate-400">
-                                                    Preferências da conta
-                                                </span>
-                                            </div>
-
-                                            <span className="text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-[#1B98E0]">
-                                                →
-                                            </span>
-                                        </a>
-                                    </div>
-
-                                    {/* Separador */}
-                                    <div className="mx-3 border-t border-slate-100" />
-
-                                    {/* Sair */}
-                                    <div className="p-2">
-                                        <button
-                                            onClick={() => {
-                                                alert("Saindo...");
-                                                setIsOpen(false);
-                                            }}
-                                            className="
-                        group flex w-full items-center gap-3
-                        rounded-xl px-3 py-2.5
-                        text-left text-sm font-medium
-                        text-red-500
-                        transition-all duration-150
-                        hover:bg-red-50
-                        hover:text-red-600
-                    "
-                                        >
-                                            <div
-                                                className="
-                            flex h-9 w-9 items-center justify-center
-                            rounded-lg
-                            bg-red-50
-                            text-red-400
-                            transition-colors
-                            group-hover:bg-white
-                            group-hover:text-red-500
-                        "
-                                            >
-                                                <FaSignOutAlt className="text-sm" />
-                                            </div>
-
-                                            <div>
-                                                <p>Sair da conta</p>
-                                                <span className="text-[11px] font-normal text-red-300">
-                                                    Encerrar sessão
-                                                </span>
-                                            </div>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
+                            <button
+                              onClick={() => {
+                                setAlunoParaExcluir(aluno);
+                                setMenuAlunoAberto(null);
+                              }}
+                              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                            >
+                              <BsTrash3 />
+                              Excluir aluno
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
 
-                </header>
+        {/* Rodapé */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[10px] text-[var(--text-muted)]">
+          <span>Os registros são armazenados localmente neste navegador.</span>
 
+          <span>
+            {alunos.length}{" "}
+            {alunos.length === 1 ? "aluno cadastrado" : "alunos cadastrados"}
+          </span>
+        </div>
+      </section>
+    );
+  }
 
-                {/* Conteúdo */}
+  function renderInicio() {
+    const alunosRecentes = [...alunos]
+      .sort(
+        (a, b) =>
+          new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime(),
+      )
+      .slice(0, 4);
 
-                <div className="flex min-h-full justify-center p-8">
+    const ultimoCadastro = alunosRecentes[0];
 
-                    {renderConteudo()}
+    return (
+      <section className="w-full max-w-[1440px] space-y-7">
+        {/* Cabeçalho */}
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-text)]">
+              <span>Workspace</span>
+              <span className="text-[var(--text-muted)]">/</span>
+              <span>Visão geral</span>
+            </div>
 
-                    {alunoParaExcluir && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <h1
+              className={`text-[28px] font-semibold tracking-[-0.045em] ${cores.heading}`}
+            >
+              Seu espaço de trabalho.
+            </h1>
 
-                            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <p className={`mt-2 text-[13px] ${cores.bodyText}`}>
+              Gerencie seus alunos e acompanhe a organização dos seus
+              treinamentos.
+            </p>
+          </div>
 
-                                <div className="mb-5 flex items-center gap-4">
+          <button
+            onClick={criarAluno}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-5 text-[12px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+          >
+            <BsPlusLg />
+            Novo aluno
+          </button>
+        </div>
 
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-xl text-red-600">
-                                        <BsTrash3Fill />
-                                    </div>
+        {/* Indicadores */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium text-[var(--text-secondary)]">
+                Alunos cadastrados
+              </span>
+              <BsPeople className="text-lg text-[var(--accent)]" />
+            </div>
 
-                                    <div>
-                                        <h2 className="text-xl font-black text-slate-800">
-                                            Excluir aluno?
-                                        </h2>
+            <p
+              className={`mt-4 text-[30px] font-semibold tracking-[-0.05em] ${cores.heading}`}
+            >
+              {alunos.length}
+            </p>
 
-                                        <p className="text-sm text-slate-500">
-                                            Esta ação não poderá ser desfeita.
-                                        </p>
-                                    </div>
+            <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+              Registros na sua base
+            </p>
+          </div>
 
-                                </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium text-[var(--text-secondary)]">
+                Último cadastro
+              </span>
+              <BsPersonCircle className="text-lg text-[var(--accent)]" />
+            </div>
 
-                                <div className="mb-6 rounded-xl bg-slate-50 p-4">
+            <p
+              className={`mt-4 truncate text-[17px] font-semibold tracking-[-0.03em] ${cores.heading}`}
+            >
+              {ultimoCadastro?.nome || "Nenhum cadastro"}
+            </p>
 
-                                    <p className="text-sm text-slate-500">
-                                        Você está prestes a excluir:
-                                    </p>
+            <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+              {ultimoCadastro
+                ? formatarData(ultimoCadastro.criadoEm)
+                : "Sua base ainda está vazia"}
+            </p>
+          </div>
 
-                                    <p className="mt-1 font-black text-slate-800">
-                                        {alunoParaExcluir.nome}
-                                    </p>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium text-[var(--text-secondary)]">
+                Armazenamento
+              </span>
+              <BsFolder2Open className="text-lg text-[var(--accent)]" />
+            </div>
 
-                                </div>
+            <p
+              className={`mt-4 text-[17px] font-semibold tracking-[-0.03em] ${cores.heading}`}
+            >
+              Local
+            </p>
 
-                                <p className="mb-6 text-sm leading-relaxed text-slate-500">
-                                    Todos os dados armazenados deste aluno serão
-                                    removidos da lista de alunos deste navegador.
-                                </p>
+            <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+              Dados neste navegador
+            </p>
+          </div>
+        </div>
 
-                                <div className="flex justify-end gap-3">
+        {/* Conteúdo principal */}
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0 space-y-5">
+            {/* Ações */}
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+              <div className="border-b border-[var(--border)] px-5 py-4">
+                <h2 className={`text-[13px] font-semibold ${cores.heading}`}>
+                  Acesso rápido
+                </h2>
+                <p className={`mt-1 text-[11px] ${cores.subtleText}`}>
+                  Atalhos para suas principais atividades.
+                </p>
+              </div>
 
-                                    <button
-                                        onClick={() =>
-                                            setAlunoParaExcluir(null)
-                                        }
-                                        className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:cursor-pointer hover:bg-slate-50"
-                                    >
-                                        Cancelar
-                                    </button>
+              <div className="grid gap-3 p-4 sm:grid-cols-2">
+                <button
+                  onClick={criarAluno}
+                  className="group flex min-h-[120px] flex-col justify-between rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <BsPlusLg className="text-lg" />
+                    </span>
 
-                                    <button
-                                        onClick={excluirAluno}
-                                        className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:cursor-pointer hover:bg-red-700"
-                                    >
-                                        <BsTrash3Fill />
-                                        Sim, excluir
-                                    </button>
+                    <BsArrowUpRight className="text-[13px] text-[var(--text-muted)] transition group-hover:text-[var(--accent)]" />
+                  </div>
 
-                                </div>
+                  <div className="mt-4">
+                    <strong
+                      className={`block text-[12px] font-semibold ${cores.heading}`}
+                    >
+                      Cadastrar aluno
+                    </strong>
+                    <span
+                      className={`mt-1 block text-[10px] ${cores.bodyText}`}
+                    >
+                      Criar uma nova ficha de acompanhamento.
+                    </span>
+                  </div>
+                </button>
 
-                            </div>
+                <button
+                  onClick={() => navegar("alunos")}
+                  className="group flex min-h-[120px] flex-col justify-between rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--surface-tertiary)] text-[var(--text-secondary)]">
+                      <BsPeople className="text-lg" />
+                    </span>
 
-                        </div>
-                    )}
+                    <BsArrowUpRight className="text-[13px] text-[var(--text-muted)] transition group-hover:text-[var(--accent)]" />
+                  </div>
 
+                  <div className="mt-4">
+                    <strong
+                      className={`block text-[12px] font-semibold ${cores.heading}`}
+                    >
+                      Gerenciar alunos
+                    </strong>
+                    <span
+                      className={`mt-1 block text-[10px] ${cores.bodyText}`}
+                    >
+                      Consultar e administrar sua base.
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Alunos recentes */}
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
+                <div>
+                  <h2 className={`text-[13px] font-semibold ${cores.heading}`}>
+                    Cadastros recentes
+                  </h2>
+                  <p className={`mt-1 text-[11px] ${cores.subtleText}`}>
+                    Últimos alunos adicionados.
+                  </p>
                 </div>
 
-            </main>
+                <button
+                  onClick={() => navegar("alunos")}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-md text-[11px] font-semibold text-[var(--accent-text)] hover:underline"
+                >
+                  Ver todos <BsArrowUpRight />
+                </button>
+              </div>
 
+              {alunosRecentes.length === 0 ? (
+                <div className="px-5 py-10 text-center">
+                  <BsPeople className="mx-auto text-2xl text-[var(--text-muted)]" />
+                  <p
+                    className={`mt-3 text-[12px] font-semibold ${cores.heading}`}
+                  >
+                    Nenhum aluno cadastrado
+                  </p>
+                  <p className={`mt-1 text-[11px] ${cores.subtleText}`}>
+                    Seus próximos cadastros aparecerão aqui.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-[var(--border)]">
+                  {alunosRecentes.map((aluno) => (
+                    <div
+                      key={aluno.id}
+                      className="flex items-center justify-between gap-3 px-5 py-3 transition hover:bg-[var(--row-hover)]"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-semibold text-[var(--accent-text)]">
+                          {aluno.nome?.charAt(0)?.toUpperCase() || "A"}
+                        </span>
+
+                        <div className="min-w-0">
+                          <p
+                            className={`truncate text-[12px] font-semibold ${cores.heading}`}
+                          >
+                            {aluno.nome}
+                          </p>
+                          <p
+                            className={`mt-0.5 text-[10px] ${cores.subtleText}`}
+                          >
+                            {formatarData(aluno.criadoEm)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => abrirAluno(aluno)}
+                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent-text)]"
+                      >
+                        Abrir <BsArrowUpRight />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Painel lateral */}
+          <aside className="space-y-4">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-[var(--warning)]" />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                  Desenvolvimento
+                </span>
+              </div>
+
+              <h2 className={`mt-4 text-[15px] font-semibold ${cores.heading}`}>
+                Seu workspace está evoluindo.
+              </h2>
+
+              <p className={`mt-2 text-[11px] leading-5 ${cores.bodyText}`}>
+                Novas funcionalidades de gestão, acompanhamento e análise de
+                desempenho serão disponibilizadas gradualmente.
+              </p>
+
+              <div className="mt-5 border-t border-[var(--border)] pt-4">
+                <span className="text-[10px] text-[var(--text-muted)]">
+                  Estado atual
+                </span>
+                <p
+                  className={`mt-1 text-[11px] font-semibold ${cores.heading}`}
+                >
+                  Gestão de alunos disponível
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+              <div className="flex items-center gap-2">
+                <BsFiletypeJson className="text-[var(--accent)]" />
+                <h3 className={`text-[12px] font-semibold ${cores.heading}`}>
+                  Importação e exportação
+                </h3>
+              </div>
+
+              <p className={`mt-2 text-[11px] leading-5 ${cores.bodyText}`}>
+                Transfira fichas entre dispositivos utilizando arquivos JSON.
+              </p>
+
+              <button
+                onClick={() => navegar("alunos")}
+                className="mt-4 rounded-md text-[11px] font-semibold text-[var(--accent-text)] hover:underline"
+              >
+                Acessar gerenciamento →
+              </button>
+            </div>
+          </aside>
         </div>
+      </section>
     );
+  }
+
+  function renderSecaoVazia(
+    titulo: string,
+    descricao: string,
+    icone: React.ReactNode,
+  ) {
+    return (
+      <section className="w-full max-w-[1100px]">
+        <div className={`mb-7 border-b ${cores.divider} pb-6`}>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-text)]">
+            Workspace / {titulo}
+          </p>
+          <h1
+            className={`text-[30px] font-semibold tracking-[-0.045em] ${cores.heading}`}
+          >
+            {titulo}
+          </h1>
+          <p className={`mt-1.5 text-[13px] ${cores.bodyText}`}>{descricao}</p>
+        </div>
+
+        <div
+          className={`flex min-h-[260px] items-center gap-5 rounded-xl border ${cores.divider} bg-[var(--surface)] p-6`}
+        >
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg border border-[var(--border)] bg-[var(--accent-soft)] text-[20px] text-[var(--accent)]">
+            {icone}
+          </div>
+          <div>
+            <p className={`text-[14px] font-semibold ${cores.heading}`}>
+              Esta área está no planejamento.
+            </p>
+            <p className={`mt-1 text-[12px] ${cores.bodyText}`}>
+              A estrutura será disponibilizada em uma próxima etapa do produto.
+            </p>
+            <span className="mt-3 inline-flex rounded-md border border-[var(--border)] bg-[var(--surface-tertiary)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--warning)]">
+              Em desenvolvimento
+            </span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  function renderConteudo() {
+    switch (secaoAtual) {
+      case "inicio":
+        return renderInicio();
+      case "alunos":
+        return renderAlunos();
+      case "equipe":
+        return renderSecaoVazia(
+          "Equipe",
+          "Gestão de profissionais, treinadores e permissões de acesso.",
+          <FaPeopleGroup />,
+        );
+      case "avaliacoes":
+        return renderSecaoVazia(
+          "Avaliações",
+          "Avaliações físicas, anamneses, medidas e histórico dos alunos.",
+          <BsClipboard2Pulse />,
+        );
+      case "ajuda":
+        return renderSecaoVazia(
+          "Central de ajuda",
+          "Tutoriais, orientações e explicações sobre o funcionamento do sistema.",
+          <BsQuestionCircle />,
+        );
+      case "feedback":
+        return renderSecaoVazia(
+          "Feedback",
+          "Sugestões, críticas e retornos enviados pelos alunos.",
+          <VscFeedback />,
+        );
+      case "log":
+        return renderSecaoVazia(
+          "Atividades",
+          "Histórico de ações, alterações e eventos do sistema.",
+          <BsFileEarmarkText />,
+        );
+      case "chat":
+        return renderSecaoVazia(
+          "Central de mensagens",
+          "Comunicação com alunos por canais integrados.",
+          <BsChatDots />,
+        );
+      case "periodizacao":
+        return renderSecaoVazia(
+          "Periodização",
+          "Planejamento de semanas, dias, sessões e distribuição de volume.",
+          <BsCalendar3 />,
+        );
+      case "relatorios":
+        return renderSecaoVazia(
+          "Relatórios",
+          "Indicadores e relatórios de acompanhamento dos alunos.",
+          <BsBarChart />,
+        );
+      case "configuracoes":
+        return renderSecaoVazia(
+          "Configurações",
+          "Preferências e parâmetros gerais da plataforma.",
+          <BsGear />,
+        );
+      default:
+        return renderInicio();
+    }
+  }
+
+  return (
+    <div
+      data-theme={tema}
+      className="painel-theme flex min-h-screen bg-[var(--surface-secondary)] text-[var(--text-primary)]"
+    >
+      {/* Sidebar desktop */}
+      <aside className="hidden w-[232px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)] lg:flex">
+        <div className="flex h-[76px] items-center gap-3 border-b border-[var(--border)] px-5">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent)] text-[12px] font-bold tracking-[-0.08em] text-white">
+            GF
+          </div>
+          <div>
+            <p
+              className={`text-[12px] font-bold tracking-[-0.02em] ${cores.heading}`}
+            >
+              G. Fernando
+            </p>
+            <p className={`mt-0.5 text-[10px] ${cores.subtleText}`}>
+              Training workspace
+            </p>
+          </div>
+        </div>
+
+        <div className={`border-b ${cores.divider} px-4 py-4`}>
+          <div
+            className={`flex items-center gap-2 rounded-md px-2 text-[10px] font-semibold uppercase tracking-[0.12em] ${cores.subtleText}`}
+          >
+            <BsPersonCircle className="text-[13px]" /> Área profissional
+          </div>
+          <p className={`mt-2 px-2 text-[12px] font-semibold ${cores.heading}`}>
+            Gestão de treinamento
+          </p>
+        </div>
+
+        <nav
+          aria-label="Navegação principal"
+          className="flex-1 overflow-y-auto px-3 py-4"
+        >
+          {gruposNavegacao.map((grupo) => (
+            <div key={grupo} className="mb-5">
+              <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                {grupo}
+              </p>
+
+              <div className="space-y-0.5">
+                {secoes
+                  .filter((secao) => secao.grupo === grupo)
+                  .map((secao) => {
+                    const ativo = secaoAtual === secao.id;
+
+                    return (
+                      <button
+                        key={secao.id}
+                        onClick={() => navegar(secao.id)}
+                        aria-current={ativo ? "page" : undefined}
+                        className={`relative flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)] ${
+                          ativo
+                            ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                            : "text-[var(--text-secondary)] hover:bg-[var(--row-hover)] hover:text-[var(--text-primary)]"
+                        }`}
+                      >
+                        {ativo && (
+                          <span className="absolute inset-y-1 left-0 w-[2px] rounded-full bg-[var(--accent)]" />
+                        )}
+                        <span
+                          className={`text-[14px] ${ativo ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}
+                        >
+                          {secao.icone}
+                        </span>
+                        {secao.nome}
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div className={`border-t ${cores.divider} px-5 py-3`}>
+          <div
+            className={`flex items-center gap-2 text-[10px] ${cores.bodyText}`}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
+            Ambiente local
+          </div>
+          <p className={`mt-1 text-[9px] ${cores.subtleText}`}>
+            Versão de desenvolvimento
+          </p>
+        </div>
+      </aside>
+
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 flex h-[60px] shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--header)]/95 px-4 backdrop-blur-sm sm:px-7">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              onClick={() => setMenuMobileAberto(!menuMobileAberto)}
+              aria-label="Abrir navegação"
+              aria-expanded={menuMobileAberto}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[var(--border)] text-[var(--text-secondary)] lg:hidden"
+            >
+              <BsThreeDots />
+            </button>
+
+            <div className="min-w-0">
+              <p
+                className={`text-[9px] font-semibold uppercase tracking-[0.15em] ${cores.subtleText}`}
+              >
+                G. Fernando{" "}
+                <span className="px-1 text-[var(--text-muted)]">/</span>{" "}
+                Workspace
+              </p>
+              <p
+                className={`truncate text-[13px] font-semibold ${cores.heading}`}
+              >
+                {secaoSelecionada.nome}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                setTema((atual) => (atual === "light" ? "dark" : "light"))
+              }
+              aria-label={
+                tema === "light" ? "Ativar tema escuro" : "Ativar tema claro"
+              }
+              aria-pressed={tema === "dark"}
+              title={
+                tema === "light" ? "Ativar tema escuro" : "Ativar tema claro"
+              }
+              className={`inline-flex h-8 items-center gap-2 px-3 text-[11px] font-medium transition-colors ${cores.secondaryButton}`}
+            >
+              {tema === "light" ? (
+                <BsMoonStars size={14} />
+              ) : (
+                <BsSun size={14} />
+              )}
+              <span className="hidden sm:inline">
+                {tema === "light" ? "Escuro" : "Claro"}
+              </span>
+            </button>
+
+            <span className={`hidden text-[10px] sm:block ${cores.subtleText}`}>
+              Gestão de Academia
+            </span>
+
+            <div ref={menuPerfilRef} className="relative">
+              <button
+                onClick={() => setMenuPerfilAberto(!menuPerfilAberto)}
+                aria-label="Abrir menu do perfil"
+                aria-expanded={menuPerfilAberto}
+                className="flex h-8 items-center gap-2 rounded-lg border-l border-[var(--border)] pl-3 text-left"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--surface-tertiary)] text-[10px] font-semibold text-[var(--text-primary)]">
+                  P
+                </span>
+                <span
+                  className={`hidden text-[11px] font-semibold sm:block ${cores.bodyText}`}
+                >
+                  Personal
+                </span>
+              </button>
+
+              {menuPerfilAberto && (
+                <div className="absolute right-0 top-10 z-40 w-56 rounded-xl border border-[var(--border)] bg-[var(--menu-bg)] py-2 shadow-lg">
+                  <div className="border-b border-[var(--border)] px-4 pb-3">
+                    <p className={`text-[12px] font-semibold ${cores.heading}`}>
+                      Personal
+                    </p>
+                    <p className={`mt-0.5 text-[10px] ${cores.subtleText}`}>
+                      Administrador
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      navegar("configuracoes");
+                      setMenuPerfilAberto(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-left text-[11px] text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
+                  >
+                    <BsGear /> Configurações
+                  </button>
+
+                  <button
+                    onClick={() => setMenuPerfilAberto(false)}
+                    className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                  >
+                    <BsX /> Fechar menu
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {menuMobileAberto && (
+          <div
+            className="fixed inset-0 z-30 bg-[var(--overlay)] lg:hidden"
+            onClick={() => setMenuMobileAberto(false)}
+          >
+            <nav
+              aria-label="Navegação móvel"
+              onClick={(event) => event.stopPropagation()}
+              className="absolute inset-y-0 left-0 w-[min(300px,85vw)] overflow-y-auto rounded-r-2xl border-r border-[var(--border)] bg-[var(--sidebar)] px-4 py-5 shadow-xl"
+            >
+              <div className="mb-5 flex items-center justify-between border-b border-[var(--border)] pb-4">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent)] text-[11px] font-bold text-white">
+                    GF
+                  </span>
+                  <span className={`text-[12px] font-bold ${cores.heading}`}>
+                    G. Fernando
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => setMenuMobileAberto(false)}
+                  aria-label="Fechar navegação"
+                  className="grid h-8 w-8 place-items-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
+                >
+                  <BsX />
+                </button>
+              </div>
+
+              {gruposNavegacao.map((grupo) => (
+                <div key={grupo} className="mb-5">
+                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                    {grupo}
+                  </p>
+
+                  {secoes
+                    .filter((secao) => secao.grupo === grupo)
+                    .map((secao) => {
+                      const ativo = secaoAtual === secao.id;
+
+                      return (
+                        <button
+                          key={secao.id}
+                          onClick={() => navegar(secao.id)}
+                          aria-current={ativo ? "page" : undefined}
+                          className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2.5 text-left text-[12px] ${
+                            ativo
+                              ? "bg-[var(--accent-soft)] font-semibold text-[var(--accent-text)]"
+                              : "text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
+                          }`}
+                        >
+                          <span
+                            className={`text-[15px] ${ativo ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}
+                          >
+                            {secao.icone}
+                          </span>
+                          {secao.nome}
+                        </button>
+                      );
+                    })}
+                </div>
+              ))}
+            </nav>
+          </div>
+        )}
+
+        <main
+          className="flex-1 px-4 py-6 transition-colors duration-200 sm:px-7 sm:py-8 xl:px-10"
+          style={{ backgroundColor: "var(--surface-secondary)" }}
+        >
+          <div className="mx-auto w-full max-w-[1600px]">
+            {renderConteudo()}
+          </div>
+        </main>
+
+        <footer className="flex min-h-9 items-center justify-between border-t border-[var(--border)] bg-[var(--header)] px-4 text-[9px] text-[var(--text-muted)] sm:px-7">
+          <span>G. Fernando · Gestão de treinamento</span>
+          <span>Dados armazenados localmente</span>
+        </footer>
+      </div>
+
+      {alunoParaExcluir && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setAlunoParaExcluir(null);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-excluir-aluno"
+            className="w-full max-w-[420px] rounded-2xl border border-[var(--border)] bg-[var(--modal-bg)] p-6 shadow-2xl"
+          >
+            <div className="mb-5 flex items-start justify-between">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--danger)]">
+                  Ação permanente
+                </p>
+                <h2
+                  id="titulo-excluir-aluno"
+                  className={`mt-1 text-[19px] font-semibold tracking-[-0.03em] ${cores.heading}`}
+                >
+                  Excluir aluno?
+                </h2>
+              </div>
+
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--danger-soft)] text-[var(--danger)]">
+                <BsTrash3 />
+              </span>
+            </div>
+
+            <div className="border-y border-[var(--border)] py-4">
+              <p className={`text-[11px] ${cores.bodyText}`}>
+                Você está prestes a remover este registro:
+              </p>
+              <p className={`mt-1 text-[13px] font-semibold ${cores.heading}`}>
+                {alunoParaExcluir.nome}
+              </p>
+              <p className={`mt-3 text-[11px] leading-5 ${cores.bodyText}`}>
+                Os dados deste aluno serão removidos da lista armazenada neste
+                navegador. Esta ação não poderá ser desfeita.
+              </p>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setAlunoParaExcluir(null)}
+                className={`h-9 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={excluirAluno}
+                className="h-9 rounded-lg bg-[var(--danger)] px-4 text-[11px] font-semibold text-white hover:brightness-95"
+              >
+                Excluir registro
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+    </div>
+  );
 }

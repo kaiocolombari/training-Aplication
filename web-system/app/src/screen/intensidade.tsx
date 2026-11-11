@@ -1006,10 +1006,6 @@ export default function Intensidade() {
             </section>
 
             <br />
-
-            <div className="mt-10">
-                {navTool()}
-            </div>
         </main>
     );
 }

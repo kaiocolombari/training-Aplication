@@ -1634,7 +1634,6 @@ export default function App() {
                                 </div>
                             ))}
                         </div>
-                        {navTool()}
                     </div>
                     <div className="py-5 border-t-5 border-zinc-400 mt-6">
                         <h3 className="mb-3 pb-1 text-xl font-bold italic uppercase tracking-wide text-zinc-500">Parecer Descritivo</h3>

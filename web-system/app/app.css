@@ -1,16 +1,373 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --color-textLight: #56575b;
-  --color-nav: #5080b8;
-  --color-bgLight: #ffffff;
-  --color-bgDark: #000000;
-  --color-inputLight: #f2f2f2;
-  --color-inputDark: #1f2937;
-  --color-red-400: #f87171;
-  --color-zinc-900: #111827;
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================================
+   PAINEL — DESIGN SYSTEM
+   Neutral SaaS / Modern Dashboard
+========================================= */
+
+:root {
+  --surface-raised: #ffffff;
+  --surface-sunken: #f3f4f6;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #242424;
+  --text-secondary: #525252;
+  --text-muted: #888888;
 }
 
-@custom-variant dark (&:where(.dark, .dark *));
+.dark {
+  --surface-raised: #202124;
+  --surface-sunken: #292b30;
+  --border: #383a40;
+  --border-strong: #484b53;
+  --text: #f3f4f6;
+  --text-secondary: #c1c4cc;
+  --text-muted: #9296a1;
+}
+
+.painel-theme {
+  /* Superfícies */
+  --surface: #ffffff;
+  --surface-secondary: #f5f6f8;
+  --surface-tertiary: #eceef2;
+  --surface-hover: #f0f1f4;
+
+  /* Textos */
+  --text-primary: #191b22;
+  --text-secondary: #555966;
+  --text-muted: #858995;
+
+  /* Bordas */
+  --border: #e5e7eb;
+  --border-strong: #d5d8df;
+
+  /* Identidade */
+  --accent: #5558d9;
+  --accent-hover: #4548c5;
+  --accent-soft: #eeeeff;
+
+  /* Estados */
+  --success: #16845b;
+  --success-soft: #e8f5ee;
+
+  --danger: #d44747;
+  --danger-soft: #fceeee;
+
+  --warning: #b7791f;
+  --warning-soft: #fff5df;
+  /* Componentes do painel */
+  --sidebar: #ffffff;
+  --header: #ffffff;
+  --row-hover: #f5f6f8;
+  --input-bg: #ffffff;
+  --menu-bg: #ffffff;
+  --modal-bg: #ffffff;
+
+  --accent-text: #4548c5;
+  --accent-border: #5558d9;
+
+  --overlay: rgb(15 17 24 / 45%);
+  --shadow-color: rgb(15 17 24 / 12%);
+
+  color-scheme: light;
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+/* =========================================
+   TEMA ESCURO
+========================================= */
+
+.painel-theme[data-theme="dark"] {
+  /* Superfícies */
+  --surface: #1d1f25;
+  --surface-secondary: #15161b;
+  --surface-tertiary: #292b33;
+  --surface-hover: #30323c;
+
+  /* Textos */
+  --text-primary: #f1f2f5;
+  --text-secondary: #c0c2cc;
+  --text-muted: #9295a3;
+
+  /* Bordas */
+  --border: #343640;
+  --border-strong: #454854;
+
+  /* Identidade */
+  --accent: #9293ff;
+  --accent-hover: #aaaaff;
+  --accent-soft: #30304e;
+
+  /* Estados */
+  --success: #48c995;
+  --success-soft: #1e3930;
+
+  --danger: #ff7777;
+  --danger-soft: #45292c;
+
+  --warning: #e9b85f;
+  --warning-soft: #403522;
+  /* Componentes do painel */
+  --sidebar: #1d1f25;
+  --header: #1d1f25;
+  --row-hover: #292b33;
+  --input-bg: #1d1f25;
+  --menu-bg: #22242b;
+  --modal-bg: #22242b;
+
+  --accent-text: #aaaaff;
+  --accent-border: #9293ff;
+
+  --overlay: rgb(0 0 0 / 65%);
+  --shadow-color: rgb(0 0 0 / 35%);
+
+  color-scheme: dark;
+}
+
+/* =========================================
+   FUNDOS — TEMA CLARO
+========================================= */
+
+.painel-theme:not([data-theme="dark"]) [class~="bg-white"] {
+  background-color: var(--surface) !important;
+}
+
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#fbfaf8]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f7f5f2]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f8f5f2]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#faf7f5]"] {
+  background-color: var(--surface-secondary) !important;
+}
+
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f2efeb]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f0efeb]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f3f0ec]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f7f3f0]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f5f1ed]"] {
+  background-color: var(--surface-tertiary) !important;
+}
+
+/* Destaques */
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f1e8e4]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f2e9e6]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f3eae6]"],
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#f3eeea]"] {
+  background-color: var(--accent-soft) !important;
+}
+
+/* Botões principais */
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#8e4e4c]"] {
+  background-color: var(--accent) !important;
+}
+
+.painel-theme:not([data-theme="dark"]) [class~="bg-[#773f3e]"] {
+  background-color: var(--accent-hover) !important;
+}
+
+/* =========================================
+   FUNDOS — TEMA ESCURO
+========================================= */
+
+/* Superfícies principais */
+.painel-theme[data-theme="dark"] [class~="bg-white"],
+.painel-theme[data-theme="dark"] [class~="bg-[#fbfaf8]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f7f5f2]"] {
+  background-color: var(--surface) !important;
+}
+
+/* Superfícies secundárias */
+.painel-theme[data-theme="dark"] [class~="bg-[#f2efeb]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f0efeb]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f8f5f2]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f3f0ec]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f7f3f0]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#faf7f5]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f5f1ed]"] {
+  background-color: var(--surface-tertiary) !important;
+}
+
+/* Destaques */
+.painel-theme[data-theme="dark"] [class~="bg-[#f1e8e4]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f2e9e6]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f3eae6]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#f3eeea]"] {
+  background-color: var(--accent-soft) !important;
+}
+
+/* Botões principais */
+.painel-theme[data-theme="dark"] [class~="bg-[#8e4e4c]"] {
+  background-color: var(--accent) !important;
+}
+
+.painel-theme[data-theme="dark"] [class~="bg-[#773f3e]"] {
+  background-color: var(--accent-hover) !important;
+}
+
+/* Elementos escuros */
+.painel-theme[data-theme="dark"] [class~="bg-[#302b28]"] {
+  background-color: var(--surface-hover) !important;
+}
+
+/* Estados de erro */
+.painel-theme[data-theme="dark"] [class~="bg-[#f8eae8]"],
+.painel-theme[data-theme="dark"] [class~="bg-[#fbf1ef]"] {
+  background-color: var(--danger-soft) !important;
+}
+
+/* Fundos transparentes */
+.painel-theme[data-theme="dark"] [class~="bg-[#fbfaf8]/95"] {
+  background-color: rgb(21 22 27 / 95%) !important;
+}
+
+/* =========================================
+   TEXTOS
+========================================= */
+
+/* Texto principal */
+.painel-theme[data-theme="dark"] [class~="text-[#302b28]"],
+.painel-theme[data-theme="dark"] [class~="text-[#292624]"],
+.painel-theme[data-theme="dark"] [class~="text-[#39332f]"] {
+  color: var(--text-primary) !important;
+}
+
+/* Texto secundário */
+.painel-theme[data-theme="dark"] [class~="text-[#514a45]"],
+.painel-theme[data-theme="dark"] [class~="text-[#766e67]"],
+.painel-theme[data-theme="dark"] [class~="text-[#746c64]"] {
+  color: var(--text-secondary) !important;
+}
+
+/* Texto auxiliar */
+.painel-theme[data-theme="dark"] [class~="text-[#9a9189]"],
+.painel-theme[data-theme="dark"] [class~="text-[#8d847c]"],
+.painel-theme[data-theme="dark"] [class~="text-[#817973]"],
+.painel-theme[data-theme="dark"] [class~="text-[#928981]"] {
+  color: var(--text-muted) !important;
+}
+
+/* Texto de destaque */
+.painel-theme[data-theme="dark"] [class~="text-[#854747]"],
+.painel-theme[data-theme="dark"] [class~="text-[#8e4e4c]"],
+.painel-theme[data-theme="dark"] [class~="text-[#9b5555]"] {
+  color: var(--accent) !important;
+}
+
+/* =========================================
+   BORDAS
+========================================= */
+
+.painel-theme[data-theme="dark"] [class*="border-[#"],
+.painel-theme[data-theme="dark"] [class*="divide-[#"] {
+  border-color: var(--border) !important;
+}
+
+/* =========================================
+   CAMPOS DE FORMULÁRIO
+========================================= */
+
+.painel-theme input,
+.painel-theme textarea,
+.painel-theme select {
+  color: var(--text-primary);
+}
+
+.painel-theme[data-theme="dark"] input,
+.painel-theme[data-theme="dark"] textarea,
+.painel-theme[data-theme="dark"] select {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.painel-theme input::placeholder,
+.painel-theme textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.painel-theme input:focus,
+.painel-theme textarea:focus,
+.painel-theme select:focus {
+  outline-color: var(--accent);
+}
+
+/* =========================================
+   INTERAÇÕES
+========================================= */
+
+.painel-theme button:not(:disabled),
+.painel-theme a,
+.painel-theme [role="button"],
+.painel-theme label[for],
+.painel-theme select,
+.painel-theme input[type="checkbox"],
+.painel-theme input[type="radio"],
+.painel-theme summary {
+  cursor: pointer;
+}
+
+.painel-theme button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.painel-theme button:focus-visible,
+.painel-theme input:focus-visible,
+.painel-theme textarea:focus-visible,
+.painel-theme select:focus-visible,
+.painel-theme a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* =========================================
+   HOVER
+========================================= */
+
+.painel-theme [class*="hover:bg-"]:hover {
+  transition: background-color 150ms ease;
+}
+
+.painel-theme[data-theme="dark"] ::selection {
+  background: #5556a5;
+  color: #ffffff;
+}
+
+.painel-theme:not([data-theme="dark"]) ::selection {
+  background: #dcdcff;
+  color: #191b22;
+}
+
+/* =========================================
+   SCROLLBAR
+========================================= */
+
+.painel-theme * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.painel-theme *::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.painel-theme *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.painel-theme *::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 20px;
+}
+
+.painel-theme *::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

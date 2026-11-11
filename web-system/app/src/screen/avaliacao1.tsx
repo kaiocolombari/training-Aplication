@@ -14,8 +14,20 @@ import ComposicaoCorporalChart from "../components/ComposicaoChart";
 import { initialState, useAvaliacao } from "../context/avaliacaoContext";
 import navTool from "../components/navTool";
 
-const inputBaseClass =
-  "h-9 w-full border border-zinc-950 border-dashed bg-white px-3 text-center text-xl font-medium text-zinc-700 outline-none transition focus:border-zinc-600";
+const inputBaseClass = `
+  h-9 w-full rounded-md
+  border border-[var(--border)]
+  bg-[var(--surface-raised)]
+  px-3 text-sm font-medium
+  text-[var(--text)]
+  outline-none transition
+  placeholder:text-[var(--text-muted)]
+  hover:border-[var(--border-strong)]
+  focus:border-[var(--accent)]
+  focus:ring-2 focus:ring-[var(--ring)]
+  disabled:cursor-not-allowed
+  disabled:opacity-60
+`;
 
 const perimetroConfig: PerimetroField[] = [
   { key: "bracoD", label: "Braco D", index: 1 },
@@ -374,13 +386,17 @@ function calcularIMC(
 
 function classificationBox(label: string, value: string) {
   return (
-    <div >
-      <h4 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-4">
+      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
         {label}
-      </h4>
-      <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Classificacao</span>
-      <div className="flex h-10 items-center justify-center bg-[#4f7fb7] px-3 text-[1.25rem] font-medium text-white">
-        {value}
+      </span>
+
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <span className="text-lg font-semibold text-[var(--text)]">
+          {value || "Aguardando dados"}
+        </span>
+
+        <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent)]" />
       </div>
     </div>
   );
@@ -1145,498 +1161,601 @@ export default function App() {
     };
   }, []);
 
+  
   return (
-    <main className="min-h-screen bg-[#cfd2d7] p-3 md:p-5">
-      <section className="mx-auto w-full border border-zinc-400 bg-[#ececec]">
-        <header className="border-b-4 border-[#a55c5d] bg-[#4f7fb7] px-5 py-6">
-          <h1 className="text-5xl font-semibold italic tracking-wide text-white">1ª Avaliação</h1>
+    <main className="min-h-screen bg-[var(--surface-sunken)] px-4 py-6 text-[var(--text)] md:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] space-y-6">
+  
+        {/* CABEÇALHO */}
+        <header className="flex flex-col justify-between gap-5 border-b border-[var(--border)] pb-5 md:flex-row md:items-center">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              <span>Avaliação física</span>
+              <span>/</span>
+              <span className="text-[var(--accent)]">Etapa 01</span>
+            </div>
+  
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+                Primeira avaliação
+              </h1>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                Avaliação antropométrica, composição corporal e desempenho.
+              </p>
+            </div>
+  
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="rounded-md bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--accent)]">
+                Avaliação inicial
+              </span>
+  
+              <span className="text-sm text-[var(--text-muted)]">
+                {avaliacao.aluno.nomeCompleto || "Aluno não identificado"}
+              </span>
+            </div>
+          </div>
+  
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={clearAllPerimetros}
+              className="rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)]"
+            >
+              Limpar perímetros
+            </button>
+  
+            <button
+              type="button"
+              onClick={() => navigate("/avaliacao2")}
+              className="flex items-center gap-2 rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)]"
+            >
+              Próxima avaliação
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
         </header>
-        <div className="px-5 py-5">
-          <h2 className="mb-3 text-3xl font-bold italic text-zinc-600">DADOS GERAIS</h2>
-          <div className="space-y-5 border-b-8 border-zinc-300 pb-6">
-            <div className="grid gap-5 xl:grid-cols-[2.45fr_1fr]">
-              <div>
-                <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                  Informacoes basicas do avaliado
-                </h3>
-
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-                  <label className="lg:col-span-2">
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Nome completo</span>
-                    <input
-                      value={data.nomeCompleto}
-                      onChange={(event) => updateField("nomeCompleto", event.target.value)}
-                      className={`${inputBaseClass} text-left text-lg`}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Genero</span>
-                    <select
-                      value={data.genero}
-                      onChange={(event) => updateField("genero", event.target.value)}
-                      className={`${inputBaseClass} text-lg`}
-                    >
-                      <option value="">Selecione</option>
-                      <option value="masculino">Masculino</option>
-                      <option value="feminino">Feminino</option>
-                    </select>
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Idade (anos)</span>
-                    <input
-                      value={data.idade}
-                      onChange={(event) => updateField("idade", sanitizeInteger(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Etnia</span>
-                    <input
-                      value={data.etnia}
-                      onChange={(event) => updateField("etnia", event.target.value)}
-                      className={`${inputBaseClass} text-lg`}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Massa (kg)</span>
-                    <input
-                      value={data.massa}
-                      onChange={(event) => updateField("massa", sanitizeDecimal(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Estatura (m)</span>
-                    <input
-                      value={data.estatura}
-                      onChange={(event) => updateField("estatura", sanitizeDecimal(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                  Diametros osseos (cm)
-                </h3>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Fêmur (cm)</span>
-                    <input
-                      value={data.femur}
-                      onChange={(event) => updateField("femur", sanitizeDecimal(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Tíbia (cm)</span>
-                    <input
-                      value={data.tibia}
-                      onChange={(event) => updateField("tibia", sanitizeDecimal(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Úmero (cm)</span>
-                    <input
-                      value={data.umero}
-                      onChange={(event) => updateField("umero", sanitizeDecimal(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Ulna (cm)</span>
-                    <input
-                      value={data.una}
-                      onChange={(event) => updateField("una", sanitizeDecimal(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-
-                </div>
+  
+        {/* RESUMO */}
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            {
+              label: "Massa corporal",
+              value: data.massa ? `${data.massa} kg` : "--",
+              detail: "Peso registrado",
+            },
+            {
+              label: "Estatura",
+              value: data.estatura ? `${data.estatura} m` : "--",
+              detail: "Altura registrada",
+            },
+            {
+              label: "IMC",
+              value: analiseCorporal.imc > 0 ? analiseCorporal.imc.toFixed(2) : "--",
+              detail: "Índice de massa corporal",
+            },
+            {
+              label: "Dobras cutâneas",
+              value: resumoDobras.somatorio ? `${resumoDobras.somatorio} mm` : "--",
+              detail: "Somatório das medidas",
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-4"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                {item.label}
+              </p>
+              <p className="mt-2 text-2xl font-bold tracking-tight">
+                {item.value}
+              </p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                {item.detail}
+              </p>
+            </div>
+          ))}
+        </section>
+  
+        {/* DADOS GERAIS */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold">Dados gerais</h2>
+              <p className="text-sm text-[var(--text-secondary)]">
+                Informações e parâmetros iniciais do avaliado.
+              </p>
+            </div>
+            <span className="text-xs font-medium text-[var(--text-muted)]">
+              ETAPA 01 / 04
+            </span>
+          </div>
+  
+          <div className="grid gap-4 xl:grid-cols-2">
+  
+            {/* INFORMAÇÕES PESSOAIS */}
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+              <h3 className="mb-4 text-sm font-semibold">
+                Informações pessoais
+              </h3>
+  
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="sm:col-span-2">
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Nome completo
+                  </span>
+                  <input
+                    value={data.nomeCompleto}
+                    onChange={(e) => updateField("nomeCompleto", e.target.value)}
+                    className={inputBaseClass}
+                    placeholder="Nome do aluno"
+                  />
+                </label>
+  
+                <label>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Gênero
+                  </span>
+                  <select
+                    value={data.genero}
+                    onChange={(e) => updateField("genero", e.target.value)}
+                    className={inputBaseClass}
+                  >
+                    <option value="">Selecione</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="feminino">Feminino</option>
+                  </select>
+                </label>
+  
+                <label>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Idade (anos)
+                  </span>
+                  <input
+                    value={data.idade}
+                    onChange={(e) => updateField("idade", sanitizeInteger(e.target.value))}
+                    className={inputBaseClass}
+                    inputMode="numeric"
+                    placeholder="Ex.: 25"
+                  />
+                </label>
+  
+                <label>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Etnia
+                  </span>
+                  <input
+                    value={data.etnia}
+                    onChange={(e) => updateField("etnia", e.target.value)}
+                    className={inputBaseClass}
+                    placeholder="Não obrigatório"
+                  />
+                </label>
+  
+                <label>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Massa corporal (kg)
+                  </span>
+                  <input
+                    value={data.massa}
+                    onChange={(e) => updateField("massa", sanitizeDecimal(e.target.value))}
+                    className={inputBaseClass}
+                    inputMode="decimal"
+                    placeholder="0,0"
+                  />
+                </label>
+  
+                <label>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Estatura (m)
+                  </span>
+                  <input
+                    value={data.estatura}
+                    onChange={(e) => updateField("estatura", sanitizeDecimal(e.target.value))}
+                    className={inputBaseClass}
+                    inputMode="decimal"
+                    placeholder="0,00"
+                  />
+                </label>
               </div>
             </div>
-
-            <div className="grid gap-5 xl:grid-cols-[1.15fr_1.6fr_1.15fr]">
-              <div>
-                <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                  Frequencia cardiaca (BPM)
-                </h3>
-
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">De repouso</span>
+  
+            {/* DIÂMETROS ÓSSEOS */}
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+              <h3 className="mb-1 text-sm font-semibold">Diâmetros ósseos</h3>
+              <p className="mb-4 text-xs text-[var(--text-muted)]">
+                Medidas estruturais em centímetros.
+              </p>
+  
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  { label: "Fêmur", field: "femur" as const, value: data.femur },
+                  { label: "Tíbia", field: "tibia" as const, value: data.tibia },
+                  { label: "Úmero", field: "umero" as const, value: data.umero },
+                  { label: "Ulna", field: "una" as const, value: data.una },
+                ].map((item) => (
+                  <label key={item.field}>
+                    <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                      {item.label} (cm)
+                    </span>
                     <input
-                      value={data.fcRepouso}
-                      onChange={(event) => updateField("fcRepouso", sanitizeInteger(event.target.value))}
+                      value={item.value}
+                      onChange={(e) => updateField(item.field, sanitizeDecimal(e.target.value))}
                       className={inputBaseClass}
+                      inputMode="decimal"
+                      placeholder="0,0"
                     />
                   </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Maxima</span>
-                    <input value={fcMaxima} className={inputBaseClass} readOnly />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">De reserva</span>
-                    <input value={fcReserva} className={inputBaseClass} readOnly />
-                  </label>
-                </div>
+                ))}
               </div>
-
-              <div>
-                <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                  Controle bioquimico
-                </h3>
-
-                <div className="grid gap-3 sm:grid-cols-4">
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Glicose</span>
-                    <input
-                      value={data.glicose}
-                      onChange={(event) => updateField("glicose", sanitizeInteger(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Triglicerideos</span>
-                    <input
-                      value={data.triglicerideos}
-                      onChange={(event) => updateField("triglicerideos", sanitizeInteger(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">LDL-C</span>
-                    <input
-                      value={data.ldl}
-                      onChange={(event) => updateField("ldl", sanitizeInteger(event.target.value))}
-                      className={inputBaseClass}
-                    />
-                  </label>
-
-                  <label>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">HDL-C</span>
-                    <input
-                      value={data.hdl}
-                      onChange={(event) => updateField("hdl", sanitizeInteger(event.target.value))}
-                      className={`${inputBaseClass}`}
-                    />
-                  </label>
-                </div>
+            </div>
+  
+            {/* FREQUÊNCIA CARDÍACA */}
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+              <h3 className="mb-4 text-sm font-semibold">Frequência cardíaca</h3>
+  
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Repouso (BPM)
+                  </span>
+                  <input
+                    value={data.fcRepouso}
+                    onChange={(e) => updateField("fcRepouso", sanitizeInteger(e.target.value))}
+                    className={inputBaseClass}
+                    inputMode="numeric"
+                  />
+                </label>
+  
+                <label>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Máxima estimada
+                  </span>
+                  <input value={fcMaxima} readOnly className={`${inputBaseClass} bg-[var(--surface-sunken)]`} />
+                </label>
+  
+                <label>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Reserva
+                  </span>
+                  <input value={fcReserva} readOnly className={`${inputBaseClass} bg-[var(--surface-sunken)]`} />
+                </label>
               </div>
-
-              <div>
-                <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                  Pressao arterial (mmHg)
-                </h3>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Sistole / diastole</span>
-                    <div className="flex h-9 items-center border border-zinc-400 bg-white px-2 text-xl text-zinc-700">
-                      <input
-                        value={data.sistolica}
-                        onChange={(event) => updateField("sistolica", sanitizeInteger(event.target.value))}
-                        className="w-full border-none bg-transparent text-center font-medium outline-none"
-                      />
-                      <span className="mx-1 font-semibold">/</span>
-                      <input
-                        value={data.diastolica}
-                        onChange={(event) => updateField("diastolica", sanitizeInteger(event.target.value))}
-                        className="w-full border-none bg-transparent text-center font-medium outline-none"
-                      />
-                    </div>
+            </div>
+  
+            {/* BIOQUÍMICA */}
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+              <h3 className="mb-4 text-sm font-semibold">Controle bioquímico</h3>
+  
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Glicose", field: "glicose" as const, value: data.glicose },
+                  { label: "Triglicerídeos", field: "triglicerideos" as const, value: data.triglicerideos },
+                  { label: "LDL-C", field: "ldl" as const, value: data.ldl },
+                  { label: "HDL-C", field: "hdl" as const, value: data.hdl },
+                ].map((item) => (
+                  <label key={item.field}>
+                    <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                      {item.label}
+                    </span>
+                    <input
+                      value={item.value}
+                      onChange={(e) => updateField(item.field, sanitizeInteger(e.target.value))}
+                      className={inputBaseClass}
+                      inputMode="numeric"
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+  
+            {/* PRESSÃO ARTERIAL */}
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5 xl:col-span-2">
+              <h3 className="mb-4 text-sm font-semibold">Pressão arterial</h3>
+  
+              <div className="grid gap-4 sm:grid-cols-[1fr_1fr]">
+                <div>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Sistólica / diastólica (mmHg)
+                  </span>
+  
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={data.sistolica}
+                      onChange={(e) => updateField("sistolica", sanitizeInteger(e.target.value))}
+                      className={inputBaseClass}
+                      inputMode="numeric"
+                      placeholder="Sistólica"
+                    />
+                    <span className="text-[var(--text-muted)]">/</span>
+                    <input
+                      value={data.diastolica}
+                      onChange={(e) => updateField("diastolica", sanitizeInteger(e.target.value))}
+                      className={inputBaseClass}
+                      inputMode="numeric"
+                      placeholder="Diastólica"
+                    />
                   </div>
-                  <div>
-                    <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Classificacao</span>
-                    <div className="flex h-9 items-center justify-center bg-[#4f7fb7] px-3 text-[1.35rem] font-semibold text-white">
-                      {classificacaoPressao}
-                    </div>
+                </div>
+  
+                <div>
+                  <span className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Classificação calculada
+                  </span>
+                  <div className="flex h-9 items-center rounded-md border border-[var(--border)] bg-[var(--surface-sunken)] px-3 text-sm font-semibold">
+                    {classificacaoPressao}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="px-5 py-5">
-          <h2 className="mb-3 text-3xl font-bold italic text-zinc-600">ANALISE DA COMPOSICAO CORPORAL</h2>
-          <div className="grid gap-5 xl:grid-cols-[2.45fr_1fr]">
-            <div>
-              <h3 className="mb-2 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                Perimetros corporais (cm)
-              </h3>
-              {!dadosAntropometricosValidos && (
-                <div className="mb-4 rounded-md border border-red-400 bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
-                  Preencha os seguintes dados para gerar a comparacao antropometrica:
-                  {" "}
-                  {camposFaltando.join(", ")}
-                </div>
-              )}
-              <div className="grid gap-4 lg:grid-cols-[280px_1fr_1.1fr]">
-                <div className="space-y-1">
-                  {perimetroConfig.map((field) => (
-                    <div key={field.key} className="grid grid-cols-[1fr_26px_92px] items-center gap-2">
-                      <span className="text-base font-semibold uppercase italic tracking-wide text-zinc-500">{field.label}</span>
-                      <span className="text-center text-sm font-semibold text-zinc-500">{field.index}</span>
-                      <input
-                        value={perimetros[field.key]}
-                        onChange={(event) => updatePerimetro(field.key, sanitizeDecimal(event.target.value))}
-                        className={inputBaseClass}
-                      />
-                    </div>
-                  ))}
-                  <button type="button" onClick={clearAllPerimetros} className="w-[50%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80">Limpar</button>
-                </div>
-                <div className="flex items-center justify-center border border-zinc-300 bg-white/40 p-2 max-w-[350px]">
-                  <img src="/app/src/assets/human.png" alt="Human" className="max-w-[300px]" />
-                </div>
-
-                <div className="relative h-[520px] w-[520px] border border-zinc-400 bg-white px-8 py-6">
+        </section>
+  
+        {/* COMPOSIÇÃO CORPORAL */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-bold">Composição corporal</h2>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Medidas antropométricas e análise de proporcionalidade.
+            </p>
+          </div>
+  
+          {!dadosAntropometricosValidos && (
+            <div className="rounded-md border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--text)]">
+              <strong>Dados incompletos:</strong> informe {camposFaltando.join(", ")} para habilitar as análises de referência.
+            </div>
+          )}
+  
+          {/* PERÍMETROS */}
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">Perímetros corporais</h3>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  Registre as medidas em centímetros.
+                </p>
+              </div>
+  
+              <button
+                type="button"
+                onClick={clearAllPerimetros}
+                className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+              >
+                Limpar medidas
+              </button>
+            </div>
+  
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(220px,0.7fr)_minmax(300px,1fr)]">
+              <div className="grid content-start gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                {perimetroConfig.map((field) => (
+                  <label
+                    key={field.key}
+                    className="grid grid-cols-[1fr_28px_100px] items-center gap-2"
+                  >
+                    <span className="text-xs font-medium text-[var(--text-secondary)]">
+                      {field.label}
+                    </span>
+                    <span className="text-center text-xs text-[var(--text-muted)]">
+                      {field.index}
+                    </span>
+                    <input
+                      value={perimetros[field.key]}
+                      onChange={(e) => updatePerimetro(field.key, sanitizeDecimal(e.target.value))}
+                      className={inputBaseClass}
+                      inputMode="decimal"
+                      placeholder="0,0"
+                    />
+                  </label>
+                ))}
+              </div>
+  
+              <div className="flex min-h-[300px] items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-sunken)] p-4">
+                <img
+                  src="/app/src/assets/human.png"
+                  alt="Referência anatômica dos perímetros corporais"
+                  className="max-h-[380px] max-w-full object-contain"
+                />
+              </div>
+  
+              <div className="min-w-0">
+                <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  Proporcionalidade dos perímetros
+                </h4>
+  
+                <div className="relative aspect-square w-full max-w-[480px] border border-[var(--border)] bg-[var(--surface-raised)] p-5">
                   <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
-                    <div className="bg-[#e89a9a]" />
-                    <div className="bg-[#f3b2b2]" />
-                    <div className="bg-[#f7dfaa]" />
-                    <div className="bg-[#f5ec99]" />
-                    <div className="bg-[#d6e8c7]" />
-
-                    <div className="bg-[#d6e8c7]" />
-                    <div className="bg-[#f5ec99]" />
-                    <div className="bg-[#f7dfaa]" />
-                    <div className="bg-[#f3b2b2]" />
-                    <div className="bg-[#e89a9a]" />
-                  </div>
-
-                  <div className="absolute inset-0 grid grid-cols-10 border-x border-zinc-400">
-                    {Array.from({ length: 8 }).map((_, idx) => (
-                      <div key={`col-${idx}`} className="border-r border-zinc-400/60" />
+                    {[
+                      "#e89a9a", "#f3b2b2", "#f7dfaa", "#f5ec99", "#d6e8c7",
+                      "#d6e8c7", "#f5ec99", "#f7dfaa", "#f3b2b2", "#e89a9a",
+                    ].map((color, index) => (
+                      <div key={index} style={{ backgroundColor: color, opacity: 0.65 }} />
                     ))}
                   </div>
-
+  
                   <div className="absolute inset-0 grid grid-rows-14">
-                    {Array.from({ length: 14 }).map((_, idx) => (
-                      <div
-                        key={`row-${idx}`}
-                        className="border-b border-zinc-300"
-                      />
+                    {Array.from({ length: chartRows }).map((_, index) => (
+                      <div key={index} className="border-b border-zinc-500/20" />
                     ))}
                   </div>
-
-                  <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
-
-                  {chartPoints.map((point, idx) => (
+  
+                  <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-700/70" />
+  
+                  {chartPoints.map((point, index) => (
                     <div
-                      key={`point-${idx}`}
-                      className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-sky-500 shadow"
+                      key={index}
+                      title={`Medida ${point.y}: ${point.valor} cm`}
+                      className="absolute z-10 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[var(--accent)] shadow"
                       style={{
                         left: `${((point.x + 5) / 10) * 100}%`,
                         top: `${((point.y - 0.5) / chartRows) * 100}%`,
                       }}
                     />
                   ))}
-
-                  <div className="absolute -bottom-8 left-0 right-0 flex justify-between px-2 text-lg font-semibold text-zinc-500">
-                    {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((value) => (
-                      <span
-                        key={`axis-${value}`}
-                        className="w-6 text-center"
-                      >
-                        {value}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="absolute inset-y-0 -left-8 flex flex-col justify-between py-[18px] text-lg font-semibold text-zinc-500">
-                    {Array.from({ length: 14 }).map((_, idx) => (
-                      <span
-                        key={`axis-y-${idx + 1}`}
-                        className="flex h-full items-center"
-                      >
-                        {idx + 1}
-                      </span>
-                    ))}
-                  </div>
-
-                  <span className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
-                    1ª Avaliacao
-                  </span>
+                </div>
+  
+                <div className="mt-3 flex flex-wrap gap-3 text-xs text-[var(--text-muted)]">
+                  <span>← Abaixo da referência</span>
+                  <span className="font-semibold text-[var(--text)]">0 = Referência</span>
+                  <span>Acima da referência →</span>
                 </div>
               </div>
-            </div>
-            <div className="space-y-8 max-w-[400px]">
-              {classificationBox("Massa muscular", analiseCorporal.massaMuscular)}
-              {classificationBox("Massa adiposa", analiseCorporal.massaAdiposa)}
-              {classificationBox("Area muscular do braço", analiseCorporal.areaBraco)}
-              {classificationBox("Area muscular da coxa", analiseCorporal.areaCoxa)}
             </div>
           </div>
-          <div className="mt-10 grid gap-6 xl:grid-cols-[2.45fr_1fr]">
-            <div>
-              <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                Dobras cutaneas (mm)
-              </h3>
-
-              <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
-                <div className="grid gap-4 lg:grid-cols-[1fr_0.95fr]">
-                  <div>
-                    <div className="mb-1 grid grid-cols-[1fr_130px_130px_130px] items-center gap-3 pl-1 text-center text-2xl font-semibold italic text-zinc-500">
-                      <span className="text-left" />
-                      <span>1ª Medida</span>
-                      <span>2ª Medida</span>
-                      <span>Media final</span>
-                    </div>
-
-                    <div className="space-y-1">
-                      {dobrasConfig.map((field) => (
-                        <div key={field.key} className="grid grid-cols-[1fr_130px_130px_130px] items-center gap-3">
-                          <div className="flex items-center justify-between pr-3">
-                            <span className="text-base font-semibold uppercase italic tracking-wide text-zinc-500 pr-3">{field.label}</span>
-                            <span className="text-sm font-semibold text-zinc-500">{field.index}</span>
-                          </div>
-
-                          <input
-                            value={dobras1[field.key]}
-                            onChange={(event) =>
-                              updateDobra1(
-                                field.key,
-                                event.target.value
-                              )
-                            }
-                            className={inputBaseClass}
-                          />
-                          <input
-                            value={dobras2[field.key]}
-                            onChange={(event) =>
-                              updateDobra2(
-                                field.key,
-                                event.target.value
-                              )
-                            }
-                            className={inputBaseClass}
-                          />
-                          <input value={resumoDobras.mediaFinal[field.key]} readOnly className={inputBaseClass} />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="space-y-6 pt-6">
-                      <label className="grid grid-cols-[1fr_130px] items-center gap-4">
-                        <span className="text-xl font-semibold italic text-zinc-500 text-right">Somatório (mm)</span>
-                        <input value={resumoDobras.somatorio} readOnly className={inputBaseClass} />
-                      </label>
-
-                      <label className="grid grid-cols-[1fr_130px] items-center gap-4">
-                        <span className="text-xl font-semibold italic text-zinc-500 text-right">Periférico (mm)</span>
-                        <input value={resumoDobras.periferico} readOnly className={inputBaseClass} />
-                      </label>
-
-                      <label className="grid grid-cols-[1fr_130px] items-center gap-4">
-                        <span className="text-xl font-semibold italic text-zinc-500 text-right">Central (mm)</span>
-                        <input value={resumoDobras.central} readOnly className={inputBaseClass} />
-                      </label>
-                    </div>
-                    <button type="button" onClick={clearAllDobras} className="w-[25%] bg-[#4f7fb7] py-1.5 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80">Limpar</button>
-                  </div>
+  
+          {/* CLASSIFICAÇÕES */}
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {classificationBox("Massa muscular", analiseCorporal.massaMuscular)}
+            {classificationBox("Massa adiposa", analiseCorporal.massaAdiposa)}
+            {classificationBox("Área muscular do braço", analiseCorporal.areaBraco)}
+            {classificationBox("Área muscular da coxa", analiseCorporal.areaCoxa)}
+          </div>
+  
+          {/* DOBRAS */}
+          <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold">Dobras cutâneas</h3>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    Duas medições e média final em milímetros.
+                  </p>
                 </div>
-                <div className="flex min-h-[560px] items-center justify-center border border-zinc-300 bg-white/40 p-1">
-                  <img src="/app/src/assets/human2.png" alt="Human" className="" />
+  
+                <button
+                  type="button"
+                  onClick={clearAllDobras}
+                  className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+                >
+                  Limpar medidas
+                </button>
+              </div>
+  
+              <div className="overflow-x-auto">
+                <div className="min-w-[560px]">
+                  <div className="grid grid-cols-[minmax(130px,1fr)_90px_90px_90px] gap-2 border-b border-[var(--border)] pb-2">
+                    <span className="text-xs font-semibold text-[var(--text-muted)]">LOCAL</span>
+                    <span className="text-center text-xs font-semibold text-[var(--text-muted)]">1ª MEDIDA</span>
+                    <span className="text-center text-xs font-semibold text-[var(--text-muted)]">2ª MEDIDA</span>
+                    <span className="text-center text-xs font-semibold text-[var(--accent)]">MÉDIA</span>
+                  </div>
+  
+                  <div className="space-y-2 pt-3">
+                    {dobrasConfig.map((field) => (
+                      <div
+                        key={field.key}
+                        className="grid grid-cols-[minmax(130px,1fr)_90px_90px_90px] items-center gap-2"
+                      >
+                        <span className="text-xs font-medium text-[var(--text-secondary)]">
+                          {field.label}
+                        </span>
+  
+                        <input
+                          value={dobras1[field.key]}
+                          onChange={(e) => updateDobra1(field.key, sanitizeDecimal(e.target.value))}
+                          className={inputBaseClass}
+                          inputMode="decimal"
+                        />
+  
+                        <input
+                          value={dobras2[field.key]}
+                          onChange={(e) => updateDobra2(field.key, sanitizeDecimal(e.target.value))}
+                          className={inputBaseClass}
+                          inputMode="decimal"
+                        />
+  
+                        <input
+                          value={resumoDobras.mediaFinal[field.key]}
+                          readOnly
+                          className={`${inputBaseClass} bg-[var(--surface-sunken)] text-[var(--accent)]`}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
+  
+              <div className="mt-5 grid grid-cols-3 gap-2 border-t border-[var(--border)] pt-4">
+                {[
+                  { label: "Somatório", value: resumoDobras.somatorio },
+                  { label: "Periférico", value: resumoDobras.periferico },
+                  { label: "Central", value: resumoDobras.central },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-md bg-[var(--surface-sunken)] p-3">
+                    <span className="text-xs text-[var(--text-muted)]">{item.label}</span>
+                    <p className="mt-1 text-lg font-bold">{item.value || "--"} <span className="text-xs font-normal">mm</span></p>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            <div>
-              <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                Proporcionalidade - dobras cutaneas (mm)
-              </h3>
-              {!dadosAntropometricosValidos && (
-                <div className="mb-4 rounded-md border border-red-400 bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
-                  Preencha os seguintes dados para gerar a proporcionalidade das dobras:
-                  {" "}
-                  {camposFaltando.join(", ")}
-                </div>
-              )}
-              <div className="relative overflow-visible pb-16 pl-10 pr-2 pt-2">
-                <div className="relative h-[460px] border border-zinc-400 bg-white overflow-visible">
-                  <div className="absolute inset-0 grid grid-cols-10 overflow-hidden">
-                    <div className="bg-[#e89a9a]" />
-                    <div className="bg-[#f3b2b2]" />
-                    <div className="bg-[#f7dfaa]" />
-                    <div className="bg-[#f5ec99]" />
-                    <div className="bg-[#d6e8c7]" />
-
-                    <div className="bg-[#d6e8c7]" />
-                    <div className="bg-[#f5ec99]" />
-                    <div className="bg-[#f7dfaa]" />
-                    <div className="bg-[#f3b2b2]" />
-                    <div className="bg-[#e89a9a]" />
-                  </div>
-
-                  <div className="absolute inset-0 grid grid-cols-10 border-x border-zinc-400">
-                    {Array.from({ length: 8 }).map((_, idx) => (
-                      <div key={`dobra-col-${idx}`} className="border-r border-zinc-400/60" />
+  
+            {/* PROPORCIONALIDADE DOBRAS */}
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+              <h3 className="text-sm font-semibold">Proporcionalidade das dobras</h3>
+              <p className="mb-5 mt-1 text-xs text-[var(--text-muted)]">
+                Distribuição das medidas em relação às referências.
+              </p>
+  
+              <div className="relative w-full border border-[var(--border)]">
+                <div className="relative h-[360px] overflow-hidden">
+                  <div className="absolute inset-0 grid grid-cols-10">
+                    {[
+                      "#e89a9a", "#f3b2b2", "#f7dfaa", "#f5ec99", "#d6e8c7",
+                      "#d6e8c7", "#f5ec99", "#f7dfaa", "#f3b2b2", "#e89a9a",
+                    ].map((color, index) => (
+                      <div key={index} style={{ backgroundColor: color, opacity: 0.65 }} />
                     ))}
                   </div>
-
-                  <div className="absolute inset-0 grid grid-rows-8 ">
-                    {Array.from({ length: dobraChartRows }).map((_, idx) => (
-                      <div key={`dobra-row-${idx}`} className="border-b border-zinc-300" />
+  
+                  <div className="absolute inset-0 grid grid-rows-8">
+                    {Array.from({ length: dobraChartRows }).map((_, index) => (
+                      <div key={index} className="border-b border-zinc-500/20" />
                     ))}
                   </div>
-
-                  <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-700" />
-                  {pontosDobras.map((point, idx) => (
+  
+                  <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-700/70" />
+  
+                  {pontosDobras.map((point, index) => (
                     <div
-                      key={`dobra-point-${idx}`}
-                      className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-500"
+                      key={index}
+                      className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[var(--accent)] shadow"
                       style={{
                         left: `${((point.x + 5) / 10) * 100}%`,
                         top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
                       }}
                     />
                   ))}
-
-                  <div className="absolute -bottom-7 left-0 right-0 flex justify-between px-1 text-lg font-semibold text-zinc-500">
-                    {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((value) => (
-                      <span key={`dobra-axis-${value}`}>{value}</span>
-                    ))}
-                  </div>
-
-                  <div className="pointer-events-none absolute -left-8 top-0 h-full w-8 text-lg font-semibold text-zinc-500">
-                    {dobrasConfig.map((item) => (
-                      <span
-                        key={`dobra-left-axis-${item.index}`}
-                        className="absolute right-1 -translate-y-1/2"
-                        style={{ top: `${((item.index - 0.5) / dobraChartRows) * 100}%` }}
-                      >
-                        {item.index}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-lg font-semibold text-zinc-500">
-                    1ª Avaliacao
-                  </span>
                 </div>
+              </div>
+  
+              <div className="mt-3 flex justify-between text-xs text-[var(--text-muted)]">
+                <span>Abaixo</span>
+                <span>Referência</span>
+                <span>Acima</span>
+              </div>
+  
+              <div className="mt-5">
+                <img
+                  src="/app/src/assets/human2.png"
+                  alt="Referência anatômica das dobras cutâneas"
+                  className="mx-auto max-h-[220px] max-w-full object-contain"
+                />
               </div>
             </div>
           </div>
-          <div className="mt-10 flex items-end justify-end">
-            <button className="w-[25%] bg-[#4f7fb7] py-1 px-4 text-base font-semibold  text-white cursor-pointer rounded-[5px] hover:bg-[#4f7fb7]/80" onClick={() => { navigate("/avaliacao2") }}>2ª Avaliação</button>
+        </section>
+  
+        {/* DESEMPENHO */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-bold">Desempenho e força</h2>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Indicadores corporais e estimativas de força máxima.
+            </p>
           </div>
-          <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr] mt-10">
-            <div>
-              <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                COMPOSIÇÃO CORPORAL
-              </h3>
+  
+          <div className="grid gap-4 xl:grid-cols-2">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+              <h3 className="mb-4 text-sm font-semibold">Composição corporal</h3>
+  
               <ComposicaoCorporalChart
                 massaMuscular={analiseCorporal.massaMuscularKg}
                 massaLivre={analiseCorporal.massaLivreKg}
@@ -1644,70 +1763,102 @@ export default function App() {
                 massaTotal={analiseCorporal.massaTotalKg}
               />
             </div>
-            <div>
-              <h3 className="mb-3 border-b-2 border-[#b88b8b] pb-1 text-xl font-bold italic uppercase tracking-wide text-[#a85f60]">
-                TESTE DE CARGA MÁXIMA - 1RM
-              </h3>
-              {exercicios.map((exercicio) => (
-                <div key={exercicio.key}
-                  className="grid-cols-5 grid gap-1 pt-5">
-                  <div className="grid-rows-1 grid">
-                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Exercicios</text>
-                    <text className="text-xl font-semibold italic text-zinc-500 text-left">{exercicio.nome}</text>
+  
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold">Teste de carga máxima</h3>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  Estimativa de 1RM a partir da carga e repetições.
+                </p>
+              </div>
+  
+              <div className="space-y-3">
+                {exercicios.map((exercicio) => (
+                  <div
+                    key={exercicio.key}
+                    className="grid grid-cols-[minmax(90px,1fr)_75px_75px_75px] items-center gap-2 border-b border-[var(--border)] pb-3 sm:grid-cols-[minmax(110px,1fr)_90px_90px_90px_100px]"
+                  >
+                    <span className="text-xs font-semibold">{exercicio.nome}</span>
+  
+                    <label>
+                      <span className="mb-1 block text-[10px] text-[var(--text-muted)]">Carga (kg)</span>
+                      <input
+                        value={testeCarga.carga1[exercicio.key].carga}
+                        onChange={(e) => updateTesteCarga("carga1", exercicio.key, "carga", sanitizeDecimal(e.target.value))}
+                        className={inputBaseClass}
+                        inputMode="decimal"
+                      />
+                    </label>
+  
+                    <label>
+                      <span className="mb-1 block text-[10px] text-[var(--text-muted)]">Repetições</span>
+                      <input
+                        value={testeCarga.carga1[exercicio.key].repeticoes}
+                        onChange={(e) => updateTesteCarga("carga1", exercicio.key, "repeticoes", sanitizeInteger(e.target.value))}
+                        className={inputBaseClass}
+                        inputMode="numeric"
+                      />
+                    </label>
+  
+                    <div>
+                      <span className="mb-1 block text-[10px] text-[var(--text-muted)]">1RM</span>
+                      <div className="flex h-9 items-center rounded-md bg-[var(--surface-sunken)] px-2 text-sm font-bold">
+                        {resultado1RM[exercicio.key].rm || "--"}
+                      </div>
+                    </div>
+  
+                    <div className="hidden sm:block">
+                      <span className="mb-1 block text-[10px] text-[var(--text-muted)]">Classificação</span>
+                      <div className="flex h-9 items-center rounded-md bg-[var(--accent-soft)] px-2 text-xs font-semibold text-[var(--accent)]">
+                        {resultado1RM[exercicio.key].rm
+                          ? classificarForca(resultado1RM[exercicio.key].rm)
+                          : "--"}
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid-rows-1 grid ">
-                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Carga</text>
-                    <input
-                      className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
-                      value={testeCarga.carga1[exercicio.key].carga}
-                      onChange={(e) =>
-                        updateTesteCarga(
-                          "carga1",
-                          exercicio.key,
-                          "carga",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="grid-rows-1 grid ">
-                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Repetições</text>
-                    <input
-                      className="h-7 w-[60%] border border-zinc-950 border-dashed bg-white px-3 text-center text-sm font-medium text-zinc-700 outline-none transition focus:border-zinc-600"
-                      value={testeCarga.carga1[exercicio.key].repeticoes}
-                      onChange={(e) =>
-                        updateTesteCarga(
-                          "carga1",
-                          exercicio.key,
-                          "repeticoes",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="grid-rows-1 grid">
-                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">1 RM Predito</text>
-                    <text className="text-xl font-semibold italic text-zinc-500">{resultado1RM[exercicio.key].rm || ""}</text>
-                  </div>
-                  <div className="grid-rows-1 grid">
-                    <text className="mb-1 block text-sm font-semibold uppercase tracking-wide text-zinc-600">Força Muscular</text>
-                    <div className="flex h-8 items-center justify-center bg-[#4f7fb7] px-3 text-[1.25rem] font-medium text-white">{classificarForca(resultado1RM[exercicio.key].rm)}</div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            {navTool()}
           </div>
-          <div className="py-5 border-t-5 border-zinc-400 mt-6">
-            <h3 className="mb-3 pb-1 text-xl font-bold italic uppercase tracking-wide text-zinc-500">Parecer Descritivo</h3>
-            <textarea className="w-full border-2 border-red-700 rounded-sm h-40 pl-1 max-h-52 outline-none transition-all duration-200 focus:border-red-400 focus:ring-4 focus:ring-indigo-500/10"
-              value={observacoes}
-              onChange={(e) => {
-                updateObservacoes(e.target.value)
-              }} />
+        </section>
+  
+        {/* PARECER */}
+        <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold">Parecer descritivo</h2>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Registre observações, considerações e recomendações da avaliação.
+            </p>
           </div>
-        </div>
-      </section>
-    </main >
+  
+          <textarea
+            value={observacoes}
+            onChange={(e) => updateObservacoes(e.target.value)}
+            placeholder="Escreva o parecer da avaliação..."
+            className="min-h-[140px] w-full resize-y rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--ring)]"
+          />
+        </section>
+  
+        {/* RODAPÉ */}
+        <footer className="flex flex-col justify-between gap-3 border-t border-[var(--border)] pt-5 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-sm font-semibold">Primeira avaliação</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Continue para registrar a segunda avaliação do aluno.
+            </p>
+          </div>
+  
+          <button
+            type="button"
+            onClick={() => navigate("/avaliacao2")}
+            className="flex items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)]"
+          >
+            Ir para segunda avaliação
+            <span aria-hidden="true">→</span>
+          </button>
+        </footer>
+  
+      </div>
+    </main>
   );
 }

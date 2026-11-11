@@ -1358,9 +1358,6 @@ export default function Prescricao() {
                     })}
                 </div>
             </div>
-            <div>
-                {navTool()}
-            </div>
             <div className="h-24" />
         </main>
     );

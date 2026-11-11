@@ -238,9 +238,6 @@
 //                 </div>
 //             </section>
 
-//             <div className="mt-10">
-//                 {navTool()}
-//             </div>
 //             <br></br>
 //         </main>
 //     )

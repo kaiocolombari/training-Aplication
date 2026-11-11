@@ -2559,7 +2559,6 @@ export default function comparacao() {
 
             </section>
 
-            {navTool()}
 
         </main>
     );

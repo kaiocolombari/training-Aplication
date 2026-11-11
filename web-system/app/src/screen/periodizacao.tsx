@@ -983,11 +983,6 @@ export default function periodizacao() {
                     )
                 )}
             </section>
-
-            {/* NAVEGAÇÃO */}
-            <div className="mt-10">
-                {navTool()}
-            </div>
         </main>
     );
 }

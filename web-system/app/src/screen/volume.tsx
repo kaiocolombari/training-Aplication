@@ -1467,12 +1467,6 @@ export default function Volume() {
 
                 </div>
             )}
-
-
-            <div className="mt-10">
-                {navTool()}
-            </div>
-
         </main>
     );
 }
