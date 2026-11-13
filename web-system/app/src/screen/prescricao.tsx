@@ -52,11 +52,11 @@ function VariacaoRow({
     }
 
     const inputClass = `
-        h-10 w-full rounded-lg border border-zinc-300
-        bg-white px-2 text-center text-sm font-semibold
-        text-zinc-700 outline-none transition-all duration-150
-        hover:border-zinc-400 focus:border-[#8f4f51]
-        focus:bg-[#f5eeee] focus:ring-2 focus:ring-[#8f4f51]/20
+        h-10 w-full rounded-lg border border-[var(--border)]
+        bg-[var(--surface)] px-2 text-center text-sm font-semibold
+        text-[var(--text-primary)] outline-none transition-all duration-150
+        hover:border-[var(--border-strong)] focus:border-[var(--accent-border)]
+        focus:bg-[var(--surface-hover)] focus:ring-2 focus:ring-[var(--ring)]
     `;
 
     const campo = (
@@ -75,8 +75,8 @@ function VariacaoRow({
         <tr className="
             border-t
             border-dashed
-            border-[#d8c3c4]
-            bg-[#fbf7f7]
+            border-[var(--accent-border)]
+            bg-[var(--accent-soft)]
             animate-in
             fade-in
             slide-in-from-top-2
@@ -93,11 +93,11 @@ function VariacaoRow({
                         items-center
                         justify-center
                         rounded-lg
-                        bg-[#f0e4e4]
+                        bg-[var(--accent-soft)]
                         px-2
                         text-[10px]
                         font-black
-                        text-[#8f4f51]
+                        text-[var(--accent-text)]
                     ">
                         V{variacaoIndex + 1}
                     </div>
@@ -120,10 +120,10 @@ function VariacaoRow({
                             items-center
                             justify-center
                             rounded-lg
-                            text-zinc-400
+                            text-[var(--text-muted)]
                             transition-colors
-                            hover:bg-red-50
-                            hover:text-red-500
+                            hover:bg-[var(--danger-soft)]
+                            hover:text-[var(--danger)]
                         "
                     >
                         <FaTrash className="text-[10px]" />
@@ -137,7 +137,7 @@ function VariacaoRow({
                             font-bold
                             uppercase
                             tracking-wide
-                            text-[#a87576]
+                            text-[var(--accent-text)]
                         ">
                             Variação de:{" "}
                             {exercicioPrincipal ||
@@ -159,19 +159,19 @@ function VariacaoRow({
                                 w-full
                                 rounded-lg
                                 border
-                                border-zinc-300
-                                bg-white
+                                border-[var(--border)]
+                                bg-[var(--surface)]
                                 px-3
                                 text-sm
                                 font-semibold
-                                text-zinc-700
+                                text-[var(--text-primary)]
                                 outline-none
                                 transition-all
-                                hover:border-zinc-400
-                                focus:border-[#8f4f51]
-                                focus:bg-[#f5eeee]
+                                hover:border-[var(--border-strong)]
+                                focus:border-[var(--accent-border)]
+                                focus:bg-[var(--surface-hover)]
                                 focus:ring-2
-                                focus:ring-[#8f4f51]/20
+                                focus:ring-[var(--ring)]
                             "
                         />
 
@@ -244,17 +244,17 @@ function VariacaoRow({
                         w-full
                         rounded-lg
                         border
-                        border-[#c59b9c]
-                        bg-[#f0e4e4]
+                        border-[var(--accent-border)]
+                        bg-[var(--accent-soft)]
                         text-center
                         text-sm
                         font-black
-                        text-[#7d4547]
+                        text-[var(--accent-text)]
                         outline-none
                         transition-all
-                        focus:border-[#713b3d]
+                        focus:border-[var(--accent-border)]
                         focus:ring-2
-                        focus:ring-[#8f4f51]/20
+                        focus:ring-[var(--ring)]
                     "
                 />
             </td>
@@ -275,18 +275,18 @@ function VariacaoRow({
                         w-full
                         rounded-lg
                         border
-                        border-zinc-300
-                        bg-white
+                        border-[var(--border)]
+                        bg-[var(--surface)]
                         px-3
                         text-sm
-                        text-zinc-600
+                        text-[var(--text-secondary)]
                         outline-none
                         transition-all
-                        hover:border-zinc-400
-                        focus:border-[#8f4f51]
-                        focus:bg-[#f5eeee]
+                        hover:border-[var(--border-strong)]
+                        focus:border-[var(--accent-border)]
+                        focus:bg-[var(--surface-hover)]
                         focus:ring-2
-                        focus:ring-[#8f4f51]/20
+                        focus:ring-[var(--ring)]
                     "
                 />
             </td>
@@ -590,15 +590,15 @@ export default function Prescricao() {
 
     return (
 
-        <main className="min-h-full bg-[#ececec] p-4 md:p-6 lg:p-8">
+        <main className="min-h-full bg-[var(--surface-sunken)] p-4 text-[var(--text-primary)] md:p-6 lg:p-8">
             <div className="mx-auto w-full max-w-none">
 
                 <div className="
                     mb-8
                     flex flex-col gap-4
                     rounded-3xl
-                    border border-zinc-200
-                    bg-white
+                    border border-[var(--border)]
+                    bg-[var(--surface)]
                     p-6
                     shadow-sm
                     md:flex-row
@@ -612,7 +612,7 @@ export default function Prescricao() {
                             flex h-14 w-14 shrink-0
                             items-center justify-center
                             rounded-2xl
-                            bg-[#a85f60]
+                            bg-[var(--accent)]
                             text-white
                             shadow-md
                             font-bold
@@ -630,7 +630,7 @@ export default function Prescricao() {
                                 font-bold
                                 uppercase
                                 tracking-[0.2em]
-                                text-[#a85f60]
+                                text-[var(--accent)]
                             ">
                                 Prescrição
                             </p>
@@ -639,7 +639,7 @@ export default function Prescricao() {
                                 text-2xl
                                 font-black
                                 tracking-tight
-                                text-zinc-800
+                                text-[var(--text-primary)]
                                 md:text-3xl
                             ">
                                 Planilha de Treinamento
@@ -648,7 +648,7 @@ export default function Prescricao() {
                             <p className="
                                 mt-1
                                 text-sm
-                                text-zinc-500
+                                text-[var(--text-secondary)]
                             ">
                                 Configure os exercícios e parâmetros de cada treino.
                             </p>
@@ -660,7 +660,7 @@ export default function Prescricao() {
                     <div className="
                         flex items-center gap-3
                         rounded-2xl
-                        bg-zinc-50
+                        bg-[var(--surface-secondary)]
                         px-4 py-3
                         ring-1 ring-zinc-200
                     ">
@@ -669,7 +669,7 @@ export default function Prescricao() {
                             flex h-9 w-9
                             items-center justify-center
                             rounded-xl
-                            bg-[#8f4f51]
+                            bg-[var(--accent)]
                             text-white
                         ">
                             <FaRunning />
@@ -682,7 +682,7 @@ export default function Prescricao() {
                                 font-semibold
                                 uppercase
                                 tracking-wide
-                                text-zinc-400
+                                text-[var(--text-muted)]
                             ">
                                 Treinos
                             </p>
@@ -690,7 +690,7 @@ export default function Prescricao() {
                             <p className="
                                 text-sm
                                 font-black
-                                text-zinc-700
+                                text-[var(--text-primary)]
                             ">
                                 12 disponíveis
                             </p>
@@ -722,8 +722,8 @@ export default function Prescricao() {
                                 className="
                 overflow-hidden
                 rounded-3xl
-                border border-zinc-300
-                bg-[#f7f7f7]
+                border border-[var(--border)]
+                bg-[var(--surface-raised)]
                 shadow-[0_4px_18px_rgba(0,0,0,0.06)]
                 transition-shadow
                 duration-200
@@ -737,8 +737,8 @@ export default function Prescricao() {
                     flex flex-col
                     gap-4
                     border-b
-                    border-zinc-300
-                    bg-[#eeeeee]
+                    border-[var(--border)]
+                    bg-[var(--surface-tertiary)]
                     p-5
                     md:flex-row
                     md:items-center
@@ -752,7 +752,7 @@ export default function Prescricao() {
                             flex h-12 w-12 shrink-0
                             items-center justify-center
                             rounded-2xl
-                            bg-[#8f4f51]
+                            bg-[var(--accent)]
                             text-lg font-black text-white
                         "
                                         >
@@ -766,7 +766,7 @@ export default function Prescricao() {
                                 font-black
                                 uppercase
                                 tracking-[0.2em]
-                                text-zinc-400
+                                text-[var(--text-muted)]
                             "
                                             >
                                                 Treino
@@ -775,14 +775,14 @@ export default function Prescricao() {
                                             <div className="mt-1 flex items-center gap-2">
 
                                                 <FaDumbbell
-                                                    className="text-sm text-[#a85f60]"
+                                                    className="text-sm text-[var(--accent)]"
                                                 />
 
                                                 <span
                                                     className="
                                     text-lg
                                     font-black
-                                    text-zinc-800
+                                    text-[var(--text-primary)]
                                 "
                                                 >
                                                     {treino.nome ||
@@ -804,8 +804,8 @@ export default function Prescricao() {
                                             className="
                             flex items-center gap-2
                             rounded-xl
-                            border border-zinc-200
-                            bg-white
+                            border border-[var(--border)]
+                            bg-[var(--surface)]
                             px-3 py-2
                         "
                                         >
@@ -815,7 +815,7 @@ export default function Prescricao() {
                                 font-bold
                                 uppercase
                                 tracking-wide
-                                text-zinc-400
+                                text-[var(--text-muted)]
                             "
                                             >
                                                 Nome
@@ -837,7 +837,7 @@ export default function Prescricao() {
                                 bg-transparent
                                 text-sm
                                 font-bold
-                                text-zinc-700
+                                text-[var(--text-primary)]
                                 outline-none
                             "
                                             />
@@ -847,21 +847,21 @@ export default function Prescricao() {
                                             className="
                             flex items-center gap-2
                             rounded-xl
-                            bg-zinc-100
+                            bg-[var(--surface-tertiary)]
                             px-3 py-2
                             text-xs
                             font-bold
-                            text-zinc-500
+                            text-[var(--text-secondary)]
                         "
                                         >
                                             <FaLayerGroup
-                                                className="text-[#a85f60]"
+                                                className="text-[var(--accent)]"
                                             />
 
                                             {exerciciosPreenchidos}/12 exercícios
                                         </div>
-                                        <div className="flex items-center gap-1.5 rounded-xl bg-zinc-100 px-3 py-2 text-xs font-bold text-zinc-500">
-                                            <FaLayerGroup className="text-[10px] text-[#a85f60]" />
+                                        <div className="flex items-center gap-1.5 rounded-xl bg-[var(--surface-tertiary)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)]">
+                                            <FaLayerGroup className="text-[10px] text-[var(--accent)]" />
 
                                             <span>
                                                 {totalVariacoes}{" "}
@@ -891,12 +891,12 @@ export default function Prescricao() {
                                         <thead>
                                             <tr
                                                 className="
-                                                    bg-zinc-50
+                                                    bg-[var(--surface-secondary)]
                                                     text-[10px]
                                                     font-black
                                                     uppercase
                                                     tracking-wider
-                                                    text-zinc-500
+                                                    text-[var(--text-secondary)]
                                                 ">
                                                 <th className="w-[25%] px-4 py-3 text-left">
                                                     <div className="flex items-center gap-2">
@@ -967,9 +967,9 @@ export default function Prescricao() {
                                                             <tr
                                                                 className="
                                                 border-t
-                                                border-zinc-100
+                                                border-[var(--border)]
                                                 transition-colors
-                                                hover:bg-[#a85f60]/[0.025]
+                                                hover:bg-[var(--accent)]/[0.025]
                                             "
                                                             >
                                                                 <td className="px-3 py-1.5">
@@ -982,10 +982,10 @@ export default function Prescricao() {
                                                             items-center
                                                             justify-center
                                                             rounded-lg
-                                                            bg-zinc-100
+                                                            bg-[var(--surface-tertiary)]
                                                             text-[10px]
                                                             font-black
-                                                            text-zinc-400
+                                                            text-[var(--text-muted)]
                                                         "
                                                                         >
                                                                             {String(
@@ -1013,8 +1013,8 @@ export default function Prescricao() {
                                                             hover:cursor-pointer
 
                                                             ${(exercicio.variacoes?.length ?? 0) > 0
-                                                                                    ? "border-[#c59b9c] bg-[#f0e4e4] text-[#8f4f51]"
-                                                                                    : "border-zinc-300 bg-white text-zinc-400"
+                                                                                    ? "border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                                                                                    : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]"
                                                                                 }
                                                         `}
                                                                         >
@@ -1052,12 +1052,12 @@ export default function Prescricao() {
                                                                 w-full
                                                                 rounded-lg
                                                                 border
-                                                                border-zinc-400
-                                                                bg-[#eeeeee]
+                                                                border-[var(--border-strong)]
+                                                                bg-[var(--surface-tertiary)]
                                                                 px-3
                                                                 text-sm
                                                                 font-semibold
-                                                                text-zinc-700
+                                                                text-[var(--text-primary)]
                                                                 outline-none
                                                             "
                                                                             />
@@ -1068,11 +1068,11 @@ export default function Prescricao() {
                                                                                 className="
                                                                 shrink-0
                                                                 rounded-full
-                                                                bg-[#f0e4e4]
+                                                                bg-[var(--accent-soft)]
                                                                 px-2 py-1
                                                                 text-[9px]
                                                                 font-black
-                                                                text-[#8f4f51]
+                                                                text-[var(--accent-text)]
                                                             "
                                                                             >
                                                                                 {exercicio.variacoes?.length ?? 0} var.
@@ -1101,12 +1101,12 @@ export default function Prescricao() {
                                                         w-full
                                                         rounded-lg
                                                         border
-                                                        border-zinc-400
-                                                        bg-[#eeeeee]
+                                                        border-[var(--border-strong)]
+                                                        bg-[var(--surface-tertiary)]
                                                         text-center
                                                         text-sm
                                                         font-bold
-                                                        text-zinc-700
+                                                        text-[var(--text-primary)]
                                                         outline-none
                                                     "
                                                                     />
@@ -1131,12 +1131,12 @@ export default function Prescricao() {
                                                         w-full
                                                         rounded-lg
                                                         border
-                                                        border-zinc-400
-                                                        bg-[#eeeeee]
+                                                        border-[var(--border-strong)]
+                                                        bg-[var(--surface-tertiary)]
                                                         text-center
                                                         text-sm
                                                         font-bold
-                                                        text-zinc-700
+                                                        text-[var(--text-primary)]
                                                         outline-none
                                                     "
                                                                     />
@@ -1162,13 +1162,13 @@ export default function Prescricao() {
                                                         w-full
                                                         rounded-lg
                                                         border
-                                                        border-zinc-400
-                                                        bg-[#eeeeee]
+                                                        border-[var(--border-strong)]
+                                                        bg-[var(--surface-tertiary)]
                                                         px-2
                                                         text-center
                                                         text-sm
                                                         font-semibold
-                                                        text-zinc-700
+                                                        text-[var(--text-primary)]
                                                         outline-none
                                                     "
                                                                     />
@@ -1210,12 +1210,12 @@ export default function Prescricao() {
                                                         w-full
                                                         rounded-lg
                                                         border
-                                                        border-zinc-400
-                                                        bg-[#eeeeee]
+                                                        border-[var(--border-strong)]
+                                                        bg-[var(--surface-tertiary)]
                                                         text-center
                                                         text-sm
                                                         font-bold
-                                                        text-zinc-700
+                                                        text-[var(--text-primary)]
                                                         outline-none
                                                     "
                                                                     />
@@ -1240,12 +1240,12 @@ export default function Prescricao() {
                                                         w-full
                                                         rounded-lg
                                                         border
-                                                        border-[#a87576]
-                                                        bg-[#f0e4e4]
+                                                        border-[var(--accent-border)]
+                                                        bg-[var(--accent-soft)]
                                                         text-center
                                                         text-sm
                                                         font-black
-                                                        text-[#7d4547]
+                                                        text-[var(--accent-text)]
                                                         outline-none
                                                     "
                                                                     />
@@ -1271,11 +1271,11 @@ export default function Prescricao() {
                                                         w-full
                                                         rounded-lg
                                                         border
-                                                        border-zinc-400
-                                                        bg-[#eeeeee]
+                                                        border-[var(--border-strong)]
+                                                        bg-[var(--surface-tertiary)]
                                                         px-3
                                                         text-sm
-                                                        text-zinc-600
+                                                        text-[var(--text-secondary)]
                                                         outline-none
                                                     "
                                                                     />
@@ -1306,8 +1306,8 @@ export default function Prescricao() {
                                                                         className="
                                                         border-t
                                                         border-dashed
-                                                        border-[#d8c3c4]
-                                                        bg-[#fbf7f7]
+                                                        border-[var(--accent-border)]
+                                                        bg-[var(--accent-soft)]
                                                     "
                                                                     >
                                                                         <td
@@ -1330,14 +1330,14 @@ export default function Prescricao() {
                                                                 rounded-lg
                                                                 border
                                                                 border-dashed
-                                                                border-[#a87576]
+                                                                border-[var(--accent-border)]
                                                                 px-3 py-2
                                                                 text-[10px]
                                                                 font-black
                                                                 uppercase
                                                                 tracking-wide
-                                                                text-[#8f4f51]
-                                                                hover:bg-[#f0e4e4]
+                                                                text-[var(--accent-text)]
+                                                                hover:bg-[var(--accent-soft)]
                                                             "
                                                                             >
                                                                                 <FaPlus />

@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import navTool from "../components/navTool";
 import { useAvaliacao } from "../context/avaliacaoContext";
 import {
     FaRegTrashAlt,
@@ -26,6 +25,10 @@ export default function periodizacao() {
     }, []);
 
     const [dataInicio, setDataInicio] = useState(new Date());
+    const [diaEditando, setDiaEditando] = useState<{
+        semanaIndex: number;
+        diaIndex: number;
+    } | null>(null);
 
     const { avaliacao, setAvaliacao } = useAvaliacao();
 
@@ -54,6 +57,8 @@ export default function periodizacao() {
         slotIndex: number,
         treinoId: string
     ) => {
+        setDiaEditando({ semanaIndex, diaIndex });
+
         setAvaliacao((prev) => {
             const semanas = [...prev.periodizacao.semanas];
 
@@ -261,7 +266,7 @@ export default function periodizacao() {
     };
 
     return (
-        <main className="min-h-full bg-[#ececec] p-3 md:p-5">
+        <main className="min-h-full bg-[var(--surface-sunken)] p-3 md:p-5 text-[var(--text-primary)] transition-colors duration-200">
 
             {/* CABEÇALHO */}
             <header
@@ -269,9 +274,10 @@ export default function periodizacao() {
                     mb-6
                     flex flex-col gap-4
                     rounded-3xl
-                    border border-zinc-300
-                    bg-[#f7f7f7]
+                    border border-[var(--border)]
+                    bg-[var(--surface-raised)]
                     p-6
+                    transition-colors duration-200
                     shadow-sm
                     md:flex-row
                     md:items-center
@@ -286,7 +292,7 @@ export default function periodizacao() {
                             font-bold
                             uppercase
                             tracking-[0.2em]
-                            text-[#a85f60]
+                            text-[var(--accent-text)]
                         "
                     >
                         Planejamento
@@ -297,14 +303,14 @@ export default function periodizacao() {
                             text-2xl
                             font-black
                             tracking-tight
-                            text-zinc-800
+                            text-[var(--text-primary)]
                             md:text-3xl
                         "
                     >
                         Periodização do Treino
                     </h1>
 
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
                         Organize os treinos ao longo das
                         12 semanas do planejamento.
                     </p>
@@ -314,8 +320,8 @@ export default function periodizacao() {
                     className="
                         flex items-center gap-3
                         rounded-2xl
-                        border border-zinc-300
-                        bg-[#eeeeee]
+                        border border-[var(--border)]
+                        bg-[var(--surface-secondary)]
                         px-4 py-3
                     "
                 >
@@ -324,7 +330,7 @@ export default function periodizacao() {
                             flex h-10 w-10
                             items-center justify-center
                             rounded-xl
-                            bg-[#8f4f51]
+                            bg-[var(--accent)]
                             text-white
                         "
                     >
@@ -338,7 +344,7 @@ export default function periodizacao() {
                                 font-semibold
                                 uppercase
                                 tracking-wide
-                                text-zinc-400
+                                text-[var(--text-muted)]
                             "
                         >
                             Período
@@ -348,7 +354,7 @@ export default function periodizacao() {
                             className="
                                 text-sm
                                 font-black
-                                text-zinc-700
+                                text-[var(--text-primary)]
                             "
                         >
                             12 semanas
@@ -362,9 +368,10 @@ export default function periodizacao() {
                 className="
                     mb-6
                     rounded-3xl
-                    border border-zinc-300
-                    bg-[#f7f7f7]
+                    border border-[var(--border)]
+                    bg-[var(--surface-raised)]
                     p-5
+                    transition-colors duration-200
                     shadow-sm
                 "
             >
@@ -372,7 +379,7 @@ export default function periodizacao() {
                     className="
                         mb-5
                         flex items-center gap-3
-                        border-b border-zinc-300
+                        border-b border-[var(--border)]
                         pb-4
                     "
                 >
@@ -381,8 +388,8 @@ export default function periodizacao() {
                             flex h-9 w-9
                             items-center justify-center
                             rounded-xl
-                            bg-[#a85f60]/10
-                            text-[#a85f60]
+                            text-[var(--accent-text)]
+                            text-[var(--accent-text)]
                         "
                     >
                         <FaCalendarAlt />
@@ -395,13 +402,13 @@ export default function periodizacao() {
                                 font-black
                                 uppercase
                                 tracking-wide
-                                text-zinc-700
+                                text-[var(--text-primary)]
                             "
                         >
                             Informações da periodização
                         </h2>
 
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-[var(--text-secondary)]">
                             Defina o período e o objetivo
                             principal do planejamento.
                         </p>
@@ -424,7 +431,7 @@ export default function periodizacao() {
                                 font-bold
                                 uppercase
                                 tracking-wide
-                                text-zinc-500
+                                text-[var(--text-secondary)]
                             "
                         >
                             Início
@@ -445,20 +452,20 @@ export default function periodizacao() {
                                 w-full
                                 rounded-xl
                                 border-2
-                                border-zinc-400
-                                bg-[#e2e2e2]
+                                border-[var(--border-strong)]
+                                bg-[var(--surface-tertiary)]
                                 px-3
                                 text-center
                                 font-bold
-                                text-zinc-700
+                                text-[var(--text-primary)]
                                 outline-none
                                 transition-all
-                                hover:border-zinc-500
-                                hover:bg-[#dddddd]
-                                focus:border-[#8f4f51]
-                                focus:bg-[#f3e5e5]
+                                hover:border-[var(--border-strong)]
+                                hover:bg-[var(--surface-hover)]
+                                focus:border-[var(--accent-border)]
+                                focus:bg-[var(--accent-soft)]
                                 focus:ring-2
-                                focus:ring-[#8f4f51]/20
+                                focus:ring-[var(--ring)]
                             "
                         />
                     </div>
@@ -473,7 +480,7 @@ export default function periodizacao() {
                                 font-bold
                                 uppercase
                                 tracking-wide
-                                text-zinc-500
+                                text-[var(--text-secondary)]
                             "
                         >
                             Término
@@ -488,12 +495,12 @@ export default function periodizacao() {
                                 w-full
                                 rounded-xl
                                 border-2
-                                border-zinc-300
-                                bg-[#eeeeee]
+                                border-[var(--border)]
+                                bg-[var(--surface-secondary)]
                                 px-3
                                 text-center
                                 font-bold
-                                text-zinc-600
+                                text-[var(--text-secondary)]
                                 outline-none
                             "
                         />
@@ -509,7 +516,7 @@ export default function periodizacao() {
                                 font-bold
                                 uppercase
                                 tracking-wide
-                                text-zinc-500
+                                text-[var(--text-secondary)]
                             "
                         >
                             Objetivo geral
@@ -523,20 +530,20 @@ export default function periodizacao() {
                                 w-full
                                 rounded-xl
                                 border-2
-                                border-zinc-400
-                                bg-[#e2e2e2]
+                                border-[var(--border-strong)]
+                                bg-[var(--surface-tertiary)]
                                 px-3
                                 font-semibold
-                                text-zinc-700
+                                text-[var(--text-primary)]
                                 outline-none
                                 transition-all
-                                placeholder:text-zinc-400
-                                hover:border-zinc-500
-                                hover:bg-[#dddddd]
-                                focus:border-[#8f4f51]
-                                focus:bg-[#f3e5e5]
+                                placeholder:text-[var(--text-muted)]
+                                hover:border-[var(--border-strong)]
+                                hover:bg-[var(--surface-hover)]
+                                focus:border-[var(--accent-border)]
+                                focus:bg-[var(--accent-soft)]
                                 focus:ring-2
-                                focus:ring-[#8f4f51]/20
+                                focus:ring-[var(--ring)]
                             "
                         />
                     </div>
@@ -553,8 +560,8 @@ export default function periodizacao() {
                             className="
                                 overflow-hidden
                                 rounded-3xl
-                                border border-zinc-300
-                                bg-[#f7f7f7]
+                                border border-[var(--border)]
+                                bg-[var(--surface-raised)]
                                 shadow-sm
                             "
                         >
@@ -562,8 +569,8 @@ export default function periodizacao() {
                             <div
                                 className="
                                     flex flex-col gap-4
-                                    border-b border-zinc-300
-                                    bg-[#eeeeee]
+                                    border-b border-[var(--border)]
+                                    bg-[var(--surface-secondary)]
                                     p-5
                                     md:flex-row
                                     md:items-center
@@ -577,7 +584,7 @@ export default function periodizacao() {
                                             shrink-0
                                             items-center justify-center
                                             rounded-2xl
-                                            bg-[#8f4f51]
+                                            bg-[var(--accent)]
                                             text-lg
                                             font-black
                                             text-white
@@ -594,7 +601,7 @@ export default function periodizacao() {
                                                 font-bold
                                                 uppercase
                                                 tracking-[0.15em]
-                                                text-[#a85f60]
+                                                text-[var(--accent-text)]
                                             "
                                         >
                                             Periodização
@@ -604,7 +611,7 @@ export default function periodizacao() {
                                             className="
                                                 text-xl
                                                 font-black
-                                                text-zinc-800
+                                                text-[var(--text-primary)]
                                             "
                                         >
                                             Semana {semana.numero}
@@ -614,11 +621,12 @@ export default function periodizacao() {
 
                                 <button
                                     type="button"
-                                    onClick={() =>
+                                    onClick={() => {
+                                        setDiaEditando(null);
                                         limparSemana(
                                             semanaIndex
-                                        )
-                                    }
+                                        );
+                                    }}
                                     title={`Limpar toda a semana ${semana.numero}`}
                                     className="
                                         flex
@@ -628,17 +636,17 @@ export default function periodizacao() {
                                         gap-2
                                         rounded-xl
                                         border
-                                        border-zinc-300
-                                        bg-[#e2e2e2]
+                                        border-[var(--border)]
+                                        bg-[var(--surface-tertiary)]
                                         px-4
                                         text-sm
                                         font-bold
                                         uppercase
-                                        text-zinc-600
+                                        text-[var(--text-secondary)]
                                         transition-all
-                                        hover:border-red-300
-                                        hover:bg-red-50
-                                        hover:text-red-600
+                                        hover:border-[var(--danger)]
+                                        hover:bg-[var(--danger-soft)]
+                                        hover:text-[var(--danger)]
                                     "
                                 >
                                     <FaRegTrashAlt />
@@ -673,26 +681,35 @@ export default function periodizacao() {
                                         (dia, diaIndex) => (
                                             <div
                                                 key={diaIndex}
-                                                className="
-                                                    overflow-hidden
-                                                    rounded-2xl
-                                                    border
-                                                    border-zinc-300
-                                                    bg-[#eeeeee]
-                                                "
+                                                onClick={() =>
+                                                    setDiaEditando({
+                                                        semanaIndex,
+                                                        diaIndex,
+                                                    })
+                                                }
+                                                className={`
+                                                    group relative overflow-hidden rounded-2xl border
+                                                    transition-all duration-200
+                                                    ${
+                                                        diaEditando?.semanaIndex === semanaIndex &&
+                                                        diaEditando?.diaIndex === diaIndex
+                                                            ? "border-[var(--accent-border)] bg-[var(--accent-soft)] shadow-md ring-2 ring-[var(--ring)]"
+                                                            : "border-[var(--border)] bg-[var(--surface-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
+                                                    }
+                                                `}
                                             >
                                                 {/* DIA */}
                                                 <div
-                                                    className="
-                                                        flex
-                                                        items-center
-                                                        justify-between
-                                                        border-b
-                                                        border-zinc-300
-                                                        bg-[#e2e2e2]
-                                                        px-3
-                                                        py-2
-                                                    "
+                                                    className={`
+                                                        flex items-center justify-between border-b px-3 py-2
+                                                        transition-colors duration-200
+                                                        ${
+                                                            diaEditando?.semanaIndex === semanaIndex &&
+                                                            diaEditando?.diaIndex === diaIndex
+                                                                ? "border-[var(--accent-border)] bg-[var(--accent)]/10"
+                                                                : "border-[var(--border)] bg-[var(--surface-tertiary)]"
+                                                        }
+                                                    `}
                                                 >
                                                     <div>
                                                         <p
@@ -700,17 +717,23 @@ export default function periodizacao() {
                                                                 text-xs
                                                                 font-black
                                                                 uppercase
-                                                                text-[#8f4f51]
+                                                                text-[var(--accent-text)]
                                                             "
                                                         >
                                                             {dia}
+                                                            {diaEditando?.semanaIndex === semanaIndex &&
+                                                                diaEditando?.diaIndex === diaIndex && (
+                                                                    <span className="ml-1.5 rounded-full bg-[var(--accent)] px-1.5 py-0.5 text-[8px] font-black tracking-wide text-[var(--on-accent)]">
+                                                                        EDITANDO
+                                                                    </span>
+                                                                )}
                                                         </p>
 
                                                         <p
                                                             className="
                                                                 text-[11px]
                                                                 font-semibold
-                                                                text-zinc-500
+                                                                text-[var(--text-secondary)]
                                                             "
                                                         >
                                                             {datasPeriodizacao[
@@ -725,12 +748,17 @@ export default function periodizacao() {
 
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setDiaEditando({
+                                                                semanaIndex,
+                                                                diaIndex,
+                                                            });
                                                             limparDia(
                                                                 semanaIndex,
                                                                 diaIndex
-                                                            )
-                                                        }
+                                                            );
+                                                        }}
                                                         title={`Limpar ${dia}`}
                                                         className="
                                                             flex
@@ -739,10 +767,10 @@ export default function periodizacao() {
                                                             items-center
                                                             justify-center
                                                             rounded-lg
-                                                            text-zinc-400
+                                                            text-[var(--text-muted)]
                                                             transition-all
-                                                            hover:bg-red-50
-                                                            hover:text-red-600
+                                                            hover:bg-[var(--danger-soft)]
+                                                            hover:text-[var(--danger)]
                                                         "
                                                     >
                                                         <FaRegTrashAlt />
@@ -770,7 +798,7 @@ export default function periodizacao() {
                                                                         items-center
                                                                         justify-center
                                                                         rounded-md
-                                                                        bg-[#8f4f51]
+                                                                        bg-[var(--accent)]
                                                                         text-[10px]
                                                                         font-black
                                                                         text-white
@@ -802,29 +830,29 @@ export default function periodizacao() {
                                                                                 .value
                                                                         )
                                                                     }
-                                                                    className="
-                                                                        h-10
-                                                                        w-full
-                                                                        cursor-pointer
-                                                                        appearance-none
-                                                                        rounded-xl
-                                                                        border
-                                                                        border-zinc-400
-                                                                        bg-[#f7f7f7]
-                                                                        pl-9
-                                                                        pr-2
-                                                                        text-sm
-                                                                        font-semibold
-                                                                        text-zinc-700
-                                                                        outline-none
-                                                                        transition-all
-                                                                        hover:border-zinc-500
-                                                                        hover:bg-white
-                                                                        focus:border-[#8f4f51]
-                                                                        focus:bg-[#f5eeee]
+                                                                    onFocus={() =>
+                                                                        setDiaEditando({
+                                                                            semanaIndex,
+                                                                            diaIndex,
+                                                                        })
+                                                                    }
+                                                                    className={`
+                                                                        h-10 w-full cursor-pointer appearance-none rounded-xl border
+                                                                        bg-[var(--input-bg)] pl-9 pr-2 text-sm font-semibold
+                                                                        text-[var(--text-primary)] outline-none transition-all
+                                                                        ${
+                                                                            diaEditando?.semanaIndex === semanaIndex &&
+                                                                            diaEditando?.diaIndex === diaIndex
+                                                                                ? "border-[var(--accent-border)] ring-1 ring-[var(--ring)]"
+                                                                                : "border-[var(--border-strong)]"
+                                                                        }
+                                                                        hover:border-[var(--accent-border)]
+                                                                        hover:bg-[var(--surface)]
+                                                                        focus:border-[var(--accent-border)]
+                                                                        focus:bg-[var(--surface)]
                                                                         focus:ring-2
-                                                                        focus:ring-[#8f4f51]/20
-                                                                    "
+                                                                        focus:ring-[var(--ring)]
+                                                                    `}
                                                                 >
                                                                     <option value="">
                                                                         Sem Treino
@@ -873,8 +901,8 @@ export default function periodizacao() {
                                             gap-4
                                             rounded-2xl
                                             border
-                                            border-zinc-300
-                                            bg-[#eeeeee]
+                                            border-[var(--border)]
+                                            bg-[var(--surface-secondary)]
                                             p-4
                                         "
                                     >
@@ -885,8 +913,8 @@ export default function periodizacao() {
                                                 items-center
                                                 justify-center
                                                 rounded-xl
-                                                bg-[#a85f60]/10
-                                                text-[#a85f60]
+                                                text-[var(--accent-text)]
+                                                text-[var(--accent-text)]
                                             "
                                         >
                                             <FaDumbbell />
@@ -899,7 +927,7 @@ export default function periodizacao() {
                                                     font-bold
                                                     uppercase
                                                     tracking-wide
-                                                    text-zinc-500
+                                                    text-[var(--text-secondary)]
                                                 "
                                             >
                                                 Quilagem
@@ -909,13 +937,13 @@ export default function periodizacao() {
                                                 className="
                                                     text-xl
                                                     font-black
-                                                    text-zinc-800
+                                                    text-[var(--text-primary)]
                                                 "
                                             >
                                                 {calcularQuilagemSemana(
                                                     semanaIndex
                                                 )}{" "}
-                                                <span className="text-sm font-bold text-zinc-500">
+                                                <span className="text-sm font-bold text-[var(--text-secondary)]">
                                                     kg
                                                 </span>
                                             </p>
@@ -929,8 +957,8 @@ export default function periodizacao() {
                                             gap-4
                                             rounded-2xl
                                             border
-                                            border-zinc-300
-                                            bg-[#eeeeee]
+                                            border-[var(--border)]
+                                            bg-[var(--surface-secondary)]
                                             p-4
                                         "
                                     >
@@ -941,8 +969,8 @@ export default function periodizacao() {
                                                 items-center
                                                 justify-center
                                                 rounded-xl
-                                                bg-[#a85f60]/10
-                                                text-[#a85f60]
+                                                text-[var(--accent-text)]
+                                                text-[var(--accent-text)]
                                             "
                                         >
                                             <FaChartLine />
@@ -955,7 +983,7 @@ export default function periodizacao() {
                                                     font-bold
                                                     uppercase
                                                     tracking-wide
-                                                    text-zinc-500
+                                                    text-[var(--text-secondary)]
                                                 "
                                             >
                                                 Volume load
@@ -965,13 +993,13 @@ export default function periodizacao() {
                                                 className="
                                                     text-xl
                                                     font-black
-                                                    text-zinc-800
+                                                    text-[var(--text-primary)]
                                                 "
                                             >
                                                 {calcularVolumeSemana(
                                                     semanaIndex
                                                 )}{" "}
-                                                <span className="text-sm font-bold text-zinc-500">
+                                                <span className="text-sm font-bold text-[var(--text-secondary)]">
                                                     kg
                                                 </span>
                                             </p>

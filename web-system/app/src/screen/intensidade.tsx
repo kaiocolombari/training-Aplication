@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
-import navTool from "../components/navTool";
 import { FaRunning } from "react-icons/fa";
 
 const STIMULO_MAX_POSSIVEL = 15 * 1 * 1.1;
@@ -294,14 +293,14 @@ export default function Intensidade() {
     }
 
     return (
-        <main className="min-h-full bg-[#ececec] p-3 md:p-5">
+        <main className="min-h-full bg-[var(--surface-sunken)] p-3 md:p-5 text-[var(--text-primary)] transition-colors duration-200">
             <div
                 className="
                     mb-10
                     flex flex-col gap-4
                     rounded-3xl
-                    border border-zinc-300
-                    bg-[#f7f7f7]
+                    border border-[var(--border)]
+                    bg-[var(--surface)]
                     p-6
                     shadow-sm
                     md:flex-row
@@ -318,7 +317,7 @@ export default function Intensidade() {
                                 font-bold
                                 uppercase
                                 tracking-[0.2em]
-                                text-[#a85f60]
+                                text-[var(--accent)]
                             "
                         >
                             Intensidade
@@ -329,14 +328,14 @@ export default function Intensidade() {
                                 text-2xl
                                 font-black
                                 tracking-tight
-                                text-zinc-800
+                                text-[var(--text-primary)]
                                 md:text-3xl
                             "
                         >
                             Volume - Intensidade
                         </h1>
 
-                        <p className="mt-1 text-sm text-zinc-500">
+                        <p className="mt-1 text-sm text-[var(--text-secondary)]">
                             Configure e acompanhe a intensidade dos exercícios
                             de cada treino.
                         </p>
@@ -346,8 +345,8 @@ export default function Intensidade() {
                     className="
                         flex items-center gap-3
                         rounded-2xl
-                        border border-zinc-300
-                        bg-[#eeeeee]
+                        border border-[var(--border)]
+                        bg-[var(--surface-secondary)]
                         px-4 py-3
                     "
                 >
@@ -356,8 +355,8 @@ export default function Intensidade() {
                             flex h-10 w-10
                             items-center justify-center
                             rounded-xl
-                            bg-[#8f4f51]
-                            text-white
+                            bg-[var(--accent)]
+                            text-[var(--on-accent)]
                         "
                     >
                         <FaRunning />
@@ -370,7 +369,7 @@ export default function Intensidade() {
                                 font-semibold
                                 uppercase
                                 tracking-wide
-                                text-zinc-400
+                                text-[var(--text-muted)]
                             "
                         >
                             Treinos
@@ -380,7 +379,7 @@ export default function Intensidade() {
                             className="
                                 text-sm
                                 font-black
-                                text-zinc-700
+                                text-[var(--text-primary)]
                             "
                         >
                             12 disponíveis
@@ -403,8 +402,8 @@ export default function Intensidade() {
                                     overflow-hidden
                                     rounded-3xl
                                     border
-                                    border-zinc-300
-                                    bg-[#f7f7f7]
+                                    border-[var(--border)]
+                                    bg-[var(--surface)]
                                     p-4
                                     shadow-sm
                                 "
@@ -415,8 +414,8 @@ export default function Intensidade() {
                                         flex flex-col gap-3
                                         rounded-2xl
                                         border
-                                        border-zinc-300
-                                        bg-[#eeeeee]
+                                        border-[var(--border)]
+                                        bg-[var(--surface-secondary)]
                                         p-4
                                         md:flex-row
                                         md:items-end
@@ -430,7 +429,7 @@ export default function Intensidade() {
                                                 font-bold
                                                 uppercase
                                                 tracking-wide
-                                                text-zinc-500
+                                                text-[var(--text-secondary)]
                                             "
                                         >
                                             Treino {treinoIndex + 1}
@@ -443,7 +442,7 @@ export default function Intensidade() {
                                                 italic
                                                 uppercase
                                                 tracking-wide
-                                                text-[#a85f60]
+                                                text-[var(--accent)]
                                             "
                                         >
                                             {treino?.nome ||
@@ -458,15 +457,15 @@ export default function Intensidade() {
                                             text-sm
                                             font-bold
                                             uppercase
-                                            text-zinc-600
+                                            text-[var(--text-secondary)]
                                         "
                                     >
                                         <span
                                             className="
                                                 rounded-xl
                                                 border
-                                                border-zinc-300
-                                                bg-[#e2e2e2]
+                                                border-[var(--border)]
+                                                bg-[var(--surface-tertiary)]
                                                 px-3
                                                 py-2
                                             "
@@ -479,8 +478,8 @@ export default function Intensidade() {
                                             className="
                                                 rounded-xl
                                                 border
-                                                border-zinc-300
-                                                bg-[#e2e2e2]
+                                                border-[var(--border)]
+                                                bg-[var(--surface-tertiary)]
                                                 px-3
                                                 py-2
                                             "
@@ -529,8 +528,8 @@ export default function Intensidade() {
                                                         overflow-hidden
                                                         rounded-2xl
                                                         border
-                                                        border-zinc-300
-                                                        bg-[#eeeeee]
+                                                        border-[var(--border)]
+                                                        bg-[var(--surface-secondary)]
                                                         shadow-sm
                                                     "
                                                     key={exercicioIndex}
@@ -549,7 +548,7 @@ export default function Intensidade() {
                                                                     text-xs
                                                                     font-bold
                                                                     uppercase
-                                                                    text-zinc-500
+                                                                    text-[var(--text-secondary)]
                                                                 "
                                                             >
                                                                 Exercício
@@ -559,7 +558,7 @@ export default function Intensidade() {
                                                                 className="
                                                                     text-lg
                                                                     font-bold
-                                                                    text-zinc-800
+                                                                    text-[var(--text-primary)]
                                                                 "
                                                             >
                                                                 {exercicio?.exercicio ||
@@ -573,7 +572,7 @@ export default function Intensidade() {
                                                                     text-xs
                                                                     font-bold
                                                                     uppercase
-                                                                    text-zinc-500
+                                                                    text-[var(--text-secondary)]
                                                                 "
                                                             >
                                                                 Séries
@@ -583,7 +582,7 @@ export default function Intensidade() {
                                                                 className="
                                                                     text-lg
                                                                     font-bold
-                                                                    text-zinc-800
+                                                                    text-[var(--text-primary)]
                                                                 "
                                                             >
                                                                 {totalSeries ||
@@ -597,7 +596,7 @@ export default function Intensidade() {
                                                                     text-xs
                                                                     font-bold
                                                                     uppercase
-                                                                    text-zinc-500
+                                                                    text-[var(--text-secondary)]
                                                                 "
                                                             >
                                                                 Reps base
@@ -607,7 +606,7 @@ export default function Intensidade() {
                                                                 className="
                                                                     text-lg
                                                                     font-bold
-                                                                    text-zinc-800
+                                                                    text-[var(--text-primary)]
                                                                 "
                                                             >
                                                                 {exercicio?.repeticoes ||
@@ -627,19 +626,19 @@ export default function Intensidade() {
                                                                 h-10
                                                                 rounded-xl
                                                                 border
-                                                                border-[#a87576]
-                                                                bg-[#f0e4e4]
+                                                                border-[var(--border-strong)]
+                                                                bg-[var(--accent-soft)]
                                                                 px-4
                                                                 text-sm
                                                                 font-bold
                                                                 uppercase
-                                                                text-[#7d4547]
+                                                                text-[var(--accent)]
                                                                 outline-none
                                                                 transition-all
                                                                 duration-150
-                                                                hover:border-[#8f4f51]
-                                                                hover:bg-[#eadada]
-                                                                hover:text-[#713b3d]
+                                                                hover:border-[var(--accent)]
+                                                                hover:bg-[var(--accent-soft)]
+                                                                hover:text-[var(--accent-hover)]
                                                             "
                                                         >
                                                             {aberto
@@ -653,8 +652,8 @@ export default function Intensidade() {
                                                             className="
                                                                 overflow-x-auto
                                                                 border-t
-                                                                border-zinc-300
-                                                                bg-[#f7f7f7]
+                                                                border-[var(--border)]
+                                                                bg-[var(--surface)]
                                                                 p-4
                                                             "
                                                         >
@@ -671,38 +670,38 @@ export default function Intensidade() {
                                                                 <thead>
                                                                     <tr
                                                                         className="
-                                                                            bg-[#eeeeee]
+                                                                            bg-[var(--surface-secondary)]
                                                                             font-bold
                                                                             italic
                                                                             uppercase
-                                                                            text-zinc-600
+                                                                            text-[var(--text-secondary)]
                                                                         "
                                                                     >
-                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
                                                                             Série
                                                                         </th>
 
-                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
                                                                             Reps
                                                                         </th>
 
-                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
                                                                             Carga
                                                                         </th>
 
-                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
                                                                             %1RM
                                                                         </th>
 
-                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
                                                                             RIR
                                                                         </th>
 
-                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
                                                                             Esforço
                                                                         </th>
 
-                                                                        <th className="border border-zinc-300 px-2 py-3 text-center text-xs">
+                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
                                                                             %Esforço
                                                                         </th>
                                                                     </tr>
@@ -727,7 +726,7 @@ export default function Intensidade() {
                                                                                         serieIndex
                                                                                     }
                                                                                 >
-                                                                                    <td className="border border-zinc-300 bg-[#eeeeee]">
+                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
                                                                                         <input
                                                                                             type="text"
                                                                                             value={
@@ -738,18 +737,18 @@ export default function Intensidade() {
                                                                                             className="
                                                                                                 h-10
                                                                                                 w-full
-                                                                                                bg-transparent
+                                                                                                bg-[var(--input-bg)]
                                                                                                 px-2
                                                                                                 text-center
                                                                                                 text-lg
                                                                                                 font-bold
-                                                                                                text-zinc-700
+                                                                                                text-[var(--text-primary)]
                                                                                                 outline-none
                                                                                             "
                                                                                         />
                                                                                     </td>
 
-                                                                                    <td className="border border-zinc-300 bg-[#e2e2e2]">
+                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
                                                                                         <input
                                                                                             type="text"
                                                                                             value={
@@ -772,20 +771,20 @@ export default function Intensidade() {
                                                                                             className="
                                                                                                 h-10
                                                                                                 w-full
-                                                                                                bg-transparent
+                                                                                                bg-[var(--input-bg)]
                                                                                                 px-2
                                                                                                 text-center
                                                                                                 text-lg
                                                                                                 font-bold
-                                                                                                text-[#8f4f51]
+                                                                                                text-[var(--accent)]
                                                                                                 outline-none
                                                                                                 transition-all
-                                                                                                focus:bg-[#f3e5e5]
+                                                                                                focus:bg-[var(--surface-hover)]
                                                                                             "
                                                                                         />
                                                                                     </td>
 
-                                                                                    <td className="border border-zinc-300 bg-[#e2e2e2]">
+                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
                                                                                         <input
                                                                                             type="text"
                                                                                             value={
@@ -808,20 +807,20 @@ export default function Intensidade() {
                                                                                             className="
                                                                                                 h-10
                                                                                                 w-full
-                                                                                                bg-transparent
+                                                                                                bg-[var(--input-bg)]
                                                                                                 px-2
                                                                                                 text-center
                                                                                                 text-lg
                                                                                                 font-bold
-                                                                                                text-[#8f4f51]
+                                                                                                text-[var(--accent)]
                                                                                                 outline-none
                                                                                                 transition-all
-                                                                                                focus:bg-[#f3e5e5]
+                                                                                                focus:bg-[var(--surface-hover)]
                                                                                             "
                                                                                         />
                                                                                     </td>
 
-                                                                                    <td className="border border-zinc-300 bg-[#eeeeee]">
+                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
                                                                                         <input
                                                                                             type="text"
                                                                                             value={formatarPercentual(
@@ -832,18 +831,18 @@ export default function Intensidade() {
                                                                                             className="
                                                                                                 h-10
                                                                                                 w-full
-                                                                                                bg-transparent
+                                                                                                bg-[var(--input-bg)]
                                                                                                 px-2
                                                                                                 text-center
                                                                                                 text-lg
                                                                                                 font-bold
-                                                                                                text-zinc-600
+                                                                                                text-[var(--text-secondary)]
                                                                                                 outline-none
                                                                                             "
                                                                                         />
                                                                                     </td>
 
-                                                                                    <td className="border border-zinc-300 bg-[#e2e2e2]">
+                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
                                                                                         <input
                                                                                             type="text"
                                                                                             value={
@@ -866,20 +865,20 @@ export default function Intensidade() {
                                                                                             className="
                                                                                                 h-10
                                                                                                 w-full
-                                                                                                bg-transparent
+                                                                                                bg-[var(--input-bg)]
                                                                                                 px-2
                                                                                                 text-center
                                                                                                 text-lg
                                                                                                 font-bold
-                                                                                                text-[#8f4f51]
+                                                                                                text-[var(--accent)]
                                                                                                 outline-none
                                                                                                 transition-all
-                                                                                                focus:bg-[#f3e5e5]
+                                                                                                focus:bg-[var(--surface-hover)]
                                                                                             "
                                                                                         />
                                                                                     </td>
 
-                                                                                    <td className="border border-zinc-300 bg-[#eeeeee]">
+                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
                                                                                         <input
                                                                                             type="text"
                                                                                             value={formatarDecimal(
@@ -890,18 +889,18 @@ export default function Intensidade() {
                                                                                             className="
                                                                                                 h-10
                                                                                                 w-full
-                                                                                                bg-transparent
+                                                                                                bg-[var(--input-bg)]
                                                                                                 px-2
                                                                                                 text-center
                                                                                                 text-lg
                                                                                                 font-bold
-                                                                                                text-zinc-600
+                                                                                                text-[var(--text-secondary)]
                                                                                                 outline-none
                                                                                             "
                                                                                         />
                                                                                     </td>
 
-                                                                                    <td className="border border-zinc-300 bg-[#eeeeee]">
+                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
                                                                                         <input
                                                                                             type="text"
                                                                                             value={formatarPercentual(
@@ -912,12 +911,12 @@ export default function Intensidade() {
                                                                                             className="
                                                                                                 h-10
                                                                                                 w-full
-                                                                                                bg-transparent
+                                                                                                bg-[var(--input-bg)]
                                                                                                 px-2
                                                                                                 text-center
                                                                                                 text-lg
                                                                                                 font-bold
-                                                                                                text-zinc-600
+                                                                                                text-[var(--text-secondary)]
                                                                                                 outline-none
                                                                                             "
                                                                                         />
@@ -938,15 +937,15 @@ export default function Intensidade() {
                                                                     text-sm
                                                                     font-bold
                                                                     uppercase
-                                                                    text-zinc-600
+                                                                    text-[var(--text-secondary)]
                                                                 "
                                                             >
                                                                 <span
                                                                     className="
                                                                         rounded-xl
                                                                         border
-                                                                        border-zinc-300
-                                                                        bg-[#eeeeee]
+                                                                        border-[var(--border)]
+                                                                        bg-[var(--surface-secondary)]
                                                                         px-4
                                                                         py-2
                                                                     "
@@ -973,26 +972,26 @@ export default function Intensidade() {
                                         justify-end
                                         gap-3
                                         border-t
-                                        border-zinc-300
+                                        border-[var(--border)]
                                         pt-4
                                         text-sm
                                         font-bold
                                         uppercase
-                                        text-zinc-600
+                                        text-[var(--text-secondary)]
                                     "
                                 >
                                     <span
                                         className="
                                             rounded-xl
                                             border
-                                            border-zinc-300
-                                            bg-[#eeeeee]
+                                            border-[var(--border)]
+                                            bg-[var(--surface-secondary)]
                                             px-4
                                             py-2
                                         "
                                     >
                                         Intensidade do treino:{" "}
-                                        <span className="text-[#8f4f51]">
+                                        <span className="text-[var(--accent)]">
                                             {formatarPercentual(
                                                 resumoTreino.intensidade
                                             )}

@@ -1,4 +1,3 @@
-import navTool from "../components/navTool";
 import { useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
 import { FaSearch, FaRegTrashAlt, FaTrashAlt, FaRunning } from "react-icons/fa";
@@ -274,14 +273,14 @@ export default function Volume() {
     };
 
     return (
-        <main className="min-h-full bg-[#ececec] p-3 md:p-5">
+        <main className="min-h-full bg-[var(--surface-sunken)] p-3 md:p-5 text-[var(--text-primary)] transition-colors duration-200">
 
             <div className="
                 mb-6
                 flex flex-col gap-4
                 rounded-3xl
-                border border-zinc-300
-                bg-[#f7f7f7]
+                border border-[var(--border)]
+                bg-[var(--surface-raised)]
                 p-6
                 shadow-[0_4px_18px_rgba(0,0,0,0.06)]
                 md:flex-row
@@ -299,7 +298,7 @@ export default function Volume() {
                             font-bold
                             uppercase
                             tracking-[0.2em]
-                            text-[#8f4f51]
+                            text-[var(--accent-text)]
                         ">
                             Volume
                         </p>
@@ -308,7 +307,7 @@ export default function Volume() {
                             text-2xl
                             font-black
                             tracking-tight
-                            text-zinc-800
+                            text-[var(--text-primary)]
                             md:text-3xl
                         ">
                             Volume - Intensidade
@@ -317,7 +316,7 @@ export default function Volume() {
                         <p className="
                             mt-1
                             text-sm
-                            text-zinc-500
+                            text-[var(--text-muted)]
                         ">
                             Configure o volume para cada músculo
                             dos conjuntos musculares.
@@ -330,8 +329,8 @@ export default function Volume() {
                 <div className="
                     flex items-center gap-3
                     rounded-2xl
-                    border border-zinc-300
-                    bg-[#eeeeee]
+                    border border-[var(--border)]
+                    bg-[var(--surface-secondary)]
                     px-4 py-3
                 ">
 
@@ -339,8 +338,8 @@ export default function Volume() {
                         flex h-10 w-10
                         items-center justify-center
                         rounded-xl
-                        bg-[#8f4f51]
-                        text-white
+                        bg-[var(--accent)]
+                        text-[var(--on-accent)]
                     ">
                         <FaRunning />
                     </div>
@@ -352,7 +351,7 @@ export default function Volume() {
                             font-semibold
                             uppercase
                             tracking-wide
-                            text-zinc-500
+                            text-[var(--text-muted)]
                         ">
                             Treinos
                         </p>
@@ -360,7 +359,7 @@ export default function Volume() {
                         <p className="
                             text-sm
                             font-black
-                            text-zinc-700
+                            text-[var(--text-primary)]
                         ">
                             12 disponíveis
                         </p>
@@ -375,15 +374,15 @@ export default function Volume() {
                 mt-5
                 overflow-hidden
                 rounded-3xl
-                border border-zinc-300
-                bg-[#f7f7f7]
+                border border-[var(--border)]
+                bg-[var(--surface-raised)]
                 shadow-[0_4px_18px_rgba(0,0,0,0.06)]
             ">
 
                 <div className="
                     border-b
-                    border-zinc-300
-                    bg-[#eeeeee]
+                    border-[var(--border)]
+                    bg-[var(--surface-secondary)]
                     p-5
                 ">
 
@@ -401,7 +400,7 @@ export default function Volume() {
                                 font-bold
                                 uppercase
                                 tracking-wide
-                                text-zinc-500
+                                text-[var(--text-muted)]
                             ">
                                 Semana selecionada
                             </span>
@@ -413,7 +412,7 @@ export default function Volume() {
                                 italic
                                 uppercase
                                 tracking-tight
-                                text-[#8f4f51]
+                                text-[var(--accent-text)]
                             ">
                                 Semana {semanaAtual + 1} / 12
                             </h2>
@@ -425,13 +424,13 @@ export default function Volume() {
                                 max-w-xs
                                 overflow-hidden
                                 rounded-full
-                                bg-zinc-300
+                                bg-[var(--border-strong)]
                             ">
                                 <div
                                     className="
                                         h-full
                                         rounded-full
-                                        bg-[#8f4f51]
+                                        bg-[var(--accent)]
                                         transition-all
                                         duration-500
                                     "
@@ -459,16 +458,16 @@ export default function Volume() {
                                     h-10
                                     rounded-xl
                                     border
-                                    border-zinc-400
-                                    bg-zinc-700
+                                    border-[var(--border-strong)]
+                                    bg-[var(--surface-tertiary)]
                                     px-4
                                     text-sm
                                     font-bold
                                     uppercase
-                                    text-white
+                                    text-[var(--text-primary)]
                                     transition-all
                                     hover:cursor-pointer
-                                    hover:bg-zinc-600
+                                    hover:bg-[var(--surface-hover)]
                                     hover:shadow-sm
                                     disabled:cursor-not-allowed
                                     disabled:opacity-40
@@ -488,16 +487,16 @@ export default function Volume() {
                                     h-10
                                     rounded-xl
                                     border
-                                    border-zinc-400
-                                    bg-zinc-700
+                                    border-[var(--border-strong)]
+                                    bg-[var(--surface-tertiary)]
                                     px-4
                                     text-sm
                                     font-bold
                                     uppercase
-                                    text-white
+                                    text-[var(--text-primary)]
                                     transition-all
                                     hover:cursor-pointer
-                                    hover:bg-zinc-600
+                                    hover:bg-[var(--surface-hover)]
                                     hover:shadow-sm
                                     disabled:cursor-not-allowed
                                     disabled:opacity-40
@@ -519,16 +518,16 @@ export default function Volume() {
                                         gap-2
                                         rounded-xl
                                         border
-                                        border-[#a87576]
-                                        bg-[#f7eeee]
+                                        border-[var(--accent-border)]
+                                        bg-[var(--accent-soft)]
                                         px-4
                                         text-sm
                                         font-bold
                                         uppercase
-                                        text-[#8f4f51]
+                                        text-[var(--accent-text)]
                                         transition-all
                                         hover:cursor-pointer
-                                        hover:bg-[#eadada]
+                                        hover:bg-[var(--accent-soft)]
                                     "
                                 >
                                     Puxar dados
@@ -545,16 +544,16 @@ export default function Volume() {
                                     gap-2
                                     rounded-xl
                                     border
-                                    border-[#8f4f51]
-                                    bg-[#8f4f51]
+                                    border-[var(--accent-border)]
+                                    bg-[var(--accent)]
                                     px-4
                                     text-sm
                                     font-bold
                                     uppercase
-                                    text-white
+                                    text-[var(--on-accent)]
                                     transition-all
                                     hover:cursor-pointer
-                                    hover:bg-[#713b3d]
+                                    hover:bg-[var(--accent-hover)]
                                     hover:shadow-sm
                                 "
                             >
@@ -582,8 +581,8 @@ export default function Volume() {
                     <div className="
                         rounded-2xl
                         border
-                        border-zinc-300
-                        bg-[#eeeeee]
+                        border-[var(--border)]
+                        bg-[var(--surface-secondary)]
                         p-4
                     ">
 
@@ -592,7 +591,7 @@ export default function Volume() {
                             font-bold
                             uppercase
                             tracking-wide
-                            text-zinc-500
+                            text-[var(--text-muted)]
                         ">
                             Total da semana
                         </span>
@@ -601,7 +600,7 @@ export default function Volume() {
                             mt-1
                             text-2xl
                             font-black
-                            text-zinc-800
+                            text-[var(--text-primary)]
                         ">
                             {totalSemana}
                         </p>
@@ -611,8 +610,8 @@ export default function Volume() {
                     <div className="
                         rounded-2xl
                         border
-                        border-zinc-300
-                        bg-[#eeeeee]
+                        border-[var(--border)]
+                        bg-[var(--surface-secondary)]
                         p-4
                     ">
 
@@ -621,7 +620,7 @@ export default function Volume() {
                             font-bold
                             uppercase
                             tracking-wide
-                            text-zinc-500
+                            text-[var(--text-muted)]
                         ">
                             Séries diretas
                         </span>
@@ -630,7 +629,7 @@ export default function Volume() {
                             mt-1
                             text-2xl
                             font-black
-                            text-[#8f4f51]
+                            text-[var(--accent-text)]
                         ">
                             {totalDiretasSemana}
                         </p>
@@ -640,8 +639,8 @@ export default function Volume() {
                     <div className="
                         rounded-2xl
                         border
-                        border-zinc-300
-                        bg-[#eeeeee]
+                        border-[var(--border)]
+                        bg-[var(--surface-secondary)]
                         p-4
                     ">
 
@@ -650,7 +649,7 @@ export default function Volume() {
                             font-bold
                             uppercase
                             tracking-wide
-                            text-zinc-500
+                            text-[var(--text-muted)]
                         ">
                             Séries livres
                         </span>
@@ -659,7 +658,7 @@ export default function Volume() {
                             mt-1
                             text-2xl
                             font-black
-                            text-[#8f4f51]
+                            text-[var(--accent-text)]
                         ">
                             {totalLivresSemana}
                         </p>
@@ -669,8 +668,8 @@ export default function Volume() {
                     <div className="
                         rounded-2xl
                         border
-                        border-zinc-300
-                        bg-[#eeeeee]
+                        border-[var(--border)]
+                        bg-[var(--surface-secondary)]
                         p-4
                     ">
 
@@ -679,7 +678,7 @@ export default function Volume() {
                             font-bold
                             uppercase
                             tracking-wide
-                            text-zinc-500
+                            text-[var(--text-muted)]
                         ">
                             Grupos preenchidos
                         </span>
@@ -688,7 +687,7 @@ export default function Volume() {
                             mt-1
                             text-2xl
                             font-black
-                            text-zinc-800
+                            text-[var(--text-primary)]
                         ">
                             {gruposPreenchidos}
                         </p>
@@ -732,8 +731,8 @@ export default function Volume() {
                                 overflow-hidden
                                 rounded-3xl
                                 border
-                                border-zinc-300
-                                bg-[#f7f7f7]
+                                border-[var(--border)]
+                                bg-[var(--surface-raised)]
                                 shadow-[0_4px_18px_rgba(0,0,0,0.06)]
                                 transition-shadow
                                 duration-200
@@ -746,8 +745,8 @@ export default function Volume() {
                                 items-center
                                 justify-between
                                 border-b
-                                border-zinc-300
-                                bg-[#eeeeee]
+                                border-[var(--border)]
+                                bg-[var(--surface-secondary)]
                                 px-5
                                 py-4
                             ">
@@ -764,7 +763,7 @@ export default function Volume() {
                                         italic
                                         uppercase
                                         tracking-wide
-                                        text-[#8f4f51]
+                                        text-[var(--accent-text)]
                                     ">
                                         {regiao.titulo}
                                     </h3>
@@ -781,11 +780,11 @@ export default function Volume() {
                                             group
                                             rounded-lg
                                             p-1.5
-                                            text-zinc-500
+                                            text-[var(--text-muted)]
                                             transition-all
                                             hover:cursor-pointer
-                                            hover:bg-[#f3dddd]
-                                            hover:text-[#8f4f51]
+                                            hover:bg-[var(--danger-soft)]
+                                            hover:text-[var(--accent-text)]
                                         "
                                     >
 
@@ -816,15 +815,15 @@ export default function Volume() {
                                 <span className="
                                     rounded-xl
                                     border
-                                    border-zinc-300
-                                    bg-[#e4e4e4]
+                                    border-[var(--border)]
+                                    bg-[var(--surface-tertiary)]
                                     px-3
                                     py-1.5
                                     text-xs
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-700
+                                    text-[var(--text-primary)]
                                 ">
                                     Total {totalRegiao}
                                 </span>
@@ -848,7 +847,7 @@ export default function Volume() {
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-500
+                                    text-[var(--text-muted)]
                                 ">
                                     Diretas
                                 </span>
@@ -859,7 +858,7 @@ export default function Volume() {
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-500
+                                    text-[var(--text-muted)]
                                 ">
                                     Livres
                                 </span>
@@ -870,7 +869,7 @@ export default function Volume() {
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-500
+                                    text-[var(--text-muted)]
                                 ">
                                     Total
                                 </span>
@@ -914,13 +913,13 @@ export default function Volume() {
                                                 gap-2
                                                 rounded-xl
                                                 border
-                                                border-zinc-300
-                                                bg-[#eeeeee]
+                                                border-[var(--border)]
+                                                bg-[var(--surface-secondary)]
                                                 px-3
                                                 py-2
                                                 transition-colors
-                                                hover:border-zinc-400
-                                                hover:bg-[#e8e8e8]
+                                                hover:border-[var(--border-strong)]
+                                                hover:bg-[var(--surface-hover)]
                                             "
                                         >
 
@@ -929,7 +928,7 @@ export default function Volume() {
                                                 font-bold
                                                 uppercase
                                                 tracking-wide
-                                                text-zinc-700
+                                                text-[var(--text-primary)]
                                             ">
                                                 {grupo.grupo}
                                             </span>
@@ -942,20 +941,20 @@ export default function Volume() {
                                                     w-full
                                                     rounded-lg
                                                     border
-                                                    border-zinc-400
-                                                    bg-[#f7f7f7]
+                                                    border-[var(--border-strong)]
+                                                    bg-[var(--surface-raised)]
                                                     px-1
                                                     text-center
                                                     text-lg
                                                     font-black
-                                                    text-[#8f4f51]
+                                                    text-[var(--accent-text)]
                                                     outline-none
                                                     transition-all
-                                                    hover:border-zinc-500
-                                                    focus:border-[#713b3d]
-                                                    focus:bg-[#f5eeee]
+                                                    hover:border-[var(--accent-border)]
+                                                    focus:border-[var(--accent-border)]
+                                                    focus:bg-[var(--accent-soft)]
                                                     focus:ring-2
-                                                    focus:ring-[#8f4f51]/20
+                                                    focus:ring-[var(--ring)]
                                                 "
                                                 value={
                                                     grupo.seriesDiretas ?? 0
@@ -981,20 +980,20 @@ export default function Volume() {
                                                     w-full
                                                     rounded-lg
                                                     border
-                                                    border-zinc-400
-                                                    bg-[#f7f7f7]
+                                                    border-[var(--border-strong)]
+                                                    bg-[var(--surface-raised)]
                                                     px-1
                                                     text-center
                                                     text-lg
                                                     font-black
-                                                    text-[#8f4f51]
+                                                    text-[var(--accent-text)]
                                                     outline-none
                                                     transition-all
-                                                    hover:border-zinc-500
-                                                    focus:border-[#713b3d]
-                                                    focus:bg-[#f5eeee]
+                                                    hover:border-[var(--accent-border)]
+                                                    focus:border-[var(--accent-border)]
+                                                    focus:bg-[var(--accent-soft)]
                                                     focus:ring-2
-                                                    focus:ring-[#8f4f51]/20
+                                                    focus:ring-[var(--ring)]
                                                 "
                                                 value={
                                                     grupo.seriesLivres ?? 0
@@ -1016,7 +1015,7 @@ export default function Volume() {
                                                 text-center
                                                 text-lg
                                                 font-black
-                                                text-zinc-700
+                                                text-[var(--text-primary)]
                                             ">
                                                 {totalGrupo}
                                             </span>
@@ -1053,15 +1052,15 @@ export default function Volume() {
                         overflow-hidden
                         rounded-3xl
                         border
-                        border-zinc-300
-                        bg-[#f7f7f7]
+                        border-[var(--border)]
+                        bg-[var(--surface-raised)]
                         shadow-[0_12px_40px_rgba(0,0,0,0.20)]
                     ">
 
                         <div className="
                             border-b
-                            border-zinc-300
-                            bg-[#eeeeee]
+                            border-[var(--border)]
+                            bg-[var(--surface-secondary)]
                             px-6
                             py-5
                         ">
@@ -1072,7 +1071,7 @@ export default function Volume() {
                                 italic
                                 uppercase
                                 tracking-tight
-                                text-[#8f4f51]
+                                text-[var(--accent-text)]
                             ">
                                 Definir valores específicos
                             </h2>
@@ -1080,7 +1079,7 @@ export default function Volume() {
                             <p className="
                                 mt-1
                                 text-sm
-                                text-zinc-500
+                                text-[var(--text-muted)]
                             ">
                                 Selecione o grupo e a semana
                                 que deseja configurar.
@@ -1103,7 +1102,7 @@ export default function Volume() {
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-500
+                                    text-[var(--text-muted)]
                                 ">
                                     Grupo muscular
                                 </span>
@@ -1114,17 +1113,17 @@ export default function Volume() {
                                         w-full
                                         rounded-xl
                                         border
-                                        border-zinc-400
-                                        bg-[#eeeeee]
+                                        border-[var(--border-strong)]
+                                        bg-[var(--surface-secondary)]
                                         px-3
                                         font-bold
-                                        text-zinc-700
+                                        text-[var(--text-primary)]
                                         outline-none
                                         transition-all
-                                        focus:border-[#8f4f51]
-                                        focus:bg-[#f5eeee]
+                                        focus:border-[var(--accent-border)]
+                                        focus:bg-[var(--accent-soft)]
                                         focus:ring-2
-                                        focus:ring-[#8f4f51]/20
+                                        focus:ring-[var(--ring)]
                                     "
                                     value={grupoSelecionado}
                                     onChange={(evento) => {
@@ -1191,7 +1190,7 @@ export default function Volume() {
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-500
+                                    text-[var(--text-muted)]
                                 ">
                                     Semana
                                 </span>
@@ -1202,17 +1201,17 @@ export default function Volume() {
                                         w-full
                                         rounded-xl
                                         border
-                                        border-zinc-400
-                                        bg-[#eeeeee]
+                                        border-[var(--border-strong)]
+                                        bg-[var(--surface-secondary)]
                                         px-3
                                         font-bold
-                                        text-zinc-700
+                                        text-[var(--text-primary)]
                                         outline-none
                                         transition-all
-                                        focus:border-[#8f4f51]
-                                        focus:bg-[#f5eeee]
+                                        focus:border-[var(--accent-border)]
+                                        focus:bg-[var(--accent-soft)]
                                         focus:ring-2
-                                        focus:ring-[#8f4f51]/20
+                                        focus:ring-[var(--ring)]
                                     "
                                     value={semanaModal}
                                     onChange={(evento) => {
@@ -1282,7 +1281,7 @@ export default function Volume() {
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-500
+                                    text-[var(--text-muted)]
                                 ">
                                     Séries diretas
                                 </span>
@@ -1301,18 +1300,18 @@ export default function Volume() {
                                         w-full
                                         rounded-xl
                                         border
-                                        border-zinc-400
-                                        bg-[#eeeeee]
+                                        border-[var(--border-strong)]
+                                        bg-[var(--surface-secondary)]
                                         px-3
                                         font-black
-                                        text-[#8f4f51]
+                                        text-[var(--accent-text)]
                                         outline-none
                                         transition-all
                                         placeholder:text-zinc-400
-                                        focus:border-[#8f4f51]
-                                        focus:bg-[#f5eeee]
+                                        focus:border-[var(--accent-border)]
+                                        focus:bg-[var(--accent-soft)]
                                         focus:ring-2
-                                        focus:ring-[#8f4f51]/20
+                                        focus:ring-[var(--ring)]
                                     "
                                     placeholder="Digite as séries diretas"
                                 />
@@ -1332,7 +1331,7 @@ export default function Volume() {
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-500
+                                    text-[var(--text-muted)]
                                 ">
                                     Séries livres
                                 </span>
@@ -1351,18 +1350,18 @@ export default function Volume() {
                                         w-full
                                         rounded-xl
                                         border
-                                        border-zinc-400
-                                        bg-[#eeeeee]
+                                        border-[var(--border-strong)]
+                                        bg-[var(--surface-secondary)]
                                         px-3
                                         font-black
-                                        text-[#8f4f51]
+                                        text-[var(--accent-text)]
                                         outline-none
                                         transition-all
                                         placeholder:text-zinc-400
-                                        focus:border-[#8f4f51]
-                                        focus:bg-[#f5eeee]
+                                        focus:border-[var(--accent-border)]
+                                        focus:bg-[var(--accent-soft)]
                                         focus:ring-2
-                                        focus:ring-[#8f4f51]/20
+                                        focus:ring-[var(--ring)]
                                     "
                                     placeholder="Digite as séries livres"
                                 />
@@ -1373,8 +1372,8 @@ export default function Volume() {
                                 mb-5
                                 rounded-2xl
                                 border
-                                border-zinc-300
-                                bg-[#eeeeee]
+                                border-[var(--border)]
+                                bg-[var(--surface-secondary)]
                                 p-4
                             ">
 
@@ -1383,7 +1382,7 @@ export default function Volume() {
                                     font-black
                                     uppercase
                                     tracking-wide
-                                    text-zinc-500
+                                    text-[var(--text-muted)]
                                 ">
                                     Volume total
                                 </span>
@@ -1392,7 +1391,7 @@ export default function Volume() {
                                     mt-1
                                     text-3xl
                                     font-black
-                                    text-[#8f4f51]
+                                    text-[var(--accent-text)]
                                 ">
                                     {
                                         (Number(
@@ -1420,18 +1419,18 @@ export default function Volume() {
                                         h-10
                                         rounded-xl
                                         border
-                                        border-zinc-400
-                                        bg-[#eeeeee]
+                                        border-[var(--border-strong)]
+                                        bg-[var(--surface-secondary)]
                                         px-4
                                         text-sm
                                         font-bold
                                         uppercase
-                                        text-zinc-600
+                                        text-[var(--text-secondary)]
                                         transition-all
                                         hover:cursor-pointer
-                                        hover:border-red-400
-                                        hover:bg-red-50
-                                        hover:text-red-600
+                                        hover:border-[var(--danger)]
+                                        hover:bg-[var(--danger-soft)]
+                                        hover:text-[var(--danger)]
                                     "
                                 >
                                     Cancelar
@@ -1443,16 +1442,16 @@ export default function Volume() {
                                         h-10
                                         rounded-xl
                                         border
-                                        border-[#8f4f51]
-                                        bg-[#8f4f51]
+                                        border-[var(--accent-border)]
+                                        bg-[var(--accent)]
                                         px-5
                                         text-sm
                                         font-bold
                                         uppercase
-                                        text-white
+                                        text-[var(--on-accent)]
                                         transition-all
                                         hover:cursor-pointer
-                                        hover:bg-[#713b3d]
+                                        hover:bg-[var(--accent-hover)]
                                         hover:shadow-sm
                                     "
                                 >

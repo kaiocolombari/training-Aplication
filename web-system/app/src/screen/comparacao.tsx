@@ -16,7 +16,7 @@ import { GraficoForca } from '../components/chartForca';
 
 
 const valorClass =    
-    "flex h-10 items-center justify-center rounded-xl border border-zinc-300 bg-[#e2e2e2] px-3 text-sm font-bold text-zinc-700";
+    "flex h-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] px-3 text-sm font-bold text-[var(--text-primary)]";
 
 const diferencaClass = (valor: number | string) => {
     const numero =
@@ -25,14 +25,14 @@ const diferencaClass = (valor: number | string) => {
             : parseDecimal(String(valor));
 
     if (numero > 0) {
-        return "flex h-10 items-center justify-center rounded-xl border border-[#b88b8b] bg-[#f3e5e5] px-3 text-sm font-black text-[#8f4f51]";
+        return "flex h-10 items-center justify-center rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)] px-3 text-sm font-black text-[var(--accent)]";
     }
 
     if (numero < 0) {
-        return "flex h-10 items-center justify-center rounded-xl border border-zinc-300 bg-[#e5e5e5] px-3 text-sm font-black text-zinc-600";
+        return "flex h-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] px-3 text-sm font-black text-[var(--text-secondary)]";
     }
 
-    return "flex h-10 items-center justify-center rounded-xl border border-zinc-300 bg-[#eeeeee] px-3 text-sm font-black text-zinc-500";
+    return "flex h-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-tertiary)] px-3 text-sm font-black text-[var(--text-secondary)]";
 };
 
 const perimetroConfig: PerimetroField[] = [
@@ -1444,44 +1444,44 @@ export default function comparacao() {
     }, []);
 
     return (
-        <main className="min-h-full bg-[#ececec] p-3 md:p-5">
+        <main className="min-h-full bg-[var(--surface-sunken)] p-3 text-[var(--text-primary)] md:p-5">
 
-            <section className="mb-6 rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-6 shadow-sm">
+            <section className="mb-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
 
                 <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
                     <div>
-                        <p className="mb-1 text-sm font-bold uppercase tracking-[0.2em] text-[#a85f60]">
+                        <p className="mb-1 text-sm font-bold uppercase tracking-[0.2em] text-[var(--accent)]">
                             Avaliação física
                         </p>
 
-                        <h1 className="text-3xl font-black italic tracking-tight text-zinc-700">
+                        <h1 className="text-3xl font-black italic tracking-tight text-[var(--text-primary)]">
                             Evolução do atleta
                         </h1>
 
-                        <p className="mt-1 text-sm text-zinc-500">
+                        <p className="mt-1 text-sm text-[var(--text-secondary)]">
                             Comparação entre a primeira e a segunda avaliação.
                         </p>
                     </div>
 
                     <div className="flex items-center gap-3">
 
-                        <div className="rounded-2xl border border-zinc-300 bg-[#eeeeee] px-5 py-3 text-center">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] px-5 py-3 text-center">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                                 Avaliações
                             </p>
 
-                            <p className="mt-1 text-lg font-black text-[#8f4f51]">
+                            <p className="mt-1 text-lg font-black text-[var(--accent)]">
                                 01 → 02
                             </p>
                         </div>
 
-                        <div className="rounded-2xl border border-zinc-300 bg-[#eeeeee] px-5 py-3 text-center">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] px-5 py-3 text-center">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                                 Atleta
                             </p>
 
-                            <p className="mt-1 max-w-[180px] truncate text-sm font-black text-zinc-700">
+                            <p className="mt-1 max-w-[180px] truncate text-sm font-black text-[var(--text-primary)]">
                                 {data.nomeCompleto}
                             </p>
                         </div>
@@ -1490,50 +1490,50 @@ export default function comparacao() {
                 </div>
             </section>
 
-            <section className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-300 bg-[#f7f7f7] p-4">
+            <section className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
 
-                <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                     Leitura:
                 </span>
 
-                <div className="flex items-center gap-2 rounded-xl bg-[#eeeeee] px-3 py-2">
-                    <div className="h-3 w-3 rounded-full bg-[#a85f60]" />
-                    <span className="text-xs font-semibold text-zinc-600">
+                <div className="flex items-center gap-2 rounded-xl bg-[var(--surface-tertiary)] px-3 py-2">
+                    <div className="h-3 w-3 rounded-full bg-[var(--accent)]" />
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">
                         1ª avaliação
                     </span>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-xl bg-[#eeeeee] px-3 py-2">
+                <div className="flex items-center gap-2 rounded-xl bg-[var(--surface-tertiary)] px-3 py-2">
                     <div className="h-3 w-3 rounded-full bg-zinc-500" />
-                    <span className="text-xs font-semibold text-zinc-600">
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">
                         2ª avaliação
                     </span>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-xl bg-[#eeeeee] px-3 py-2">
-                    <div className="h-3 w-3 rounded-full bg-[#8f4f51]" />
-                    <span className="text-xs font-semibold text-zinc-600">
+                <div className="flex items-center gap-2 rounded-xl bg-[var(--surface-tertiary)] px-3 py-2">
+                    <div className="h-3 w-3 rounded-full bg-[var(--accent)]" />
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">
                         Diferença
                     </span>
                 </div>
 
             </section>
 
-            <section className="mb-8 rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-5 shadow-sm">
+            <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
 
                 <div className="mb-5 flex items-center justify-between">
 
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-[#a85f60]">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                             Medidas corporais
                         </p>
 
-                        <h2 className="text-2xl font-black text-zinc-700">
+                        <h2 className="text-2xl font-black text-[var(--text-primary)]">
                             Perímetros corporais
                         </h2>
                     </div>
 
-                    <div className="hidden rounded-xl bg-[#eeeeee] px-4 py-2 text-xs font-bold text-zinc-500 md:block">
+                    <div className="hidden rounded-xl bg-[var(--surface-tertiary)] px-4 py-2 text-xs font-bold text-[var(--text-secondary)] md:block">
                         Unidade: cm
                     </div>
 
@@ -1542,23 +1542,23 @@ export default function comparacao() {
 
                 <div className="grid gap-6 xl:grid-cols-[1.35fr_0.8fr]">
 
-                    <div className="overflow-hidden rounded-2xl border border-zinc-300">
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
 
-                        <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-2 bg-[#eeeeee] p-3">
+                        <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-2 bg-[var(--surface-tertiary)] p-3">
 
-                            <span className="text-xs font-black uppercase tracking-wider text-zinc-500">
+                            <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                                 Medida
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 1ª avaliação
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 2ª avaliação
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Δ diferença
                             </span>
 
@@ -1573,18 +1573,18 @@ export default function comparacao() {
                                 <div
                                     key={field.key}
                                     className={`grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-2 p-2 ${index % 2 === 0
-                                        ? "bg-[#f7f7f7]"
-                                        : "bg-[#eeeeee]"
+                                        ? "bg-[var(--surface-raised)]"
+                                        : "bg-[var(--surface-tertiary)]"
                                         }`}
                                 >
 
                                     <div className="flex items-center gap-2">
 
-                                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#e2e2e2] text-[10px] font-black text-zinc-500">
+                                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-secondary)] text-[10px] font-black text-[var(--text-secondary)]">
                                             {field.index}
                                         </span>
 
-                                        <span className="text-sm font-bold text-zinc-600">
+                                        <span className="text-sm font-bold text-[var(--text-secondary)]">
                                             {field.label}
                                         </span>
 
@@ -1609,7 +1609,7 @@ export default function comparacao() {
 
                     </div>
 
-                    <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-zinc-300 bg-[#eeeeee]">
+                    <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)]">
 
                         <img
                             src="./app/src/assets/human.png"
@@ -1622,21 +1622,21 @@ export default function comparacao() {
                 </div>
             </section>
 
-            <section className="mb-8 rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-5 shadow-sm">
+            <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
 
                 <div className="mb-5 flex items-center justify-between">
 
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-[#a85f60]">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                             Composição corporal
                         </p>
 
-                        <h2 className="text-2xl font-black text-zinc-700">
+                        <h2 className="text-2xl font-black text-[var(--text-primary)]">
                             Dobras cutâneas
                         </h2>
                     </div>
 
-                    <div className="hidden rounded-xl bg-[#eeeeee] px-4 py-2 text-xs font-bold text-zinc-500 md:block">
+                    <div className="hidden rounded-xl bg-[var(--surface-tertiary)] px-4 py-2 text-xs font-bold text-[var(--text-secondary)] md:block">
                         Unidade: mm
                     </div>
 
@@ -1645,23 +1645,23 @@ export default function comparacao() {
 
                 <div className="grid gap-6 xl:grid-cols-[1.35fr_0.8fr]">
 
-                    <div className="overflow-hidden rounded-2xl border border-zinc-300">
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
 
-                        <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-2 bg-[#eeeeee] p-3">
+                        <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-2 bg-[var(--surface-tertiary)] p-3">
 
-                            <span className="text-xs font-black uppercase tracking-wider text-zinc-500">
+                            <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                                 Ponto
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 1ª avaliação
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 2ª avaliação
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Δ diferença
                             </span>
 
@@ -1678,18 +1678,18 @@ export default function comparacao() {
                                 <div
                                     key={field.key}
                                     className={`grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-2 p-2 ${index % 2 === 0
-                                        ? "bg-[#f7f7f7]"
-                                        : "bg-[#eeeeee]"
+                                        ? "bg-[var(--surface-raised)]"
+                                        : "bg-[var(--surface-tertiary)]"
                                         }`}
                                 >
 
                                     <div className="flex items-center gap-2">
 
-                                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#e2e2e2] text-[10px] font-black text-zinc-500">
+                                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-secondary)] text-[10px] font-black text-[var(--text-secondary)]">
                                             {field.index}
                                         </span>
 
-                                        <span className="text-sm font-bold text-zinc-600">
+                                        <span className="text-sm font-bold text-[var(--text-secondary)]">
                                             {field.label}
                                         </span>
 
@@ -1712,7 +1712,7 @@ export default function comparacao() {
                             );
                         })}
 
-                        <div className="border-t border-zinc-300 bg-[#eeeeee] p-3">
+                        <div className="border-t border-[var(--border)] bg-[var(--surface-tertiary)] p-3">
 
                             <div className="grid gap-3 md:grid-cols-3">
 
@@ -1739,17 +1739,17 @@ export default function comparacao() {
 
                                     <div
                                         key={item.label}
-                                        className="rounded-2xl border border-zinc-300 bg-[#f7f7f7] p-3"
+                                        className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3"
                                     >
 
-                                        <p className="mb-2 text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                                        <p className="mb-2 text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                             {item.label}
                                         </p>
 
                                         <div className="grid grid-cols-3 gap-2">
 
                                             <div>
-                                                <p className="mb-1 text-[10px] font-bold text-zinc-400">
+                                                <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                                     AV. 01
                                                 </p>
 
@@ -1759,7 +1759,7 @@ export default function comparacao() {
                                             </div>
 
                                             <div>
-                                                <p className="mb-1 text-[10px] font-bold text-zinc-400">
+                                                <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                                     AV. 02
                                                 </p>
 
@@ -1769,7 +1769,7 @@ export default function comparacao() {
                                             </div>
 
                                             <div>
-                                                <p className="mb-1 text-[10px] font-bold text-zinc-400">
+                                                <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                                     Δ
                                                 </p>
 
@@ -1791,7 +1791,7 @@ export default function comparacao() {
                     </div>
 
 
-                    <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-zinc-300 bg-[#eeeeee]">
+                    <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)]">
 
                         <img
                             src="./app/src/assets/human2.png"
@@ -1806,15 +1806,15 @@ export default function comparacao() {
 
             <section className="mb-8 grid gap-6 xl:grid-cols-2">
 
-                <div className="rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-5 shadow-sm">
+                <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
 
                     <div className="mb-4">
 
-                        <p className="text-xs font-bold uppercase tracking-widest text-[#a85f60]">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                             Análise visual
                         </p>
 
-                        <h2 className="text-xl font-black text-zinc-700">
+                        <h2 className="text-xl font-black text-[var(--text-primary)]">
                             Escala de proporcionalidade
                         </h2>
 
@@ -1822,20 +1822,20 @@ export default function comparacao() {
 
                     <div className="flex justify-center">
 
-                        <div className="relative h-[420px] w-full max-w-[520px] rounded-2xl border border-zinc-300 bg-white">
+                        <div className="relative h-[420px] w-full max-w-[520px] rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
 
                             <div className="absolute inset-0 grid grid-cols-10 overflow-hidden rounded-2xl">
 
-                                <div className="bg-[#e89a9a]" />
-                                <div className="bg-[#f3b2b2]" />
-                                <div className="bg-[#f7dfaa]" />
-                                <div className="bg-[#f5ec99]" />
-                                <div className="bg-[#d6e8c7]" />
-                                <div className="bg-[#d6e8c7]" />
-                                <div className="bg-[#f5ec99]" />
-                                <div className="bg-[#f7dfaa]" />
-                                <div className="bg-[#f3b2b2]" />
-                                <div className="bg-[#e89a9a]" />
+                                <div className="bg-[var(--danger)]" />
+                                <div className="bg-[var(--danger-soft)]" />
+                                <div className="bg-[var(--warning-soft)]" />
+                                <div className="bg-[var(--warning-soft)]" />
+                                <div className="bg-[var(--success-soft)]" />
+                                <div className="bg-[var(--success-soft)]" />
+                                <div className="bg-[var(--warning-soft)]" />
+                                <div className="bg-[var(--warning-soft)]" />
+                                <div className="bg-[var(--danger-soft)]" />
+                                <div className="bg-[var(--danger)]" />
 
                             </div>
 
@@ -1845,7 +1845,7 @@ export default function comparacao() {
                                 {Array.from({ length: 10 }).map((_, idx) => (
                                     <div
                                         key={idx}
-                                        className="border-r border-zinc-400/40"
+                                        className="border-r border-[var(--border-strong)]/40"
                                     />
                                 ))}
 
@@ -1857,7 +1857,7 @@ export default function comparacao() {
                                 {Array.from({ length: 14 }).map((_, idx) => (
                                     <div
                                         key={idx}
-                                        className="border-b border-zinc-300/60"
+                                        className="border-b border-[var(--border)]/60"
                                     />
                                 ))}
 
@@ -1871,7 +1871,7 @@ export default function comparacao() {
 
                                 <div
                                     key={`p1-${idx}`}
-                                    className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8f4f51] shadow-md"
+                                    className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent)] shadow-md"
                                     style={{
                                         left: `${((point.x + 5) / 10) * 100}%`,
                                         top: `${((point.y - 0.5) / 14) * 100}%`,
@@ -1885,7 +1885,7 @@ export default function comparacao() {
 
                                 <div
                                     key={`p2-${idx}`}
-                                    className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-zinc-600 bg-[#eeeeee] shadow-md"
+                                    className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)] shadow-md"
                                     style={{
                                         left: `${((point.x + 5) / 10) * 100}%`,
                                         top: `${((point.y - 0.5) / 14) * 100}%`,
@@ -1901,13 +1901,13 @@ export default function comparacao() {
 
                     <div className="mt-5 flex justify-center gap-5">
 
-                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-500">
-                            <span className="h-3 w-3 rounded-full bg-[#8f4f51]" />
+                        <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)]">
+                            <span className="h-3 w-3 rounded-full bg-[var(--accent)]" />
                             1ª avaliação
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-500">
-                            <span className="h-3 w-3 rounded-full border-2 border-zinc-600 bg-[#eeeeee]" />
+                        <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)]">
+                            <span className="h-3 w-3 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)]" />
                             2ª avaliação
                         </div>
 
@@ -1915,15 +1915,15 @@ export default function comparacao() {
 
                 </div>
 
-                <div className="rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-5 shadow-sm">
+                <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
 
                     <div className="mb-4">
 
-                        <p className="text-xs font-bold uppercase tracking-widest text-[#a85f60]">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                             Análise visual
                         </p>
 
-                        <h2 className="text-xl font-black text-zinc-700">
+                        <h2 className="text-xl font-black text-[var(--text-primary)]">
                             Distribuição das dobras
                         </h2>
 
@@ -1932,20 +1932,20 @@ export default function comparacao() {
 
                     <div className="flex justify-center">
 
-                        <div className="relative h-[420px] w-full max-w-[520px] rounded-2xl border border-zinc-300 bg-white">
+                        <div className="relative h-[420px] w-full max-w-[520px] rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
 
                             <div className="absolute inset-0 grid grid-cols-10 overflow-hidden rounded-2xl">
 
-                                <div className="bg-[#e89a9a]" />
-                                <div className="bg-[#f3b2b2]" />
-                                <div className="bg-[#f7dfaa]" />
-                                <div className="bg-[#f5ec99]" />
-                                <div className="bg-[#d6e8c7]" />
-                                <div className="bg-[#d6e8c7]" />
-                                <div className="bg-[#f5ec99]" />
-                                <div className="bg-[#f7dfaa]" />
-                                <div className="bg-[#f3b2b2]" />
-                                <div className="bg-[#e89a9a]" />
+                                <div className="bg-[var(--danger)]" />
+                                <div className="bg-[var(--danger-soft)]" />
+                                <div className="bg-[var(--warning-soft)]" />
+                                <div className="bg-[var(--warning-soft)]" />
+                                <div className="bg-[var(--success-soft)]" />
+                                <div className="bg-[var(--success-soft)]" />
+                                <div className="bg-[var(--warning-soft)]" />
+                                <div className="bg-[var(--warning-soft)]" />
+                                <div className="bg-[var(--danger-soft)]" />
+                                <div className="bg-[var(--danger)]" />
 
                             </div>
 
@@ -1955,7 +1955,7 @@ export default function comparacao() {
                                 {Array.from({ length: 10 }).map((_, idx) => (
                                     <div
                                         key={idx}
-                                        className="border-r border-zinc-400/40"
+                                        className="border-r border-[var(--border-strong)]/40"
                                     />
                                 ))}
 
@@ -1967,7 +1967,7 @@ export default function comparacao() {
                                 {Array.from({ length: 8 }).map((_, idx) => (
                                     <div
                                         key={idx}
-                                        className="border-b border-zinc-300/60"
+                                        className="border-b border-[var(--border)]/60"
                                     />
                                 ))}
 
@@ -1981,7 +1981,7 @@ export default function comparacao() {
 
                                 <div
                                     key={`d1-${idx}`}
-                                    className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8f4f51] shadow-md"
+                                    className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent)] shadow-md"
                                     style={{
                                         left: `${((point.x + 5) / 10) * 100}%`,
                                         top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
@@ -1995,7 +1995,7 @@ export default function comparacao() {
 
                                 <div
                                     key={`d2-${idx}`}
-                                    className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-zinc-600 bg-[#eeeeee] shadow-md"
+                                    className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)] shadow-md"
                                     style={{
                                         left: `${((point.x + 5) / 10) * 100}%`,
                                         top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
@@ -2011,13 +2011,13 @@ export default function comparacao() {
 
                     <div className="mt-5 flex justify-center gap-5">
 
-                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-500">
-                            <span className="h-3 w-3 rounded-full bg-[#8f4f51]" />
+                        <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)]">
+                            <span className="h-3 w-3 rounded-full bg-[var(--accent)]" />
                             1ª avaliação
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-500">
-                            <span className="h-3 w-3 rounded-full border-2 border-zinc-600 bg-[#eeeeee]" />
+                        <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)]">
+                            <span className="h-3 w-3 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)]" />
                             2ª avaliação
                         </div>
 
@@ -2027,15 +2027,15 @@ export default function comparacao() {
 
             </section>
 
-            <section className="mb-8 rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-5 shadow-sm">
+            <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
 
                 <div className="mb-5">
 
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#a85f60]">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                         Análise corporal
                     </p>
 
-                    <h2 className="text-2xl font-black text-zinc-700">
+                    <h2 className="text-2xl font-black text-[var(--text-primary)]">
                         Composição corporal
                     </h2>
 
@@ -2077,16 +2077,16 @@ export default function comparacao() {
 
                         <div
                             key={item.titulo}
-                            className="rounded-2xl border border-zinc-300 bg-[#eeeeee] p-4"
+                            className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] p-4"
                         >
 
                             <div className="mb-4">
 
-                                <p className="text-xs font-black uppercase tracking-wider text-zinc-500">
+                                <p className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                                     {item.titulo}
                                 </p>
 
-                                <p className="text-[11px] text-zinc-400">
+                                <p className="text-[11px] text-[var(--text-muted)]">
                                     {item.unidade}
                                 </p>
 
@@ -2096,7 +2096,7 @@ export default function comparacao() {
                             <div className="grid grid-cols-3 gap-2">
 
                                 <div>
-                                    <p className="mb-1 text-[10px] font-bold uppercase text-zinc-400">
+                                    <p className="mb-1 text-[10px] font-bold uppercase text-[var(--text-muted)]">
                                         01
                                     </p>
 
@@ -2107,7 +2107,7 @@ export default function comparacao() {
 
 
                                 <div>
-                                    <p className="mb-1 text-[10px] font-bold uppercase text-zinc-400">
+                                    <p className="mb-1 text-[10px] font-bold uppercase text-[var(--text-muted)]">
                                         02
                                     </p>
 
@@ -2118,7 +2118,7 @@ export default function comparacao() {
 
 
                                 <div>
-                                    <p className="mb-1 text-[10px] font-bold uppercase text-zinc-400">
+                                    <p className="mb-1 text-[10px] font-bold uppercase text-[var(--text-muted)]">
                                         Δ
                                     </p>
 
@@ -2135,33 +2135,33 @@ export default function comparacao() {
 
                 </div>
 
-                <div className="mt-5 rounded-2xl border border-zinc-300 bg-[#eeeeee] p-5">
+                <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] p-5">
 
                     <div className="mb-4">
 
-                        <p className="text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                        <p className="text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                             Distribuição
                         </p>
 
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-[var(--text-secondary)]">
                             Comparação da massa muscular e massa adiposa.
                         </p>
 
                     </div>
 
 
-                    <div className="relative h-[150px] w-full overflow-hidden rounded-xl border border-zinc-300 bg-white">
+                    <div className="relative h-[150px] w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
 
-                        <div className="absolute left-0 right-0 top-[25%] border-b border-zinc-300" />
+                        <div className="absolute left-0 right-0 top-[25%] border-b border-[var(--border)]" />
 
-                        <div className="absolute left-0 right-0 top-[75%] border-b border-zinc-300" />
+                        <div className="absolute left-0 right-0 top-[75%] border-b border-[var(--border)]" />
 
 
                         {pontosComposicao.map((point, idx) => (
 
                             <div
                                 key={`comp1-${idx}`}
-                                className="absolute z-10 h-4 w-4 rounded-full bg-[#8f4f51] shadow"
+                                className="absolute z-10 h-4 w-4 rounded-full bg-[var(--accent)] shadow"
                                 style={{
                                     left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
                                     top:
@@ -2179,7 +2179,7 @@ export default function comparacao() {
 
                             <div
                                 key={`comp2-${idx}`}
-                                className="absolute z-10 h-4 w-4 rounded-full border-2 border-zinc-600 bg-[#eeeeee] shadow"
+                                className="absolute z-10 h-4 w-4 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)] shadow"
                                 style={{
                                     left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
                                     top:
@@ -2198,15 +2198,15 @@ export default function comparacao() {
 
             </section>
 
-            <section className="mb-8 rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-5 shadow-sm">
+            <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
 
                 <div className="mb-5">
 
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#a85f60]">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                         Desempenho
                     </p>
 
-                    <h2 className="text-2xl font-black text-zinc-700">
+                    <h2 className="text-2xl font-black text-[var(--text-primary)]">
                         Teste de carga máxima — 1RM
                     </h2>
 
@@ -2246,16 +2246,16 @@ export default function comparacao() {
 
                             <div
                                 key={item.nome}
-                                className="rounded-2xl border border-zinc-300 bg-[#eeeeee] p-4"
+                                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] p-4"
                             >
 
                                 <div className="mb-4 flex items-center justify-between">
 
-                                    <span className="text-sm font-black uppercase tracking-wide text-zinc-600">
+                                    <span className="text-sm font-black uppercase tracking-wide text-[var(--text-secondary)]">
                                         {item.nome}
                                     </span>
 
-                                    <span className="rounded-lg bg-[#e2e2e2] px-2 py-1 text-[10px] font-bold text-zinc-500">
+                                    <span className="rounded-lg bg-[var(--surface-secondary)] px-2 py-1 text-[10px] font-bold text-[var(--text-secondary)]">
                                         1RM
                                     </span>
 
@@ -2265,7 +2265,7 @@ export default function comparacao() {
                                 <div className="grid grid-cols-3 gap-2">
 
                                     <div>
-                                        <p className="mb-1 text-[10px] font-bold text-zinc-400">
+                                        <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                             AV. 01
                                         </p>
 
@@ -2276,7 +2276,7 @@ export default function comparacao() {
 
 
                                     <div>
-                                        <p className="mb-1 text-[10px] font-bold text-zinc-400">
+                                        <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                             AV. 02
                                         </p>
 
@@ -2287,7 +2287,7 @@ export default function comparacao() {
 
 
                                     <div>
-                                        <p className="mb-1 text-[10px] font-bold text-zinc-400">
+                                        <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                             Δ
                                         </p>
 
@@ -2306,15 +2306,15 @@ export default function comparacao() {
                     </div>
 
 
-                    <div className="overflow-hidden rounded-2xl border border-zinc-300 bg-[#eeeeee]">
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)]">
 
-                        <div className="border-b border-zinc-300 p-4">
+                        <div className="border-b border-[var(--border)] p-4">
 
-                            <p className="text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <p className="text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Produção de força
                             </p>
 
-                            <p className="text-sm text-zinc-500">
+                            <p className="text-sm text-[var(--text-secondary)]">
                                 Evolução estimada da força máxima.
                             </p>
 
@@ -2335,15 +2335,15 @@ export default function comparacao() {
 
             </section>
 
-            <section className="mb-8 rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-5 shadow-sm">
+            <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
 
                 <div className="mb-5">
 
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#a85f60]">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                         Controle laboratorial
                     </p>
 
-                    <h2 className="text-2xl font-black text-zinc-700">
+                    <h2 className="text-2xl font-black text-[var(--text-primary)]">
                         Controle bioquímico
                     </h2>
 
@@ -2352,23 +2352,23 @@ export default function comparacao() {
 
                 <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
 
-                    <div className="overflow-hidden rounded-2xl border border-zinc-300">
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
 
-                        <div className="grid grid-cols-[1.3fr_1fr_1fr_1fr] bg-[#eeeeee] p-3">
+                        <div className="grid grid-cols-[1.3fr_1fr_1fr_1fr] bg-[var(--surface-tertiary)] p-3">
 
-                            <span className="text-xs font-black uppercase tracking-wider text-zinc-500">
+                            <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                                 Exame
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 AV. 01
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 AV. 02
                             </span>
 
-                            <span className="text-center text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Δ
                             </span>
 
@@ -2408,12 +2408,12 @@ export default function comparacao() {
                                 <div
                                     key={item.nome}
                                     className={`grid grid-cols-[1.3fr_1fr_1fr_1fr] items-center gap-2 p-3 ${index % 2 === 0
-                                        ? "bg-[#f7f7f7]"
-                                        : "bg-[#eeeeee]"
+                                        ? "bg-[var(--surface-raised)]"
+                                        : "bg-[var(--surface-tertiary)]"
                                         }`}
                                 >
 
-                                    <span className="text-sm font-bold text-zinc-600">
+                                    <span className="text-sm font-bold text-[var(--text-secondary)]">
                                         {item.nome}
                                     </span>
 
@@ -2436,34 +2436,34 @@ export default function comparacao() {
 
                     </div>
 
-                    <div className="rounded-2xl border border-zinc-300 bg-[#eeeeee] p-4">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] p-4">
 
                         <div className="mb-4">
 
-                            <p className="text-xs font-black uppercase tracking-wider text-[#a85f60]">
+                            <p className="text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Valores de referência
                             </p>
 
-                            <p className="text-sm text-zinc-500">
+                            <p className="text-sm text-[var(--text-secondary)]">
                                 Faixas utilizadas como referência visual.
                             </p>
 
                         </div>
 
 
-                        <div className="overflow-hidden rounded-xl border border-zinc-300">
+                        <div className="overflow-hidden rounded-xl border border-[var(--border)]">
 
-                            <div className="grid grid-cols-3 bg-[#e2e2e2] p-3">
+                            <div className="grid grid-cols-3 bg-[var(--surface-secondary)] p-3">
 
-                                <span className="text-xs font-black uppercase text-zinc-500">
+                                <span className="text-xs font-black uppercase text-[var(--text-secondary)]">
                                     Exame
                                 </span>
 
-                                <span className="text-center text-xs font-black uppercase text-zinc-500">
+                                <span className="text-center text-xs font-black uppercase text-[var(--text-secondary)]">
                                     Desejável
                                 </span>
 
-                                <span className="text-center text-xs font-black uppercase text-zinc-500">
+                                <span className="text-center text-xs font-black uppercase text-[var(--text-secondary)]">
                                     Limítrofe
                                 </span>
 
@@ -2480,20 +2480,20 @@ export default function comparacao() {
                                 <div
                                     key={item[0]}
                                     className={`grid grid-cols-3 items-center p-3 ${index % 2 === 0
-                                        ? "bg-[#f7f7f7]"
-                                        : "bg-[#eeeeee]"
+                                        ? "bg-[var(--surface-raised)]"
+                                        : "bg-[var(--surface-tertiary)]"
                                         }`}
                                 >
 
-                                    <span className="text-sm font-bold text-zinc-600">
+                                    <span className="text-sm font-bold text-[var(--text-secondary)]">
                                         {item[0]}
                                     </span>
 
-                                    <span className="text-center text-xs font-semibold text-zinc-500">
+                                    <span className="text-center text-xs font-semibold text-[var(--text-secondary)]">
                                         {item[1]}
                                     </span>
 
-                                    <span className="text-center text-xs font-semibold text-zinc-500">
+                                    <span className="text-center text-xs font-semibold text-[var(--text-secondary)]">
                                         {item[2]}
                                     </span>
 
@@ -2509,19 +2509,19 @@ export default function comparacao() {
 
             </section>
 
-            <section className="mb-20 rounded-3xl border border-zinc-300 bg-[#f7f7f7] p-5 shadow-sm">
+            <section className="mb-20 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
 
                 <div className="mb-4">
 
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#a85f60]">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                         Observações
                     </p>
 
-                    <h2 className="text-2xl font-black text-zinc-700">
+                    <h2 className="text-2xl font-black text-[var(--text-primary)]">
                         Parecer descritivo
                     </h2>
 
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
                         Registre a interpretação geral da evolução do atleta.
                     </p>
 
@@ -2538,22 +2538,22 @@ export default function comparacao() {
                     resize-y
                     rounded-2xl
                     border-2
-                    border-zinc-400
-                    bg-[#e2e2e2]
+                    border-[var(--border-strong)]
+                    bg-[var(--surface-secondary)]
                     p-4
                     text-sm
                     font-medium
-                    text-zinc-700
+                    text-[var(--text-primary)]
                     outline-none
                     transition-all
                     duration-150
-                    placeholder:text-zinc-400
-                    hover:border-zinc-500
-                    hover:bg-[#dddddd]
-                    focus:border-[#8f4f51]
-                    focus:bg-[#f3e5e5]
+                    placeholder:text-[var(--text-muted)]
+                    hover:border-[var(--accent)]
+                    hover:bg-[var(--surface-hover)]
+                    focus:border-[var(--accent)]
+                    focus:bg-[var(--accent-soft)]
                     focus:ring-2
-                    focus:ring-[#8f4f51]/20
+                    focus:ring-[var(--ring)]
                 "
                 />
 
