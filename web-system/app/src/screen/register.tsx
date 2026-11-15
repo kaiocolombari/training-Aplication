@@ -1,11 +1,9 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router";
-import { criarPersonal } from "../service/personalService";
+import { Link } from "react-router";
 import "../../app.css";
 
 type Mode = "signup" | "login";
-type Profile = "personal" | "student";
 
 function BoltIcon() {
     return (
@@ -40,10 +38,7 @@ function EyeIcon() {
 }
 
 export default function Register() {
-    const navigate = useNavigate();
-
     const [mode, setMode] = useState<Mode>("login");
-    const [profile, setProfile] = useState<Profile>("personal");
 
     const [nome, setNome] = useState("");
     const [email, setEmail] = useState("");
@@ -55,7 +50,6 @@ export default function Register() {
     const [message, setMessage] = useState("");
 
     const [mostrarSenha, setMostrarSenha] = useState(false);
-    const [carregando, setCarregando] = useState(false);
 
     const isSignup = mode === "signup";
 
@@ -66,7 +60,7 @@ export default function Register() {
         setMostrarSenha(false);
     }
 
-    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
         setErro("");
@@ -88,34 +82,11 @@ export default function Register() {
                 return;
             }
 
-            try {
-                setCarregando(true);
-
-                const personal = await criarPersonal({
-                    email,
-                    nomeCompleto: nome,
-                    telefone,
-                    senha,
-                });
-
-                console.log("Personal criado:", personal);
-
-                navigate("/login");
-            } catch (error) {
-                if (error instanceof Error) {
-                    setErro(error.message);
-                } else {
-                    setErro("Erro ao criar conta.");
-                }
-            } finally {
-                setCarregando(false);
-            }
-
+            setMessage("O cadastro de alunos depende da disponibilização do endpoint de auto cadastro na API.");
             return;
         }
 
-        // Integração do login pode ser adicionada aqui.
-        setMessage("Formulário de login pronto para integração.");
+        setMessage("A autenticação depende da validação de senha e da emissão de token pela API.");
     }
 
     return (
@@ -217,8 +188,8 @@ export default function Register() {
 
                         <p className="mb-[27px] mt-[21px] max-w-[320px] text-xs leading-[1.7] text-zinc-500">
                             {isSignup
-                                ? "Acesse seus alunos, fichas de treino e resultados em um só lugar."
-                                : "Crie treinos, acompanhe resultados e construa uma rotina que realmente funciona."}
+                                ? "Acompanhe seus treinos, resultados e evolução em um só lugar."
+                                : "Acesse seus treinos, acompanhe resultados e construa uma rotina que realmente funciona."}
                         </p>
 
                         <button
@@ -226,7 +197,7 @@ export default function Register() {
                             onClick={() => switchMode(isSignup ? "login" : "signup")}
                             className="flex min-w-[176px] items-center justify-center gap-4 rounded-xl border border-[#a85f6099] bg-[#a85f600a] px-[19px] py-[11px] text-[11px] font-extrabold tracking-wide text-[#a85f60] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#a85f60] hover:bg-[#a85f6017]"
                         >
-                            {isSignup ? "Fazer login" : "Criar minha conta"}
+                            {isSignup ? "Fazer login" : "Criar conta de aluno"}
                             <span className="text-base font-normal">→</span>
                         </button>
 
@@ -277,43 +248,9 @@ export default function Register() {
 
                         <p className="mt-[9px] text-[13px] text-zinc-500">
                             {isSignup
-                                ? "Escolha seu perfil e comece agora."
+                                ? "Crie sua conta de aluno para acompanhar seus treinos."
                                 : "Entre para acessar seus treinos e resultados."}
                         </p>
-
-                        {/* PERFIL */}
-
-                        {isSignup && (
-                            <fieldset className="mb-0 mt-6 border-0 p-0">
-                                <legend className="mb-[9px] text-[10px] font-bold uppercase tracking-[0.09em] text-zinc-500">
-                                    Como você quer usar a plataforma?
-                                </legend>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                    {(["personal", "student"] as Profile[]).map((item) => (
-                                        <button
-                                            key={item}
-                                            type="button"
-                                            aria-pressed={profile === item}
-                                            onClick={() => setProfile(item)}
-                                            className={`grid gap-[2px] rounded-[10px] border px-3 py-[9px] text-left text-[10px] transition-all ${
-                                                profile === item
-                                                    ? "border-[#a85f6099] bg-[#a85f600f] text-zinc-500"
-                                                    : "border-zinc-200 bg-zinc-50 text-zinc-400"
-                                            }`}
-                                        >
-                                            <span className={`text-[12px] font-bold ${
-                                                profile === item ? "text-[#a85f60]" : "text-zinc-600"
-                                            }`}>
-                                                {item === "personal" ? "Personal" : "Aluno"}
-                                            </span>
-
-                                            {item === "personal" ? "Gerenciar alunos" : "Seguir meu treino"}
-                                        </button>
-                                    ))}
-                                </div>
-                            </fieldset>
-                        )}
 
                         {/* CAMPOS */}
 
@@ -333,7 +270,8 @@ export default function Register() {
                                         autoComplete="name"
                                         placeholder="Como podemos te chamar?"
                                         required
-className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13px] text-[14px] text-zinc-700 outline-none transition placeholder:text-[13px] placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white focus:shadow-[0_0_0_3px_rgba(168,95,96,0.08)]"                                    />
+                                        className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13px] text-[14px] text-zinc-700 outline-none transition placeholder:text-[13px] placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white focus:shadow-[0_0_0_3px_rgba(168,95,96,0.08)]"
+                                    />
                                 </label>
                             )}
 
@@ -412,7 +350,8 @@ className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13
                                         autoComplete="new-password"
                                         placeholder="Digite a senha novamente"
                                         required
-className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13px] text-[14px] text-zinc-700 outline-none transition placeholder:text-[13px] placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white focus:shadow-[0_0_0_3px_rgba(168,95,96,0.08)]"                                    />
+                                        className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13px] text-[14px] text-zinc-700 outline-none transition placeholder:text-[13px] placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white focus:shadow-[0_0_0_3px_rgba(168,95,96,0.08)]"
+                                    />
                                 </label>
                             )}
                         </div>
@@ -477,14 +416,9 @@ className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13
 
                         <button
                             type="submit"
-                            disabled={carregando}
-                            className="mt-[22px] flex w-full items-center justify-center gap-4 rounded-xl border border-[#a85f60] bg-[#a85f60] px-[21px] py-[11px] text-[11px] font-extrabold tracking-wide text-white shadow-[0_12px_28px_rgba(168,95,96,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#914f50] hover:shadow-[0_16px_34px_rgba(145,79,80,0.25)] disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:shadow-none"
+                            className="mt-[22px] flex w-full items-center justify-center gap-4 rounded-xl border border-[#a85f60] bg-[#a85f60] px-[21px] py-[11px] text-[11px] font-extrabold tracking-wide text-white shadow-[0_12px_28px_rgba(168,95,96,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#914f50] hover:shadow-[0_16px_34px_rgba(145,79,80,0.25)]"
                         >
-                            {carregando
-                                ? "Criando conta..."
-                                : isSignup
-                                    ? "Começar agora"
-                                    : "Entrar na plataforma"}
+                            {isSignup ? "Criar conta de aluno" : "Entrar na plataforma"}
 
                             <span className="text-base font-normal">→</span>
                         </button>

@@ -21,8 +21,6 @@ export default [
     route("salvar", "src/screen/salvar.tsx"),
   ]),
 
-  // Rotas independentes
-  route("login", "src/screen/login.tsx"),
   route("register", "src/screen/register.tsx"),
 
 ] satisfies RouteConfig;
