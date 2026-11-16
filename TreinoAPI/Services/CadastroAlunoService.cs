@@ -50,24 +50,35 @@ public sealed class CadastroAlunoService
 
     public async Task<List<SolicitacaoCadastroDTO>> ListarPendentesAsync()
     {
-        var solicitacoes = await _db.SolicitacoesCadastro
+        var alunos = await _db.Alunos
             .AsNoTracking()
-            .Where(s => s.Aluno.StatusCadastro == StatusCadastroAluno.PENDENTE)
-            .Include(s => s.Aluno)
-                .ThenInclude(a => a.Usuario)
-            .OrderBy(s => s.EnviadaEm)
+            .Where(a => a.StatusCadastro == StatusCadastroAluno.PENDENTE)
+            .Include(a => a.Usuario)
+            .Include(a => a.SolicitacaoCadastro)
+            .OrderBy(a => a.CriadoEm)
             .ToListAsync();
 
-        return solicitacoes.Select(s => new SolicitacaoCadastroDTO
+        return alunos.Select(aluno => new SolicitacaoCadastroDTO
         {
-            AlunoId = s.AlunoId,
-            NomeCompleto = s.Aluno.NomeCompleto,
-            Email = s.Aluno.Usuario.Email,
-            Telefone = s.Aluno.Usuario.Telefone,
-            CriadoEm = s.Aluno.CriadoEm,
-            EnviadaEm = s.EnviadaEm,
-            Respostas = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(s.RespostasJson) ?? new()
+            AlunoId = aluno.Id,
+            NomeCompleto = aluno.NomeCompleto,
+            Email = aluno.Usuario.Email,
+            Telefone = aluno.Usuario.Telefone,
+            CriadoEm = aluno.CriadoEm,
+            EnviadaEm = aluno.SolicitacaoCadastro?.EnviadaEm,
+            FormularioEnviado = aluno.SolicitacaoCadastro is not null,
+            Respostas = aluno.SolicitacaoCadastro is null
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(aluno.SolicitacaoCadastro.RespostasJson) ?? new()
         }).ToList();
+    }
+
+    public async Task<object> ObterResumoPendentesAsync()
+    {
+        var pendentes = _db.Alunos.Where(a => a.StatusCadastro == StatusCadastroAluno.PENDENTE);
+        var total = await pendentes.CountAsync();
+        var enviados = await pendentes.CountAsync(a => a.SolicitacaoCadastro != null);
+        return new { total, enviados, aguardandoFormulario = total - enviados };
     }
 
     public async Task AprovarAsync(Guid alunoId, Guid? personalIdSolicitado)

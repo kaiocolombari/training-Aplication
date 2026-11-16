@@ -11,12 +11,24 @@ public sealed class AuthService
     private readonly AppDbContext _context;
     private readonly PasswordService _passwords;
     private readonly TokenService _tokens;
+    private readonly AuditoriaService _auditoria;
+    private readonly IHttpContextAccessor _httpContext;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext context, PasswordService passwords, TokenService tokens)
+    public AuthService(
+        AppDbContext context,
+        PasswordService passwords,
+        TokenService tokens,
+        AuditoriaService auditoria,
+        IHttpContextAccessor httpContext,
+        ILogger<AuthService> logger)
     {
         _context = context;
         _passwords = passwords;
         _tokens = tokens;
+        _auditoria = auditoria;
+        _httpContext = httpContext;
+        _logger = logger;
     }
 
     public async Task<AuthSessionResult?> LoginAsync(LoginDTO dto)
@@ -29,11 +41,17 @@ public sealed class AuthService
             .FirstOrDefaultAsync(u => u.Email == email);
 
         if (usuario is null)
+        {
+            await RegistrarTentativaLoginAsync(email, null, "FALHA");
             return null;
+        }
 
         var (valid, needsRehash) = _passwords.Verify(dto.Senha, usuario.SenhaHashed);
         if (!valid)
+        {
+            await RegistrarTentativaLoginAsync(email, usuario, "FALHA");
             return null;
+        }
 
         if (needsRehash)
         {
@@ -41,7 +59,9 @@ public sealed class AuthService
             await _context.SaveChangesAsync();
         }
 
-        return await CreateSessionAsync(usuario);
+        var session = await CreateSessionAsync(usuario);
+        await RegistrarTentativaLoginAsync(email, usuario, "SUCESSO");
+        return session;
     }
 
     public async Task<AuthSessionResult> RegistrarAlunoAsync(RegistrarAlunoDTO dto)
@@ -71,7 +91,9 @@ public sealed class AuthService
         _context.Alunos.Add(aluno);
         await _context.SaveChangesAsync();
 
-        return await CreateSessionAsync(usuario);
+        var session = await CreateSessionAsync(usuario);
+        await RegistrarTentativaLoginAsync(email, usuario, "CADASTRO");
+        return session;
     }
 
     public async Task<AuthSessionResult?> RenovarAsync(string? refreshToken)
@@ -172,6 +194,27 @@ public sealed class AuthService
         StatusCadastro = usuario.Aluno?.StatusCadastro.ToString(),
         FormularioEnviado = usuario.Aluno?.SolicitacaoCadastro is not null
     };
+
+    private async Task RegistrarTentativaLoginAsync(string email, Usuario? usuario, string resultado)
+    {
+        try
+        {
+            await _auditoria.RegistrarAsync(
+                usuario?.Id,
+                email,
+                usuario?.Tipo.ToString() ?? "ANONIMO",
+                "POST",
+                resultado == "CADASTRO" ? "/api/auth/register" : "/api/auth/login",
+                resultado == "FALHA" ? StatusCodes.Status401Unauthorized :
+                    resultado == "CADASTRO" ? StatusCodes.Status201Created : StatusCodes.Status200OK,
+                _httpContext.HttpContext?.Connection.RemoteIpAddress?.ToString(),
+                _httpContext.HttpContext?.Request.Headers.UserAgent.ToString());
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Não foi possível registrar o evento de autenticação para {Email}.", email);
+        }
+    }
 
     private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 }

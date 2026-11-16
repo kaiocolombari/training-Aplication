@@ -69,6 +69,8 @@ builder.Services.AddScoped<OwnershipService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CadastroAlunoService>();
 builder.Services.AddScoped<ComunicacaoService>();
+builder.Services.AddScoped<AuditoriaService>();
+builder.Services.AddScoped<RelatoriosService>();
 builder.Services.AddScoped<AlunoService>();
 builder.Services.AddScoped<PersonalService>();
 builder.Services.AddScoped<PersonalAlunoService>();
@@ -167,6 +169,7 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<AuditoriaMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 

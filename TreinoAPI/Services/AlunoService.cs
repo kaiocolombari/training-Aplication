@@ -77,7 +77,10 @@ public class AlunoService
 
     public async Task<List<AlunoDTO>> Listar(IEnumerable<Guid>? alunoIds = null)
     {
-        var query = _context.Alunos.AsNoTracking().Include(a => a.Usuario).AsQueryable();
+        var query = _context.Alunos.AsNoTracking()
+            .Include(a => a.Usuario)
+            .Where(a => a.StatusCadastro == StatusCadastroAluno.APROVADO)
+            .AsQueryable();
         if (alunoIds is not null)
         {
             var ids = alunoIds.Distinct().ToArray();
@@ -95,7 +98,11 @@ public class AlunoService
                 Genero = a.Genero,
                 DataNascimento = a.DataNascimento,
                 Etnia = a.Etnia,
-                CriadoEm = a.CriadoEm
+                CriadoEm = a.CriadoEm,
+                StatusCadastro = a.StatusCadastro.ToString(),
+                PossuiFichaTecnica = a.Avaliacoes.Any(av => av.Ativo) ||
+                    a.Treinos.Any(t => t.Ativo) || a.Anamneses.Any() ||
+                    a.TestesCarga.Any() || a.Periodizacoes.Any()
             })
             .ToListAsync();
     }
@@ -105,6 +112,11 @@ public class AlunoService
         var aluno = await _context.Alunos
             .AsNoTracking()
             .Include(a => a.Usuario)
+            .Include(a => a.Avaliacoes.Where(av => av.Ativo))
+            .Include(a => a.Treinos.Where(t => t.Ativo))
+            .Include(a => a.Anamneses)
+            .Include(a => a.TestesCarga)
+            .Include(a => a.Periodizacoes)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         return aluno is null ? null : Mapear(aluno, aluno.Usuario);
@@ -114,6 +126,11 @@ public class AlunoService
     {
         var aluno = await _context.Alunos
             .Include(a => a.Usuario)
+            .Include(a => a.Avaliacoes.Where(av => av.Ativo))
+            .Include(a => a.Treinos.Where(t => t.Ativo))
+            .Include(a => a.Anamneses)
+            .Include(a => a.TestesCarga)
+            .Include(a => a.Periodizacoes)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         if (aluno is null)
@@ -162,6 +179,10 @@ public class AlunoService
         Genero = aluno.Genero,
         DataNascimento = aluno.DataNascimento,
         Etnia = aluno.Etnia,
-        CriadoEm = aluno.CriadoEm
+        CriadoEm = aluno.CriadoEm,
+        StatusCadastro = aluno.StatusCadastro.ToString(),
+        PossuiFichaTecnica = aluno.Avaliacoes.Any(av => av.Ativo) ||
+            aluno.Treinos.Any(t => t.Ativo) || aluno.Anamneses.Any() ||
+            aluno.TestesCarga.Any() || aluno.Periodizacoes.Any()
     };
 }

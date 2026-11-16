@@ -25,6 +25,8 @@ export interface AlunoResumoApi {
     dataNascimento?: string | null;
     etnia?: string | null;
     criadoEm?: string;
+    statusCadastro?: string;
+    possuiFichaTecnica?: boolean;
 }
 
 export interface PersonalResumoApi {

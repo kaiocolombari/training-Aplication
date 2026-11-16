@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<MensagemEquipe> MensagensEquipe { get; set; }
     public DbSet<NotificacaoUsuario> NotificacoesUsuarios { get; set; }
     public DbSet<AvisoGlobal> AvisosGlobais { get; set; }
+    public DbSet<RegistroAuditoria> RegistrosAuditoria { get; set; }
     public DbSet<Personal> Personais { get; set; }
     public DbSet<PersonalAluno> PersonalAlunos { get; set; }
     public DbSet<Anamnese> Anamnese { get; set; }
@@ -115,6 +116,37 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(a => a.AutorId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<RegistroAuditoria>()
+            .HasOne(r => r.Usuario)
+            .WithMany()
+            .HasForeignKey(r => r.UsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.UsuarioEmail).HasMaxLength(256);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.UsuarioTipo).HasMaxLength(30);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.Acao).HasMaxLength(30);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.MetodoHttp).HasMaxLength(10);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.Rota).HasMaxLength(300);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.RecursoId).HasMaxLength(36);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.Resumo).HasMaxLength(500);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.Resultado).HasMaxLength(20);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.EnderecoIp).HasMaxLength(64);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .Property(r => r.UserAgent).HasMaxLength(500);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .HasIndex(r => r.CriadoEm);
+        modelBuilder.Entity<RegistroAuditoria>()
+            .HasIndex(r => new { r.UsuarioId, r.CriadoEm });
 
         modelBuilder.Entity<PersonalAluno>()
             .HasOne(pa => pa.Personal)

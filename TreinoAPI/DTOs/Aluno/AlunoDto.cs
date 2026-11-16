@@ -17,4 +17,8 @@ public class AlunoDTO
     public string? Etnia { get; set; }
 
     public DateTime CriadoEm { get; set; }
+
+    public string StatusCadastro { get; set; } = "APROVADO";
+
+    public bool PossuiFichaTecnica { get; set; }
 }

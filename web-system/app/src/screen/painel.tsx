@@ -22,6 +22,8 @@ import {
   BsX,
   BsMoonStars,
   BsSun,
+  BsActivity,
+  BsCpu,
 } from "react-icons/bs";
 import { FaPeopleGroup, FaRegCircleQuestion } from "react-icons/fa6";
 import { VscFeedback } from "react-icons/vsc";
@@ -37,6 +39,11 @@ import { ApiError } from "../service/api";
 import SolicitacoesCadastro from "./SolicitacoesCadastro";
 import CentralComunicacao from "./CentralComunicacao";
 import { comunicacaoService } from "../service/comunicacaoService";
+import { cadastroAlunoService } from "../service/cadastroAlunoService";
+import AtividadesAdmin from "./AtividadesAdmin";
+import Relatorios from "./Relatorios";
+import ControleAluno from "./ControleAluno";
+import ControleAvancado from "./ControleAvancado";
 
 interface AlunoPainel {
   id: string;
@@ -44,6 +51,8 @@ interface AlunoPainel {
   email: string;
   telefone: string;
   criadoEm: string;
+  statusCadastro: string;
+  possuiFichaTecnica: boolean;
 }
 
 function clonarIdsFicha(ficha: Avaliacao): Avaliacao {
@@ -154,9 +163,11 @@ const secoes = [
     grupo: "Sistema",
     icone: <BsGear />,
   },
+  { id: "controleAluno", nome: "Controle do aluno", grupo: "Acompanhamento", icone: <BsActivity /> },
+  { id: "controleAvancado", nome: "Controle avançado", grupo: "Acompanhamento", icone: <BsCpu /> },
 ];
 
-const gruposNavegacao = ["Workspace", "Comunicação"];
+const gruposNavegacao = ["Workspace", "Treinamento", "Acompanhamento", "Comunicação", "Sistema"];
 
 const cores = {
   primaryButton:
@@ -217,6 +228,12 @@ export default function Painel() {
     queryKey: ["alunos"],
     queryFn: cadastroService.listarAlunos,
   });
+  const solicitacoesResumoQuery = useQuery({
+    queryKey: ["solicitacoes-cadastro", "resumo"],
+    queryFn: cadastroAlunoService.obterResumo,
+    enabled: user?.tipo === "ADMIN" || user?.tipo === "PERSONAL",
+    refetchInterval: 30000,
+  });
   const personaisQuery = useQuery({
     queryKey: ["personais"],
     queryFn: cadastroService.listarPersonais,
@@ -242,11 +259,14 @@ export default function Painel() {
     email: aluno.email,
     telefone: aluno.telefone ?? "",
     criadoEm: aluno.criadoEm ?? "",
+    statusCadastro: aluno.statusCadastro ?? "APROVADO",
+    possuiFichaTecnica: aluno.possuiFichaTecnica === true,
   }));
   const [alunoParaExcluir, setAlunoParaExcluir] = useState<AlunoPainel | null>(
     null,
   );
   const [busca, setBusca] = useState("");
+  const [filtroFicha, setFiltroFicha] = useState<"todos" | "sem-ficha" | "com-ficha">("todos");
   const [menuPerfilAberto, setMenuPerfilAberto] = useState(false);
   const [menuAlunoAberto, setMenuAlunoAberto] = useState<string | null>(null);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
@@ -309,15 +329,17 @@ export default function Painel() {
 
   const alunosFiltrados = useMemo(() => {
     const termo = busca.trim().toLocaleLowerCase("pt-BR");
-    if (!termo) return alunos;
-
-    return alunos.filter(
-      (aluno) =>
-        aluno.nome.toLocaleLowerCase("pt-BR").includes(termo) ||
+    return alunos.filter(aluno => {
+      const correspondeFicha = filtroFicha === "todos" ||
+        (filtroFicha === "sem-ficha" && !aluno.possuiFichaTecnica) ||
+        (filtroFicha === "com-ficha" && aluno.possuiFichaTecnica);
+      if (!correspondeFicha) return false;
+      if (!termo) return true;
+      return aluno.nome.toLocaleLowerCase("pt-BR").includes(termo) ||
         aluno.email.toLocaleLowerCase("pt-BR").includes(termo) ||
-        aluno.id.toLowerCase().includes(termo),
-    );
-  }, [alunos, busca]);
+        aluno.id.toLowerCase().includes(termo);
+    });
+  }, [alunos, busca, filtroFicha]);
 
   function criarAluno() {
     setNovoNome("");
@@ -366,6 +388,7 @@ export default function Painel() {
         }
       }
       await queryClient.invalidateQueries({ queryKey: ["alunos"] });
+      await queryClient.invalidateQueries({ queryKey: ["relatorios"] });
       setModalNovoAluno(false);
       setDadosImportacao(null);
       setSecaoAtual("alunos");
@@ -431,9 +454,10 @@ export default function Painel() {
     }
   }
 
-  async function abrirAluno(aluno: AlunoPainel) {
+  async function abrirAluno(aluno: AlunoPainel, destino: "ficha" | "controle" = "ficha") {
     if (alunoSelecionadoId === aluno.id) {
-      navigate("/avaliacoes");
+      if (destino === "ficha") navigate("/avaliacoes");
+      else navegar("controleAluno");
       return;
     }
     if (alunoSelecionadoId && alteracoesPendentes) {
@@ -458,7 +482,8 @@ export default function Painel() {
         cadastroService.listarGruposMusculares(),
       ]);
       carregarAvaliacao(mapearCadastroParaAvaliacao(cadastro, grupos), aluno.id);
-      navigate("/avaliacoes");
+      if (destino === "ficha") navigate("/avaliacoes");
+      else navegar("controleAluno");
     } catch (error) {
       alert(error instanceof ApiError ? error.message : "Não foi possível carregar a ficha do aluno.");
     } finally {
@@ -471,6 +496,7 @@ export default function Painel() {
     try {
       await cadastroService.excluirAluno(alunoParaExcluir.id);
       await queryClient.invalidateQueries({ queryKey: ["alunos"] });
+      await queryClient.invalidateQueries({ queryKey: ["relatorios"] });
       if (alunoSelecionadoId === alunoParaExcluir.id) setAlunoSelecionadoId(null);
       setAlunoParaExcluir(null);
     } catch (error) {
@@ -551,14 +577,20 @@ export default function Painel() {
 
   const secaoSelecionada =
     secoes.find((secao) => secao.id === secaoAtual) ?? secoes[1];
-  // A navegação do MVP mostra apenas áreas concluídas; os módulos da ficha
-  // continuam acessíveis depois que um aluno é aberto.
+  const acessoControleAvancado = user?.tipo === "ADMIN" || Boolean(
+    (user as unknown as { controleAvancadoHabilitado?: boolean } | null)?.controleAvancadoHabilitado,
+  );
+  // Mantém os módulos em desenvolvimento fora da navegação principal.
   const secoesVisiveis = secoes.filter(secao =>
     secao.id === "inicio" ||
     secao.id === "alunos" ||
     secao.id === "solicitacoes" ||
+    secao.id === "relatorios" ||
     secao.id === "chat" ||
-    (secao.id === "equipe" && user?.tipo === "ADMIN")
+    (secao.id === "log" && user?.tipo === "ADMIN") ||
+    (secao.id === "equipe" && user?.tipo === "ADMIN") ||
+    (secao.id === "controleAluno" && Boolean(alunoSelecionadoId) && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
+    (secao.id === "controleAvancado" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL"))
   );
 
   function renderEquipe() {
@@ -785,8 +817,21 @@ export default function Painel() {
           </div>
         </div>
 
+        {(solicitacoesResumoQuery.data?.total ?? 0) > 0 && (
+          <button type="button" onClick={() => navegar("solicitacoes")} className="mb-5 flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-left transition hover:bg-amber-500/10">
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-amber-500/10 text-amber-600"><BsClipboard2Pulse /></span>
+              <span className="min-w-0">
+                <span className="block text-xs font-bold text-[var(--text-primary)]">{solicitacoesResumoQuery.data?.total} novo(s) cadastro(s) em análise</span>
+                <span className="mt-1 block text-[11px] text-[var(--text-secondary)]">{solicitacoesResumoQuery.data?.aguardandoFormulario} aguardando formulário · {solicitacoesResumoQuery.data?.enviados} pronto(s) para análise</span>
+              </span>
+            </span>
+            <span className="text-[11px] font-bold text-amber-700">Abrir solicitações →</span>
+          </button>
+        )}
+
         {/* Indicadores */}
-        <div className="mb-7 grid gap-3 sm:grid-cols-3">
+        <div className="mb-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
               <BsPeople className="text-lg" />
@@ -804,35 +849,20 @@ export default function Painel() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--surface-tertiary)] text-[var(--text-secondary)]">
-              <BsFiletypeJson className="text-lg" />
-            </span>
+          <button type="button" onClick={() => setFiltroFicha("sem-ficha")} className={`flex items-center gap-3 rounded-xl border p-4 text-left transition ${filtroFicha === "sem-ficha" ? "border-amber-500/50 bg-amber-500/5" : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--row-hover)]"}`}>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-amber-500/10 text-amber-600"><BsFileEarmarkText className="text-lg" /></span>
+            <span><span className="block text-[10px] text-[var(--text-muted)]">Sem ficha técnica</span><span className={`mt-0.5 block text-[20px] font-semibold tracking-[-0.04em] ${cores.heading}`}>{alunos.filter(aluno => !aluno.possuiFichaTecnica).length}</span></span>
+          </button>
 
-            <div>
-              <p className="text-[10px] text-[var(--text-muted)]">
-                Formato de intercâmbio
-              </p>
-              <p className={`mt-1 text-[13px] font-semibold ${cores.heading}`}>
-                JSON
-              </p>
-            </div>
-          </div>
+          <button type="button" onClick={() => navegar("solicitacoes")} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left transition hover:bg-[var(--row-hover)]">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-sky-500/10 text-sky-600"><BsClipboard2Pulse className="text-lg" /></span>
+            <span><span className="block text-[10px] text-[var(--text-muted)]">Em análise</span><span className={`mt-0.5 block text-[20px] font-semibold tracking-[-0.04em] ${cores.heading}`}>{solicitacoesResumoQuery.data?.total ?? "—"}</span></span>
+          </button>
 
-          <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--surface-tertiary)] text-[var(--text-secondary)]">
-              <BsFolder2Open className="text-lg" />
-            </span>
-
-            <div>
-              <p className="text-[10px] text-[var(--text-muted)]">
-                Armazenamento
-              </p>
-              <p className={`mt-1 text-[13px] font-semibold ${cores.heading}`}>
-                PostgreSQL
-              </p>
-            </div>
-          </div>
+          <button type="button" onClick={() => setFiltroFicha("com-ficha")} className={`flex items-center gap-3 rounded-xl border p-4 text-left transition ${filtroFicha === "com-ficha" ? "border-[var(--success)]/50 bg-[var(--success-soft)]" : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--row-hover)]"}`}>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--success-soft)] text-[var(--success)]"><BsClipboard2Pulse className="text-lg" /></span>
+            <span><span className="block text-[10px] text-[var(--text-muted)]">Com ficha técnica</span><span className={`mt-0.5 block text-[20px] font-semibold tracking-[-0.04em] ${cores.heading}`}>{alunos.filter(aluno => aluno.possuiFichaTecnica).length}</span></span>
+          </button>
         </div>
 
         {/* Diretório */}
@@ -850,7 +880,7 @@ export default function Painel() {
               </div>
 
               <p className={`mt-1 text-[11px] ${cores.subtleText}`}>
-                Selecione um aluno para acessar sua ficha.
+                Acompanhe quem já possui ficha e quem ainda precisa iniciar o preenchimento.
               </p>
             </div>
 
@@ -866,6 +896,14 @@ export default function Painel() {
                 className={`h-10 w-full pl-9 pr-3 text-[11px] outline-none transition ${cores.input}`}
               />
             </label>
+          </div>
+
+          <div className="flex flex-wrap gap-2 border-b border-[var(--border)] px-5 py-3">
+            {(["todos", "sem-ficha", "com-ficha"] as const).map(filtro => (
+              <button key={filtro} type="button" onClick={() => setFiltroFicha(filtro)} className={`rounded-lg px-3 py-2 text-[10px] font-semibold transition ${filtroFicha === filtro ? "bg-[var(--accent)] text-white" : "border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"}`}>
+                {filtro === "todos" ? "Todos" : filtro === "sem-ficha" ? "Sem ficha técnica" : "Com ficha técnica"}
+              </button>
+            ))}
           </div>
 
           {/* Lista vazia */}
@@ -970,17 +1008,23 @@ export default function Painel() {
                       </span>
                     </div>
 
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-soft)] px-2.5 py-1.5 text-[10px] font-medium text-[var(--success)]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
-                      Salvo
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-medium ${aluno.possuiFichaTecnica ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-amber-500/10 text-amber-600"}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${aluno.possuiFichaTecnica ? "bg-[var(--success)]" : "bg-amber-500"}`} />
+                      {aluno.possuiFichaTecnica ? "Ficha técnica cadastrada" : "Sem ficha técnica"}
                     </span>
 
                     <div className="flex shrink-0 items-center gap-2">
                       <button
-                        onClick={() => abrirAluno(aluno)}
-                        className="inline-flex h-9 min-w-[112px] items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-[11px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+                        onClick={() => void abrirAluno(aluno, "controle")}
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent-text)]"
                       >
-                        {user?.tipo === "PERSONAL" ? "Assumir atendimento" : "Abrir ficha"}
+                        Acompanhar
+                      </button>
+                      <button
+                        onClick={() => void abrirAluno(aluno)}
+                        className="inline-flex h-9 min-w-[104px] items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-3 text-[10px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+                      >
+                        {user?.tipo === "PERSONAL" ? "Assumir" : "Abrir ficha"}
                         <BsArrowUpRight />
                       </button>
 
@@ -1475,6 +1519,7 @@ export default function Painel() {
         return <CentralComunicacao />;
       case "equipe":
         return user?.tipo === "ADMIN" ? renderEquipe() : renderAlunos();
+
       case "avaliacoes":
         return renderSecaoVazia(
           "Avaliações",
@@ -1494,11 +1539,7 @@ export default function Painel() {
           <VscFeedback />,
         );
       case "log":
-        return renderSecaoVazia(
-          "Atividades",
-          "Histórico de ações, alterações e eventos do sistema.",
-          <BsFileEarmarkText />,
-        );
+        return user?.tipo === "ADMIN" ? <AtividadesAdmin /> : renderInicio();
       case "periodizacao":
         return renderSecaoVazia(
           "Periodização",
@@ -1506,13 +1547,26 @@ export default function Painel() {
           <BsCalendar3 />,
         );
       case "relatorios":
-        return renderSecaoVazia(
-          "Relatórios",
-          "Indicadores e relatórios de acompanhamento dos alunos.",
-          <BsBarChart />,
-        );
+        return <Relatorios />;
       case "configuracoes":
         return renderConfiguracoes();
+      case "controleAluno": {
+        const aluno = alunos.find(item => item.id === alunoSelecionadoId);
+        if (!aluno || !alunoSelecionadoId) return renderSecaoVazia("Controle do aluno", "Selecione um aluno no diretório para abrir o acompanhamento individual.", <BsActivity />);
+        return <ControleAluno
+          aluno={{ id: aluno.id, nomeCompleto: aluno.nome, email: aluno.email, telefone: aluno.telefone, criadoEm: aluno.criadoEm, possuiFichaTecnica: aluno.possuiFichaTecnica }}
+          ficha={fichaAtual}
+          onBack={() => navegar("alunos")}
+          onNavigate={navegar}
+        />;
+      }
+      case "controleAvancado":
+        return <ControleAvancado
+          isAdmin={user?.tipo === "ADMIN"}
+          autorizado={acessoControleAvancado}
+          personais={personaisQuery.data ?? []}
+          onBack={() => navegar("alunos")}
+        />;
       default:
         return renderInicio();
     }
@@ -1556,7 +1610,7 @@ export default function Painel() {
           aria-label="Navegação principal"
           className="flex-1 overflow-y-auto px-3 py-4"
         >
-          {gruposNavegacao.map((grupo) => (
+          {gruposNavegacao.filter(grupo => secoesVisiveis.some(secao => secao.grupo === grupo)).map((grupo) => (
             <div key={grupo} className="mb-5">
               <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                 {grupo}
@@ -1592,6 +1646,9 @@ export default function Painel() {
                           <span className="ml-auto rounded-full bg-[var(--accent)] px-1.5 py-0.5 text-[9px] font-bold text-white">
                             {alertasNaoLidos > 99 ? "99+" : alertasNaoLidos}
                           </span>
+                        )}
+                        {secao.id === "solicitacoes" && (solicitacoesResumoQuery.data?.total ?? 0) > 0 && (
+                          <span className="ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">{solicitacoesResumoQuery.data?.total}</span>
                         )}
                       </button>
                     );
@@ -1710,6 +1767,12 @@ export default function Painel() {
                   </div>
 
                   <button
+                    onClick={() => navegar("configuracoes")}
+                    className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-left text-[11px] text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
+                  >
+                    <BsGear /> Configurações
+                  </button>
+                  <button
                     onClick={() => setMenuPerfilAberto(false)}
                     className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                   >
@@ -1756,7 +1819,7 @@ export default function Painel() {
                 </button>
               </div>
 
-              {gruposNavegacao.map((grupo) => (
+              {gruposNavegacao.filter(grupo => secoesVisiveis.some(secao => secao.grupo === grupo)).map((grupo) => (
                 <div key={grupo} className="mb-5">
                   <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                     {grupo}
@@ -1784,6 +1847,9 @@ export default function Painel() {
                             {secao.icone}
                           </span>
                           {secao.nome}
+                          {secao.id === "solicitacoes" && (solicitacoesResumoQuery.data?.total ?? 0) > 0 && (
+                            <span className="ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">{solicitacoesResumoQuery.data?.total}</span>
+                          )}
                         </button>
                       );
                     })}

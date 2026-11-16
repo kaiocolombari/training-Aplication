@@ -29,6 +29,13 @@ public sealed class CadastroAlunoController : ControllerBase
     }
 
     [Authorize(Roles = "PERSONAL,ADMIN")]
+    [HttpGet("solicitacoes/resumo")]
+    public async Task<IActionResult> ResumoSolicitacoes()
+    {
+        return Ok(await _service.ObterResumoPendentesAsync());
+    }
+
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPost("{alunoId:guid}/aprovar")]
     public async Task<IActionResult> Aprovar(Guid alunoId, [FromBody] AprovarCadastroDTO dto)
     {
