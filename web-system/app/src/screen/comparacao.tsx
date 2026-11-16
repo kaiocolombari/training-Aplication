@@ -1,28 +1,23 @@
-import { useAvaliacaoComparison } from '../context/avaliacaoContext'
-import { useMemo, useEffect } from 'react'
-import React from 'react'
-import navTool from '../components/navTool'
-import type { PerimetroField } from '../types/perimetroField';
-import type { PerimetroKey } from '../types/perimetroKey';
-import type { ExamData } from '../types/examData';
-import type { DobraField } from '../types/dobraField';
-import type { DobraKey } from '../types/dobraKey';
-import { calcularMassaAdiposa } from '../functions/calcMassaAdiposa';
-import { calcularAreaBraco } from '../functions/calcBraco';
-import { calcularAreaCoxa } from '../functions/calcCoxa';
-import { calcularMassaMuscular } from '../functions/calcMassaMuscular';
-import { GraficoForca } from '../components/chartForca';
+import { useAvaliacaoComparison } from "../context/avaliacaoContext";
+import { useMemo, useEffect } from "react";
+import React from "react";
+import navTool from "../components/navTool";
+import type { PerimetroField } from "../types/perimetroField";
+import type { PerimetroKey } from "../types/perimetroKey";
+import type { ExamData } from "../types/examData";
+import type { DobraField } from "../types/dobraField";
+import type { DobraKey } from "../types/dobraKey";
+import { calcularMassaAdiposa } from "../functions/calcMassaAdiposa";
+import { calcularAreaBraco } from "../functions/calcBraco";
+import { calcularAreaCoxa } from "../functions/calcCoxa";
+import { calcularMassaMuscular } from "../functions/calcMassaMuscular";
+import { GraficoForca } from "../components/chartForca";
 
-
-
-const valorClass =    
+const valorClass =
     "flex h-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] px-3 text-sm font-bold text-[var(--text-primary)]";
 
 const diferencaClass = (valor: number | string) => {
-    const numero =
-        typeof valor === "number"
-            ? valor
-            : parseDecimal(String(valor));
+    const numero = typeof valor === "number" ? valor : parseDecimal(String(valor));
 
     if (numero > 0) {
         return "flex h-10 items-center justify-center rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)] px-3 text-sm font-black text-[var(--accent)]";
@@ -69,14 +64,13 @@ function parseDecimal(value: string) {
     return Number.isFinite(parsed) ? parsed : 0;
 }
 
-
-
 function sanitizeDecimal(value: string) {
     return value.replace(/[^\d.,]/g, "");
 }
 
 export default function comparacao() {
-    const { avaliacao, setAvaliacao, avaliacaoIds, setAvaliacaoIds, hasPair } = useAvaliacaoComparison();
+    const { avaliacao, setAvaliacao, avaliacaoIds, setAvaliacaoIds, hasPair } =
+        useAvaliacaoComparison();
     let perimetros = avaliacao.avaliacao1.perimetros;
     let perimetros2 = avaliacao.avaliacao2.perimetros;
 
@@ -88,36 +82,24 @@ export default function comparacao() {
 
     const testeCarga = avaliacao.testeCarga;
 
-
     const resumoDobras = useMemo(() => {
         const mediaFinal = dobrasConfig.reduce<Record<DobraKey, string>>(
             (acc, item) => {
                 const primeira = parseDecimal(dobras1[item.key]);
                 const segunda = parseDecimal(dobras2[item.key]);
 
-                const media =
-                    segunda > 0
-                        ? (primeira + segunda) / 2
-                        : primeira;
+                const media = segunda > 0 ? (primeira + segunda) / 2 : primeira;
 
-                acc[item.key] =
-                    media > 0
-                        ? media.toFixed(1).replace(".", ",")
-                        : "";
+                acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
 
                 return acc;
             },
-            {} as Record<DobraKey, string>
+            {} as Record<DobraKey, string>,
         );
 
-        const valores = dobrasConfig.map((item) =>
-            parseDecimal(mediaFinal[item.key])
-        );
+        const valores = dobrasConfig.map(item => parseDecimal(mediaFinal[item.key]));
 
-        const somatorio = valores.reduce(
-            (total, value) => total + value,
-            0
-        );
+        const somatorio = valores.reduce((total, value) => total + value, 0);
 
         const periferico =
             parseDecimal(mediaFinal.triceps) +
@@ -133,20 +115,11 @@ export default function comparacao() {
 
         return {
             mediaFinal,
-            somatorio:
-                somatorio > 0
-                    ? somatorio.toFixed(1).replace(".", ",")
-                    : "",
+            somatorio: somatorio > 0 ? somatorio.toFixed(1).replace(".", ",") : "",
 
-            periferico:
-                periferico > 0
-                    ? periferico.toFixed(1).replace(".", ",")
-                    : "",
+            periferico: periferico > 0 ? periferico.toFixed(1).replace(".", ",") : "",
 
-            central:
-                central > 0
-                    ? central.toFixed(1).replace(".", ",")
-                    : "",
+            central: central > 0 ? central.toFixed(1).replace(".", ",") : "",
         };
     }, [dobras1, dobras2]);
 
@@ -156,29 +129,18 @@ export default function comparacao() {
                 const primeira = parseDecimal(dobras3[item.key]);
                 const segunda = parseDecimal(dobras4[item.key]);
 
-                const media =
-                    segunda > 0
-                        ? (primeira + segunda) / 2
-                        : primeira;
+                const media = segunda > 0 ? (primeira + segunda) / 2 : primeira;
 
-                acc[item.key] =
-                    media > 0
-                        ? media.toFixed(1).replace(".", ",")
-                        : "";
+                acc[item.key] = media > 0 ? media.toFixed(1).replace(".", ",") : "";
 
                 return acc;
             },
-            {} as Record<DobraKey, string>
+            {} as Record<DobraKey, string>,
         );
 
-        const valores = dobrasConfig.map((item) =>
-            parseDecimal(mediaFinal2[item.key])
-        );
+        const valores = dobrasConfig.map(item => parseDecimal(mediaFinal2[item.key]));
 
-        const somatorio = valores.reduce(
-            (total, value) => total + value,
-            0
-        );
+        const somatorio = valores.reduce((total, value) => total + value, 0);
 
         const periferico =
             parseDecimal(mediaFinal2.triceps) +
@@ -194,39 +156,38 @@ export default function comparacao() {
 
         return {
             mediaFinal2,
-            somatorio:
-                somatorio > 0
-                    ? somatorio.toFixed(1).replace(".", ",")
-                    : "",
+            somatorio: somatorio > 0 ? somatorio.toFixed(1).replace(".", ",") : "",
 
-            periferico:
-                periferico > 0
-                    ? periferico.toFixed(1).replace(".", ",")
-                    : "",
+            periferico: periferico > 0 ? periferico.toFixed(1).replace(".", ",") : "",
 
-            central:
-                central > 0
-                    ? central.toFixed(1).replace(".", ",")
-                    : "",
+            central: central > 0 ? central.toFixed(1).replace(".", ",") : "",
         };
     }, [dobras3, dobras4]);
 
     const updatePerimetro = (field: PerimetroKey, value: string) => {
-        setAvaliacao(
-            (current) => ({ ...current, avaliacao1: { ...current.avaliacao1, perimetros: { ...current.avaliacao1.perimetros, [field]: value } } }),
-        )
+        setAvaliacao(current => ({
+            ...current,
+            avaliacao1: {
+                ...current.avaliacao1,
+                perimetros: { ...current.avaliacao1.perimetros, [field]: value },
+            },
+        }));
     };
 
     const updatePerimetro2 = (field: PerimetroKey, value: string) => {
-        setAvaliacao(
-            (current) => ({ ...current, avaliacao2: { ...current.avaliacao2, perimetros: { ...current.avaliacao2.perimetros, [field]: value } } }),
-        )
+        setAvaliacao(current => ({
+            ...current,
+            avaliacao2: {
+                ...current.avaliacao2,
+                perimetros: { ...current.avaliacao2.perimetros, [field]: value },
+            },
+        }));
     };
 
     const diferencaPerimetros = (field: PerimetroKey) => {
         const diferenca = Number(perimetros2[field]) - Number(perimetros[field]);
-        return diferenca
-    }
+        return diferenca;
+    };
 
     const diferencaDobras = (field?: DobraKey, type?: "1" | "2" | "3" | "4") => {
         let diferenca: number = 0;
@@ -239,28 +200,22 @@ export default function comparacao() {
                 break;
             case "2":
                 diferenca =
-                    parseDecimal(resumoDobras.somatorio) -
-                    parseDecimal(resumoDobras2.somatorio);
+                    parseDecimal(resumoDobras.somatorio) - parseDecimal(resumoDobras2.somatorio);
                 break;
             case "3":
                 diferenca =
-                    parseDecimal(resumoDobras.periferico) -
-                    parseDecimal(resumoDobras2.periferico);
+                    parseDecimal(resumoDobras.periferico) - parseDecimal(resumoDobras2.periferico);
                 break;
             case "4":
                 diferenca =
-                    parseDecimal(resumoDobras.central) -
-                    parseDecimal(resumoDobras2.central);
+                    parseDecimal(resumoDobras.central) - parseDecimal(resumoDobras2.central);
                 break;
         }
 
         return diferenca.toFixed(1).replace(".", ",");
-    }
+    };
 
-
-    function parseDecimal(
-        value: string | number | undefined | null
-    ): number {
+    function parseDecimal(value: string | number | undefined | null): number {
         if (value === undefined || value === null || value === "") {
             return 0;
         }
@@ -274,9 +229,7 @@ export default function comparacao() {
         return Number.isFinite(parsed) ? parsed : 0;
     }
 
-    function parseEstatura(
-        value: string | number | undefined | null
-    ): number {
+    function parseEstatura(value: string | number | undefined | null): number {
         const estatura = parseDecimal(value);
 
         if (estatura <= 0) {
@@ -293,7 +246,7 @@ export default function comparacao() {
 
     function calcularIMC(
         massa: string | number | undefined | null,
-        estatura: string | number | undefined | null
+        estatura: string | number | undefined | null,
     ): number {
         const peso = parseDecimal(massa);
         const altura = parseEstatura(estatura);
@@ -305,10 +258,7 @@ export default function comparacao() {
         return peso / (altura * altura);
     }
 
-    function calcularEfeitoEstrutural(
-        data: ExamData,
-        key: PerimetroKey
-    ): number {
+    function calcularEfeitoEstrutural(data: ExamData, key: PerimetroKey): number {
         const estatura = parseEstatura(data.estatura);
 
         if (estatura <= 0) {
@@ -331,13 +281,11 @@ export default function comparacao() {
         };
 
         switch (key) {
-
             case "bracoD":
             case "bracoE": {
                 if (umero <= 0) return 0;
 
-                const proporcao =
-                    (umero / referencias.umero) - 1;
+                const proporcao = umero / referencias.umero - 1;
 
                 return proporcao * 10;
             }
@@ -346,8 +294,7 @@ export default function comparacao() {
             case "antebracoE": {
                 if (una <= 0) return 0;
 
-                const proporcao =
-                    (una / referencias.una) - 1;
+                const proporcao = una / referencias.una - 1;
 
                 return proporcao * 7;
             }
@@ -358,8 +305,7 @@ export default function comparacao() {
             case "coxaMediaE": {
                 if (femur <= 0) return 0;
 
-                const proporcao =
-                    (femur / referencias.femur) - 1;
+                const proporcao = femur / referencias.femur - 1;
 
                 return proporcao * 12;
             }
@@ -368,8 +314,7 @@ export default function comparacao() {
             case "panturrilhaE": {
                 if (tibia <= 0) return 0;
 
-                const proporcao =
-                    (tibia / referencias.tibia) - 1;
+                const proporcao = tibia / referencias.tibia - 1;
 
                 return proporcao * 8;
             }
@@ -379,25 +324,16 @@ export default function comparacao() {
         }
     }
 
-    function getReferenceByKey(
-        key: PerimetroKey,
-        data: ExamData
-    ): number {
-
+    function getReferenceByKey(key: PerimetroKey, data: ExamData): number {
         const idade = parseDecimal(data.idade);
 
         const estatura = parseEstatura(data.estatura);
 
-        const imc = calcularIMC(
-            data.massa,
-            data.estatura
-        );
+        const imc = calcularIMC(data.massa, data.estatura);
 
-        const masculino =
-            data.genero === "masculino";
+        const masculino = data.genero === "masculino";
 
         const baseValues: Record<PerimetroKey, number> = {
-
             bracoD: masculino ? 36 : 31,
             bracoE: masculino ? 36 : 31,
 
@@ -422,25 +358,16 @@ export default function comparacao() {
             panturrilhaE: masculino ? 36 : 33,
         };
 
-        const estaturaFactor =
-            estatura > 0
-                ? 1 + ((estatura - 1.75) * 0.25)
-                : 1;
+        const estaturaFactor = estatura > 0 ? 1 + (estatura - 1.75) * 0.25 : 1;
 
-        let value =
-            baseValues[key] * estaturaFactor;
+        let value = baseValues[key] * estaturaFactor;
 
         // NOVO cálculo estrutural
-        value += calcularEfeitoEstrutural(
-            data,
-            key
-        );
+        value += calcularEfeitoEstrutural(data, key);
 
         // Ajuste relacionado ao IMC
         if (imc >= 25) {
-
             switch (key) {
-
                 case "cintura":
                     value += imc >= 30 ? 12 : 6;
                     break;
@@ -515,7 +442,7 @@ export default function comparacao() {
     const observacoes = avaliacao.anamneseComparacao.observacoes;
 
     const updateObservacoes = (value: string) => {
-        setAvaliacao((current) => ({
+        setAvaliacao(current => ({
             ...current,
 
             anamneseComparacao: {
@@ -526,28 +453,17 @@ export default function comparacao() {
         }));
     };
 
-
     type DobraReference = {
         media: number;
         desvio: number;
     };
 
-    const dadosAntropometricosValidos =
-        data.genero &&
-        data.idade &&
-        data.massa &&
-        data.estatura;
+    const dadosAntropometricosValidos = data.genero && data.idade && data.massa && data.estatura;
 
     const dadosAntropometricosValidos2 =
-        data2.genero &&
-        data2.idade &&
-        data2.massa &&
-        data2.estatura;
+        data2.genero && data2.idade && data2.massa && data2.estatura;
 
-    function getDobraReference(
-        key: DobraKey,
-        data: ExamData
-    ): DobraReference {
+    function getDobraReference(key: DobraKey, data: ExamData): DobraReference {
         const masculino = data.genero === "masculino";
 
         const idade = Number(data.idade);
@@ -555,10 +471,7 @@ export default function comparacao() {
         const massa = parseDecimal(data.massa);
         const estatura = parseDecimal(data.estatura);
 
-        const imc =
-            estatura > 0
-                ? massa / (estatura * estatura)
-                : 0;
+        const imc = estatura > 0 ? massa / (estatura * estatura) : 0;
 
         const base: Record<DobraKey, DobraReference> = {
             triceps: {
@@ -633,8 +546,7 @@ export default function comparacao() {
         }
 
         return dobrasConfig.flatMap((item, idx) => {
-            const valorTexto =
-                resumoDobras.mediaFinal[item.key];
+            const valorTexto = resumoDobras.mediaFinal[item.key];
 
             if (!valorTexto) {
                 return [];
@@ -642,19 +554,11 @@ export default function comparacao() {
 
             const valor = parseDecimal(valorTexto);
 
-            const referencia = getDobraReference(
-                item.key,
-                data
-            );
+            const referencia = getDobraReference(item.key, data);
 
-            const score =
-                (valor - referencia.media) /
-                referencia.desvio;
+            const score = (valor - referencia.media) / referencia.desvio;
 
-            const limitado = Math.max(
-                -4,
-                Math.min(4, score)
-            );
+            const limitado = Math.max(-4, Math.min(4, score));
 
             return [
                 {
@@ -663,10 +567,7 @@ export default function comparacao() {
                 },
             ];
         });
-    }, [
-        resumoDobras.mediaFinal,
-        data,
-    ]);
+    }, [resumoDobras.mediaFinal, data]);
 
     const pontosDobras2 = useMemo(() => {
         if (!dadosAntropometricosValidos2) {
@@ -674,8 +575,7 @@ export default function comparacao() {
         }
 
         return dobrasConfig.flatMap((item, idx) => {
-            const valorTexto =
-                resumoDobras2.mediaFinal2[item.key];
+            const valorTexto = resumoDobras2.mediaFinal2[item.key];
 
             if (!valorTexto) {
                 return [];
@@ -683,19 +583,11 @@ export default function comparacao() {
 
             const valor = parseDecimal(valorTexto);
 
-            const referencia = getDobraReference(
-                item.key,
-                data2
-            );
+            const referencia = getDobraReference(item.key, data2);
 
-            const score =
-                (valor - referencia.media) /
-                referencia.desvio;
+            const score = (valor - referencia.media) / referencia.desvio;
 
-            const limitado = Math.max(
-                -4,
-                Math.min(4, score)
-            );
+            const limitado = Math.max(-4, Math.min(4, score));
 
             return [
                 {
@@ -704,10 +596,7 @@ export default function comparacao() {
                 },
             ];
         });
-    }, [
-        resumoDobras2.mediaFinal2,
-        data2,
-    ]);
+    }, [resumoDobras2.mediaFinal2, data2]);
 
     const perimetroDesvios: Record<PerimetroKey, number> = {
         bracoD: 4,
@@ -734,8 +623,6 @@ export default function comparacao() {
         panturrilhaE: 3,
     };
 
-
-
     const chartPoints = useMemo(() => {
         if (!dadosAntropometricosValidos) {
             return [];
@@ -745,34 +632,19 @@ export default function comparacao() {
 
         return perimetroConfig
             .map((item, idx) => {
-
-                const valorTexto =
-                    perimetros[item.key];
+                const valorTexto = perimetros[item.key];
 
                 if (!valorTexto) {
                     return null;
                 }
 
-                const valor =
-                    parseDecimal(valorTexto);
+                const valor = parseDecimal(valorTexto);
 
-                const ref =
-                    getReferenceByKey(
-                        item.key,
-                        data
-                    );
+                const ref = getReferenceByKey(item.key, data);
 
-                const desvio =
-                    perimetroDesvios[item.key] *
-                    (1 + (massa - 70) / 200);
+                const desvio = perimetroDesvios[item.key] * (1 + (massa - 70) / 200);
 
-                const score = Math.max(
-                    -5,
-                    Math.min(
-                        5,
-                        (valor - ref) / desvio
-                    )
-                );
+                const score = Math.max(-5, Math.min(5, (valor - ref) / desvio));
 
                 return {
                     x: score,
@@ -781,18 +653,13 @@ export default function comparacao() {
             })
             .filter(
                 (
-                    point
+                    point,
                 ): point is {
                     x: number;
                     y: number;
-                } => point !== null
+                } => point !== null,
             );
-
-    }, [
-        perimetros,
-        data,
-        dadosAntropometricosValidos,
-    ]);
+    }, [perimetros, data, dadosAntropometricosValidos]);
 
     const chartPoints2 = useMemo(() => {
         if (!dadosAntropometricosValidos2) {
@@ -803,34 +670,19 @@ export default function comparacao() {
 
         return perimetroConfig
             .map((item, idx) => {
-
-                const valorTexto =
-                    perimetros2[item.key];
+                const valorTexto = perimetros2[item.key];
 
                 if (!valorTexto) {
                     return null;
                 }
 
-                const valor =
-                    parseDecimal(valorTexto);
+                const valor = parseDecimal(valorTexto);
 
-                const ref =
-                    getReferenceByKey(
-                        item.key,
-                        data2
-                    );
+                const ref = getReferenceByKey(item.key, data2);
 
-                const desvio =
-                    perimetroDesvios[item.key] *
-                    (1 + (massa - 70) / 200);
+                const desvio = perimetroDesvios[item.key] * (1 + (massa - 70) / 200);
 
-                const score = Math.max(
-                    -5,
-                    Math.min(
-                        5,
-                        (valor - ref) / desvio
-                    )
-                );
+                const score = Math.max(-5, Math.min(5, (valor - ref) / desvio));
 
                 return {
                     x: score,
@@ -839,105 +691,55 @@ export default function comparacao() {
             })
             .filter(
                 (
-                    point
+                    point,
                 ): point is {
                     x: number;
                     y: number;
-                } => point !== null
+                } => point !== null,
             );
-
-    }, [
-        perimetros2,
-        data2,
-        dadosAntropometricosValidos2,
-    ]);
+    }, [perimetros2, data2, dadosAntropometricosValidos2]);
 
     function calcularAreaCircular(perimetro: number): number {
         if (perimetro <= 0) {
             return 0;
         }
 
-        return (
-            (perimetro * perimetro) /
-            (4 * Math.PI)
-        );
+        return (perimetro * perimetro) / (4 * Math.PI);
     }
 
     const analiseCorporal = useMemo(() => {
-        const massa =
-            parseDecimal(data.massa);
+        const massa = parseDecimal(data.massa);
 
-        const gorduraKg =
-            calcularMassaAdiposa(
-                data,
-                resumoDobras
-            ) || 0;
+        const gorduraKg = calcularMassaAdiposa(data, resumoDobras) || 0;
 
-        const areaBraco =
-            calcularAreaBraco(
-                perimetros,
-                resumoDobras
-            ) || 0;
+        const areaBraco = calcularAreaBraco(perimetros, resumoDobras) || 0;
 
-        const areaCoxa =
-            calcularAreaCoxa(
-                perimetros,
-                resumoDobras
-            ) || 0;
+        const areaCoxa = calcularAreaCoxa(perimetros, resumoDobras) || 0;
 
-        const massaMuscularKg =
-            calcularMassaMuscular(
-                massa,
-                gorduraKg,
-                data.genero,
-                Number(data.idade),
-                areaBraco,
-                areaCoxa,
-                calcularIMC(
-                    data.massa,
-                    data.estatura
-                )
-            );
+        const massaMuscularKg = calcularMassaMuscular(
+            massa,
+            gorduraKg,
+            data.genero,
+            Number(data.idade),
+            areaBraco,
+            areaCoxa,
+            calcularIMC(data.massa, data.estatura),
+        );
 
-        const refBraco =
-            calcularAreaCircular(
-                getReferenceByKey(
-                    "bracoD",
-                    data
-                )
-            );
+        const refBraco = calcularAreaCircular(getReferenceByKey("bracoD", data));
 
-        const refCoxa =
-            calcularAreaCircular(
-                getReferenceByKey(
-                    "coxaMediaD",
-                    data
-                )
-            );
+        const refCoxa = calcularAreaCircular(getReferenceByKey("coxaMediaD", data));
 
-        const percentualMuscular =
-            massa > 0
-                ? massaMuscularKg / massa
-                : 0;
+        const percentualMuscular = massa > 0 ? massaMuscularKg / massa : 0;
 
-        const percentualGordura =
-            massa > 0
-                ? (gorduraKg / massa) * 100
-                : 0;
+        const percentualGordura = massa > 0 ? (gorduraKg / massa) * 100 : 0;
 
-        const classificarFaixa = (
-            valor: number,
-            referencia: number,
-            margem = 2
-        ) => {
-            if (valor >= referencia + margem * 2)
-                return "Muito elevada";
+        const classificarFaixa = (valor: number, referencia: number, margem = 2) => {
+            if (valor >= referencia + margem * 2) return "Muito elevada";
 
-            if (valor >= referencia + margem)
-                return "Elevada";
+            if (valor >= referencia + margem) return "Elevada";
 
-            if (valor >= referencia - margem)
-                return "Normal";
+            if (valor >= referencia - margem) return "Normal";
 
             return "Baixa";
         };
@@ -946,13 +748,9 @@ export default function comparacao() {
 
         if (percentualMuscular >= 0.45) {
             massaMuscular = "Muito elevada";
-        } else if (
-            percentualMuscular >= 0.38
-        ) {
+        } else if (percentualMuscular >= 0.38) {
             massaMuscular = "Elevada";
-        } else if (
-            percentualMuscular >= 0.28
-        ) {
+        } else if (percentualMuscular >= 0.28) {
             massaMuscular = "Normal";
         } else {
             massaMuscular = "Baixa";
@@ -963,13 +761,9 @@ export default function comparacao() {
         if (data.genero === "Masculino") {
             if (percentualGordura >= 25) {
                 massaAdiposa = "Muito elevada";
-            } else if (
-                percentualGordura >= 18
-            ) {
+            } else if (percentualGordura >= 18) {
                 massaAdiposa = "Elevada";
-            } else if (
-                percentualGordura >= 10
-            ) {
+            } else if (percentualGordura >= 10) {
                 massaAdiposa = "Adequada";
             } else {
                 massaAdiposa = "Baixa";
@@ -977,158 +771,75 @@ export default function comparacao() {
         } else {
             if (percentualGordura >= 32) {
                 massaAdiposa = "Muito elevada";
-            } else if (
-                percentualGordura >= 25
-            ) {
+            } else if (percentualGordura >= 25) {
                 massaAdiposa = "Elevada";
-            } else if (
-                percentualGordura >= 18
-            ) {
+            } else if (percentualGordura >= 18) {
                 massaAdiposa = "Adequada";
             } else {
                 massaAdiposa = "Baixa";
             }
         }
 
-        const areaBracos =
-            classificarFaixa(
-                areaBraco,
-                refBraco,
-                2
-            );
+        const areaBracos = classificarFaixa(areaBraco, refBraco, 2);
 
-        const areaCoxas =
-            classificarFaixa(
-                areaCoxa,
-                refCoxa,
-                3
-            );
+        const areaCoxas = classificarFaixa(areaCoxa, refCoxa, 3);
 
         return {
-            massaMuscularKg:
-                Number(
-                    massaMuscularKg.toFixed(1)
-                ) || 0,
+            massaMuscularKg: Number(massaMuscularKg.toFixed(1)) || 0,
 
-            massaLivreKg:
-                Number(
-                    (massa - gorduraKg).toFixed(1)
-                ) || 0,
+            massaLivreKg: Number((massa - gorduraKg).toFixed(1)) || 0,
 
-            massaAdiposaKg:
-                Number(
-                    gorduraKg.toFixed(1)
-                ) || 0,
+            massaAdiposaKg: Number(gorduraKg.toFixed(1)) || 0,
 
-            massaTotalKg:
-                Number(
-                    massa.toFixed(1)
-                ) || 0,
+            massaTotalKg: Number(massa.toFixed(1)) || 0,
 
-            areaBracoValue:
-                Number(
-                    areaBraco.toFixed(1)
-                ) || 0,
+            areaBracoValue: Number(areaBraco.toFixed(1)) || 0,
 
-            areaCoxaValue:
-                Number(
-                    areaCoxa.toFixed(1)
-                ) || 0,
+            areaCoxaValue: Number(areaCoxa.toFixed(1)) || 0,
 
-            massaMuscular:
-                `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
+            massaMuscular: `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
 
-            massaAdiposa:
-                `${massaAdiposa} (${gorduraKg.toFixed(1)} kg)`,
+            massaAdiposa: `${massaAdiposa} (${gorduraKg.toFixed(1)} kg)`,
 
-            areaBraco:
-                `${areaBraco.toFixed(1)}`,
+            areaBraco: `${areaBraco.toFixed(1)}`,
 
-            areaCoxa:
-                `${areaCoxa.toFixed(1)}`,
+            areaCoxa: `${areaCoxa.toFixed(1)}`,
         };
-    }, [
-        data,
-        perimetros,
-        resumoDobras,
-    ]);
-
+    }, [data, perimetros, resumoDobras]);
 
     const analiseCorporal2 = useMemo(() => {
-        const massa =
-            parseDecimal(data2.massa);
+        const massa = parseDecimal(data2.massa);
 
-        const gorduraKg =
-            calcularMassaAdiposa(
-                data2,
-                resumoDobras2
-            ) || 0;
+        const gorduraKg = calcularMassaAdiposa(data2, resumoDobras2) || 0;
 
-        const areaBraco =
-            calcularAreaBraco(
-                perimetros2,
-                resumoDobras2
-            ) || 0;
+        const areaBraco = calcularAreaBraco(perimetros2, resumoDobras2) || 0;
 
-        const areaCoxa =
-            calcularAreaCoxa(
-                perimetros2,
-                resumoDobras2
-            ) || 0;
+        const areaCoxa = calcularAreaCoxa(perimetros2, resumoDobras2) || 0;
 
-        const massaMuscularKg =
-            calcularMassaMuscular(
-                massa,
-                gorduraKg,
-                data2.genero,
-                Number(data2.idade),
-                areaBraco,
-                areaCoxa,
-                calcularIMC(
-                    data2.massa,
-                    data2.estatura
-                )
-            );
+        const massaMuscularKg = calcularMassaMuscular(
+            massa,
+            gorduraKg,
+            data2.genero,
+            Number(data2.idade),
+            areaBraco,
+            areaCoxa,
+            calcularIMC(data2.massa, data2.estatura),
+        );
 
-        const refBraco =
-            calcularAreaCircular(
-                getReferenceByKey(
-                    "bracoD",
-                    data2
-                )
-            );
+        const refBraco = calcularAreaCircular(getReferenceByKey("bracoD", data2));
 
-        const refCoxa =
-            calcularAreaCircular(
-                getReferenceByKey(
-                    "coxaMediaD",
-                    data2
-                )
-            );
+        const refCoxa = calcularAreaCircular(getReferenceByKey("coxaMediaD", data2));
 
-        const percentualMuscular =
-            massa > 0
-                ? massaMuscularKg / massa
-                : 0;
+        const percentualMuscular = massa > 0 ? massaMuscularKg / massa : 0;
 
-        const percentualGordura =
-            massa > 0
-                ? (gorduraKg / massa) * 100
-                : 0;
+        const percentualGordura = massa > 0 ? (gorduraKg / massa) * 100 : 0;
 
-        const classificarFaixa = (
-            valor: number,
-            referencia: number,
-            margem = 2
-        ) => {
-            if (valor >= referencia + margem * 2)
-                return "Muito elevada";
+        const classificarFaixa = (valor: number, referencia: number, margem = 2) => {
+            if (valor >= referencia + margem * 2) return "Muito elevada";
 
-            if (valor >= referencia + margem)
-                return "Elevada";
+            if (valor >= referencia + margem) return "Elevada";
 
-            if (valor >= referencia - margem)
-                return "Normal";
+            if (valor >= referencia - margem) return "Normal";
 
             return "Baixa";
         };
@@ -1137,13 +848,9 @@ export default function comparacao() {
 
         if (percentualMuscular >= 0.45) {
             massaMuscular = "Muito elevada";
-        } else if (
-            percentualMuscular >= 0.38
-        ) {
+        } else if (percentualMuscular >= 0.38) {
             massaMuscular = "Elevada";
-        } else if (
-            percentualMuscular >= 0.28
-        ) {
+        } else if (percentualMuscular >= 0.28) {
             massaMuscular = "Normal";
         } else {
             massaMuscular = "Baixa";
@@ -1154,13 +861,9 @@ export default function comparacao() {
         if (data2.genero === "Masculino") {
             if (percentualGordura >= 25) {
                 massaAdiposa = "Muito elevada";
-            } else if (
-                percentualGordura >= 18
-            ) {
+            } else if (percentualGordura >= 18) {
                 massaAdiposa = "Elevada";
-            } else if (
-                percentualGordura >= 10
-            ) {
+            } else if (percentualGordura >= 10) {
                 massaAdiposa = "Adequada";
             } else {
                 massaAdiposa = "Baixa";
@@ -1168,81 +871,41 @@ export default function comparacao() {
         } else {
             if (percentualGordura >= 32) {
                 massaAdiposa = "Muito elevada";
-            } else if (
-                percentualGordura >= 25
-            ) {
+            } else if (percentualGordura >= 25) {
                 massaAdiposa = "Elevada";
-            } else if (
-                percentualGordura >= 18
-            ) {
+            } else if (percentualGordura >= 18) {
                 massaAdiposa = "Adequada";
             } else {
                 massaAdiposa = "Baixa";
             }
         }
 
-        const areaBracos =
-            classificarFaixa(
-                areaBraco,
-                refBraco,
-                2
-            );
+        const areaBracos = classificarFaixa(areaBraco, refBraco, 2);
 
-        const areaCoxas =
-            classificarFaixa(
-                areaCoxa,
-                refCoxa,
-                3
-            );
+        const areaCoxas = classificarFaixa(areaCoxa, refCoxa, 3);
 
         return {
-            massaMuscularKg:
-                Number(
-                    massaMuscularKg.toFixed(1)
-                ) || 0,
+            massaMuscularKg: Number(massaMuscularKg.toFixed(1)) || 0,
 
-            massaLivreKg:
-                Number(
-                    (massa - gorduraKg).toFixed(1)
-                ) || 0,
+            massaLivreKg: Number((massa - gorduraKg).toFixed(1)) || 0,
 
-            massaAdiposaKg:
-                Number(
-                    gorduraKg.toFixed(1)
-                ) || 0,
+            massaAdiposaKg: Number(gorduraKg.toFixed(1)) || 0,
 
-            massaTotalKg:
-                Number(
-                    massa.toFixed(1)
-                ) || 0,
+            massaTotalKg: Number(massa.toFixed(1)) || 0,
 
-            areaBracoValue:
-                Number(
-                    areaBraco.toFixed(1)
-                ) || 0,
+            areaBracoValue: Number(areaBraco.toFixed(1)) || 0,
 
-            areaCoxaValue:
-                Number(
-                    areaCoxa.toFixed(1)
-                ) || 0,
+            areaCoxaValue: Number(areaCoxa.toFixed(1)) || 0,
 
-            massaMuscular:
-                `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
+            massaMuscular: `${massaMuscular} (${massaMuscularKg.toFixed(1)} kg)`,
 
-            massaAdiposa:
-                `${massaAdiposa} (${gorduraKg.toFixed(1)} kg)`,
+            massaAdiposa: `${massaAdiposa} (${gorduraKg.toFixed(1)} kg)`,
 
-            areaBraco:
-                `${areaBraco.toFixed(1)}`,
+            areaBraco: `${areaBraco.toFixed(1)}`,
 
-            areaCoxa:
-                `${areaCoxa.toFixed(1)}`,
+            areaCoxa: `${areaCoxa.toFixed(1)}`,
         };
-    }, [
-        data2,
-        perimetros2,
-        resumoDobras2,
-    ]);
+    }, [data2, perimetros2, resumoDobras2]);
 
     const chartRows = 2;
 
@@ -1272,13 +935,13 @@ export default function comparacao() {
         analiseCorporal.massaMuscularKg,
         analiseCorporal.massaAdiposaKg,
         analiseCorporal2.massaMuscularKg,
-        analiseCorporal2.massaAdiposaKg
+        analiseCorporal2.massaAdiposaKg,
     );
 
     function calcular1RM(carga: number, repeticoes: number) {
         if (!carga || !repeticoes) return 0;
 
-        return carga / (1.0278 - (0.0278 * repeticoes));
+        return carga / (1.0278 - 0.0278 * repeticoes);
     }
 
     const resultadoRmAV1 = useMemo(() => {
@@ -1287,8 +950,8 @@ export default function comparacao() {
                 rm: Math.round(
                     calcular1RM(
                         Number(testeCarga.carga1.supino.carga),
-                        Number(testeCarga.carga1.supino.repeticoes)
-                    )
+                        Number(testeCarga.carga1.supino.repeticoes),
+                    ),
                 ),
             },
 
@@ -1296,8 +959,8 @@ export default function comparacao() {
                 rm: Math.round(
                     calcular1RM(
                         Number(testeCarga.carga1.terra.carga),
-                        Number(testeCarga.carga1.terra.repeticoes)
-                    )
+                        Number(testeCarga.carga1.terra.repeticoes),
+                    ),
                 ),
             },
 
@@ -1305,8 +968,8 @@ export default function comparacao() {
                 rm: Math.round(
                     calcular1RM(
                         Number(testeCarga.carga1.remada.carga),
-                        Number(testeCarga.carga1.remada.repeticoes)
-                    )
+                        Number(testeCarga.carga1.remada.repeticoes),
+                    ),
                 ),
             },
 
@@ -1314,8 +977,8 @@ export default function comparacao() {
                 rm: Math.round(
                     calcular1RM(
                         Number(testeCarga.carga1.agachamento.carga),
-                        Number(testeCarga.carga1.agachamento.repeticoes)
-                    )
+                        Number(testeCarga.carga1.agachamento.repeticoes),
+                    ),
                 ),
             },
         };
@@ -1327,8 +990,8 @@ export default function comparacao() {
                 rm: Math.round(
                     calcular1RM(
                         Number(testeCarga.carga2.supino.carga),
-                        Number(testeCarga.carga2.supino.repeticoes)
-                    )
+                        Number(testeCarga.carga2.supino.repeticoes),
+                    ),
                 ),
             },
 
@@ -1336,8 +999,8 @@ export default function comparacao() {
                 rm: Math.round(
                     calcular1RM(
                         Number(testeCarga.carga2.terra.carga),
-                        Number(testeCarga.carga2.terra.repeticoes)
-                    )
+                        Number(testeCarga.carga2.terra.repeticoes),
+                    ),
                 ),
             },
 
@@ -1345,8 +1008,8 @@ export default function comparacao() {
                 rm: Math.round(
                     calcular1RM(
                         Number(testeCarga.carga2.remada.carga),
-                        Number(testeCarga.carga2.remada.repeticoes)
-                    )
+                        Number(testeCarga.carga2.remada.repeticoes),
+                    ),
                 ),
             },
 
@@ -1354,8 +1017,8 @@ export default function comparacao() {
                 rm: Math.round(
                     calcular1RM(
                         Number(testeCarga.carga2.agachamento.carga),
-                        Number(testeCarga.carga2.agachamento.repeticoes)
-                    )
+                        Number(testeCarga.carga2.agachamento.repeticoes),
+                    ),
                 ),
             },
         };
@@ -1376,10 +1039,9 @@ export default function comparacao() {
             case "4":
                 diferenca = analiseCorporal2.areaCoxaValue - analiseCorporal.areaCoxaValue;
                 break;
-
         }
         return diferenca.toFixed(1).replace(".", ",");
-    }
+    };
 
     const diferencaRM = (type: "1" | "2" | "3" | "4") => {
         let diferenca: number = 0;
@@ -1398,7 +1060,7 @@ export default function comparacao() {
                 break;
         }
         return diferenca;
-    }
+    };
 
     const diferencaQuimica = (type: "1" | "2" | "3" | "4") => {
         let diferenca = 0;
@@ -1409,21 +1071,15 @@ export default function comparacao() {
                 break;
 
             case "2":
-                diferenca =
-                    Number(data2.triglicerideos) -
-                    Number(data.triglicerideos);
+                diferenca = Number(data2.triglicerideos) - Number(data.triglicerideos);
                 break;
 
             case "3":
-                diferenca =
-                    Number(data2.ldl) -
-                    Number(data.ldl);
+                diferenca = Number(data2.ldl) - Number(data.ldl);
                 break;
 
             case "4":
-                diferenca =
-                    Number(data2.hdl) -
-                    Number(data.hdl);
+                diferenca = Number(data2.hdl) - Number(data.hdl);
                 break;
         }
 
@@ -1456,11 +1112,8 @@ export default function comparacao() {
 
     return (
         <main className="min-h-full bg-[var(--surface-sunken)] p-3 text-[var(--text-primary)] md:p-5">
-
             <section className="mb-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
-
                 <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-
                     <div>
                         <p className="mb-1 text-sm font-bold uppercase tracking-[0.2em] text-[var(--accent)]">
                             Avaliação física
@@ -1476,7 +1129,6 @@ export default function comparacao() {
                     </div>
 
                     <div className="flex items-center gap-3">
-
                         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] px-5 py-3 text-center">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                                 Avaliações
@@ -1496,7 +1148,6 @@ export default function comparacao() {
                                 {data.nomeCompleto}
                             </p>
                         </div>
-
                     </div>
                 </div>
             </section>
@@ -1506,11 +1157,13 @@ export default function comparacao() {
                     Avaliação de referência
                     <select
                         value={avaliacaoIds[0]}
-                        onChange={(event) => setAvaliacaoIds([event.target.value, avaliacaoIds[1]])}
+                        onChange={event => setAvaliacaoIds([event.target.value, avaliacaoIds[1]])}
                         className="rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] px-3 py-2.5 text-sm font-semibold normal-case text-[var(--text-primary)]"
                     >
                         {avaliacao.avaliacoes.map(item => (
-                            <option key={item.id} value={item.id}>Avaliação #{item.numero} · {item.realizadaEm}</option>
+                            <option key={item.id} value={item.id}>
+                                Avaliação #{item.numero} · {item.realizadaEm}
+                            </option>
                         ))}
                     </select>
                 </label>
@@ -1518,18 +1171,21 @@ export default function comparacao() {
                     Avaliação para comparar
                     <select
                         value={avaliacaoIds[1]}
-                        onChange={(event) => setAvaliacaoIds([avaliacaoIds[0], event.target.value])}
+                        onChange={event => setAvaliacaoIds([avaliacaoIds[0], event.target.value])}
                         className="rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] px-3 py-2.5 text-sm font-semibold normal-case text-[var(--text-primary)]"
                     >
-                        {avaliacao.avaliacoes.filter(item => item.id !== avaliacaoIds[0]).map(item => (
-                            <option key={item.id} value={item.id}>Avaliação #{item.numero} · {item.realizadaEm}</option>
-                        ))}
+                        {avaliacao.avaliacoes
+                            .filter(item => item.id !== avaliacaoIds[0])
+                            .map(item => (
+                                <option key={item.id} value={item.id}>
+                                    Avaliação #{item.numero} · {item.realizadaEm}
+                                </option>
+                            ))}
                     </select>
                 </label>
             </section>
 
             <section className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
-
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                     Leitura:
                 </span>
@@ -1554,13 +1210,10 @@ export default function comparacao() {
                         Diferença
                     </span>
                 </div>
-
             </section>
 
             <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
-
                 <div className="mb-5 flex items-center justify-between">
-
                     <div>
                         <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                             Medidas corporais
@@ -1574,16 +1227,11 @@ export default function comparacao() {
                     <div className="hidden rounded-xl bg-[var(--surface-tertiary)] px-4 py-2 text-xs font-bold text-[var(--text-secondary)] md:block">
                         Unidade: cm
                     </div>
-
                 </div>
 
-
                 <div className="grid gap-6 xl:grid-cols-[1.35fr_0.8fr]">
-
                     <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
-
                         <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-2 bg-[var(--surface-tertiary)] p-3">
-
                             <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                                 Medida
                             </span>
@@ -1599,25 +1247,21 @@ export default function comparacao() {
                             <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Δ diferença
                             </span>
-
                         </div>
 
-
                         {perimetroConfig.map((field, index) => {
-
                             const diferenca = diferencaPerimetros(field.key);
 
                             return (
                                 <div
                                     key={field.key}
-                                    className={`grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-2 p-2 ${index % 2 === 0
-                                        ? "bg-[var(--surface-raised)]"
-                                        : "bg-[var(--surface-tertiary)]"
-                                        }`}
+                                    className={`grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-2 p-2 ${
+                                        index % 2 === 0
+                                            ? "bg-[var(--surface-raised)]"
+                                            : "bg-[var(--surface-tertiary)]"
+                                    }`}
                                 >
-
                                     <div className="flex items-center gap-2">
-
                                         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-secondary)] text-[10px] font-black text-[var(--text-secondary)]">
                                             {field.index}
                                         </span>
@@ -1625,12 +1269,9 @@ export default function comparacao() {
                                         <span className="text-sm font-bold text-[var(--text-secondary)]">
                                             {field.label}
                                         </span>
-
                                     </div>
 
-                                    <div className={valorClass}>
-                                        {perimetros[field.key] || "0"}
-                                    </div>
+                                    <div className={valorClass}>{perimetros[field.key] || "0"}</div>
 
                                     <div className={valorClass}>
                                         {perimetros2[field.key] || "0"}
@@ -1640,30 +1281,23 @@ export default function comparacao() {
                                         {diferenca > 0 ? "+" : ""}
                                         {diferenca.toFixed(1).replace(".", ",")}
                                     </div>
-
                                 </div>
                             );
                         })}
-
                     </div>
 
                     <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)]">
-
                         <img
                             src="./app/src/assets/human.png"
                             alt=""
                             className="max-h-[730px] 2- object-contain py-5"
                         />
-
                     </div>
-
                 </div>
             </section>
 
             <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
-
                 <div className="mb-5 flex items-center justify-between">
-
                     <div>
                         <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                             Composição corporal
@@ -1677,16 +1311,11 @@ export default function comparacao() {
                     <div className="hidden rounded-xl bg-[var(--surface-tertiary)] px-4 py-2 text-xs font-bold text-[var(--text-secondary)] md:block">
                         Unidade: mm
                     </div>
-
                 </div>
 
-
                 <div className="grid gap-6 xl:grid-cols-[1.35fr_0.8fr]">
-
                     <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
-
                         <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-2 bg-[var(--surface-tertiary)] p-3">
-
                             <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                                 Ponto
                             </span>
@@ -1702,27 +1331,21 @@ export default function comparacao() {
                             <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Δ diferença
                             </span>
-
                         </div>
 
-
                         {dobrasConfig.map((field, index) => {
-
-                            const diferenca = parseDecimal(
-                                diferencaDobras(field.key, "1")
-                            );
+                            const diferenca = parseDecimal(diferencaDobras(field.key, "1"));
 
                             return (
                                 <div
                                     key={field.key}
-                                    className={`grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-2 p-2 ${index % 2 === 0
-                                        ? "bg-[var(--surface-raised)]"
-                                        : "bg-[var(--surface-tertiary)]"
-                                        }`}
+                                    className={`grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-2 p-2 ${
+                                        index % 2 === 0
+                                            ? "bg-[var(--surface-raised)]"
+                                            : "bg-[var(--surface-tertiary)]"
+                                    }`}
                                 >
-
                                     <div className="flex items-center gap-2">
-
                                         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-secondary)] text-[10px] font-black text-[var(--text-secondary)]">
                                             {field.index}
                                         </span>
@@ -1730,7 +1353,6 @@ export default function comparacao() {
                                         <span className="text-sm font-bold text-[var(--text-secondary)]">
                                             {field.label}
                                         </span>
-
                                     </div>
 
                                     <div className={valorClass}>
@@ -1745,15 +1367,12 @@ export default function comparacao() {
                                         {diferenca > 0 ? "+" : ""}
                                         {diferenca.toFixed(1).replace(".", ",")}
                                     </div>
-
                                 </div>
                             );
                         })}
 
                         <div className="border-t border-[var(--border)] bg-[var(--surface-tertiary)] p-3">
-
                             <div className="grid gap-3 md:grid-cols-3">
-
                                 {[
                                     {
                                         label: "Somatório",
@@ -1773,27 +1392,22 @@ export default function comparacao() {
                                         v2: resumoDobras2.central,
                                         diff: diferencaDobras(undefined, "4"),
                                     },
-                                ].map((item) => (
-
+                                ].map(item => (
                                     <div
                                         key={item.label}
                                         className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3"
                                     >
-
                                         <p className="mb-2 text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                             {item.label}
                                         </p>
 
                                         <div className="grid grid-cols-3 gap-2">
-
                                             <div>
                                                 <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                                     AV. 01
                                                 </p>
 
-                                                <div className={valorClass}>
-                                                    {item.v1 || "0"}
-                                                </div>
+                                                <div className={valorClass}>{item.v1 || "0"}</div>
                                             </div>
 
                                             <div>
@@ -1801,9 +1415,7 @@ export default function comparacao() {
                                                     AV. 02
                                                 </p>
 
-                                                <div className={valorClass}>
-                                                    {item.v2 || "0"}
-                                                </div>
+                                                <div className={valorClass}>{item.v2 || "0"}</div>
                                             </div>
 
                                             <div>
@@ -1815,39 +1427,26 @@ export default function comparacao() {
                                                     {item.diff}
                                                 </div>
                                             </div>
-
                                         </div>
-
                                     </div>
-
                                 ))}
-
                             </div>
-
                         </div>
-
                     </div>
 
-
                     <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)]">
-
                         <img
                             src="./app/src/assets/human2.png"
                             alt=""
                             className="max-h-[550px] object-contain py-5"
                         />
-
                     </div>
-
                 </div>
             </section>
 
             <section className="mb-8 grid gap-6 xl:grid-cols-2">
-
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
-
                     <div className="mb-4">
-
                         <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                             Análise visual
                         </p>
@@ -1855,15 +1454,11 @@ export default function comparacao() {
                         <h2 className="text-xl font-black text-[var(--text-primary)]">
                             Escala de proporcionalidade
                         </h2>
-
                     </div>
 
                     <div className="flex justify-center">
-
                         <div className="relative h-[420px] w-full max-w-[520px] rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-
                             <div className="absolute inset-0 grid grid-cols-10 overflow-hidden rounded-2xl">
-
                                 <div className="bg-[var(--danger)]" />
                                 <div className="bg-[var(--danger-soft)]" />
                                 <div className="bg-[var(--warning-soft)]" />
@@ -1874,39 +1469,26 @@ export default function comparacao() {
                                 <div className="bg-[var(--warning-soft)]" />
                                 <div className="bg-[var(--danger-soft)]" />
                                 <div className="bg-[var(--danger)]" />
-
                             </div>
 
-
                             <div className="absolute inset-0 grid grid-cols-10">
-
                                 {Array.from({ length: 10 }).map((_, idx) => (
                                     <div
                                         key={idx}
                                         className="border-r border-[var(--border-strong)]/40"
                                     />
                                 ))}
-
                             </div>
-
 
                             <div className="absolute inset-0 grid grid-rows-14">
-
                                 {Array.from({ length: 14 }).map((_, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="border-b border-[var(--border)]/60"
-                                    />
+                                    <div key={idx} className="border-b border-[var(--border)]/60" />
                                 ))}
-
                             </div>
-
 
                             <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-600" />
 
-
                             {chartPoints.map((point, idx) => (
-
                                 <div
                                     key={`p1-${idx}`}
                                     className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent)] shadow-md"
@@ -1915,12 +1497,9 @@ export default function comparacao() {
                                         top: `${((point.y - 0.5) / 14) * 100}%`,
                                     }}
                                 />
-
                             ))}
 
-
                             {chartPoints2.map((point, idx) => (
-
                                 <div
                                     key={`p2-${idx}`}
                                     className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)] shadow-md"
@@ -1929,16 +1508,11 @@ export default function comparacao() {
                                         top: `${((point.y - 0.5) / 14) * 100}%`,
                                     }}
                                 />
-
                             ))}
-
                         </div>
-
                     </div>
 
-
                     <div className="mt-5 flex justify-center gap-5">
-
                         <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)]">
                             <span className="h-3 w-3 rounded-full bg-[var(--accent)]" />
                             1ª avaliação
@@ -1948,15 +1522,11 @@ export default function comparacao() {
                             <span className="h-3 w-3 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)]" />
                             2ª avaliação
                         </div>
-
                     </div>
-
                 </div>
 
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
-
                     <div className="mb-4">
-
                         <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                             Análise visual
                         </p>
@@ -1964,16 +1534,11 @@ export default function comparacao() {
                         <h2 className="text-xl font-black text-[var(--text-primary)]">
                             Distribuição das dobras
                         </h2>
-
                     </div>
 
-
                     <div className="flex justify-center">
-
                         <div className="relative h-[420px] w-full max-w-[520px] rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-
                             <div className="absolute inset-0 grid grid-cols-10 overflow-hidden rounded-2xl">
-
                                 <div className="bg-[var(--danger)]" />
                                 <div className="bg-[var(--danger-soft)]" />
                                 <div className="bg-[var(--warning-soft)]" />
@@ -1984,39 +1549,26 @@ export default function comparacao() {
                                 <div className="bg-[var(--warning-soft)]" />
                                 <div className="bg-[var(--danger-soft)]" />
                                 <div className="bg-[var(--danger)]" />
-
                             </div>
 
-
                             <div className="absolute inset-0 grid grid-cols-10">
-
                                 {Array.from({ length: 10 }).map((_, idx) => (
                                     <div
                                         key={idx}
                                         className="border-r border-[var(--border-strong)]/40"
                                     />
                                 ))}
-
                             </div>
-
 
                             <div className="absolute inset-0 grid grid-rows-8">
-
                                 {Array.from({ length: 8 }).map((_, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="border-b border-[var(--border)]/60"
-                                    />
+                                    <div key={idx} className="border-b border-[var(--border)]/60" />
                                 ))}
-
                             </div>
-
 
                             <div className="absolute inset-y-0 left-1/2 w-[2px] bg-zinc-600" />
 
-
                             {pontosDobras.map((point, idx) => (
-
                                 <div
                                     key={`d1-${idx}`}
                                     className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--accent)] shadow-md"
@@ -2025,12 +1577,9 @@ export default function comparacao() {
                                         top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
                                     }}
                                 />
-
                             ))}
 
-
                             {pontosDobras2.map((point, idx) => (
-
                                 <div
                                     key={`d2-${idx}`}
                                     className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)] shadow-md"
@@ -2039,16 +1588,11 @@ export default function comparacao() {
                                         top: `${((point.y - 0.5) / dobraChartRows) * 100}%`,
                                     }}
                                 />
-
                             ))}
-
                         </div>
-
                     </div>
 
-
                     <div className="mt-5 flex justify-center gap-5">
-
                         <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)]">
                             <span className="h-3 w-3 rounded-full bg-[var(--accent)]" />
                             1ª avaliação
@@ -2058,17 +1602,12 @@ export default function comparacao() {
                             <span className="h-3 w-3 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)]" />
                             2ª avaliação
                         </div>
-
                     </div>
-
                 </div>
-
             </section>
 
             <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
-
                 <div className="mb-5">
-
                     <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                         Análise corporal
                     </p>
@@ -2076,12 +1615,9 @@ export default function comparacao() {
                     <h2 className="text-2xl font-black text-[var(--text-primary)]">
                         Composição corporal
                     </h2>
-
                 </div>
 
-
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
                     {[
                         {
                             titulo: "Massa muscular",
@@ -2111,15 +1647,12 @@ export default function comparacao() {
                             diff: diferencaComposicao("4"),
                             unidade: "cm²",
                         },
-                    ].map((item) => (
-
+                    ].map(item => (
                         <div
                             key={item.titulo}
                             className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] p-4"
                         >
-
                             <div className="mb-4">
-
                                 <p className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                                     {item.titulo}
                                 </p>
@@ -2127,56 +1660,39 @@ export default function comparacao() {
                                 <p className="text-[11px] text-[var(--text-muted)]">
                                     {item.unidade}
                                 </p>
-
                             </div>
 
-
                             <div className="grid grid-cols-3 gap-2">
-
                                 <div>
                                     <p className="mb-1 text-[10px] font-bold uppercase text-[var(--text-muted)]">
                                         01
                                     </p>
 
-                                    <div className={valorClass}>
-                                        {item.v1}
-                                    </div>
+                                    <div className={valorClass}>{item.v1}</div>
                                 </div>
-
 
                                 <div>
                                     <p className="mb-1 text-[10px] font-bold uppercase text-[var(--text-muted)]">
                                         02
                                     </p>
 
-                                    <div className={valorClass}>
-                                        {item.v2}
-                                    </div>
+                                    <div className={valorClass}>{item.v2}</div>
                                 </div>
-
 
                                 <div>
                                     <p className="mb-1 text-[10px] font-bold uppercase text-[var(--text-muted)]">
                                         Δ
                                     </p>
 
-                                    <div className={diferencaClass(item.diff)}>
-                                        {item.diff}
-                                    </div>
+                                    <div className={diferencaClass(item.diff)}>{item.diff}</div>
                                 </div>
-
                             </div>
-
                         </div>
-
                     ))}
-
                 </div>
 
                 <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] p-5">
-
                     <div className="mb-4">
-
                         <p className="text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                             Distribuição
                         </p>
@@ -2184,62 +1700,42 @@ export default function comparacao() {
                         <p className="text-sm text-[var(--text-secondary)]">
                             Comparação da massa muscular e massa adiposa.
                         </p>
-
                     </div>
 
-
                     <div className="relative h-[150px] w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-
                         <div className="absolute left-0 right-0 top-[25%] border-b border-[var(--border)]" />
 
                         <div className="absolute left-0 right-0 top-[75%] border-b border-[var(--border)]" />
 
-
                         {pontosComposicao.map((point, idx) => (
-
                             <div
                                 key={`comp1-${idx}`}
                                 className="absolute z-10 h-4 w-4 rounded-full bg-[var(--accent)] shadow"
                                 style={{
                                     left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
-                                    top:
-                                        point.y === 1
-                                            ? "25%"
-                                            : "75%",
+                                    top: point.y === 1 ? "25%" : "75%",
                                     transform: "translateY(-50%)",
                                 }}
                             />
-
                         ))}
 
-
                         {pontosComposicao2.map((point, idx) => (
-
                             <div
                                 key={`comp2-${idx}`}
                                 className="absolute z-10 h-4 w-4 rounded-full border-2 border-[var(--text-muted)] bg-[var(--surface-tertiary)] shadow"
                                 style={{
                                     left: `calc(${(point.x / maxValor) * 100}% - 8px)`,
-                                    top:
-                                        point.y === 1
-                                            ? "25%"
-                                            : "75%",
+                                    top: point.y === 1 ? "25%" : "75%",
                                     transform: "translateY(-50%)",
                                 }}
                             />
-
                         ))}
-
                     </div>
-
                 </div>
-
             </section>
 
             <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
-
                 <div className="mb-5">
-
                     <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                         Desempenho
                     </p>
@@ -2247,14 +1743,10 @@ export default function comparacao() {
                     <h2 className="text-2xl font-black text-[var(--text-primary)]">
                         Teste de carga máxima — 1RM
                     </h2>
-
                 </div>
 
-
                 <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-
                     <div className="grid gap-3 md:grid-cols-2">
-
                         {[
                             {
                                 nome: "Supino",
@@ -2280,15 +1772,12 @@ export default function comparacao() {
                                 v2: resultadoRmAV2.terra.rm,
                                 diff: diferencaRM("4"),
                             },
-                        ].map((item) => (
-
+                        ].map(item => (
                             <div
                                 key={item.nome}
                                 className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] p-4"
                             >
-
                                 <div className="mb-4 flex items-center justify-between">
-
                                     <span className="text-sm font-black uppercase tracking-wide text-[var(--text-secondary)]">
                                         {item.nome}
                                     </span>
@@ -2296,33 +1785,24 @@ export default function comparacao() {
                                     <span className="rounded-lg bg-[var(--surface-secondary)] px-2 py-1 text-[10px] font-bold text-[var(--text-secondary)]">
                                         1RM
                                     </span>
-
                                 </div>
 
-
                                 <div className="grid grid-cols-3 gap-2">
-
                                     <div>
                                         <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                             AV. 01
                                         </p>
 
-                                        <div className={valorClass}>
-                                            {item.v1} kg
-                                        </div>
+                                        <div className={valorClass}>{item.v1} kg</div>
                                     </div>
-
 
                                     <div>
                                         <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
                                             AV. 02
                                         </p>
 
-                                        <div className={valorClass}>
-                                            {item.v2} kg
-                                        </div>
+                                        <div className={valorClass}>{item.v2} kg</div>
                                     </div>
-
 
                                     <div>
                                         <p className="mb-1 text-[10px] font-bold text-[var(--text-muted)]">
@@ -2334,20 +1814,13 @@ export default function comparacao() {
                                             {item.diff} kg
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
-
                         ))}
-
                     </div>
 
-
                     <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)]">
-
                         <div className="border-b border-[var(--border)] p-4">
-
                             <p className="text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Produção de força
                             </p>
@@ -2355,28 +1828,20 @@ export default function comparacao() {
                             <p className="text-sm text-[var(--text-secondary)]">
                                 Evolução estimada da força máxima.
                             </p>
-
                         </div>
 
                         <div className="p-4">
-
                             <GraficoForca
                                 resultadoRmAV1={resultadoRmAV1}
                                 resultadoRmAV2={resultadoRmAV2}
                             />
-
                         </div>
-
                     </div>
-
                 </div>
-
             </section>
 
             <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
-
                 <div className="mb-5">
-
                     <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                         Controle laboratorial
                     </p>
@@ -2384,16 +1849,11 @@ export default function comparacao() {
                     <h2 className="text-2xl font-black text-[var(--text-primary)]">
                         Controle bioquímico
                     </h2>
-
                 </div>
 
-
                 <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-
                     <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
-
                         <div className="grid grid-cols-[1.3fr_1fr_1fr_1fr] bg-[var(--surface-tertiary)] p-3">
-
                             <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                                 Exame
                             </span>
@@ -2409,9 +1869,7 @@ export default function comparacao() {
                             <span className="text-center text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Δ
                             </span>
-
                         </div>
-
 
                         {[
                             {
@@ -2439,45 +1897,36 @@ export default function comparacao() {
                                 diff: diferencaQuimica("4"),
                             },
                         ].map((item, index) => {
-
                             const diff = parseDecimal(item.diff);
 
                             return (
                                 <div
                                     key={item.nome}
-                                    className={`grid grid-cols-[1.3fr_1fr_1fr_1fr] items-center gap-2 p-3 ${index % 2 === 0
-                                        ? "bg-[var(--surface-raised)]"
-                                        : "bg-[var(--surface-tertiary)]"
-                                        }`}
+                                    className={`grid grid-cols-[1.3fr_1fr_1fr_1fr] items-center gap-2 p-3 ${
+                                        index % 2 === 0
+                                            ? "bg-[var(--surface-raised)]"
+                                            : "bg-[var(--surface-tertiary)]"
+                                    }`}
                                 >
-
                                     <span className="text-sm font-bold text-[var(--text-secondary)]">
                                         {item.nome}
                                     </span>
 
-                                    <div className={valorClass}>
-                                        {item.v1 || "0"}
-                                    </div>
+                                    <div className={valorClass}>{item.v1 || "0"}</div>
 
-                                    <div className={valorClass}>
-                                        {item.v2 || "0"}
-                                    </div>
+                                    <div className={valorClass}>{item.v2 || "0"}</div>
 
                                     <div className={diferencaClass(diff)}>
                                         {diff > 0 ? "+" : ""}
                                         {item.diff}
                                     </div>
-
                                 </div>
                             );
                         })}
-
                     </div>
 
                     <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-tertiary)] p-4">
-
                         <div className="mb-4">
-
                             <p className="text-xs font-black uppercase tracking-wider text-[var(--accent)]">
                                 Valores de referência
                             </p>
@@ -2485,14 +1934,10 @@ export default function comparacao() {
                             <p className="text-sm text-[var(--text-secondary)]">
                                 Faixas utilizadas como referência visual.
                             </p>
-
                         </div>
 
-
                         <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-
                             <div className="grid grid-cols-3 bg-[var(--surface-secondary)] p-3">
-
                                 <span className="text-xs font-black uppercase text-[var(--text-secondary)]">
                                     Exame
                                 </span>
@@ -2504,9 +1949,7 @@ export default function comparacao() {
                                 <span className="text-center text-xs font-black uppercase text-[var(--text-secondary)]">
                                     Limítrofe
                                 </span>
-
                             </div>
-
 
                             {[
                                 ["Glicose", "< 110 mg/dl", "110 - 125 mg/dl"],
@@ -2514,15 +1957,14 @@ export default function comparacao() {
                                 ["LDL-C", "< 150 mg/dl", "130 - 160 mg/dl"],
                                 ["HDL-C", "> 40 mg/dl", "35 - 40 mg/dl"],
                             ].map((item, index) => (
-
                                 <div
                                     key={item[0]}
-                                    className={`grid grid-cols-3 items-center p-3 ${index % 2 === 0
-                                        ? "bg-[var(--surface-raised)]"
-                                        : "bg-[var(--surface-tertiary)]"
-                                        }`}
+                                    className={`grid grid-cols-3 items-center p-3 ${
+                                        index % 2 === 0
+                                            ? "bg-[var(--surface-raised)]"
+                                            : "bg-[var(--surface-tertiary)]"
+                                    }`}
                                 >
-
                                     <span className="text-sm font-bold text-[var(--text-secondary)]">
                                         {item[0]}
                                     </span>
@@ -2534,23 +1976,15 @@ export default function comparacao() {
                                     <span className="text-center text-xs font-semibold text-[var(--text-secondary)]">
                                         {item[2]}
                                     </span>
-
                                 </div>
-
                             ))}
-
                         </div>
-
                     </div>
-
                 </div>
-
             </section>
 
             <section className="mb-20 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-sm">
-
                 <div className="mb-4">
-
                     <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
                         Observações
                     </p>
@@ -2562,13 +1996,11 @@ export default function comparacao() {
                     <p className="mt-1 text-sm text-[var(--text-secondary)]">
                         Registre a interpretação geral da evolução do atleta.
                     </p>
-
                 </div>
-
 
                 <textarea
                     value={observacoes}
-                    onChange={(e) => updateObservacoes(e.target.value)}
+                    onChange={e => updateObservacoes(e.target.value)}
                     placeholder="Digite aqui o parecer da avaliação..."
                     className="
                     min-h-[180px]
@@ -2594,10 +2026,7 @@ export default function comparacao() {
                     focus:ring-[var(--ring)]
                 "
                 />
-
             </section>
-
-
         </main>
     );
 }

@@ -29,10 +29,7 @@ function ActivityIcon() {
 
 function EyeIcon() {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            className="w-[15px] fill-none stroke-current stroke-[1.5]"
-        >
+        <svg viewBox="0 0 24 24" className="w-[15px] fill-none stroke-current stroke-[1.5]">
             <path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z" />
             <circle cx="12" cy="12" r="2.5" />
         </svg>
@@ -103,7 +100,11 @@ export default function Register() {
 
             navigate("/", { replace: true });
         } catch (error) {
-            setErro(error instanceof ApiError ? error.message : "Não foi possível concluir o acesso. Tente novamente.");
+            setErro(
+                error instanceof ApiError
+                    ? error.message
+                    : "Não foi possível concluir o acesso. Tente novamente.",
+            );
         } finally {
             setEnviando(false);
         }
@@ -111,7 +112,6 @@ export default function Register() {
 
     return (
         <main className="relative isolate grid min-h-screen place-items-center overflow-hidden bg-[#ececec] px-6 py-[86px] pb-[62px]">
-
             {/* FUNDO DECORATIVO */}
 
             <div
@@ -150,7 +150,6 @@ export default function Register() {
             {/* MARCA */}
 
             <header className="absolute left-6 top-[25px] flex items-center gap-[9px] text-[15px] font-extrabold tracking-[0.14em] md:left-[5vw] md:top-[30px]">
-
                 <span className="grid h-[31px] w-[31px] place-items-center rounded-[9px] bg-[#a85f60] shadow-[0_8px_18px_rgba(168,95,96,0.22)]">
                     <BoltIcon />
                 </span>
@@ -170,7 +169,6 @@ export default function Register() {
                 }`}
                 style={{ minHeight: "550px" }}
             >
-
                 {/* PAINEL DE BOAS-VINDAS */}
 
                 <div
@@ -246,7 +244,6 @@ export default function Register() {
                         isSignup ? "translate-x-full max-[760px]:translate-x-0" : "translate-x-0"
                     }`}
                 >
-
                     {/* EFEITOS INTERNOS */}
                     <div className="pointer-events-none absolute -right-[90px] -top-[120px] h-[260px] w-[260px] rounded-full bg-[#a85f6014] blur-[58px]" />
 
@@ -257,7 +254,6 @@ export default function Register() {
                         onSubmit={handleSubmit}
                         className="relative z-[1] flex animate-[form-in_600ms_170ms_both] flex-col justify-center"
                     >
-
                         <p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#a85f60]">
                             {isSignup ? "Seu próximo nível começa aqui" : "Área do atleta"}
                         </p>
@@ -274,10 +270,11 @@ export default function Register() {
 
                         {/* CAMPOS */}
 
-                        <div className={`grid ${
-                            isSignup ? "mt-[17px] gap-[13px]" : "mt-[27px] gap-[18px]"
-                        }`}>
-
+                        <div
+                            className={`grid ${
+                                isSignup ? "mt-[17px] gap-[13px]" : "mt-[27px] gap-[18px]"
+                            }`}
+                        >
                             {isSignup && (
                                 <label className="grid gap-[6px]">
                                     <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-600">
@@ -286,7 +283,7 @@ export default function Register() {
 
                                     <input
                                         value={nome}
-                                        onChange={(e) => setNome(e.target.value)}
+                                        onChange={e => setNome(e.target.value)}
                                         autoComplete="name"
                                         placeholder="Como podemos te chamar?"
                                         required
@@ -304,7 +301,7 @@ export default function Register() {
                                     <input
                                         type="tel"
                                         value={telefone}
-                                        onChange={(e) => setTelefone(e.target.value)}
+                                        onChange={e => setTelefone(e.target.value)}
                                         autoComplete="tel"
                                         placeholder="(16) 99999-9999"
                                         required
@@ -321,7 +318,7 @@ export default function Register() {
                                 <input
                                     type="email"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={e => setEmail(e.target.value)}
                                     autoComplete="email"
                                     placeholder="voce@exemplo.com"
                                     required
@@ -338,9 +335,13 @@ export default function Register() {
                                     <input
                                         type={mostrarSenha ? "text" : "password"}
                                         value={senha}
-                                        onChange={(e) => setSenha(e.target.value)}
-                                        autoComplete={isSignup ? "new-password" : "current-password"}
-                                        placeholder={isSignup ? "Mínimo de 12 caracteres" : "Sua senha"}
+                                        onChange={e => setSenha(e.target.value)}
+                                        autoComplete={
+                                            isSignup ? "new-password" : "current-password"
+                                        }
+                                        placeholder={
+                                            isSignup ? "Mínimo de 12 caracteres" : "Sua senha"
+                                        }
                                         minLength={isSignup ? 12 : undefined}
                                         required
                                         className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13px] text-[14px] text-zinc-700 outline-none transition placeholder:text-[13px] placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white"
@@ -348,7 +349,9 @@ export default function Register() {
 
                                     <button
                                         type="button"
-                                        aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                                        aria-label={
+                                            mostrarSenha ? "Ocultar senha" : "Mostrar senha"
+                                        }
                                         onClick={() => setMostrarSenha(!mostrarSenha)}
                                         className="absolute bottom-[6px] right-[7px] grid h-[29px] w-[29px] cursor-pointer place-items-center text-[#a85f60]"
                                     >
@@ -366,7 +369,7 @@ export default function Register() {
                                     <input
                                         type={mostrarSenha ? "text" : "password"}
                                         value={confirmarSenha}
-                                        onChange={(e) => setConfirmarSenha(e.target.value)}
+                                        onChange={e => setConfirmarSenha(e.target.value)}
                                         autoComplete="new-password"
                                         placeholder="Digite a senha novamente"
                                         required
@@ -389,13 +392,20 @@ export default function Register() {
 
                                     <span className="text-[11px]">
                                         Aceito os{" "}
-                                        <a href="#termos" className="text-[#a85f60] underline-offset-2 hover:underline">
+                                        <a
+                                            href="#termos"
+                                            className="text-[#a85f60] underline-offset-2 hover:underline"
+                                        >
                                             termos de uso
                                         </a>{" "}
                                         e a{" "}
-                                        <a href="#privacidade" className="text-[#a85f60] underline-offset-2 hover:underline">
+                                        <a
+                                            href="#privacidade"
+                                            className="text-[#a85f60] underline-offset-2 hover:underline"
+                                        >
                                             política de privacidade
-                                        </a>.
+                                        </a>
+                                        .
                                     </span>
                                 </label>
                             ) : (
@@ -427,9 +437,7 @@ export default function Register() {
                         )}
 
                         {message && (
-                            <p className="mt-3 text-center text-xs text-[#a85f60]">
-                                {message}
-                            </p>
+                            <p className="mt-3 text-center text-xs text-[#a85f60]">{message}</p>
                         )}
 
                         {/* BOTÃO PRINCIPAL */}
@@ -437,9 +445,14 @@ export default function Register() {
                         <button
                             type="submit"
                             disabled={enviando}
+                            aria-busy={enviando}
                             className="mt-[22px] flex w-full items-center justify-center gap-4 rounded-xl border border-[#a85f60] bg-[#a85f60] px-[21px] py-[11px] text-[11px] font-extrabold tracking-wide text-white shadow-[0_12px_28px_rgba(168,95,96,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#914f50] hover:shadow-[0_16px_34px_rgba(145,79,80,0.25)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {enviando ? "Aguarde..." : isSignup ? "Criar conta de aluno" : "Entrar na plataforma"}
+                            {enviando
+                                ? "Aguarde..."
+                                : isSignup
+                                  ? "Criar conta de aluno"
+                                  : "Entrar na plataforma"}
 
                             <span className="text-base font-normal">→</span>
                         </button>
@@ -448,7 +461,6 @@ export default function Register() {
 
                         <p className="mt-5 hidden text-center text-[9px] text-zinc-500 max-[760px]:block">
                             {isSignup ? "Já tem uma conta?" : "Ainda não tem uma conta?"}{" "}
-
                             <button
                                 type="button"
                                 onClick={() => switchMode(isSignup ? "login" : "signup")}

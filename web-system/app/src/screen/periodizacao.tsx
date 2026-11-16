@@ -1,11 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
-import {
-    FaRegTrashAlt,
-    FaCalendarAlt,
-    FaDumbbell,
-    FaChartLine,
-} from "react-icons/fa";
+import { FaRegTrashAlt, FaCalendarAlt, FaDumbbell, FaChartLine } from "react-icons/fa";
 
 export default function periodizacao() {
     useEffect(() => {
@@ -17,10 +12,7 @@ export default function periodizacao() {
         window.addEventListener("beforeunload", handleBeforeUnload);
 
         return () => {
-            window.removeEventListener(
-                "beforeunload",
-                handleBeforeUnload
-            );
+            window.removeEventListener("beforeunload", handleBeforeUnload);
         };
     }, []);
 
@@ -33,7 +25,7 @@ export default function periodizacao() {
 
     const dataInicio = useMemo(
         () => new Date(`${avaliacao.periodizacao.dataInicio}T00:00:00`),
-        [avaliacao.periodizacao.dataInicio]
+        [avaliacao.periodizacao.dataInicio],
     );
 
     const setDataInicio = (date: Date) => {
@@ -48,35 +40,25 @@ export default function periodizacao() {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     };
 
-    const opcoesTreino = avaliacao.treino.map((treino) => ({
+    const opcoesTreino = avaliacao.treino.map(treino => ({
         id: treino.id,
         nome: treino.nome,
     }));
 
-    const nomesDias = [
-        "Dom",
-        "Seg",
-        "Ter",
-        "Qua",
-        "Qui",
-        "Sex",
-        "Sab",
-    ];
+    const nomesDias = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 
     const atualizarDia = (
         semanaIndex: number,
         diaIndex: number,
         slotIndex: number,
-        treinoId: string
+        treinoId: string,
     ) => {
         setDiaEditando({ semanaIndex, diaIndex });
 
-        setAvaliacao((prev) => {
+        setAvaliacao(prev => {
             const semanas = [...prev.periodizacao.semanas];
 
-            const treinoIds = [
-                ...semanas[semanaIndex].dias[diaIndex].treinoIds,
-            ];
+            const treinoIds = [...semanas[semanaIndex].dias[diaIndex].treinoIds];
 
             treinoIds[slotIndex] = treinoId;
 
@@ -104,19 +86,13 @@ export default function periodizacao() {
             Array.from({ length: 7 }, (_, diaIndex) => {
                 const data = new Date(dataInicio);
 
-                data.setDate(
-                    data.getDate() +
-                    semanaIndex * 7 +
-                    diaIndex
-                );
+                data.setDate(data.getDate() + semanaIndex * 7 + diaIndex);
 
                 return {
                     data,
-                    texto: `${data.toLocaleDateString(
-                        "pt-BR"
-                    )} (${nomesDias[data.getDay()]})`,
+                    texto: `${data.toLocaleDateString("pt-BR")} (${nomesDias[data.getDay()]})`,
                 };
-            })
+            }),
         );
     }, [dataInicio]);
 
@@ -129,38 +105,25 @@ export default function periodizacao() {
     }, [dataInicio]);
 
     const calcularQuilagemTreino = (treinoId: string) => {
-        const treino = avaliacao.treino.find(
-            (t) => t.id === treinoId
-        );
+        const treino = avaliacao.treino.find(t => t.id === treinoId);
 
         if (!treino) return 0;
 
-        return treino.exercicios.reduce(
-            (total, exercicio) => {
-                const carga =
-                    Number(exercicio.carga) || 0;
+        return treino.exercicios.reduce((total, exercicio) => {
+            const carga = Number(exercicio.carga) || 0;
 
-                return total + carga;
-            },
-            0
-        );
+            return total + carga;
+        }, 0);
     };
 
-    const calcularQuilagemSemana = (
-        semanaIndex: number
-    ) => {
-        const semana =
-            avaliacao.periodizacao.semanas[
-            semanaIndex
-            ];
+    const calcularQuilagemSemana = (semanaIndex: number) => {
+        const semana = avaliacao.periodizacao.semanas[semanaIndex];
 
         let total = 0;
 
-        semana.dias.forEach((dia) => {
-            dia.treinoIds.forEach((treinoId) => {
-                total += calcularQuilagemTreino(
-                    treinoId
-                );
+        semana.dias.forEach(dia => {
+            dia.treinoIds.forEach(treinoId => {
+                total += calcularQuilagemTreino(treinoId);
             });
         });
 
@@ -168,49 +131,29 @@ export default function periodizacao() {
     };
 
     const calcularVolumeTreino = (treinoId: string) => {
-        const treino = avaliacao.treino.find(
-            (t) => t.id === treinoId
-        );
+        const treino = avaliacao.treino.find(t => t.id === treinoId);
 
         if (!treino) return 0;
 
-        return treino.exercicios.reduce(
-            (total, exercicio) => {
-                const carga =
-                    Number(exercicio.carga) || 0;
+        return treino.exercicios.reduce((total, exercicio) => {
+            const carga = Number(exercicio.carga) || 0;
 
-                const series =
-                    Number(exercicio.series) || 0;
+            const series = Number(exercicio.series) || 0;
 
-                const repeticoes =
-                    Number(exercicio.repeticoes) || 0;
+            const repeticoes = Number(exercicio.repeticoes) || 0;
 
-                return (
-                    total +
-                    carga *
-                    series *
-                    repeticoes
-                );
-            },
-            0
-        );
+            return total + carga * series * repeticoes;
+        }, 0);
     };
 
-    const calcularVolumeSemana = (
-        semanaIndex: number
-    ) => {
-        const semana =
-            avaliacao.periodizacao.semanas[
-            semanaIndex
-            ];
+    const calcularVolumeSemana = (semanaIndex: number) => {
+        const semana = avaliacao.periodizacao.semanas[semanaIndex];
 
         let total = 0;
 
-        semana.dias.forEach((dia) => {
-            dia.treinoIds.forEach((treinoId) => {
-                total += calcularVolumeTreino(
-                    treinoId
-                );
+        semana.dias.forEach(dia => {
+            dia.treinoIds.forEach(treinoId => {
+                total += calcularVolumeTreino(treinoId);
             });
         });
 
@@ -218,19 +161,16 @@ export default function periodizacao() {
     };
 
     const limparSemana = (semanaIndex: number) => {
-        setAvaliacao((prev) => {
+        setAvaliacao(prev => {
             const semanas = [...prev.periodizacao.semanas];
 
             semanas[semanaIndex] = {
                 ...semanas[semanaIndex],
 
-                dias: semanas[semanaIndex].dias.map(
-                    (dia) => ({
-                        ...dia,
-                        treinoIds:
-                            dia.treinoIds.map(() => ""),
-                    })
-                ),
+                dias: semanas[semanaIndex].dias.map(dia => ({
+                    ...dia,
+                    treinoIds: dia.treinoIds.map(() => ""),
+                })),
             };
 
             return {
@@ -243,27 +183,20 @@ export default function periodizacao() {
         });
     };
 
-    const limparDia = (
-        semanaIndex: number,
-        diaIndex: number
-    ) => {
-        setAvaliacao((prev) => {
+    const limparDia = (semanaIndex: number, diaIndex: number) => {
+        setAvaliacao(prev => {
             const semanas = [...prev.periodizacao.semanas];
 
             semanas[semanaIndex] = {
                 ...semanas[semanaIndex],
 
-                dias: semanas[semanaIndex].dias.map(
-                    (dia, index) =>
-                        index === diaIndex
-                            ? {
-                                ...dia,
-                                treinoIds:
-                                    dia.treinoIds.map(
-                                        () => ""
-                                    ),
-                            }
-                            : dia
+                dias: semanas[semanaIndex].dias.map((dia, index) =>
+                    index === diaIndex
+                        ? {
+                              ...dia,
+                              treinoIds: dia.treinoIds.map(() => ""),
+                          }
+                        : dia,
                 ),
             };
 
@@ -279,7 +212,6 @@ export default function periodizacao() {
 
     return (
         <main className="min-h-full bg-[var(--surface-sunken)] p-3 md:p-5 text-[var(--text-primary)] transition-colors duration-200">
-
             {/* CABEÇALHO */}
             <header
                 className="
@@ -323,8 +255,7 @@ export default function periodizacao() {
                     </h1>
 
                     <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                        Organize os treinos ao longo das
-                        12 semanas do planejamento.
+                        Organize os treinos ao longo das 12 semanas do planejamento.
                     </p>
                 </div>
 
@@ -421,8 +352,7 @@ export default function periodizacao() {
                         </h2>
 
                         <p className="text-xs text-[var(--text-secondary)]">
-                            Defina o período e o objetivo
-                            principal do planejamento.
+                            Defina o período e o objetivo principal do planejamento.
                         </p>
                     </div>
                 </div>
@@ -452,12 +382,8 @@ export default function periodizacao() {
                         <input
                             type="date"
                             value={formatDateInput(dataInicio)}
-                            onChange={(e) => {
-                                setDataInicio(
-                                    new Date(
-                                        `${e.target.value}T00:00:00`
-                                    )
-                                );
+                            onChange={e => {
+                                setDataInicio(new Date(`${e.target.value}T00:00:00`));
                             }}
                             className="
                                 h-11
@@ -564,22 +490,20 @@ export default function periodizacao() {
 
             {/* SEMANAS */}
             <section className="grid gap-6">
-
-                {avaliacao.periodizacao.semanas.map(
-                    (semana, semanaIndex) => (
-                        <article
-                            key={semana.numero}
-                            className="
+                {avaliacao.periodizacao.semanas.map((semana, semanaIndex) => (
+                    <article
+                        key={semana.numero}
+                        className="
                                 overflow-hidden
                                 rounded-3xl
                                 border border-[var(--border)]
                                 bg-[var(--surface-raised)]
                                 shadow-sm
                             "
-                        >
-                            {/* CABEÇALHO DA SEMANA */}
-                            <div
-                                className="
+                    >
+                        {/* CABEÇALHO DA SEMANA */}
+                        <div
+                            className="
                                     flex flex-col gap-4
                                     border-b border-[var(--border)]
                                     bg-[var(--surface-secondary)]
@@ -588,10 +512,10 @@ export default function periodizacao() {
                                     md:items-center
                                     md:justify-between
                                 "
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div
-                                        className="
+                        >
+                            <div className="flex items-center gap-4">
+                                <div
+                                    className="
                                             flex h-12 w-12
                                             shrink-0
                                             items-center justify-center
@@ -602,45 +526,43 @@ export default function periodizacao() {
                                             text-white
                                             shadow-sm
                                         "
-                                    >
-                                        {semana.numero}
-                                    </div>
+                                >
+                                    {semana.numero}
+                                </div>
 
-                                    <div>
-                                        <p
-                                            className="
+                                <div>
+                                    <p
+                                        className="
                                                 text-xs
                                                 font-bold
                                                 uppercase
                                                 tracking-[0.15em]
                                                 text-[var(--accent-text)]
                                             "
-                                        >
-                                            Periodização
-                                        </p>
+                                    >
+                                        Periodização
+                                    </p>
 
-                                        <h2
-                                            className="
+                                    <h2
+                                        className="
                                                 text-xl
                                                 font-black
                                                 text-[var(--text-primary)]
                                             "
-                                        >
-                                            Semana {semana.numero}
-                                        </h2>
-                                    </div>
+                                    >
+                                        Semana {semana.numero}
+                                    </h2>
                                 </div>
+                            </div>
 
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setDiaEditando(null);
-                                        limparSemana(
-                                            semanaIndex
-                                        );
-                                    }}
-                                    title={`Limpar toda a semana ${semana.numero}`}
-                                    className="
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDiaEditando(null);
+                                    limparSemana(semanaIndex);
+                                }}
+                                title={`Limpar toda a semana ${semana.numero}`}
+                                className="
                                         flex
                                         h-10
                                         items-center
@@ -660,46 +582,35 @@ export default function periodizacao() {
                                         hover:bg-[var(--danger-soft)]
                                         hover:text-[var(--danger)]
                                     "
-                                >
-                                    <FaRegTrashAlt />
+                            >
+                                <FaRegTrashAlt />
 
-                                    <span>
-                                        Limpar semana
-                                    </span>
-                                </button>
-                            </div>
+                                <span>Limpar semana</span>
+                            </button>
+                        </div>
 
-                            {/* CONTEÚDO */}
-                            <div className="p-4 md:p-5">
-
-                                {/* DIAS */}
-                                <div
-                                    className="
+                        {/* CONTEÚDO */}
+                        <div className="p-4 md:p-5">
+                            {/* DIAS */}
+                            <div
+                                className="
                                         grid gap-3
                                         sm:grid-cols-2
                                         lg:grid-cols-4
                                         xl:grid-cols-7
                                     "
-                                >
-                                    {[
-                                        "Dom",
-                                        "Seg",
-                                        "Ter",
-                                        "Qua",
-                                        "Qui",
-                                        "Sex",
-                                        "Sab",
-                                    ].map(
-                                        (dia, diaIndex) => (
-                                            <div
-                                                key={diaIndex}
-                                                onClick={() =>
-                                                    setDiaEditando({
-                                                        semanaIndex,
-                                                        diaIndex,
-                                                    })
-                                                }
-                                                className={`
+                            >
+                                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].map(
+                                    (dia, diaIndex) => (
+                                        <div
+                                            key={diaIndex}
+                                            onClick={() =>
+                                                setDiaEditando({
+                                                    semanaIndex,
+                                                    diaIndex,
+                                                })
+                                            }
+                                            className={`
                                                     group relative overflow-hidden rounded-2xl border
                                                     transition-all duration-200
                                                     ${
@@ -709,70 +620,66 @@ export default function periodizacao() {
                                                             : "border-[var(--border)] bg-[var(--surface-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
                                                     }
                                                 `}
-                                            >
-                                                {/* DIA */}
-                                                <div
-                                                    className={`
+                                        >
+                                            {/* DIA */}
+                                            <div
+                                                className={`
                                                         flex items-center justify-between border-b px-3 py-2
                                                         transition-colors duration-200
                                                         ${
-                                                            diaEditando?.semanaIndex === semanaIndex &&
+                                                            diaEditando?.semanaIndex ===
+                                                                semanaIndex &&
                                                             diaEditando?.diaIndex === diaIndex
                                                                 ? "border-[var(--accent-border)] bg-[var(--accent)]/10"
                                                                 : "border-[var(--border)] bg-[var(--surface-tertiary)]"
                                                         }
                                                     `}
-                                                >
-                                                    <div>
-                                                        <p
-                                                            className="
+                                            >
+                                                <div>
+                                                    <p
+                                                        className="
                                                                 text-xs
                                                                 font-black
                                                                 uppercase
                                                                 text-[var(--accent-text)]
                                                             "
-                                                        >
-                                                            {dia}
-                                                            {diaEditando?.semanaIndex === semanaIndex &&
-                                                                diaEditando?.diaIndex === diaIndex && (
-                                                                    <span className="ml-1.5 rounded-full bg-[var(--accent)] px-1.5 py-0.5 text-[8px] font-black tracking-wide text-[var(--on-accent)]">
-                                                                        EDITANDO
-                                                                    </span>
-                                                                )}
-                                                        </p>
+                                                    >
+                                                        {dia}
+                                                        {diaEditando?.semanaIndex === semanaIndex &&
+                                                            diaEditando?.diaIndex === diaIndex && (
+                                                                <span className="ml-1.5 rounded-full bg-[var(--accent)] px-1.5 py-0.5 text-[8px] font-black tracking-wide text-[var(--on-accent)]">
+                                                                    EDITANDO
+                                                                </span>
+                                                            )}
+                                                    </p>
 
-                                                        <p
-                                                            className="
+                                                    <p
+                                                        className="
                                                                 text-[11px]
                                                                 font-semibold
                                                                 text-[var(--text-secondary)]
                                                             "
-                                                        >
-                                                            {datasPeriodizacao[
-                                                                semanaIndex
-                                                            ][
+                                                    >
+                                                        {
+                                                            datasPeriodizacao[semanaIndex][
                                                                 diaIndex
-                                                            ]?.texto.split(
-                                                                " "
-                                                            )[0]}
-                                                        </p>
-                                                    </div>
+                                                            ]?.texto.split(" ")[0]
+                                                        }
+                                                    </p>
+                                                </div>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setDiaEditando({
-                                                                semanaIndex,
-                                                                diaIndex,
-                                                            });
-                                                            limparDia(
-                                                                semanaIndex,
-                                                                diaIndex
-                                                            );
-                                                        }}
-                                                        title={`Limpar ${dia}`}
-                                                        className="
+                                                <button
+                                                    type="button"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        setDiaEditando({
+                                                            semanaIndex,
+                                                            diaIndex,
+                                                        });
+                                                        limparDia(semanaIndex, diaIndex);
+                                                    }}
+                                                    title={`Limpar ${dia}`}
+                                                    className="
                                                             flex
                                                             h-8
                                                             w-8
@@ -784,21 +691,17 @@ export default function periodizacao() {
                                                             hover:bg-[var(--danger-soft)]
                                                             hover:text-[var(--danger)]
                                                         "
-                                                    >
-                                                        <FaRegTrashAlt />
-                                                    </button>
-                                                </div>
+                                                >
+                                                    <FaRegTrashAlt />
+                                                </button>
+                                            </div>
 
-                                                {/* TREINOS */}
-                                                <div className="grid gap-2 p-3">
-                                                    {[0, 1, 2].map(
-                                                        (slot) => (
-                                                            <div
-                                                                key={slot}
-                                                                className="relative"
-                                                            >
-                                                                <span
-                                                                    className="
+                                            {/* TREINOS */}
+                                            <div className="grid gap-2 p-3">
+                                                {[0, 1, 2].map(slot => (
+                                                    <div key={slot} className="relative">
+                                                        <span
+                                                            className="
                                                                         absolute
                                                                         left-2
                                                                         top-1/2
@@ -815,46 +718,39 @@ export default function periodizacao() {
                                                                         font-black
                                                                         text-white
                                                                     "
-                                                                >
-                                                                    {slot + 1}
-                                                                </span>
+                                                        >
+                                                            {slot + 1}
+                                                        </span>
 
-                                                                <select
-                                                                    value={
-                                                                        semana
-                                                                            .dias[
-                                                                            diaIndex
-                                                                        ]
-                                                                            .treinoIds[
-                                                                        slot
-                                                                        ] ||
-                                                                        ""
-                                                                    }
-                                                                    onChange={(
-                                                                        e
-                                                                    ) =>
-                                                                        atualizarDia(
-                                                                            semanaIndex,
-                                                                            diaIndex,
-                                                                            slot,
-                                                                            e
-                                                                                .target
-                                                                                .value
-                                                                        )
-                                                                    }
-                                                                    onFocus={() =>
-                                                                        setDiaEditando({
-                                                                            semanaIndex,
-                                                                            diaIndex,
-                                                                        })
-                                                                    }
-                                                                    className={`
+                                                        <select
+                                                            value={
+                                                                semana.dias[diaIndex].treinoIds[
+                                                                    slot
+                                                                ] || ""
+                                                            }
+                                                            onChange={e =>
+                                                                atualizarDia(
+                                                                    semanaIndex,
+                                                                    diaIndex,
+                                                                    slot,
+                                                                    e.target.value,
+                                                                )
+                                                            }
+                                                            onFocus={() =>
+                                                                setDiaEditando({
+                                                                    semanaIndex,
+                                                                    diaIndex,
+                                                                })
+                                                            }
+                                                            className={`
                                                                         h-10 w-full cursor-pointer appearance-none rounded-xl border
                                                                         bg-[var(--input-bg)] pl-9 pr-2 text-sm font-semibold
                                                                         text-[var(--text-primary)] outline-none transition-all
                                                                         ${
-                                                                            diaEditando?.semanaIndex === semanaIndex &&
-                                                                            diaEditando?.diaIndex === diaIndex
+                                                                            diaEditando?.semanaIndex ===
+                                                                                semanaIndex &&
+                                                                            diaEditando?.diaIndex ===
+                                                                                diaIndex
                                                                                 ? "border-[var(--accent-border)] ring-1 ring-[var(--ring)]"
                                                                                 : "border-[var(--border-strong)]"
                                                                         }
@@ -865,61 +761,48 @@ export default function periodizacao() {
                                                                         focus:ring-2
                                                                         focus:ring-[var(--ring)]
                                                                     `}
+                                                        >
+                                                            <option value="">Sem Treino</option>
+
+                                                            {opcoesTreino.map(treino => (
+                                                                <option
+                                                                    key={treino.id}
+                                                                    value={treino.id}
                                                                 >
-                                                                    <option value="">
-                                                                        Sem Treino
-                                                                    </option>
-
-                                                                    {opcoesTreino.map(
-                                                                        (
-                                                                            treino
-                                                                        ) => (
-                                                                            <option
-                                                                                key={
-                                                                                    treino.id
-                                                                                }
-                                                                                value={
-                                                                                    treino.id
-                                                                                }
-                                                                            >
-                                                                                {
-                                                                                    treino.nome
-                                                                                }
-                                                                            </option>
-                                                                        )
-                                                                    )}
-                                                                </select>
-                                                            </div>
-                                                        )
-                                                    )}
-                                                </div>
+                                                                    {treino.nome}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        )
-                                    )}
-                                </div>
+                                        </div>
+                                    ),
+                                )}
+                            </div>
 
-                                {/* CONTROLE SEMANAL */}
-                                <div
-                                    className="
+                            {/* CONTROLE SEMANAL */}
+                            <div
+                                className="
                                         mt-5
                                         grid gap-3
                                         md:grid-cols-2
                                     "
+                            >
+                                <div
+                                    className="
+                                            flex
+                                            items-center
+                                            gap-4
+                                            rounded-2xl
+                                            border
+                                            border-[var(--border)]
+                                            bg-[var(--surface-secondary)]
+                                            p-4
+                                        "
                                 >
                                     <div
                                         className="
-                                            flex
-                                            items-center
-                                            gap-4
-                                            rounded-2xl
-                                            border
-                                            border-[var(--border)]
-                                            bg-[var(--surface-secondary)]
-                                            p-4
-                                        "
-                                    >
-                                        <div
-                                            className="
                                                 flex h-11 w-11
                                                 shrink-0
                                                 items-center
@@ -928,42 +811,40 @@ export default function periodizacao() {
                                                 text-[var(--accent-text)]
                                                 text-[var(--accent-text)]
                                             "
-                                        >
-                                            <FaDumbbell />
-                                        </div>
-
-                                        <div>
-                                            <p
-                                                className="
-                                                    text-xs
-                                                    font-bold
-                                                    uppercase
-                                                    tracking-wide
-                                                    text-[var(--text-secondary)]
-                                                "
-                                            >
-                                                Quilagem
-                                            </p>
-
-                                            <p
-                                                className="
-                                                    text-xl
-                                                    font-black
-                                                    text-[var(--text-primary)]
-                                                "
-                                            >
-                                                {calcularQuilagemSemana(
-                                                    semanaIndex
-                                                )}{" "}
-                                                <span className="text-sm font-bold text-[var(--text-secondary)]">
-                                                    kg
-                                                </span>
-                                            </p>
-                                        </div>
+                                    >
+                                        <FaDumbbell />
                                     </div>
 
-                                    <div
-                                        className="
+                                    <div>
+                                        <p
+                                            className="
+                                                    text-xs
+                                                    font-bold
+                                                    uppercase
+                                                    tracking-wide
+                                                    text-[var(--text-secondary)]
+                                                "
+                                        >
+                                            Quilagem
+                                        </p>
+
+                                        <p
+                                            className="
+                                                    text-xl
+                                                    font-black
+                                                    text-[var(--text-primary)]
+                                                "
+                                        >
+                                            {calcularQuilagemSemana(semanaIndex)}{" "}
+                                            <span className="text-sm font-bold text-[var(--text-secondary)]">
+                                                kg
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    className="
                                             flex
                                             items-center
                                             gap-4
@@ -973,9 +854,9 @@ export default function periodizacao() {
                                             bg-[var(--surface-secondary)]
                                             p-4
                                         "
-                                    >
-                                        <div
-                                            className="
+                                >
+                                    <div
+                                        className="
                                                 flex h-11 w-11
                                                 shrink-0
                                                 items-center
@@ -984,44 +865,41 @@ export default function periodizacao() {
                                                 text-[var(--accent-text)]
                                                 text-[var(--accent-text)]
                                             "
-                                        >
-                                            <FaChartLine />
-                                        </div>
+                                    >
+                                        <FaChartLine />
+                                    </div>
 
-                                        <div>
-                                            <p
-                                                className="
+                                    <div>
+                                        <p
+                                            className="
                                                     text-xs
                                                     font-bold
                                                     uppercase
                                                     tracking-wide
                                                     text-[var(--text-secondary)]
                                                 "
-                                            >
-                                                Volume load
-                                            </p>
+                                        >
+                                            Volume load
+                                        </p>
 
-                                            <p
-                                                className="
+                                        <p
+                                            className="
                                                     text-xl
                                                     font-black
                                                     text-[var(--text-primary)]
                                                 "
-                                            >
-                                                {calcularVolumeSemana(
-                                                    semanaIndex
-                                                )}{" "}
-                                                <span className="text-sm font-bold text-[var(--text-secondary)]">
-                                                    kg
-                                                </span>
-                                            </p>
-                                        </div>
+                                        >
+                                            {calcularVolumeSemana(semanaIndex)}{" "}
+                                            <span className="text-sm font-bold text-[var(--text-secondary)]">
+                                                kg
+                                            </span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </article>
-                    )
-                )}
+                        </div>
+                    </article>
+                ))}
             </section>
         </main>
     );

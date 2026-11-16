@@ -42,7 +42,9 @@ export default function SalvarFicha() {
 
     useEffect(() => {
         componenteMontado.current = true;
-        return () => { componenteMontado.current = false; };
+        return () => {
+            componenteMontado.current = false;
+        };
     }, []);
 
     const salvar = useMutation({
@@ -52,13 +54,21 @@ export default function SalvarFicha() {
                 setAutoSaveError(null);
             }
         },
-        mutationFn: async ({ alunoId, snapshot }: { alunoId: string; snapshot: typeof avaliacao }) => {
+        mutationFn: async ({
+            alunoId,
+            snapshot,
+        }: {
+            alunoId: string;
+            snapshot: typeof avaliacao;
+        }) => {
             return salvarFicha(alunoId, snapshot);
         },
         onSuccess: (dadosAtualizados, variables) => {
             if (isAlunoSelecionado(variables.alunoId)) {
-                const estadoMudouDuranteSave = componenteMontado.current &&
-                    JSON.stringify(estadoAtualRef.current.avaliacao) !== JSON.stringify(variables.snapshot);
+                const estadoMudouDuranteSave =
+                    componenteMontado.current &&
+                    JSON.stringify(estadoAtualRef.current.avaliacao) !==
+                        JSON.stringify(variables.snapshot);
                 const marcado = marcarComoSalvo(variables.snapshot, variables.alunoId);
                 if (marcado && componenteMontado.current && !estadoMudouDuranteSave) {
                     carregarAvaliacao(dadosAtualizados, variables.alunoId);
@@ -72,7 +82,9 @@ export default function SalvarFicha() {
         onError: (error, variables) => {
             if (isAlunoSelecionado(variables.alunoId)) {
                 setAutoSaveStatus(autoSaveEnabled ? "error" : "idle");
-                setAutoSaveError(error instanceof Error ? error.message : "Não foi possível salvar a ficha.");
+                setAutoSaveError(
+                    error instanceof Error ? error.message : "Não foi possível salvar a ficha.",
+                );
             }
         },
     });
@@ -87,13 +99,19 @@ export default function SalvarFicha() {
         <main className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8">
             <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a85f60]">Persistência da ficha</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a85f60]">
+                        Persistência da ficha
+                    </p>
                     <h1 className="mt-2 text-2xl font-bold text-zinc-800">Salvar alterações</h1>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                        Os dados são enviados à API e persistidos no PostgreSQL. As medidas e informações clínicas não ficam salvas no armazenamento local do navegador.
+                        Os dados são enviados à API e persistidos no PostgreSQL. As medidas e
+                        informações clínicas não ficam salvas no armazenamento local do navegador.
                     </p>
                 </div>
-                <Link to="/" className="rounded-lg border border-zinc-200 px-4 py-2 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50">
+                <Link
+                    to="/"
+                    className="rounded-lg border border-zinc-200 px-4 py-2 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50"
+                >
                     Voltar ao painel
                 </Link>
             </div>
@@ -101,10 +119,19 @@ export default function SalvarFicha() {
             <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="flex items-center justify-between gap-4 border-b border-zinc-100 pb-4">
                     <div>
-                        <h2 className="text-sm font-bold text-zinc-800">{avaliacao.aluno.nomeCompleto || "Aluno selecionado"}</h2>
+                        <h2 className="text-sm font-bold text-zinc-800">
+                            {avaliacao.aluno.nomeCompleto || "Aluno selecionado"}
+                        </h2>
                         <p className="mt-1 text-xs text-zinc-500">{avaliacao.aluno.email}</p>
                     </div>
-                    <span className={"rounded-full px-3 py-1 text-[10px] font-bold " + (alteracoesPendentes ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700")}>
+                    <span
+                        className={
+                            "rounded-full px-3 py-1 text-[10px] font-bold " +
+                            (alteracoesPendentes
+                                ? "bg-amber-50 text-amber-700"
+                                : "bg-emerald-50 text-emerald-700")
+                        }
+                    >
                         {alteracoesPendentes ? "Alterações pendentes" : "Tudo salvo"}
                     </span>
                 </div>
@@ -114,20 +141,27 @@ export default function SalvarFicha() {
                     {telasAlteradas.length ? (
                         <div className="mt-3 flex flex-wrap gap-2">
                             {telasAlteradas.map(tela => (
-                                <span key={tela} className="rounded-lg bg-zinc-100 px-3 py-1.5 text-[10px] font-medium text-zinc-600">
+                                <span
+                                    key={tela}
+                                    className="rounded-lg bg-zinc-100 px-3 py-1.5 text-[10px] font-medium text-zinc-600"
+                                >
                                     {nomesTelas[tela] ?? tela}
                                 </span>
                             ))}
                         </div>
                     ) : (
-                        <p className="mt-2 text-xs text-zinc-500">Nenhuma alteração local pendente.</p>
+                        <p className="mt-2 text-xs text-zinc-500">
+                            Nenhuma alteração local pendente.
+                        </p>
                     )}
                 </div>
 
                 <div className="mb-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h3 className="text-xs font-bold text-zinc-800">Salvamento automático</h3>
+                            <h3 className="text-xs font-bold text-zinc-800">
+                                Salvamento automático
+                            </h3>
                             <p className="mt-1 text-[11px] leading-5 text-zinc-500">
                                 Salva a ficha no banco depois que você parar de editar.
                             </p>
@@ -161,19 +195,33 @@ export default function SalvarFicha() {
                     )}
 
                     <p role="status" className="mt-3 text-[11px] font-medium text-zinc-600">
-                        {!autoSaveEnabled && "Desativado. Você pode continuar salvando manualmente."}
-                        {autoSaveEnabled && autoSaveStatus === "idle" && "Ativo. Aguardando alterações."}
-                        {autoSaveEnabled && autoSaveStatus === "waiting" && `Salvando ${autoSaveDelayMs / 1000}s após a última alteração...`}
+                        {!autoSaveEnabled &&
+                            "Desativado. Você pode continuar salvando manualmente."}
+                        {autoSaveEnabled &&
+                            autoSaveStatus === "idle" &&
+                            "Ativo. Aguardando alterações."}
+                        {autoSaveEnabled &&
+                            autoSaveStatus === "waiting" &&
+                            `Salvando ${autoSaveDelayMs / 1000}s após a última alteração...`}
                         {autoSaveEnabled && autoSaveStatus === "saving" && "Salvando no banco..."}
-                        {autoSaveEnabled && autoSaveStatus === "saved" && `Salvo${autoSaveLastSavedAt ? ` às ${autoSaveLastSavedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}.`}
-                        {autoSaveEnabled && autoSaveStatus === "error" && "Não foi possível salvar automaticamente."}
+                        {autoSaveEnabled &&
+                            autoSaveStatus === "saved" &&
+                            `Salvo${autoSaveLastSavedAt ? ` às ${autoSaveLastSavedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}.`}
+                        {autoSaveEnabled &&
+                            autoSaveStatus === "error" &&
+                            "Não foi possível salvar automaticamente."}
                     </p>
                     {autoSaveEnabled && autoSaveError && (
                         <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <p role="alert" className="text-[11px] text-red-600">{autoSaveError} Você ainda pode salvar manualmente.</p>
+                            <p role="alert" className="text-[11px] text-red-600">
+                                {autoSaveError} Você ainda pode salvar manualmente.
+                            </p>
                             <button
                                 type="button"
-                                onClick={() => { setAutoSaveError(null); setAutoSaveStatus("idle"); }}
+                                onClick={() => {
+                                    setAutoSaveError(null);
+                                    setAutoSaveStatus("idle");
+                                }}
                                 className="text-[11px] font-bold text-[#a85f60] underline underline-offset-2"
                             >
                                 Tentar novamente
@@ -183,13 +231,21 @@ export default function SalvarFicha() {
                 </div>
 
                 {salvar.isError && (
-                    <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
-                        {salvar.error instanceof ApiError ? salvar.error.message : "Não foi possível salvar a ficha. Verifique a conexão com a API."}
+                    <div
+                        role="alert"
+                        className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"
+                    >
+                        {salvar.error instanceof ApiError
+                            ? salvar.error.message
+                            : "Não foi possível salvar a ficha. Verifique a conexão com a API."}
                     </div>
                 )}
 
                 {salvar.isSuccess && (
-                    <div role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700">
+                    <div
+                        role="status"
+                        className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700"
+                    >
                         Ficha sincronizada com sucesso.
                     </div>
                 )}
@@ -204,7 +260,10 @@ export default function SalvarFicha() {
                                 snapshot: JSON.parse(JSON.stringify(avaliacao)) as typeof avaliacao,
                             });
                         }}
-                        disabled={salvar.isPending || autoSaveStatus === "saving" || !alteracoesPendentes}
+                        disabled={
+                            salvar.isPending || autoSaveStatus === "saving" || !alteracoesPendentes
+                        }
+                        aria-busy={salvar.isPending || autoSaveStatus === "saving"}
                         className="inline-flex h-11 items-center justify-center rounded-xl bg-[#a85f60] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#914f50] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {salvar.isPending ? "Salvando..." : "Salvar no PostgreSQL"}

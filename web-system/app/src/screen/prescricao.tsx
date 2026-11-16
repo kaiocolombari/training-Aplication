@@ -1,6 +1,6 @@
-import { initialState, useAvaliacao } from '../context/avaliacaoContext'
-import navTool from '../components/navTool'
-import type { ExercicioTreino } from '../interface/interfaceExercicio';
+import { initialState, useAvaliacao } from "../context/avaliacaoContext";
+import navTool from "../components/navTool";
+import type { ExercicioTreino } from "../interface/interfaceExercicio";
 import React, { useEffect, useState } from "react";
 import {
     FaDumbbell,
@@ -12,7 +12,7 @@ import {
     FaRunning,
     FaPlus,
     FaTrash,
-    FaChevronRight
+    FaChevronRight,
 } from "react-icons/fa";
 
 type VariacaoRowProps = {
@@ -27,14 +27,10 @@ type VariacaoRowProps = {
         exercicioId: string,
         variacaoId: string,
         valor: string,
-        campo: keyof ExercicioTreino
+        campo: keyof ExercicioTreino,
     ) => void;
 
-    removerVariacao: (
-        treinoId: string,
-        exercicioId: string,
-        variacaoId: string
-    ) => void;
+    removerVariacao: (treinoId: string, exercicioId: string, variacaoId: string) => void;
 };
 
 function VariacaoRow({
@@ -46,7 +42,6 @@ function VariacaoRow({
     atualizarVariacao,
     removerVariacao,
 }: VariacaoRowProps) {
-
     if (!variacao) {
         return null;
     }
@@ -59,20 +54,12 @@ function VariacaoRow({
         focus:bg-[var(--surface-hover)] focus:ring-2 focus:ring-[var(--ring)]
     `;
 
-    const campo = (
-        nome: keyof ExercicioTreino,
-        valor: string
-    ) =>
-        atualizarVariacao(
-            treinoId,
-            exercicioId,
-            variacao.id ?? "",
-            valor,
-            nome
-        );
+    const campo = (nome: keyof ExercicioTreino, valor: string) =>
+        atualizarVariacao(treinoId, exercicioId, variacao.id ?? "", valor, nome);
 
     return (
-        <tr className="
+        <tr
+            className="
             border-t
             border-dashed
             border-[var(--accent-border)]
@@ -81,12 +68,12 @@ function VariacaoRow({
             fade-in
             slide-in-from-top-2
             duration-200
-        ">
-
+        "
+        >
             <td className="px-3 py-2">
                 <div className="flex items-center gap-2 pl-8">
-
-                    <div className="
+                    <div
+                        className="
                         flex
                         h-7
                         min-w-7
@@ -98,19 +85,14 @@ function VariacaoRow({
                         text-[10px]
                         font-black
                         text-[var(--accent-text)]
-                    ">
+                    "
+                    >
                         V{variacaoIndex + 1}
                     </div>
 
                     <button
                         type="button"
-                        onClick={() =>
-                            removerVariacao(
-                                treinoId,
-                                exercicioId,
-                                variacao.id ?? ""
-                            )
-                        }
+                        onClick={() => removerVariacao(treinoId, exercicioId, variacao.id ?? "")}
                         title="Excluir variação"
                         className="
                             flex
@@ -130,29 +112,23 @@ function VariacaoRow({
                     </button>
 
                     <div className="min-w-0 flex-1">
-
-                        <p className="
+                        <p
+                            className="
                             mb-1
                             text-[9px]
                             font-bold
                             uppercase
                             tracking-wide
                             text-[var(--accent-text)]
-                        ">
-                            Variação de:{" "}
-                            {exercicioPrincipal ||
-                                "Exercício principal"}
+                        "
+                        >
+                            Variação de: {exercicioPrincipal || "Exercício principal"}
                         </p>
 
                         <input
                             type="text"
                             value={variacao.exercicio ?? ""}
-                            onChange={(e) =>
-                                campo(
-                                    "exercicio",
-                                    e.target.value
-                                )
-                            }
+                            onChange={e => campo("exercicio", e.target.value)}
                             placeholder="Nome da variação"
                             className="
                                 h-9
@@ -174,7 +150,6 @@ function VariacaoRow({
                                 focus:ring-[var(--ring)]
                             "
                         />
-
                     </div>
                 </div>
             </td>
@@ -183,9 +158,7 @@ function VariacaoRow({
                 <input
                     type="text"
                     value={variacao.series ?? ""}
-                    onChange={(e) =>
-                        campo("series", e.target.value)
-                    }
+                    onChange={e => campo("series", e.target.value)}
                     className={inputClass}
                 />
             </td>
@@ -194,12 +167,7 @@ function VariacaoRow({
                 <input
                     type="text"
                     value={variacao.repeticoes ?? ""}
-                    onChange={(e) =>
-                        campo(
-                            "repeticoes",
-                            e.target.value
-                        )
-                    }
+                    onChange={e => campo("repeticoes", e.target.value)}
                     className={inputClass}
                 />
             </td>
@@ -208,12 +176,7 @@ function VariacaoRow({
                 <input
                     type="text"
                     value={variacao.intervalo ?? ""}
-                    onChange={(e) =>
-                        campo(
-                            "intervalo",
-                            e.target.value
-                        )
-                    }
+                    onChange={e => campo("intervalo", e.target.value)}
                     className={inputClass}
                 />
             </td>
@@ -222,9 +185,7 @@ function VariacaoRow({
                 <input
                     type="text"
                     value={variacao.carga ?? ""}
-                    onChange={(e) =>
-                        campo("carga", e.target.value)
-                    }
+                    onChange={e => campo("carga", e.target.value)}
                     className={inputClass}
                 />
             </td>
@@ -233,12 +194,7 @@ function VariacaoRow({
                 <input
                     type="text"
                     value={variacao.rirMax ?? ""}
-                    onChange={(e) =>
-                        campo(
-                            "rirMax",
-                            e.target.value
-                        )
-                    }
+                    onChange={e => campo("rirMax", e.target.value)}
                     className="
                         h-10
                         w-full
@@ -263,12 +219,7 @@ function VariacaoRow({
                 <input
                     type="text"
                     value={variacao.observacoes ?? ""}
-                    onChange={(e) =>
-                        campo(
-                            "observacoes",
-                            e.target.value
-                        )
-                    }
+                    onChange={e => campo("observacoes", e.target.value)}
                     placeholder="Observações..."
                     className="
                         h-10
@@ -290,23 +241,19 @@ function VariacaoRow({
                     "
                 />
             </td>
-
         </tr>
     );
 }
 
 export default function Prescricao() {
-
     const { avaliacao, setAvaliacao } = useAvaliacao();
 
-    const [expandedVariacoes, setExpandedVariacoes] = useState<Set<string>>(
-        new Set()
-    );
+    const [expandedVariacoes, setExpandedVariacoes] = useState<Set<string>>(new Set());
 
     const alternarVariacoes = (treinoId: string, exercicioId: string) => {
         const chave = `${treinoId}-${exercicioId}`;
 
-        setExpandedVariacoes((prev) => {
+        setExpandedVariacoes(prev => {
             const novo = new Set(prev);
 
             if (novo.has(chave)) {
@@ -319,20 +266,17 @@ export default function Prescricao() {
         });
     };
 
-    const atualizarNomeTreino = (
-        treinoId: string,
-        nome: string
-    ) => {
-        setAvaliacao((prev) => ({
+    const atualizarNomeTreino = (treinoId: string, nome: string) => {
+        setAvaliacao(prev => ({
             ...prev,
 
-            treino: prev.treino.map((treino) =>
+            treino: prev.treino.map(treino =>
                 treino.id === treinoId
                     ? {
-                        ...treino,
-                        nome,
-                    }
-                    : treino
+                          ...treino,
+                          nome,
+                      }
+                    : treino,
             ),
         }));
     };
@@ -341,14 +285,12 @@ export default function Prescricao() {
         treinoId: string,
         exercicioIndex: number,
         valor: string,
-        campo: keyof ExercicioTreino
+        campo: keyof ExercicioTreino,
     ) => {
-
-        setAvaliacao((prev) => ({
+        setAvaliacao(prev => ({
             ...prev,
 
-            treino: prev.treino.map((treino) => {
-
+            treino: prev.treino.map(treino => {
                 if (treino.id !== treinoId) {
                     return treino;
                 }
@@ -356,52 +298,41 @@ export default function Prescricao() {
                 return {
                     ...treino,
 
-                    exercicios: treino.exercicios.map(
-                        (exercicio, index) =>
-                            index === exercicioIndex
-                                ? {
-                                    ...exercicio,
-                                    [campo]: valor
-                                }
-                                : exercicio
+                    exercicios: treino.exercicios.map((exercicio, index) =>
+                        index === exercicioIndex
+                            ? {
+                                  ...exercicio,
+                                  [campo]: valor,
+                              }
+                            : exercicio,
                     ),
-                }
-
+                };
             }),
         }));
     };
 
-    const adicionarVariacao = (
-        treinoId: string,
-        exercicioId: string
-    ) => {
-        setAvaliacao((prev) => {
-            const treinoEncontrado = prev.treino.find(
-                (treino) => treino.id === treinoId
-            );
+    const adicionarVariacao = (treinoId: string, exercicioId: string) => {
+        setAvaliacao(prev => {
+            const treinoEncontrado = prev.treino.find(treino => treino.id === treinoId);
 
             if (!treinoEncontrado) {
                 console.error("Treino não encontrado:", treinoId);
                 return prev;
             }
 
-            const exercicioEncontrado =
-                treinoEncontrado.exercicios.find(
-                    (exercicio) => exercicio.id === exercicioId
-                );
+            const exercicioEncontrado = treinoEncontrado.exercicios.find(
+                exercicio => exercicio.id === exercicioId,
+            );
 
             if (!exercicioEncontrado) {
-                console.error(
-                    "Exercício não encontrado:",
-                    exercicioId
-                );
+                console.error("Exercício não encontrado:", exercicioId);
 
                 console.log(
                     "Exercícios disponíveis:",
-                    treinoEncontrado.exercicios.map((e) => ({
+                    treinoEncontrado.exercicios.map(e => ({
                         id: e.id,
                         nome: e.exercicio,
-                    }))
+                    })),
                 );
 
                 return prev;
@@ -422,7 +353,7 @@ export default function Prescricao() {
             return {
                 ...prev,
 
-                treino: prev.treino.map((treino) => {
+                treino: prev.treino.map(treino => {
                     if (treino.id !== treinoId) {
                         return treino;
                     }
@@ -430,37 +361,28 @@ export default function Prescricao() {
                     return {
                         ...treino,
 
-                        exercicios: treino.exercicios.map(
-                            (exercicio) => {
-                                if (exercicio.id !== exercicioId) {
-                                    return exercicio;
-                                }
-
-                                return {
-                                    ...exercicio,
-
-                                    variacoes: [
-                                        ...(exercicio.variacoes ?? []),
-                                        novaVariacao,
-                                    ],
-                                };
+                        exercicios: treino.exercicios.map(exercicio => {
+                            if (exercicio.id !== exercicioId) {
+                                return exercicio;
                             }
-                        ),
+
+                            return {
+                                ...exercicio,
+
+                                variacoes: [...(exercicio.variacoes ?? []), novaVariacao],
+                            };
+                        }),
                     };
                 }),
             };
         });
     };
 
-    const removerVariacao = (
-        treinoId: string,
-        exercicioId: string,
-        variacaoId: string
-    ) => {
-        setAvaliacao((prev) => ({
+    const removerVariacao = (treinoId: string, exercicioId: string, variacaoId: string) => {
+        setAvaliacao(prev => ({
             ...prev,
 
-            treino: prev.treino.map((treino) => {
+            treino: prev.treino.map(treino => {
                 if (treino.id !== treinoId) {
                     return treino;
                 }
@@ -468,7 +390,7 @@ export default function Prescricao() {
                 return {
                     ...treino,
 
-                    exercicios: treino.exercicios.map((exercicio) => {
+                    exercicios: treino.exercicios.map(exercicio => {
                         if (exercicio.id !== exercicioId) {
                             return exercicio;
                         }
@@ -477,8 +399,7 @@ export default function Prescricao() {
                             ...exercicio,
 
                             variacoes: (exercicio.variacoes ?? []).filter(
-                                (variacao) =>
-                                    variacao.id !== variacaoId
+                                variacao => variacao.id !== variacaoId,
                             ),
                         };
                     }),
@@ -492,12 +413,12 @@ export default function Prescricao() {
         exercicioId: string,
         variacaoId: string,
         valor: string,
-        campo: keyof ExercicioTreino
+        campo: keyof ExercicioTreino,
     ) => {
-        setAvaliacao((prev) => ({
+        setAvaliacao(prev => ({
             ...prev,
 
-            treino: prev.treino.map((treino) => {
+            treino: prev.treino.map(treino => {
                 if (treino.id !== treinoId) {
                     return treino;
                 }
@@ -505,7 +426,7 @@ export default function Prescricao() {
                 return {
                     ...treino,
 
-                    exercicios: treino.exercicios.map((exercicio) => {
+                    exercicios: treino.exercicios.map(exercicio => {
                         if (exercicio.id !== exercicioId) {
                             return exercicio;
                         }
@@ -513,14 +434,13 @@ export default function Prescricao() {
                         return {
                             ...exercicio,
 
-                            variacoes: (exercicio.variacoes ?? []).map(
-                                (variacao) =>
-                                    variacao.id === variacaoId
-                                        ? {
-                                            ...variacao,
-                                            [campo]: valor,
-                                        }
-                                        : variacao
+                            variacoes: (exercicio.variacoes ?? []).map(variacao =>
+                                variacao.id === variacaoId
+                                    ? {
+                                          ...variacao,
+                                          [campo]: valor,
+                                      }
+                                    : variacao,
                             ),
                         };
                     }),
@@ -530,7 +450,7 @@ export default function Prescricao() {
     };
 
     useEffect(() => {
-        setAvaliacao((prev) => {
+        setAvaliacao(prev => {
             const treinos = [...(prev.treino ?? [])];
 
             while (treinos.length < 12) {
@@ -561,39 +481,23 @@ export default function Prescricao() {
     }, [setAvaliacao]);
 
     useEffect(() => {
-
-        const handleBeforeUnload = (
-            event: BeforeUnloadEvent
-        ) => {
-
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             event.preventDefault();
             event.returnValue = "Tem certeza que deseja sair?";
-
         };
 
-        window.addEventListener(
-            "beforeunload",
-            handleBeforeUnload
-        );
+        window.addEventListener("beforeunload", handleBeforeUnload);
 
         return () => {
-
-            window.removeEventListener(
-                "beforeunload",
-                handleBeforeUnload
-            );
-
+            window.removeEventListener("beforeunload", handleBeforeUnload);
         };
-
     }, []);
 
-
     return (
-
         <main className="min-h-full bg-[var(--surface-sunken)] p-4 text-[var(--text-primary)] md:p-6 lg:p-8">
             <div className="mx-auto w-full max-w-none">
-
-                <div className="
+                <div
+                    className="
                     mb-8
                     flex flex-col gap-4
                     rounded-3xl
@@ -604,10 +508,9 @@ export default function Prescricao() {
                     md:flex-row
                     md:items-center
                     md:justify-between
-                ">
-
+                "
+                >
                     <div className="flex items-center gap-4">
-
                         {/* <div className="
                             flex h-14 w-14 shrink-0
                             items-center justify-center
@@ -623,97 +526,99 @@ export default function Prescricao() {
                         </div> */}
 
                         <div>
-
-                            <p className="
+                            <p
+                                className="
                                 mb-1
                                 text-xs
                                 font-bold
                                 uppercase
                                 tracking-[0.2em]
                                 text-[var(--accent)]
-                            ">
+                            "
+                            >
                                 Prescrição
                             </p>
 
-                            <h1 className="
+                            <h1
+                                className="
                                 text-2xl
                                 font-black
                                 tracking-tight
                                 text-[var(--text-primary)]
                                 md:text-3xl
-                            ">
+                            "
+                            >
                                 Planilha de Treinamento
                             </h1>
 
-                            <p className="
+                            <p
+                                className="
                                 mt-1
                                 text-sm
                                 text-[var(--text-secondary)]
-                            ">
+                            "
+                            >
                                 Configure os exercícios e parâmetros de cada treino.
                             </p>
-
                         </div>
-
                     </div>
 
-                    <div className="
+                    <div
+                        className="
                         flex items-center gap-3
                         rounded-2xl
                         bg-[var(--surface-secondary)]
                         px-4 py-3
                         ring-1 ring-zinc-200
-                    ">
-
-                        <div className="
+                    "
+                    >
+                        <div
+                            className="
                             flex h-9 w-9
                             items-center justify-center
                             rounded-xl
                             bg-[var(--accent)]
                             text-white
-                        ">
+                        "
+                        >
                             <FaRunning />
                         </div>
 
                         <div>
-
-                            <p className="
+                            <p
+                                className="
                                 text-xs
                                 font-semibold
                                 uppercase
                                 tracking-wide
                                 text-[var(--text-muted)]
-                            ">
+                            "
+                            >
                                 Treinos
                             </p>
 
-                            <p className="
+                            <p
+                                className="
                                 text-sm
                                 font-black
                                 text-[var(--text-primary)]
-                            ">
+                            "
+                            >
                                 12 disponíveis
                             </p>
-
                         </div>
-
                     </div>
-
                 </div>
 
                 <div className="space-y-8">
-
                     {avaliacao.treino.slice(0, 12).map((treino, treinoIndex) => {
                         const exerciciosPreenchidos =
-                            treino.exercicios?.filter(
-                                (exercicio) =>
-                                    exercicio?.exercicio?.trim()
-                            ).length ?? 0;
+                            treino.exercicios?.filter(exercicio => exercicio?.exercicio?.trim())
+                                .length ?? 0;
 
                         const totalVariacoes = treino.exercicios.reduce(
-                            (total, exercicio) =>
-                                total + (exercicio.variacoes?.length ?? 0),
-                            0
+                            (total, exercicio) => total + (exercicio.variacoes?.length ?? 0),
+                            0,
                         );
 
                         return (
@@ -746,7 +651,6 @@ export default function Prescricao() {
                 "
                                 >
                                     <div className="flex items-center gap-4">
-
                                         <div
                                             className="
                             flex h-12 w-12 shrink-0
@@ -773,10 +677,7 @@ export default function Prescricao() {
                                             </p>
 
                                             <div className="mt-1 flex items-center gap-2">
-
-                                                <FaDumbbell
-                                                    className="text-sm text-[var(--accent)]"
-                                                />
+                                                <FaDumbbell className="text-sm text-[var(--accent)]" />
 
                                                 <span
                                                     className="
@@ -785,10 +686,8 @@ export default function Prescricao() {
                                     text-[var(--text-primary)]
                                 "
                                                 >
-                                                    {treino.nome ||
-                                                        `Treino ${treinoIndex + 1}`}
+                                                    {treino.nome || `Treino ${treinoIndex + 1}`}
                                                 </span>
-
                                             </div>
                                         </div>
                                     </div>
@@ -824,11 +723,8 @@ export default function Prescricao() {
                                             <input
                                                 type="text"
                                                 value={treino.nome ?? ""}
-                                                onChange={(e) =>
-                                                    atualizarNomeTreino(
-                                                        treino.id,
-                                                        e.target.value
-                                                    )
+                                                onChange={e =>
+                                                    atualizarNomeTreino(treino.id, e.target.value)
                                                 }
                                                 placeholder={`Treino ${treinoIndex + 1}`}
                                                 className="
@@ -854,10 +750,7 @@ export default function Prescricao() {
                             text-[var(--text-secondary)]
                         "
                                         >
-                                            <FaLayerGroup
-                                                className="text-[var(--accent)]"
-                                            />
-
+                                            <FaLayerGroup className="text-[var(--accent)]" />
                                             {exerciciosPreenchidos}/12 exercícios
                                         </div>
                                         <div className="flex items-center gap-1.5 rounded-xl bg-[var(--surface-tertiary)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)]">
@@ -865,9 +758,7 @@ export default function Prescricao() {
 
                                             <span>
                                                 {totalVariacoes}{" "}
-                                                {totalVariacoes === 1
-                                                    ? "variação"
-                                                    : "variações"}
+                                                {totalVariacoes === 1 ? "variação" : "variações"}
                                             </span>
                                         </div>
                                     </div>
@@ -876,15 +767,14 @@ export default function Prescricao() {
                                 {/* TABELA */}
 
                                 <div className="overflow-x-auto">
-
                                     <table className="w-full min-w-[1350px] table-fixed border-collapse">
                                         <colgroup>
                                             <col className="w-[24%]" /> {/* Exercício */}
-                                            <col className="w-[7%]" />  {/* Séries */}
-                                            <col className="w-[7%]" />  {/* Reps */}
+                                            <col className="w-[7%]" /> {/* Séries */}
+                                            <col className="w-[7%]" /> {/* Reps */}
                                             <col className="w-[10%]" /> {/* Intervalo */}
-                                            <col className="w-[7%]" />  {/* Carga */}
-                                            <col className="w-[5%]" />  {/* RIR */}
+                                            <col className="w-[7%]" /> {/* Carga */}
+                                            <col className="w-[5%]" /> {/* RIR */}
                                             <col className="w-[40%]" /> {/* Observações */}
                                         </colgroup>
 
@@ -897,7 +787,8 @@ export default function Prescricao() {
                                                     uppercase
                                                     tracking-wider
                                                     text-[var(--text-secondary)]
-                                                ">
+                                                "
+                                            >
                                                 <th className="w-[25%] px-4 py-3 text-left">
                                                     <div className="flex items-center gap-2">
                                                         <FaDumbbell />
@@ -933,9 +824,7 @@ export default function Prescricao() {
                                                     </div>
                                                 </th>
 
-                                                <th className="w-[8%] px-3 py-3">
-                                                    RIR
-                                                </th>
+                                                <th className="w-[8%] px-3 py-3">RIR</th>
 
                                                 <th className="w-[30%] px-4 py-3 text-left">
                                                     <div className="flex items-center gap-2">
@@ -950,7 +839,6 @@ export default function Prescricao() {
                                             {treino.exercicios
                                                 .slice(0, 12)
                                                 .map((exercicio, exercicioIndex) => {
-
                                                     if (!exercicio) {
                                                         return null;
                                                     }
@@ -958,10 +846,7 @@ export default function Prescricao() {
                                                     const chave = `${treino.id}-${exercicio.id}`;
 
                                                     return (
-                                                        <React.Fragment
-                                                            key={exercicio.id}
-                                                        >
-
+                                                        <React.Fragment key={exercicio.id}>
                                                             {/* EXERCÍCIO */}
 
                                                             <tr
@@ -974,7 +859,6 @@ export default function Prescricao() {
                                                             >
                                                                 <td className="px-3 py-1.5">
                                                                     <div className="flex items-center gap-2">
-
                                                                         <span
                                                                             className="
                                                             flex h-7 w-7
@@ -989,7 +873,7 @@ export default function Prescricao() {
                                                         "
                                                                         >
                                                                             {String(
-                                                                                exercicioIndex + 1
+                                                                                exercicioIndex + 1,
                                                                             ).padStart(2, "0")}
                                                                         </span>
 
@@ -998,7 +882,9 @@ export default function Prescricao() {
                                                                             onClick={() =>
                                                                                 alternarVariacoes(
                                                                                     treino.id,
-                                                                                    exercicio.id ? exercicio.id : ""
+                                                                                    exercicio.id
+                                                                                        ? exercicio.id
+                                                                                        : "",
                                                                                 )
                                                                             }
                                                                             title="Mostrar variações"
@@ -1012,10 +898,12 @@ export default function Prescricao() {
                                                             transition-all
                                                             hover:cursor-pointer
 
-                                                            ${(exercicio.variacoes?.length ?? 0) > 0
-                                                                                    ? "border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-text)]"
-                                                                                    : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]"
-                                                                                }
+                                                            ${
+                                                                (exercicio.variacoes?.length ?? 0) >
+                                                                0
+                                                                    ? "border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                                                                    : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]"
+                                                            }
                                                         `}
                                                                         >
                                                                             <FaChevronRight
@@ -1024,10 +912,11 @@ export default function Prescricao() {
                                                                 transition-transform
                                                                 duration-200
 
-                                                                ${expandedVariacoes.has(chave)
-                                                                                        ? "rotate-90"
-                                                                                        : ""
-                                                                                    }
+                                                                ${
+                                                                    expandedVariacoes.has(chave)
+                                                                        ? "rotate-90"
+                                                                        : ""
+                                                                }
                                                             `}
                                                                             />
                                                                         </button>
@@ -1036,14 +925,16 @@ export default function Prescricao() {
                                                                             <input
                                                                                 type="text"
                                                                                 value={
-                                                                                    exercicio.exercicio ?? ""
+                                                                                    exercicio.exercicio ??
+                                                                                    ""
                                                                                 }
-                                                                                onChange={(e) =>
+                                                                                onChange={e =>
                                                                                     adicionarExercicio(
                                                                                         treino.id,
                                                                                         exercicioIndex,
-                                                                                        e.target.value,
-                                                                                        "exercicio"
+                                                                                        e.target
+                                                                                            .value,
+                                                                                        "exercicio",
                                                                                     )
                                                                                 }
                                                                                 placeholder="Nome do exercício"
@@ -1063,7 +954,8 @@ export default function Prescricao() {
                                                                             />
                                                                         </div>
 
-                                                                        {(exercicio.variacoes?.length ?? 0) > 0 && (
+                                                                        {(exercicio.variacoes
+                                                                            ?.length ?? 0) > 0 && (
                                                                             <span
                                                                                 className="
                                                                 shrink-0
@@ -1075,10 +967,12 @@ export default function Prescricao() {
                                                                 text-[var(--accent-text)]
                                                             "
                                                                             >
-                                                                                {exercicio.variacoes?.length ?? 0} var.
+                                                                                {exercicio.variacoes
+                                                                                    ?.length ??
+                                                                                    0}{" "}
+                                                                                var.
                                                                             </span>
                                                                         )}
-
                                                                     </div>
                                                                 </td>
 
@@ -1087,13 +981,15 @@ export default function Prescricao() {
                                                                 <td className="px-2 py-1.5">
                                                                     <input
                                                                         type="text"
-                                                                        value={exercicio.series ?? ""}
-                                                                        onChange={(e) =>
+                                                                        value={
+                                                                            exercicio.series ?? ""
+                                                                        }
+                                                                        onChange={e =>
                                                                             adicionarExercicio(
                                                                                 treino.id,
                                                                                 exercicioIndex,
                                                                                 e.target.value,
-                                                                                "series"
+                                                                                "series",
                                                                             )
                                                                         }
                                                                         className="
@@ -1117,13 +1013,16 @@ export default function Prescricao() {
                                                                 <td className="px-2 py-1.5">
                                                                     <input
                                                                         type="text"
-                                                                        value={exercicio.repeticoes ?? ""}
-                                                                        onChange={(e) =>
+                                                                        value={
+                                                                            exercicio.repeticoes ??
+                                                                            ""
+                                                                        }
+                                                                        onChange={e =>
                                                                             adicionarExercicio(
                                                                                 treino.id,
                                                                                 exercicioIndex,
                                                                                 e.target.value,
-                                                                                "repeticoes"
+                                                                                "repeticoes",
                                                                             )
                                                                         }
                                                                         className="
@@ -1148,13 +1047,16 @@ export default function Prescricao() {
                                                                     <input
                                                                         list={`intervalos-${treinoIndex}-${exercicioIndex}`}
                                                                         type="text"
-                                                                        value={exercicio.intervalo ?? ""}
-                                                                        onChange={(e) =>
+                                                                        value={
+                                                                            exercicio.intervalo ??
+                                                                            ""
+                                                                        }
+                                                                        onChange={e =>
                                                                             adicionarExercicio(
                                                                                 treino.id,
                                                                                 exercicioIndex,
                                                                                 e.target.value,
-                                                                                "intervalo"
+                                                                                "intervalo",
                                                                             )
                                                                         }
                                                                         className="
@@ -1196,13 +1098,15 @@ export default function Prescricao() {
                                                                 <td className="px-2 py-1.5">
                                                                     <input
                                                                         type="text"
-                                                                        value={exercicio.carga ?? ""}
-                                                                        onChange={(e) =>
+                                                                        value={
+                                                                            exercicio.carga ?? ""
+                                                                        }
+                                                                        onChange={e =>
                                                                             adicionarExercicio(
                                                                                 treino.id,
                                                                                 exercicioIndex,
                                                                                 e.target.value,
-                                                                                "carga"
+                                                                                "carga",
                                                                             )
                                                                         }
                                                                         className="
@@ -1226,13 +1130,15 @@ export default function Prescricao() {
                                                                 <td className="px-2 py-1.5">
                                                                     <input
                                                                         type="text"
-                                                                        value={exercicio.rirMax ?? ""}
-                                                                        onChange={(e) =>
+                                                                        value={
+                                                                            exercicio.rirMax ?? ""
+                                                                        }
+                                                                        onChange={e =>
                                                                             adicionarExercicio(
                                                                                 treino.id,
                                                                                 exercicioIndex,
                                                                                 e.target.value,
-                                                                                "rirMax"
+                                                                                "rirMax",
                                                                             )
                                                                         }
                                                                         className="
@@ -1256,13 +1162,16 @@ export default function Prescricao() {
                                                                 <td className="px-3 py-1.5">
                                                                     <input
                                                                         type="text"
-                                                                        value={exercicio.observacoes ?? ""}
-                                                                        onChange={(e) =>
+                                                                        value={
+                                                                            exercicio.observacoes ??
+                                                                            ""
+                                                                        }
+                                                                        onChange={e =>
                                                                             adicionarExercicio(
                                                                                 treino.id,
                                                                                 exercicioIndex,
                                                                                 e.target.value,
-                                                                                "observacoes"
+                                                                                "observacoes",
                                                                             )
                                                                         }
                                                                         placeholder="Observações..."
@@ -1280,7 +1189,6 @@ export default function Prescricao() {
                                                     "
                                                                     />
                                                                 </td>
-
                                                             </tr>
 
                                                             {/* VARIAÇÕES */}
@@ -1288,18 +1196,33 @@ export default function Prescricao() {
                                                             {expandedVariacoes.has(chave) && (
                                                                 <>
                                                                     {exercicio.variacoes?.map(
-                                                                        (variacao, variacaoIndex) => (
+                                                                        (
+                                                                            variacao,
+                                                                            variacaoIndex,
+                                                                        ) => (
                                                                             <VariacaoRow
                                                                                 key={variacao.id}
                                                                                 variacao={variacao}
-                                                                                variacaoIndex={variacaoIndex}
-                                                                                exercicioPrincipal={exercicio.exercicio}
+                                                                                variacaoIndex={
+                                                                                    variacaoIndex
+                                                                                }
+                                                                                exercicioPrincipal={
+                                                                                    exercicio.exercicio
+                                                                                }
                                                                                 treinoId={treino.id}
-                                                                                exercicioId={exercicio.id ? exercicio.id : ""}
-                                                                                atualizarVariacao={atualizarVariacao}
-                                                                                removerVariacao={removerVariacao}
+                                                                                exercicioId={
+                                                                                    exercicio.id
+                                                                                        ? exercicio.id
+                                                                                        : ""
+                                                                                }
+                                                                                atualizarVariacao={
+                                                                                    atualizarVariacao
+                                                                                }
+                                                                                removerVariacao={
+                                                                                    removerVariacao
+                                                                                }
                                                                             />
-                                                                        )
+                                                                        ),
                                                                     )}
 
                                                                     <tr
@@ -1319,7 +1242,9 @@ export default function Prescricao() {
                                                                                 onClick={() =>
                                                                                     adicionarVariacao(
                                                                                         treino.id,
-                                                                                        exercicio.id ? exercicio.id : ""
+                                                                                        exercicio.id
+                                                                                            ? exercicio.id
+                                                                                            : "",
                                                                                     )
                                                                                 }
                                                                                 className="

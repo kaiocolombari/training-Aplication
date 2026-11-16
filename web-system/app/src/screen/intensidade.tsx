@@ -6,11 +6,13 @@ import { FaRunning } from "react-icons/fa";
 const STIMULO_MAX_POSSIVEL = 15 * 1 * 1.1;
 
 function extrairNumeros(valor: unknown) {
-    return String(valor ?? "")
-        .replace(",", ".")
-        .match(/\d+(\.\d+)?/g)
-        ?.map(Number)
-        .filter((numero) => Number.isFinite(numero)) ?? [];
+    return (
+        String(valor ?? "")
+            .replace(",", ".")
+            .match(/\d+(\.\d+)?/g)
+            ?.map(Number)
+            .filter(numero => Number.isFinite(numero)) ?? []
+    );
 }
 
 function limitarNumero(valor: number, minimo: number, maximo: number) {
@@ -70,11 +72,7 @@ function formatarDecimal(valor: number | null, casas = 2) {
     return valor.toFixed(casas);
 }
 
-function getValorSerie(
-    exercicio: any,
-    serieIndex: number,
-    campo: keyof SerieIntensidade
-) {
+function getValorSerie(exercicio: any, serieIndex: number, campo: keyof SerieIntensidade) {
     const serie = exercicio?.seriesIntensidade?.[serieIndex];
 
     if (serie?.[campo] !== undefined) {
@@ -100,20 +98,11 @@ function calcularIntensidadeSerie(serie: SerieIntensidade) {
     const esforco = (5 - rir) / 5;
     const fatorCarga = calcularFatorCarga(reps);
     const stimulo = reps * esforco * fatorCarga;
-    const intensidade = limitarNumero(
-        (stimulo / STIMULO_MAX_POSSIVEL) * 100,
-        0,
-        100
-    );
+    const intensidade = limitarNumero((stimulo / STIMULO_MAX_POSSIVEL) * 100, 0, 100);
 
-    const umRmEstimado = carga
-        ? carga * (1 + (reps + rir) / 30)
-        : 0;
+    const umRmEstimado = carga ? carga * (1 + (reps + rir) / 30) : 0;
 
-    const percentualUmRm =
-        carga && umRmEstimado
-            ? (carga / umRmEstimado) * 100
-            : null;
+    const percentualUmRm = carga && umRmEstimado ? (carga / umRmEstimado) * 100 : null;
 
     return {
         reps,
@@ -141,10 +130,8 @@ function calcularResumoExercicio(exercicio: any) {
     const series = montarSeriesDoExercicio(exercicio);
 
     const intensidades = series
-        .map((serie) => calcularIntensidadeSerie(serie))
-        .filter(Boolean) as NonNullable<
-            ReturnType<typeof calcularIntensidadeSerie>
-        >[];
+        .map(serie => calcularIntensidadeSerie(serie))
+        .filter(Boolean) as NonNullable<ReturnType<typeof calcularIntensidadeSerie>>[];
 
     if (!intensidades.length) {
         return {
@@ -155,23 +142,18 @@ function calcularResumoExercicio(exercicio: any) {
     }
 
     const intensidade =
-        intensidades.reduce(
-            (total, serie) => total + serie.intensidade,
-            0
-        ) / intensidades.length;
+        intensidades.reduce((total, serie) => total + serie.intensidade, 0) / intensidades.length;
 
     return {
         seriesValidas: intensidades.length,
-        hardSets: intensidades.filter((serie) => serie.rir <= 3).length,
+        hardSets: intensidades.filter(serie => serie.rir <= 3).length,
         intensidade,
     };
 }
 
 function calcularResumoTreino(treino: any) {
     const exercicios = (treino?.exercicios ?? []).filter(
-        (exercicio: any) =>
-            exercicio?.exercicio ||
-            calcularSeries(exercicio?.series)
+        (exercicio: any) => exercicio?.exercicio || calcularSeries(exercicio?.series),
     );
 
     const resumosExercicio = exercicios
@@ -191,49 +173,38 @@ function calcularResumoTreino(treino: any) {
         exerciciosValidos: resumosExercicio.length,
 
         seriesValidas: resumosExercicio.reduce(
-            (total: number, resumo: any) =>
-                total + resumo.seriesValidas,
-            0
+            (total: number, resumo: any) => total + resumo.seriesValidas,
+            0,
         ),
 
         hardSets: resumosExercicio.reduce(
-            (total: number, resumo: any) =>
-                total + resumo.hardSets,
-            0
+            (total: number, resumo: any) => total + resumo.hardSets,
+            0,
         ),
 
         intensidade:
-            resumosExercicio.reduce(
-                (total: number, resumo: any) =>
-                    total + resumo.intensidade,
-                0
-            ) / resumosExercicio.length,
+            resumosExercicio.reduce((total: number, resumo: any) => total + resumo.intensidade, 0) /
+            resumosExercicio.length,
     };
 }
 
 export default function Intensidade() {
     const { avaliacao, setAvaliacao } = useAvaliacao();
 
-    const [exerciciosAbertos, setExerciciosAbertos] =
-        useState<Record<string, boolean>>({});
+    const [exerciciosAbertos, setExerciciosAbertos] = useState<Record<string, boolean>>({});
 
     const resumosTreino = useMemo(
         () =>
             Array.from({ length: 12 }).map((_, treinoIndex) =>
-                calcularResumoTreino(
-                    avaliacao?.treino?.[treinoIndex]
-                )
+                calcularResumoTreino(avaliacao?.treino?.[treinoIndex]),
             ),
-        [avaliacao?.treino]
+        [avaliacao?.treino],
     );
 
-    function alternarDetalhes(
-        treinoIndex: number,
-        exercicioIndex: number
-    ) {
+    function alternarDetalhes(treinoIndex: number, exercicioIndex: number) {
         const chave = `${treinoIndex}-${exercicioIndex}`;
 
-        setExerciciosAbertos((estadoAtual) => ({
+        setExerciciosAbertos(estadoAtual => ({
             ...estadoAtual,
             [chave]: !estadoAtual[chave],
         }));
@@ -244,28 +215,22 @@ export default function Intensidade() {
         exercicioIndex: number,
         serieIndex: number,
         campo: keyof SerieIntensidade,
-        valor: string
+        valor: string,
     ) {
         setAvaliacao((avaliacaoAtual: any) => {
-            const treinos = [
-                ...(avaliacaoAtual?.treino ?? []),
-            ];
+            const treinos = [...(avaliacaoAtual?.treino ?? [])];
 
             const treino = {
                 ...(treinos[treinoIndex] ?? {}),
             };
 
-            const exercicios = [
-                ...(treino.exercicios ?? []),
-            ];
+            const exercicios = [...(treino.exercicios ?? [])];
 
             const exercicio = {
                 ...(exercicios[exercicioIndex] ?? {}),
             };
 
-            const seriesIntensidade = [
-                ...(exercicio.seriesIntensidade ?? []),
-            ];
+            const seriesIntensidade = [...(exercicio.seriesIntensidade ?? [])];
 
             seriesIntensidade[serieIndex] = {
                 ...(seriesIntensidade[serieIndex] ?? {}),
@@ -331,8 +296,7 @@ export default function Intensidade() {
                         </h1>
 
                         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                            Configure e acompanhe a intensidade dos exercícios
-                            de cada treino.
+                            Configure e acompanhe a intensidade dos exercícios de cada treino.
                         </p>
                     </div>
                 </div>
@@ -383,17 +347,14 @@ export default function Intensidade() {
                 </div>
             </div>
             <section className="mt-6 grid gap-5">
-                {Array.from({ length: 12 }).map(
-                    (_, treinoIndex) => {
-                        const treino =
-                            avaliacao?.treino?.[treinoIndex];
+                {Array.from({ length: 12 }).map((_, treinoIndex) => {
+                    const treino = avaliacao?.treino?.[treinoIndex];
 
-                        const resumoTreino =
-                            resumosTreino[treinoIndex];
+                    const resumoTreino = resumosTreino[treinoIndex];
 
-                        return (
-                            <article
-                                className="
+                    return (
+                        <article
+                            className="
                                     overflow-hidden
                                     rounded-3xl
                                     border
@@ -402,10 +363,10 @@ export default function Intensidade() {
                                     p-4
                                     shadow-sm
                                 "
-                                key={treinoIndex}
-                            >
-                                <div
-                                    className="
+                            key={treinoIndex}
+                        >
+                            <div
+                                className="
                                         flex flex-col gap-3
                                         rounded-2xl
                                         border
@@ -416,22 +377,22 @@ export default function Intensidade() {
                                         md:items-end
                                         md:justify-between
                                     "
-                                >
-                                    <div>
-                                        <span
-                                            className="
+                            >
+                                <div>
+                                    <span
+                                        className="
                                                 text-xs
                                                 font-bold
                                                 uppercase
                                                 tracking-wide
                                                 text-[var(--text-secondary)]
                                             "
-                                        >
-                                            Treino {treinoIndex + 1}
-                                        </span>
+                                    >
+                                        Treino {treinoIndex + 1}
+                                    </span>
 
-                                        <h2
-                                            className="
+                                    <h2
+                                        className="
                                                 text-xl
                                                 font-bold
                                                 italic
@@ -439,14 +400,13 @@ export default function Intensidade() {
                                                 tracking-wide
                                                 text-[var(--accent)]
                                             "
-                                        >
-                                            {treino?.nome ||
-                                                "Sem nome"}
-                                        </h2>
-                                    </div>
+                                    >
+                                        {treino?.nome || "Sem nome"}
+                                    </h2>
+                                </div>
 
-                                    <div
-                                        className="
+                                <div
+                                    className="
                                             flex flex-wrap
                                             gap-3
                                             text-sm
@@ -454,23 +414,22 @@ export default function Intensidade() {
                                             uppercase
                                             text-[var(--text-secondary)]
                                         "
+                                >
+                                    <span
+                                        className="
+                                                rounded-xl
+                                                border
+                                                border-[var(--border)]
+                                                bg-[var(--surface-tertiary)]
+                                                px-3
+                                                py-2
+                                            "
                                     >
-                                        <span
-                                            className="
-                                                rounded-xl
-                                                border
-                                                border-[var(--border)]
-                                                bg-[var(--surface-tertiary)]
-                                                px-3
-                                                py-2
-                                            "
-                                        >
-                                            Exercícios:{" "}
-                                            {resumoTreino.exerciciosValidos}
-                                        </span>
+                                        Exercícios: {resumoTreino.exerciciosValidos}
+                                    </span>
 
-                                        <span
-                                            className="
+                                    <span
+                                        className="
                                                 rounded-xl
                                                 border
                                                 border-[var(--border)]
@@ -478,48 +437,31 @@ export default function Intensidade() {
                                                 px-3
                                                 py-2
                                             "
-                                        >
-                                            Séries válidas:{" "}
-                                            {resumoTreino.seriesValidas}
-                                        </span>
-                                    </div>
+                                    >
+                                        Séries válidas: {resumoTreino.seriesValidas}
+                                    </span>
                                 </div>
+                            </div>
 
-                                <div className="mt-4 grid gap-3">
-                                    {Array.from({ length: 12 }).map(
-                                        (_, exercicioIndex) => {
-                                            const exercicio =
-                                                treino?.exercicios?.[
-                                                exercicioIndex
-                                                ];
+                            <div className="mt-4 grid gap-3">
+                                {Array.from({ length: 12 }).map((_, exercicioIndex) => {
+                                    const exercicio = treino?.exercicios?.[exercicioIndex];
 
-                                            const totalSeries =
-                                                calcularSeries(
-                                                    exercicio?.series
-                                                );
+                                    const totalSeries = calcularSeries(exercicio?.series);
 
-                                            const resumoExercicio =
-                                                calcularResumoExercicio(
-                                                    exercicio
-                                                );
+                                    const resumoExercicio = calcularResumoExercicio(exercicio);
 
-                                            const chave = `${treinoIndex}-${exercicioIndex}`;
+                                    const chave = `${treinoIndex}-${exercicioIndex}`;
 
-                                            const aberto =
-                                                exerciciosAbertos[
-                                                chave
-                                                ];
+                                    const aberto = exerciciosAbertos[chave];
 
-                                            if (
-                                                !exercicio?.exercicio &&
-                                                !totalSeries
-                                            ) {
-                                                return null;
-                                            }
+                                    if (!exercicio?.exercicio && !totalSeries) {
+                                        return null;
+                                    }
 
-                                            return (
-                                                <div
-                                                    className="
+                                    return (
+                                        <div
+                                            className="
                                                         overflow-hidden
                                                         rounded-2xl
                                                         border
@@ -527,97 +469,94 @@ export default function Intensidade() {
                                                         bg-[var(--surface-secondary)]
                                                         shadow-sm
                                                     "
-                                                    key={exercicioIndex}
-                                                >
-                                                    <div
-                                                        className="
+                                            key={exercicioIndex}
+                                        >
+                                            <div
+                                                className="
                                                             grid gap-3
                                                             p-4
                                                             md:grid-cols-[1.5fr_90px_110px_120px]
                                                             md:items-center
                                                         "
+                                            >
+                                                <div>
+                                                    <span
+                                                        className="
+                                                                    text-xs
+                                                                    font-bold
+                                                                    uppercase
+                                                                    text-[var(--text-secondary)]
+                                                                "
                                                     >
-                                                        <div>
-                                                            <span
-                                                                className="
+                                                        Exercício
+                                                    </span>
+
+                                                    <p
+                                                        className="
+                                                                    text-lg
+                                                                    font-bold
+                                                                    text-[var(--text-primary)]
+                                                                "
+                                                    >
+                                                        {exercicio?.exercicio || "-"}
+                                                    </p>
+                                                </div>
+
+                                                <div>
+                                                    <span
+                                                        className="
                                                                     text-xs
                                                                     font-bold
                                                                     uppercase
                                                                     text-[var(--text-secondary)]
                                                                 "
-                                                            >
-                                                                Exercício
-                                                            </span>
+                                                    >
+                                                        Séries
+                                                    </span>
 
-                                                            <p
-                                                                className="
+                                                    <p
+                                                        className="
                                                                     text-lg
                                                                     font-bold
                                                                     text-[var(--text-primary)]
                                                                 "
-                                                            >
-                                                                {exercicio?.exercicio ||
-                                                                    "-"}
-                                                            </p>
-                                                        </div>
+                                                    >
+                                                        {totalSeries || "-"}
+                                                    </p>
+                                                </div>
 
-                                                        <div>
-                                                            <span
-                                                                className="
+                                                <div>
+                                                    <span
+                                                        className="
                                                                     text-xs
                                                                     font-bold
                                                                     uppercase
                                                                     text-[var(--text-secondary)]
                                                                 "
-                                                            >
-                                                                Séries
-                                                            </span>
+                                                    >
+                                                        Reps base
+                                                    </span>
 
-                                                            <p
-                                                                className="
+                                                    <p
+                                                        className="
                                                                     text-lg
                                                                     font-bold
                                                                     text-[var(--text-primary)]
                                                                 "
-                                                            >
-                                                                {totalSeries ||
-                                                                    "-"}
-                                                            </p>
-                                                        </div>
+                                                    >
+                                                        {exercicio?.repeticoes || "-"}
+                                                    </p>
+                                                </div>
 
-                                                        <div>
-                                                            <span
-                                                                className="
-                                                                    text-xs
-                                                                    font-bold
-                                                                    uppercase
-                                                                    text-[var(--text-secondary)]
-                                                                "
-                                                            >
-                                                                Reps base
-                                                            </span>
-
-                                                            <p
-                                                                className="
-                                                                    text-lg
-                                                                    font-bold
-                                                                    text-[var(--text-primary)]
-                                                                "
-                                                            >
-                                                                {exercicio?.repeticoes ||
-                                                                    "-"}
-                                                            </p>
-                                                        </div>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                alternarDetalhes(
-                                                                    treinoIndex,
-                                                                    exercicioIndex
-                                                                )
-                                                            }
-                                                            className="
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        alternarDetalhes(
+                                                            treinoIndex,
+                                                            exercicioIndex,
+                                                        )
+                                                    }
+                                                    className="
                                                                 h-10
                                                                 rounded-xl
                                                                 border
@@ -635,25 +574,23 @@ export default function Intensidade() {
                                                                 hover:bg-[var(--accent-soft)]
                                                                 hover:text-[var(--accent-hover)]
                                                             "
-                                                        >
-                                                            {aberto
-                                                                ? "Fechar"
-                                                                : "Detalhes"}
-                                                        </button>
-                                                    </div>
+                                                >
+                                                    {aberto ? "Fechar" : "Detalhes"}
+                                                </button>
+                                            </div>
 
-                                                    {aberto && (
-                                                        <div
-                                                            className="
+                                            {aberto && (
+                                                <div
+                                                    className="
                                                                 overflow-x-auto
                                                                 border-t
                                                                 border-[var(--border)]
                                                                 bg-[var(--surface)]
                                                                 p-4
                                                             "
-                                                        >
-                                                            <table
-                                                                className="
+                                                >
+                                                    <table
+                                                        className="
                                                                     w-full
                                                                     min-w-[900px]
                                                                     border-separate
@@ -661,75 +598,66 @@ export default function Intensidade() {
                                                                     overflow-hidden
                                                                     rounded-xl
                                                                 "
-                                                            >
-                                                                <thead>
-                                                                    <tr
-                                                                        className="
+                                                    >
+                                                        <thead>
+                                                            <tr
+                                                                className="
                                                                             bg-[var(--surface-secondary)]
                                                                             font-bold
                                                                             italic
                                                                             uppercase
                                                                             text-[var(--text-secondary)]
                                                                         "
-                                                                    >
-                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
-                                                                            Série
-                                                                        </th>
+                                                            >
+                                                                <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
+                                                                    Série
+                                                                </th>
 
-                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
-                                                                            Reps
-                                                                        </th>
+                                                                <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
+                                                                    Reps
+                                                                </th>
 
-                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
-                                                                            Carga
-                                                                        </th>
+                                                                <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
+                                                                    Carga
+                                                                </th>
 
-                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
-                                                                            %1RM
-                                                                        </th>
+                                                                <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
+                                                                    %1RM
+                                                                </th>
 
-                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
-                                                                            RIR
-                                                                        </th>
+                                                                <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
+                                                                    RIR
+                                                                </th>
 
-                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
-                                                                            Esforço
-                                                                        </th>
+                                                                <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
+                                                                    Esforço
+                                                                </th>
 
-                                                                        <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
-                                                                            %Esforço
-                                                                        </th>
-                                                                    </tr>
-                                                                </thead>
+                                                                <th className="border border-[var(--border)] px-2 py-3 text-center text-xs">
+                                                                    %Esforço
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
 
-                                                                <tbody>
-                                                                    {montarSeriesDoExercicio(
-                                                                        exercicio
-                                                                    ).map(
-                                                                        (
+                                                        <tbody>
+                                                            {montarSeriesDoExercicio(exercicio).map(
+                                                                (serie, serieIndex) => {
+                                                                    const intensidadeSerie =
+                                                                        calcularIntensidadeSerie(
                                                                             serie,
-                                                                            serieIndex
-                                                                        ) => {
-                                                                            const intensidadeSerie =
-                                                                                calcularIntensidadeSerie(
-                                                                                    serie
-                                                                                );
+                                                                        );
 
-                                                                            return (
-                                                                                <tr
-                                                                                    key={
-                                                                                        serieIndex
+                                                                    return (
+                                                                        <tr key={serieIndex}>
+                                                                            <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={
+                                                                                        serieIndex +
+                                                                                        1
                                                                                     }
-                                                                                >
-                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={
-                                                                                                serieIndex +
-                                                                                                1
-                                                                                            }
-                                                                                            readOnly
-                                                                                            className="
+                                                                                    readOnly
+                                                                                    className="
                                                                                                 h-10
                                                                                                 w-full
                                                                                                 bg-[var(--input-bg)]
@@ -740,30 +668,28 @@ export default function Intensidade() {
                                                                                                 text-[var(--text-primary)]
                                                                                                 outline-none
                                                                                             "
-                                                                                        />
-                                                                                    </td>
+                                                                                />
+                                                                            </td>
 
-                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={
-                                                                                                serie.reps ??
-                                                                                                ""
-                                                                                            }
-                                                                                            onChange={(
-                                                                                                evento
-                                                                                            ) =>
-                                                                                                alterarSerie(
-                                                                                                    treinoIndex,
-                                                                                                    exercicioIndex,
-                                                                                                    serieIndex,
-                                                                                                    "reps",
-                                                                                                    evento
-                                                                                                        .target
-                                                                                                        .value
-                                                                                                )
-                                                                                            }
-                                                                                            className="
+                                                                            <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={
+                                                                                        serie.reps ??
+                                                                                        ""
+                                                                                    }
+                                                                                    onChange={evento =>
+                                                                                        alterarSerie(
+                                                                                            treinoIndex,
+                                                                                            exercicioIndex,
+                                                                                            serieIndex,
+                                                                                            "reps",
+                                                                                            evento
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    className="
                                                                                                 h-10
                                                                                                 w-full
                                                                                                 bg-[var(--input-bg)]
@@ -776,30 +702,28 @@ export default function Intensidade() {
                                                                                                 transition-all
                                                                                                 focus:bg-[var(--surface-hover)]
                                                                                             "
-                                                                                        />
-                                                                                    </td>
+                                                                                />
+                                                                            </td>
 
-                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={
-                                                                                                serie.carga ??
-                                                                                                ""
-                                                                                            }
-                                                                                            onChange={(
-                                                                                                evento
-                                                                                            ) =>
-                                                                                                alterarSerie(
-                                                                                                    treinoIndex,
-                                                                                                    exercicioIndex,
-                                                                                                    serieIndex,
-                                                                                                    "carga",
-                                                                                                    evento
-                                                                                                        .target
-                                                                                                        .value
-                                                                                                )
-                                                                                            }
-                                                                                            className="
+                                                                            <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={
+                                                                                        serie.carga ??
+                                                                                        ""
+                                                                                    }
+                                                                                    onChange={evento =>
+                                                                                        alterarSerie(
+                                                                                            treinoIndex,
+                                                                                            exercicioIndex,
+                                                                                            serieIndex,
+                                                                                            "carga",
+                                                                                            evento
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    className="
                                                                                                 h-10
                                                                                                 w-full
                                                                                                 bg-[var(--input-bg)]
@@ -812,18 +736,18 @@ export default function Intensidade() {
                                                                                                 transition-all
                                                                                                 focus:bg-[var(--surface-hover)]
                                                                                             "
-                                                                                        />
-                                                                                    </td>
+                                                                                />
+                                                                            </td>
 
-                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={formatarPercentual(
-                                                                                                intensidadeSerie?.percentualUmRm ??
-                                                                                                null
-                                                                                            )}
-                                                                                            readOnly
-                                                                                            className="
+                                                                            <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={formatarPercentual(
+                                                                                        intensidadeSerie?.percentualUmRm ??
+                                                                                            null,
+                                                                                    )}
+                                                                                    readOnly
+                                                                                    className="
                                                                                                 h-10
                                                                                                 w-full
                                                                                                 bg-[var(--input-bg)]
@@ -834,30 +758,28 @@ export default function Intensidade() {
                                                                                                 text-[var(--text-secondary)]
                                                                                                 outline-none
                                                                                             "
-                                                                                        />
-                                                                                    </td>
+                                                                                />
+                                                                            </td>
 
-                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={
-                                                                                                serie.rir ??
-                                                                                                ""
-                                                                                            }
-                                                                                            onChange={(
-                                                                                                evento
-                                                                                            ) =>
-                                                                                                alterarSerie(
-                                                                                                    treinoIndex,
-                                                                                                    exercicioIndex,
-                                                                                                    serieIndex,
-                                                                                                    "rir",
-                                                                                                    evento
-                                                                                                        .target
-                                                                                                        .value
-                                                                                                )
-                                                                                            }
-                                                                                            className="
+                                                                            <td className="border border-[var(--border)] bg-[var(--surface-tertiary)]">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={
+                                                                                        serie.rir ??
+                                                                                        ""
+                                                                                    }
+                                                                                    onChange={evento =>
+                                                                                        alterarSerie(
+                                                                                            treinoIndex,
+                                                                                            exercicioIndex,
+                                                                                            serieIndex,
+                                                                                            "rir",
+                                                                                            evento
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    className="
                                                                                                 h-10
                                                                                                 w-full
                                                                                                 bg-[var(--input-bg)]
@@ -870,18 +792,18 @@ export default function Intensidade() {
                                                                                                 transition-all
                                                                                                 focus:bg-[var(--surface-hover)]
                                                                                             "
-                                                                                        />
-                                                                                    </td>
+                                                                                />
+                                                                            </td>
 
-                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={formatarDecimal(
-                                                                                                intensidadeSerie?.esforco ??
-                                                                                                null
-                                                                                            )}
-                                                                                            readOnly
-                                                                                            className="
+                                                                            <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={formatarDecimal(
+                                                                                        intensidadeSerie?.esforco ??
+                                                                                            null,
+                                                                                    )}
+                                                                                    readOnly
+                                                                                    className="
                                                                                                 h-10
                                                                                                 w-full
                                                                                                 bg-[var(--input-bg)]
@@ -892,18 +814,18 @@ export default function Intensidade() {
                                                                                                 text-[var(--text-secondary)]
                                                                                                 outline-none
                                                                                             "
-                                                                                        />
-                                                                                    </td>
+                                                                                />
+                                                                            </td>
 
-                                                                                    <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={formatarPercentual(
-                                                                                                intensidadeSerie?.percentualEsforco ??
-                                                                                                null
-                                                                                            )}
-                                                                                            readOnly
-                                                                                            className="
+                                                                            <td className="border border-[var(--border)] bg-[var(--surface-secondary)]">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={formatarPercentual(
+                                                                                        intensidadeSerie?.percentualEsforco ??
+                                                                                            null,
+                                                                                    )}
+                                                                                    readOnly
+                                                                                    className="
                                                                                                 h-10
                                                                                                 w-full
                                                                                                 bg-[var(--input-bg)]
@@ -914,17 +836,17 @@ export default function Intensidade() {
                                                                                                 text-[var(--text-secondary)]
                                                                                                 outline-none
                                                                                             "
-                                                                                        />
-                                                                                    </td>
-                                                                                </tr>
-                                                                            );
-                                                                        }
-                                                                    )}
-                                                                </tbody>
-                                                            </table>
+                                                                                />
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                },
+                                                            )}
+                                                        </tbody>
+                                                    </table>
 
-                                                            <div
-                                                                className="
+                                                    <div
+                                                        className="
                                                                     mt-4
                                                                     flex flex-wrap
                                                                     justify-end
@@ -934,9 +856,9 @@ export default function Intensidade() {
                                                                     uppercase
                                                                     text-[var(--text-secondary)]
                                                                 "
-                                                            >
-                                                                <span
-                                                                    className="
+                                                    >
+                                                        <span
+                                                            className="
                                                                         rounded-xl
                                                                         border
                                                                         border-[var(--border)]
@@ -944,24 +866,20 @@ export default function Intensidade() {
                                                                         px-4
                                                                         py-2
                                                                     "
-                                                                >
-                                                                    Séries
-                                                                    válidas:{" "}
-                                                                    {
-                                                                        resumoExercicio.seriesValidas
-                                                                    }
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                                        >
+                                                            Séries válidas:{" "}
+                                                            {resumoExercicio.seriesValidas}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            );
-                                        }
-                                    )}
-                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
 
-                                <div
-                                    className="
+                            <div
+                                className="
                                         mt-4
                                         flex flex-wrap
                                         justify-end
@@ -974,9 +892,9 @@ export default function Intensidade() {
                                         uppercase
                                         text-[var(--text-secondary)]
                                     "
-                                >
-                                    <span
-                                        className="
+                            >
+                                <span
+                                    className="
                                             rounded-xl
                                             border
                                             border-[var(--border)]
@@ -984,19 +902,16 @@ export default function Intensidade() {
                                             px-4
                                             py-2
                                         "
-                                    >
-                                        Intensidade do treino:{" "}
-                                        <span className="text-[var(--accent)]">
-                                            {formatarPercentual(
-                                                resumoTreino.intensidade
-                                            )}
-                                        </span>
+                                >
+                                    Intensidade do treino:{" "}
+                                    <span className="text-[var(--accent)]">
+                                        {formatarPercentual(resumoTreino.intensidade)}
                                     </span>
-                                </div>
-                            </article>
-                        );
-                    }
-                )}
+                                </span>
+                            </div>
+                        </article>
+                    );
+                })}
             </section>
 
             <br />
