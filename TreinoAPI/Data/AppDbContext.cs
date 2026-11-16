@@ -15,6 +15,11 @@ public class AppDbContext : DbContext
     public DbSet<ExecucaoExercicio> ExecucoesExercicio { get; set; }
     public DbSet<ExecucaoSerie> ExecucoesSerie { get; set; }
     public DbSet<Aluno> Alunos { get; set; }
+    public DbSet<SolicitacaoCadastro> SolicitacoesCadastro { get; set; }
+    public DbSet<ConversaEquipe> ConversasEquipe { get; set; }
+    public DbSet<MensagemEquipe> MensagensEquipe { get; set; }
+    public DbSet<NotificacaoUsuario> NotificacoesUsuarios { get; set; }
+    public DbSet<AvisoGlobal> AvisosGlobais { get; set; }
     public DbSet<Personal> Personais { get; set; }
     public DbSet<PersonalAluno> PersonalAlunos { get; set; }
     public DbSet<Anamnese> Anamnese { get; set; }
@@ -49,6 +54,67 @@ public class AppDbContext : DbContext
             .WithOne(u => u.Aluno)
             .HasForeignKey<Aluno>(a => a.UsuarioId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Aluno>()
+            .Property(a => a.StatusCadastro)
+            .HasConversion<string>()
+            .HasDefaultValue(StatusCadastroAluno.APROVADO);
+
+        modelBuilder.Entity<SolicitacaoCadastro>()
+            .HasOne(s => s.Aluno)
+            .WithOne(a => a.SolicitacaoCadastro)
+            .HasForeignKey<SolicitacaoCadastro>(s => s.AlunoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SolicitacaoCadastro>()
+            .Property(s => s.RespostasJson)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<ConversaEquipe>()
+            .HasIndex(c => new { c.UsuarioAId, c.UsuarioBId })
+            .IsUnique();
+
+        modelBuilder.Entity<ConversaEquipe>()
+            .HasOne(c => c.UsuarioA)
+            .WithMany()
+            .HasForeignKey(c => c.UsuarioAId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ConversaEquipe>()
+            .HasOne(c => c.UsuarioB)
+            .WithMany()
+            .HasForeignKey(c => c.UsuarioBId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MensagemEquipe>()
+            .HasOne(m => m.Conversa)
+            .WithMany(c => c.Mensagens)
+            .HasForeignKey(m => m.ConversaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MensagemEquipe>()
+            .HasOne(m => m.Remetente)
+            .WithMany()
+            .HasForeignKey(m => m.RemetenteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MensagemEquipe>()
+            .HasIndex(m => new { m.ConversaId, m.EnviadaEm });
+
+        modelBuilder.Entity<NotificacaoUsuario>()
+            .HasOne(n => n.Usuario)
+            .WithMany()
+            .HasForeignKey(n => n.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NotificacaoUsuario>()
+            .HasIndex(n => new { n.UsuarioId, n.LidaEm, n.CriadaEm });
+
+        modelBuilder.Entity<AvisoGlobal>()
+            .HasOne(a => a.Autor)
+            .WithMany()
+            .HasForeignKey(a => a.AutorId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<PersonalAluno>()
             .HasOne(pa => pa.Personal)

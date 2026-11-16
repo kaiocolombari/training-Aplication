@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuth } from "../context/authContext";
 
 export default function ProtectedLayout() {
-    const { user, isLoading, logout } = useAuth();
+    const { user, isLoading } = useAuth();
     const location = useLocation();
 
     if (isLoading) {
@@ -21,25 +21,19 @@ export default function ProtectedLayout() {
     }
 
     if (user.tipo === "ALUNO") {
-        return (
-            <main className="grid min-h-screen place-items-center bg-[#f7f7f7] px-6 py-10">
-                <section className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#a85f60]">Conta de aluno</p>
-                    <h1 className="mt-3 text-2xl font-bold text-zinc-800">Olá, {user.nome}</h1>
-                    <p className="mt-3 text-sm leading-6 text-zinc-600">
-                        Sua conta está criada. O painel de gestão é reservado aos personal trainers.
-                        O acesso às suas fichas será disponibilizado na área do aluno.
-                    </p>
-                    <button
-                        type="button"
-                        onClick={() => void logout()}
-                        className="mt-7 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100"
-                    >
-                        Sair da conta
-                    </button>
-                </section>
-            </main>
-        );
+        const destino = user.statusCadastro === "APROVADO"
+            ? "/cadastro/app"
+            : user.formularioEnviado
+                ? "/cadastro/aguardando"
+                : "/cadastro/formulario";
+
+        return location.pathname === destino
+            ? <Outlet />
+            : <Navigate to={destino} replace />;
+    }
+
+    if (location.pathname.startsWith("/cadastro/")) {
+        return <Navigate to="/" replace />;
     }
 
     if (user.tipo !== "PERSONAL" && user.tipo !== "ADMIN") {

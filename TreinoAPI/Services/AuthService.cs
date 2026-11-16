@@ -25,6 +25,7 @@ public sealed class AuthService
         var usuario = await _context.Usuarios
             .Include(u => u.Personal)
             .Include(u => u.Aluno)
+                .ThenInclude(a => a!.SolicitacaoCadastro)
             .FirstOrDefaultAsync(u => u.Email == email);
 
         if (usuario is null)
@@ -62,7 +63,8 @@ public sealed class AuthService
         {
             NomeCompleto = dto.NomeCompleto.Trim(),
             Usuario = usuario,
-            CriadoEm = DateTime.UtcNow
+            CriadoEm = DateTime.UtcNow,
+            StatusCadastro = StatusCadastroAluno.PENDENTE
         };
 
         _context.Usuarios.Add(usuario);
@@ -83,6 +85,7 @@ public sealed class AuthService
                 .ThenInclude(u => u.Personal)
             .Include(t => t.Usuario)
                 .ThenInclude(u => u.Aluno)
+                    .ThenInclude(a => a!.SolicitacaoCadastro)
             .FirstOrDefaultAsync(t => t.TokenHash == hash);
 
         if (stored is null)
@@ -137,6 +140,7 @@ public sealed class AuthService
         var usuario = await _context.Usuarios
             .Include(u => u.Personal)
             .Include(u => u.Aluno)
+                .ThenInclude(a => a!.SolicitacaoCadastro)
             .FirstOrDefaultAsync(u => u.Id == usuarioId);
 
         return usuario is null ? null : MapearUsuario(usuario);
@@ -164,7 +168,9 @@ public sealed class AuthService
         Tipo = usuario.Tipo.ToString(),
         PersonalId = usuario.Personal?.Id,
         AlunoId = usuario.Aluno?.Id,
-        Nome = usuario.Personal?.Nome ?? usuario.Aluno?.NomeCompleto ?? usuario.Email
+        Nome = usuario.Personal?.Nome ?? usuario.Aluno?.NomeCompleto ?? usuario.Email,
+        StatusCadastro = usuario.Aluno?.StatusCadastro.ToString(),
+        FormularioEnviado = usuario.Aluno?.SolicitacaoCadastro is not null
     };
 
     private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();

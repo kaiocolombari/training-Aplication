@@ -8,4 +8,6 @@ public sealed class UsuarioSessaoDTO
     public Guid? PersonalId { get; set; }
     public Guid? AlunoId { get; set; }
     public string Nome { get; set; } = string.Empty;
+    public string? StatusCadastro { get; set; }
+    public bool FormularioEnviado { get; set; }
 }

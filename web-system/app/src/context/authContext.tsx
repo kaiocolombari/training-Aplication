@@ -22,6 +22,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         retry: (count, error) => !(error instanceof ApiError && error.status === 401) && count < 1,
         staleTime: 30_000,
         refetchOnWindowFocus: true,
+        refetchInterval: query =>
+            query.state.data?.tipo === "ALUNO" &&
+            query.state.data.statusCadastro === "PENDENTE" &&
+            query.state.data.formularioEnviado
+                ? 30_000
+                : false,
         enabled: typeof window !== "undefined",
     });
 

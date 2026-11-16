@@ -9,8 +9,13 @@ namespace TreinoAPI.Services;
 public class PersonalAlunoService
 {
     private readonly AppDbContext _context;
+    private readonly ComunicacaoService _comunicacao;
 
-    public PersonalAlunoService(AppDbContext context) => _context = context;
+    public PersonalAlunoService(AppDbContext context, ComunicacaoService comunicacao)
+    {
+        _context = context;
+        _comunicacao = comunicacao;
+    }
 
     public async Task<List<PersonalAlunoDTO>> BuscarAlunos(Guid personalId)
     {
@@ -53,6 +58,7 @@ public class PersonalAlunoService
 
             existing.Ativo = true;
             await _context.SaveChangesAsync();
+            await NotificarNovoVinculoAsync(dto.PersonalId, dto.AlunoId);
             return Mapear(existing);
         }
 
@@ -70,6 +76,7 @@ public class PersonalAlunoService
 
         _context.PersonalAlunos.Add(vinculo);
         await _context.SaveChangesAsync();
+        await NotificarNovoVinculoAsync(dto.PersonalId, dto.AlunoId);
         return Mapear(vinculo);
     }
 
@@ -110,4 +117,26 @@ public class PersonalAlunoService
         Ativo = vinculo.Ativo,
         CriadoEm = vinculo.CriadoEm
     };
+
+    private async Task NotificarNovoVinculoAsync(Guid personalId, Guid alunoId)
+    {
+        var dados = await _context.Personais
+            .Where(p => p.Id == personalId)
+            .Select(p => new
+            {
+                p.UsuarioId,
+                NomeAluno = _context.Alunos.Where(a => a.Id == alunoId).Select(a => a.NomeCompleto).FirstOrDefault()
+            })
+            .FirstOrDefaultAsync();
+
+        if (dados?.NomeAluno is not null)
+        {
+            await _comunicacao.NotificarUsuarioAsync(
+                dados.UsuarioId,
+                "Novo aluno vinculado",
+                $"{dados.NomeAluno} foi vinculado à sua equipe.",
+                "SISTEMA",
+                alunoId);
+        }
+    }
 }

@@ -67,6 +67,8 @@ builder.Services.AddScoped<CurrentUserService>();
 builder.Services.AddScoped<OwnershipService>();
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<CadastroAlunoService>();
+builder.Services.AddScoped<ComunicacaoService>();
 builder.Services.AddScoped<AlunoService>();
 builder.Services.AddScoped<PersonalService>();
 builder.Services.AddScoped<PersonalAlunoService>();

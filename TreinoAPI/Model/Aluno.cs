@@ -44,6 +44,8 @@ public class Aluno
 
     public DateTime CriadoEm { get; set; }
 
+    public StatusCadastroAluno StatusCadastro { get; set; } = StatusCadastroAluno.APROVADO;
+
     public Usuario Usuario { get; set; } = null!;
 
     public ICollection<PersonalAluno> Personais { get; set; } = new List<PersonalAluno>();
@@ -52,5 +54,7 @@ public class Aluno
     public ICollection<TesteCarga> TestesCarga { get; set; } = new List<TesteCarga>();
     public ICollection<Treino> Treinos { get; set; } = new List<Treino>();
     public ICollection<Periodizacao> Periodizacoes { get; set; } = new List<Periodizacao>();
+
+    public SolicitacaoCadastro? SolicitacaoCadastro { get; set; }
 
 }

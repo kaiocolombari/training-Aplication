@@ -9,6 +9,8 @@ export interface AuthUser {
     personalId: string | null;
     alunoId: string | null;
     nome: string;
+    statusCadastro: "PENDENTE" | "APROVADO" | null;
+    formularioEnviado: boolean;
 }
 
 export interface LoginPayload {

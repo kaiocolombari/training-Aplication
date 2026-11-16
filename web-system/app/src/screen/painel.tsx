@@ -5,6 +5,7 @@ import {
   BsCalendar3,
   BsBarChart,
   BsChatDots,
+  BsBell,
   BsQuestionCircle,
   BsGear,
   BsFileEarmarkText,
@@ -33,6 +34,9 @@ import { cadastroService, mapearCadastroParaAvaliacao, salvarFicha, type AlunoRe
 import type { Avaliacao } from "../types/avaliacao";
 import { useAuth } from "../context/authContext";
 import { ApiError } from "../service/api";
+import SolicitacoesCadastro from "./SolicitacoesCadastro";
+import CentralComunicacao from "./CentralComunicacao";
+import { comunicacaoService } from "../service/comunicacaoService";
 
 interface AlunoPainel {
   id: string;
@@ -95,6 +99,7 @@ const secoes = [
     icone: <BsHouseDoor />,
   },
   { id: "alunos", nome: "Alunos", grupo: "Workspace", icone: <BsPeople /> },
+  { id: "solicitacoes", nome: "Solicitações", grupo: "Workspace", icone: <BsClipboard2Pulse /> },
   {
     id: "equipe",
     nome: "Equipe",
@@ -151,7 +156,7 @@ const secoes = [
   },
 ];
 
-const gruposNavegacao = ["Workspace"];
+const gruposNavegacao = ["Workspace", "Comunicação"];
 
 const cores = {
   primaryButton:
@@ -195,6 +200,12 @@ export default function Painel() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const notificacoesPainelQuery = useQuery({
+    queryKey: ["comunicacao", "notificacoes"],
+    queryFn: comunicacaoService.listarNotificacoes,
+    refetchInterval: 15000,
+  });
+  const alertasNaoLidos = (notificacoesPainelQuery.data ?? []).filter(item => !item.lidaEm).length;
 
   const [tema, setTema] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "light";
@@ -545,6 +556,8 @@ export default function Painel() {
   const secoesVisiveis = secoes.filter(secao =>
     secao.id === "inicio" ||
     secao.id === "alunos" ||
+    secao.id === "solicitacoes" ||
+    secao.id === "chat" ||
     (secao.id === "equipe" && user?.tipo === "ADMIN")
   );
 
@@ -1456,6 +1469,10 @@ export default function Painel() {
         return renderInicio();
       case "alunos":
         return renderAlunos();
+      case "solicitacoes":
+        return <SolicitacoesCadastro />;
+      case "chat":
+        return <CentralComunicacao />;
       case "equipe":
         return user?.tipo === "ADMIN" ? renderEquipe() : renderAlunos();
       case "avaliacoes":
@@ -1481,12 +1498,6 @@ export default function Painel() {
           "Atividades",
           "Histórico de ações, alterações e eventos do sistema.",
           <BsFileEarmarkText />,
-        );
-      case "chat":
-        return renderSecaoVazia(
-          "Central de mensagens",
-          "Comunicação com alunos por canais integrados.",
-          <BsChatDots />,
         );
       case "periodizacao":
         return renderSecaoVazia(
@@ -1577,6 +1588,11 @@ export default function Painel() {
                           {secao.icone}
                         </span>
                         {secao.nome}
+                        {secao.id === "chat" && alertasNaoLidos > 0 && (
+                          <span className="ml-auto rounded-full bg-[var(--accent)] px-1.5 py-0.5 text-[9px] font-bold text-white">
+                            {alertasNaoLidos > 99 ? "99+" : alertasNaoLidos}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -1627,6 +1643,16 @@ export default function Painel() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navegar("chat")}
+              aria-label={`Abrir alertas${alertasNaoLidos > 0 ? `, ${alertasNaoLidos} não lidos` : ""}`}
+              title="Central de comunicação"
+              className="relative grid h-8 w-8 place-items-center rounded-lg border border-[var(--border)] text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)]"
+            >
+              <BsBell size={14} />
+              {alertasNaoLidos > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--accent)] px-1 text-[8px] font-bold text-white">{alertasNaoLidos > 9 ? "9+" : alertasNaoLidos}</span>}
+            </button>
             <button
               type="button"
               onClick={() =>
