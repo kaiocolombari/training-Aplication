@@ -9,7 +9,14 @@ export class ApiError extends Error {
     }
 }
 
-const API_URL = (import.meta.env.VITE_API_URL || "https://localhost:7285").replace(/\/$/, "");
+const rawApiUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "https://localhost:7285" : "");
+
+if (!rawApiUrl) {
+    throw new Error("A variável de ambiente VITE_API_URL não foi definida.");
+}
+
+const API_URL = rawApiUrl.replace(/\/$/, "");
+
 let csrfToken: string | null = null;
 let refreshInFlight: Promise<boolean> | null = null;
 
