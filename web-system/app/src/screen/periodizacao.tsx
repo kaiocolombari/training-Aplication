@@ -24,7 +24,6 @@ export default function periodizacao() {
         };
     }, []);
 
-    const [dataInicio, setDataInicio] = useState(new Date());
     const [diaEditando, setDiaEditando] = useState<{
         semanaIndex: number;
         diaIndex: number;
@@ -32,8 +31,21 @@ export default function periodizacao() {
 
     const { avaliacao, setAvaliacao } = useAvaliacao();
 
+    const dataInicio = useMemo(
+        () => new Date(`${avaliacao.periodizacao.dataInicio}T00:00:00`),
+        [avaliacao.periodizacao.dataInicio]
+    );
+
+    const setDataInicio = (date: Date) => {
+        const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        setAvaliacao(prev => ({
+            ...prev,
+            periodizacao: { ...prev.periodizacao, dataInicio: value },
+        }));
+    };
+
     const formatDateInput = (date: Date) => {
-        return date.toISOString().split("T")[0];
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     };
 
     const opcoesTreino = avaliacao.treino.map((treino) => ({

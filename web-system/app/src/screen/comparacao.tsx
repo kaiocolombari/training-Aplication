@@ -1,5 +1,5 @@
-import { initialState, useAvaliacao } from '../context/avaliacaoContext'
-import { useState, useMemo, useEffect } from 'react'
+import { useAvaliacaoComparison } from '../context/avaliacaoContext'
+import { useMemo, useEffect } from 'react'
 import React from 'react'
 import navTool from '../components/navTool'
 import type { PerimetroField } from '../types/perimetroField';
@@ -76,7 +76,7 @@ function sanitizeDecimal(value: string) {
 }
 
 export default function comparacao() {
-    const { avaliacao, setAvaliacao } = useAvaliacao();
+    const { avaliacao, setAvaliacao, avaliacaoIds, setAvaliacaoIds, hasPair } = useAvaliacaoComparison();
     let perimetros = avaliacao.avaliacao1.perimetros;
     let perimetros2 = avaliacao.avaliacao2.perimetros;
 
@@ -466,7 +466,7 @@ export default function comparacao() {
         return Number(value.toFixed(1));
     }
 
-    const [data, setData] = useState<ExamData>({
+    const data: ExamData = {
         nomeCompleto: avaliacao.aluno.nomeCompleto,
         genero: avaliacao.aluno.genero,
         idade: avaliacao.avaliacao1.idade,
@@ -486,9 +486,9 @@ export default function comparacao() {
         hdl: avaliacao.aluno.hdl,
         sistolica: avaliacao.aluno.sistolica,
         diastolica: avaliacao.aluno.diastolica,
-    });
+    };
 
-    const [data2, setData2] = useState<ExamData>({
+    const data2: ExamData = {
         nomeCompleto: avaliacao.aluno.nomeCompleto,
         genero: avaliacao.aluno.genero,
         idade: avaliacao.avaliacao2.idade,
@@ -508,7 +508,7 @@ export default function comparacao() {
         hdl: avaliacao.aluno.hdl,
         sistolica: avaliacao.aluno.sistolica,
         diastolica: avaliacao.aluno.diastolica,
-    });
+    };
 
     const dobraChartRows = 8;
 
@@ -519,7 +519,7 @@ export default function comparacao() {
             ...current,
 
             anamneseComparacao: {
-                ...current.anamnese,
+                ...current.anamneseComparacao,
 
                 observacoes: value,
             },
@@ -1443,6 +1443,17 @@ export default function comparacao() {
         };
     }, []);
 
+    if (!hasPair) {
+        return (
+            <main className="flex min-h-[60vh] flex-col items-center justify-center gap-3 bg-[var(--surface-sunken)] p-6 text-center text-[var(--text-primary)]">
+                <h1 className="text-xl font-bold">Comparação indisponível</h1>
+                <p className="max-w-md text-sm text-[var(--text-secondary)]">
+                    Cadastre pelo menos duas avaliações físicas para comparar a evolução do aluno.
+                </p>
+            </main>
+        );
+    }
+
     return (
         <main className="min-h-full bg-[var(--surface-sunken)] p-3 text-[var(--text-primary)] md:p-5">
 
@@ -1460,7 +1471,7 @@ export default function comparacao() {
                         </h1>
 
                         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                            Comparação entre a primeira e a segunda avaliação.
+                            Compare quaisquer duas avaliações registradas para este aluno.
                         </p>
                     </div>
 
@@ -1472,7 +1483,7 @@ export default function comparacao() {
                             </p>
 
                             <p className="mt-1 text-lg font-black text-[var(--accent)]">
-                                01 → 02
+                                #{avaliacao.avaliacao1.numero} → #{avaliacao.avaliacao2.numero}
                             </p>
                         </div>
 
@@ -1490,6 +1501,33 @@ export default function comparacao() {
                 </div>
             </section>
 
+            <section className="mb-6 grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 md:grid-cols-2">
+                <label className="flex flex-col gap-2 text-xs font-bold uppercase tracking-wide text-[var(--text-secondary)]">
+                    Avaliação de referência
+                    <select
+                        value={avaliacaoIds[0]}
+                        onChange={(event) => setAvaliacaoIds([event.target.value, avaliacaoIds[1]])}
+                        className="rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] px-3 py-2.5 text-sm font-semibold normal-case text-[var(--text-primary)]"
+                    >
+                        {avaliacao.avaliacoes.map(item => (
+                            <option key={item.id} value={item.id}>Avaliação #{item.numero} · {item.realizadaEm}</option>
+                        ))}
+                    </select>
+                </label>
+                <label className="flex flex-col gap-2 text-xs font-bold uppercase tracking-wide text-[var(--text-secondary)]">
+                    Avaliação para comparar
+                    <select
+                        value={avaliacaoIds[1]}
+                        onChange={(event) => setAvaliacaoIds([avaliacaoIds[0], event.target.value])}
+                        className="rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] px-3 py-2.5 text-sm font-semibold normal-case text-[var(--text-primary)]"
+                    >
+                        {avaliacao.avaliacoes.filter(item => item.id !== avaliacaoIds[0]).map(item => (
+                            <option key={item.id} value={item.id}>Avaliação #{item.numero} · {item.realizadaEm}</option>
+                        ))}
+                    </select>
+                </label>
+            </section>
+
             <section className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
 
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
@@ -1499,14 +1537,14 @@ export default function comparacao() {
                 <div className="flex items-center gap-2 rounded-xl bg-[var(--surface-tertiary)] px-3 py-2">
                     <div className="h-3 w-3 rounded-full bg-[var(--accent)]" />
                     <span className="text-xs font-semibold text-[var(--text-secondary)]">
-                        1ª avaliação
+                        Avaliação #{avaliacao.avaliacao1.numero}
                     </span>
                 </div>
 
                 <div className="flex items-center gap-2 rounded-xl bg-[var(--surface-tertiary)] px-3 py-2">
                     <div className="h-3 w-3 rounded-full bg-zinc-500" />
                     <span className="text-xs font-semibold text-[var(--text-secondary)]">
-                        2ª avaliação
+                        Avaliação #{avaliacao.avaliacao2.numero}
                     </span>
                 </div>
 

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.TreinoDia;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -19,16 +20,21 @@ public class TreinoDiaService
         CriarTreinoDiaDTO dto)
     {
         var dia = await _context.PeriodizacaoDias
+            .Include(d => d.Semana)
+                .ThenInclude(s => s.Periodizacao)
             .FirstOrDefaultAsync(d => d.Id == diaId);
 
         if (dia == null)
-            throw new Exception("Dia não encontrado");
+            throw DomainException.NotFound("Dia não encontrado.");
 
         var treino = await _context.Treinos
             .FirstOrDefaultAsync(t => t.Id == dto.TreinoId);
 
         if (treino == null)
-            throw new Exception("Treino não encontrado");
+            throw DomainException.NotFound("Treino não encontrado.");
+
+        if (!treino.Ativo || treino.AlunoId != dia.Semana.Periodizacao.AlunoId)
+            throw DomainException.BadRequest("O treino precisa estar ativo e pertencer ao mesmo aluno da periodização.");
 
         var treinoDia = new DiaTreino
         {
@@ -84,6 +90,9 @@ public class TreinoDiaService
         AtualizarTreinoDiaDTO dto)
     {
         var treinoDia = await _context.DiaTreinos
+            .Include(td => td.PeriodizacaoDia)
+                .ThenInclude(d => d.Semana)
+                    .ThenInclude(s => s.Periodizacao)
             .FirstOrDefaultAsync(td => td.Id == id);
 
         if (treinoDia == null)
@@ -93,7 +102,10 @@ public class TreinoDiaService
             .FirstOrDefaultAsync(t => t.Id == dto.TreinoId);
 
         if (treino == null)
-            throw new Exception("Treino não encontrado");
+            throw DomainException.NotFound("Treino não encontrado.");
+
+        if (!treino.Ativo || treino.AlunoId != treinoDia.PeriodizacaoDia.Semana.Periodizacao.AlunoId)
+            throw DomainException.BadRequest("O treino precisa estar ativo e pertencer ao mesmo aluno da periodização.");
 
         treinoDia.TreinoId = dto.TreinoId;
         treinoDia.Ordem = dto.Ordem;

@@ -10,6 +10,7 @@ namespace TreinoAPI.Model
         public DateTime CriadoEm { get; set; }
         public Personal? Personal { get; set; }
         public Aluno? Aluno { get; set; }
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 
 }

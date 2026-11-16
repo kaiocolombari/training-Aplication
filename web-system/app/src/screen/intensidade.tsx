@@ -1,14 +1,9 @@
 import { useMemo, useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
+import type { SerieIntensidade } from "../interface/interfaceExercicio";
 import { FaRunning } from "react-icons/fa";
 
 const STIMULO_MAX_POSSIVEL = 15 * 1 * 1.1;
-
-type SerieIntensidade = {
-    reps?: string;
-    carga?: string;
-    rir?: string;
-};
 
 function extrairNumeros(valor: unknown) {
     return String(valor ?? "")

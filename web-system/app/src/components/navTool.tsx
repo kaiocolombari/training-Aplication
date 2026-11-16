@@ -22,8 +22,7 @@ export default function NavTool() {
   const location = useLocation();
   const { alteracoesPorTela } = useAvaliacao();
   const chavePorRota: Record<string, TelaAvaliacao> = {
-    "/avaliacao1": "avaliacao1",
-    "/avaliacao2": "avaliacao2",
+    "/avaliacoes": "avaliacoes",
     "/comparacao": "comparacao",
     "/prescricao": "prescricao",
     "/periodizacao": "periodizacao",
@@ -55,7 +54,8 @@ export default function NavTool() {
 
   const etapaAtual = tabs.findIndex((tab) => {
     const destino = tab.rota === "/" ? "/" : `/${tab.rota}`;
-    return location.pathname === destino;
+    return location.pathname === destino ||
+      (tab.rota === "/avaliacoes" && location.pathname.startsWith("/avaliacoes/"));
   });
 
   function alternarLayout() {

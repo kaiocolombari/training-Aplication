@@ -137,11 +137,40 @@ namespace TreinoAPI.Migrations
                     b.Property<Guid>("AlunoId")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("AtualizadaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("AtualizadaPorUsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid?>("CriadaPorUsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Idade")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Numero")
                         .HasColumnType("integer");
 
-                    b.Property<double?>("PerceltualGordura")
-                        .HasColumnType("double precision");
+                    b.Property<string>("Objetivo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Observacoes")
+                        .HasColumnType("text");
+
+                    b.Property<double?>("PercentualGordura")
+                        .HasColumnType("double precision")
+                        .HasColumnName("PerceltualGordura");
 
                     b.Property<double?>("Peso")
                         .HasColumnType("double precision");
@@ -153,7 +182,60 @@ namespace TreinoAPI.Migrations
 
                     b.HasIndex("AlunoId");
 
+                    b.HasIndex("AtualizadaPorUsuarioId");
+
+                    b.HasIndex("CriadaPorUsuarioId");
+
                     b.ToTable("Avaliacoes");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.AvaliacaoHistorico", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Acao")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("AvaliacaoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("DadosJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Resumo")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("UsuarioEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UsuarioTipo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.HasIndex("AvaliacaoId", "CriadoEm");
+
+                    b.ToTable("AvaliacoesHistorico");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.CargaExercicio", b =>
@@ -249,6 +331,121 @@ namespace TreinoAPI.Migrations
                     b.ToTable("DobrasCutaneas");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.ExecucaoExercicio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Estimulo")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("ExecucaoTreinoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("HardSets")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("Intensidade")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("Tonelagem")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid?>("TreinoExercicioId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExecucaoTreinoId");
+
+                    b.HasIndex("TreinoExercicioId");
+
+                    b.ToTable("ExecucoesExercicio");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExecucaoSerie", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Carga")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("ClusterAtivo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ClusterBlocosJson")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Descanso")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("DropSet")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ExecucaoExercicioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Falha")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("Repeticoes")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("RestPause")
+                        .HasColumnType("boolean");
+
+                    b.Property<double?>("Rir")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Rpe")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Velocidade")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExecucaoExercicioId");
+
+                    b.ToTable("ExecucoesSerie");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExecucaoTreino", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Data")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("TreinoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TreinoId", "Data")
+                        .IsUnique();
+
+                    b.ToTable("ExecucoesTreino");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.GrupoMuscular", b =>
                 {
                     b.Property<Guid>("Id")
@@ -259,6 +456,9 @@ namespace TreinoAPI.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
 
                     b.ToTable("GruposMusculares");
                 });
@@ -434,6 +634,41 @@ namespace TreinoAPI.Migrations
                     b.ToTable("PersonalAlunos");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RevogadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SubstituidoPorHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.TesteCarga", b =>
                 {
                     b.Property<Guid>("Id")
@@ -464,6 +699,11 @@ namespace TreinoAPI.Migrations
 
                     b.Property<Guid>("AlunoId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<DateTime>("CriadoEm")
                         .HasColumnType("timestamp with time zone");
@@ -587,6 +827,9 @@ namespace TreinoAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Usuarios", null, t =>
                         {
                             t.HasCheckConstraint("usuario_tipo_check", "\"Tipo\" IN ('PERSONAL', 'ALUNO', 'ADMIN')");
@@ -651,7 +894,39 @@ namespace TreinoAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("TreinoAPI.Model.Usuario", "AtualizadaPorUsuario")
+                        .WithMany()
+                        .HasForeignKey("AtualizadaPorUsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TreinoAPI.Model.Usuario", "CriadaPorUsuario")
+                        .WithMany()
+                        .HasForeignKey("CriadaPorUsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Aluno");
+
+                    b.Navigation("AtualizadaPorUsuario");
+
+                    b.Navigation("CriadaPorUsuario");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.AvaliacaoHistorico", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.Avaliacao", "Avaliacao")
+                        .WithMany("Historico")
+                        .HasForeignKey("AvaliacaoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TreinoAPI.Model.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Avaliacao");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.CargaExercicio", b =>
@@ -693,6 +968,46 @@ namespace TreinoAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Avaliacao");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExecucaoExercicio", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.ExecucaoTreino", "ExecucaoTreino")
+                        .WithMany("Exercicios")
+                        .HasForeignKey("ExecucaoTreinoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TreinoAPI.Model.TreinoExercicio", "TreinoExercicio")
+                        .WithMany()
+                        .HasForeignKey("TreinoExercicioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ExecucaoTreino");
+
+                    b.Navigation("TreinoExercicio");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExecucaoSerie", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.ExecucaoExercicio", "ExecucaoExercicio")
+                        .WithMany("Series")
+                        .HasForeignKey("ExecucaoExercicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExecucaoExercicio");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExecucaoTreino", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.Treino", "Treino")
+                        .WithMany()
+                        .HasForeignKey("TreinoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Treino");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.Perimetro", b =>
@@ -767,6 +1082,17 @@ namespace TreinoAPI.Migrations
                     b.Navigation("Aluno");
 
                     b.Navigation("Personal");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.RefreshToken", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.Usuario", "Usuario")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.TesteCarga", b =>
@@ -851,7 +1177,19 @@ namespace TreinoAPI.Migrations
                 {
                     b.Navigation("DobrasCutaneas");
 
+                    b.Navigation("Historico");
+
                     b.Navigation("Perimetro");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExecucaoExercicio", b =>
+                {
+                    b.Navigation("Series");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExecucaoTreino", b =>
+                {
+                    b.Navigation("Exercicios");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.GrupoMuscular", b =>
@@ -899,6 +1237,8 @@ namespace TreinoAPI.Migrations
                     b.Navigation("Aluno");
 
                     b.Navigation("Personal");
+
+                    b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618
         }

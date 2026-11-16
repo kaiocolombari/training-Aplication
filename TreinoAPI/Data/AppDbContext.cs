@@ -10,11 +10,16 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<ExecucaoTreino> ExecucoesTreino { get; set; }
+    public DbSet<ExecucaoExercicio> ExecucoesExercicio { get; set; }
+    public DbSet<ExecucaoSerie> ExecucoesSerie { get; set; }
     public DbSet<Aluno> Alunos { get; set; }
     public DbSet<Personal> Personais { get; set; }
     public DbSet<PersonalAluno> PersonalAlunos { get; set; }
     public DbSet<Anamnese> Anamnese { get; set; }
     public DbSet<Avaliacao> Avaliacoes { get; set; }
+    public DbSet<AvaliacaoHistorico> AvaliacoesHistorico { get; set; }
     public DbSet<Perimetro> Perimetros { get; set; }
     public DbSet<DobraCutanea> DobrasCutaneas { get; set; }
     public DbSet<TesteCarga> TestesCarga { get; set; }
@@ -77,6 +82,61 @@ public class AppDbContext : DbContext
             .HasForeignKey(a => a.AlunoId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<Avaliacao>()
+            .Property(a => a.Ativo)
+            .HasDefaultValue(true);
+
+        modelBuilder.Entity<Avaliacao>()
+            .Property(a => a.CriadaEm)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        modelBuilder.Entity<Avaliacao>()
+            .HasOne(a => a.CriadaPorUsuario)
+            .WithMany()
+            .HasForeignKey(a => a.CriadaPorUsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Avaliacao>()
+            .HasOne(a => a.AtualizadaPorUsuario)
+            .WithMany()
+            .HasForeignKey(a => a.AtualizadaPorUsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<AvaliacaoHistorico>()
+            .HasOne(h => h.Avaliacao)
+            .WithMany(a => a.Historico)
+            .HasForeignKey(h => h.AvaliacaoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AvaliacaoHistorico>()
+            .HasOne(h => h.Usuario)
+            .WithMany()
+            .HasForeignKey(h => h.UsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<AvaliacaoHistorico>()
+            .Property(h => h.UsuarioEmail)
+            .HasMaxLength(256);
+
+        modelBuilder.Entity<AvaliacaoHistorico>()
+            .Property(h => h.UsuarioTipo)
+            .HasMaxLength(30);
+
+        modelBuilder.Entity<AvaliacaoHistorico>()
+            .Property(h => h.Acao)
+            .HasMaxLength(30);
+
+        modelBuilder.Entity<AvaliacaoHistorico>()
+            .Property(h => h.Resumo)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<AvaliacaoHistorico>()
+            .Property(h => h.CriadoEm)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        modelBuilder.Entity<AvaliacaoHistorico>()
+            .HasIndex(h => new { h.AvaliacaoId, h.CriadoEm });
+
         modelBuilder.Entity<DobraCutanea>()
             .HasOne(d => d.Avaliacao)
             .WithMany(a => a.DobrasCutaneas)
@@ -106,6 +166,10 @@ public class AppDbContext : DbContext
             .WithMany(a => a.Treinos)
             .HasForeignKey(t => t.AlunoId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Treino>()
+            .Property(t => t.Ativo)
+            .HasDefaultValue(true);
 
         modelBuilder.Entity<TreinoExercicio>()
             .HasOne(te => te.Treino)
@@ -166,6 +230,56 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Usuario>()
             .Property(u => u.Tipo)
             .HasConversion<string>();
+
+        modelBuilder.Entity<Usuario>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<GrupoMuscular>()
+            .HasIndex(g => g.Nome)
+            .IsUnique();
+
+        modelBuilder.Entity<Avaliacao>()
+            .Property(a => a.PercentualGordura)
+            .HasColumnName("PerceltualGordura");
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasIndex(t => t.TokenHash)
+            .IsUnique();
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasOne(t => t.Usuario)
+            .WithMany(u => u.RefreshTokens)
+            .HasForeignKey(t => t.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ExecucaoTreino>()
+            .HasIndex(e => new { e.TreinoId, e.Data })
+            .IsUnique();
+
+        modelBuilder.Entity<ExecucaoTreino>()
+            .HasOne(e => e.Treino)
+            .WithMany()
+            .HasForeignKey(e => e.TreinoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ExecucaoExercicio>()
+            .HasOne(e => e.ExecucaoTreino)
+            .WithMany(e => e.Exercicios)
+            .HasForeignKey(e => e.ExecucaoTreinoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ExecucaoExercicio>()
+            .HasOne(e => e.TreinoExercicio)
+            .WithMany()
+            .HasForeignKey(e => e.TreinoExercicioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ExecucaoSerie>()
+            .HasOne(s => s.ExecucaoExercicio)
+            .WithMany(e => e.Series)
+            .HasForeignKey(s => s.ExecucaoExercicioId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<DiaTreino>()
             .HasOne(td => td.PeriodizacaoDia)

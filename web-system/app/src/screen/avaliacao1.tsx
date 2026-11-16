@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ExamData } from "../types/examData";
 import type { PerimetroKey } from "../types/perimetroKey";
 import type { PerimetroField } from "../types/perimetroField";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import type { DobraKey } from "../types/dobraKey";
 import type { DobraField } from "../types/dobraField";
 import { calcularMassaAdiposa } from "../functions/calcMassaAdiposa";
@@ -11,7 +11,8 @@ import { calcularAreaCoxa } from "../functions/calcCoxa";
 import { calcularAreaBraco } from "../functions/calcBraco";
 import safeNumber from "../functions/safeNumber";
 import ComposicaoCorporalChart from "../components/ComposicaoChart";
-import { initialState, useAvaliacao } from "../context/avaliacaoContext";
+import { useAvaliacaoEditor } from "../context/avaliacaoContext";
+import { criarAvaliacaoFisicaInicial } from "../types/avaliacao";
 
 const inputBaseClass = `
   h-9 w-full min-w-0 rounded-md
@@ -377,7 +378,9 @@ function classificationBox(label: string, value: string) {
 
 export default function App() {
   const navigate = useNavigate();
-  const { avaliacao, setAvaliacao, alteracoesPendentes } = useAvaliacao();
+  const { avaliacaoId = "" } = useParams();
+  const { avaliacao, setAvaliacao, alteracoesPendentes, hasSelection } = useAvaliacaoEditor(avaliacaoId);
+  const avaliacaoVazia = useMemo(() => criarAvaliacaoFisicaInicial(0), []);
 
   const data: ExamData = {
     nomeCompleto: avaliacao.aluno.nomeCompleto,
@@ -901,7 +904,7 @@ export default function App() {
         ...current.avaliacao1,
 
         perimetros: {
-          ...initialState.avaliacao1.perimetros,
+          ...avaliacaoVazia.perimetros,
         },
       },
     }));
@@ -915,7 +918,7 @@ export default function App() {
         ...current.avaliacao1,
 
         dobrasCutaneas: {
-          ...initialState.avaliacao1.dobrasCutaneas,
+          ...avaliacaoVazia.dobrasCutaneas,
         },
       },
     }));
@@ -955,6 +958,18 @@ export default function App() {
     }));
   }, [fcReserva, avaliacao.aluno.fcReserva, setAvaliacao]);
 
+  if (!hasSelection) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 p-6 text-center">
+        <h1 className="text-lg font-semibold">Avaliação não encontrada</h1>
+        <p className="text-sm text-[var(--text-muted)]">Selecione uma avaliação existente na lista.</p>
+        <button onClick={() => navigate("/avaliacoes")} className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--on-accent)]">
+          Voltar para avaliações
+        </button>
+      </div>
+    );
+  }
+
   return (
     <main
       className="min-h-screen w-full px-4 py-6 md:px-6 lg:px-8"
@@ -970,12 +985,12 @@ export default function App() {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
               <span>Avaliação física</span>
               <span>/</span>
-              <span className="text-[var(--accent)]">Etapa 01</span>
+              <span className="text-[var(--accent)]">Ficha individual</span>
             </div>
 
             <div>
               <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                Primeira avaliação
+                Avaliação {avaliacao.avaliacao1.numero}
               </h1>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
                 Avaliação antropométrica, composição corporal e desempenho.
@@ -984,7 +999,7 @@ export default function App() {
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="rounded-md bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--accent)]">
-                Avaliação inicial
+                Registro #{avaliacao.avaliacao1.numero}
               </span>
 
               <span className="text-sm text-[var(--text-muted)]">
@@ -1004,10 +1019,10 @@ export default function App() {
 
             <button
               type="button"
-              onClick={() => navigate("/avaliacao2")}
+              onClick={() => navigate("/avaliacoes")}
               className="flex items-center gap-2 rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)]"
             >
-              Próxima avaliação
+              Todas as avaliações
               <span aria-hidden="true">→</span>
             </button>
           </div>
@@ -1815,18 +1830,18 @@ export default function App() {
         {/* RODAPÉ */}
         <footer className="flex flex-col justify-between gap-3 border-t border-[var(--border)] pt-5 sm:flex-row sm:items-center">
           <div>
-            <p className="text-sm font-semibold">Primeira avaliação</p>
+            <p className="text-sm font-semibold">Avaliação {avaliacao.avaliacao1.numero}</p>
             <p className="text-xs text-[var(--text-muted)]">
-              Continue para registrar a segunda avaliação do aluno.
+              Volte à lista para abrir outra avaliação ou criar uma nova.
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => navigate("/avaliacao2")}
+            onClick={() => navigate("/avaliacoes")}
             className="flex items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)]"
           >
-            Ir para segunda avaliação
+            Todas as avaliações
             <span aria-hidden="true">→</span>
           </button>
         </footer>

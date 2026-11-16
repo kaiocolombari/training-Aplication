@@ -1,19 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using TreinoAPI.DTOs.Periodizacao;
+using TreinoAPI.Security;
 using TreinoAPI.Services;
 
 namespace TreinoAPI.Controllers;
 
 [ApiController]
+[Authorize(Roles = "PERSONAL,ADMIN")]
 [Route("api/periodizacao-dias")]
 public class PeriodizacaoDiaController : ControllerBase
 {
     private readonly PeriodizacaoDiaService _service;
+    private readonly OwnershipService _ownership;
 
     public PeriodizacaoDiaController(
-        PeriodizacaoDiaService service)
+        PeriodizacaoDiaService service,
+        OwnershipService ownership)
     {
         _service = service;
+        _ownership = ownership;
     }
 
     [HttpPost("/api/periodizacao-semanas/{semanaId}/dias")]
@@ -21,6 +27,7 @@ public class PeriodizacaoDiaController : ControllerBase
         Guid semanaId,
         PeriodizacaoDiaDTO dto)
     {
+        await _ownership.EnsureSemanaAccessAsync(semanaId);
         var resultado = await _service.Criar(
             semanaId,
             dto);
@@ -32,6 +39,7 @@ public class PeriodizacaoDiaController : ControllerBase
     public async Task<IActionResult> ListarPorSemana(
         Guid semanaId)
     {
+        await _ownership.EnsureSemanaAccessAsync(semanaId);
         var resultado = await _service.ListarPorSemana(
             semanaId);
 
@@ -41,6 +49,7 @@ public class PeriodizacaoDiaController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
+        await _ownership.EnsureDiaAccessAsync(id);
         var resultado = await _service.ObterPorId(id);
 
         if (resultado == null)
@@ -54,6 +63,7 @@ public class PeriodizacaoDiaController : ControllerBase
         Guid id,
         PeriodizacaoDiaDTO dto)
     {
+        await _ownership.EnsureDiaAccessAsync(id);
         var resultado = await _service.Atualizar(id, dto);
 
         if (resultado == null)
@@ -65,6 +75,7 @@ public class PeriodizacaoDiaController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Deletar(Guid id)
     {
+        await _ownership.EnsureDiaAccessAsync(id);
         var sucesso = await _service.Deletar(id);
 
         if (!sucesso)

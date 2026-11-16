@@ -1,72 +1,60 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TreinoAPI.DTOs.CargaExercicio;
+using TreinoAPI.Security;
 using TreinoAPI.Services;
 
 namespace TreinoAPI.Controllers;
 
-public class CargaExercicioController : ControllerBase
+[ApiController]
+[Authorize(Roles = "PERSONAL,ADMIN")]
+[Route("api/carga-exercicio")]
+public sealed class CargaExercicioController : ControllerBase
 {
-    private readonly CargaExercicioService _cargaExercicioService;
+    private readonly CargaExercicioService _service;
+    private readonly OwnershipService _ownership;
 
-    public CargaExercicioController(CargaExercicioService cargaExercicioService)
+    public CargaExercicioController(CargaExercicioService service, OwnershipService ownership)
     {
-        _cargaExercicioService = cargaExercicioService;
+        _service = service;
+        _ownership = ownership;
     }
 
-    [HttpPost("api/carga-exercicio/{testeCargaId}")]
-    public async Task<IActionResult> Criar(
-        Guid testeCargaId,
-        CriarCargaExercicioDTO dto)
+    [HttpPost("{testeCargaId:guid}")]
+    public async Task<IActionResult> Criar(Guid testeCargaId, [FromBody] CriarCargaExercicioDTO dto)
     {
-        var cargaExercicio = await _cargaExercicioService.Criar(testeCargaId, dto);
-
-        return CreatedAtAction(
-            nameof(ObterPorId),
-            new { id = cargaExercicio.Id },
-            cargaExercicio
-        );
+        await _ownership.EnsureTesteCargaAccessAsync(testeCargaId);
+        var result = await _service.Criar(testeCargaId, dto);
+        return CreatedAtAction(nameof(ObterPorId), new { id = result.Id }, result);
     }
 
-    [HttpGet("api/carga-exercicio/teste-carga/{testeCargaId}")]
+    [HttpGet("teste-carga/{testeCargaId:guid}")]
     public async Task<IActionResult> ListarPorTesteCarga(Guid testeCargaId)
     {
-        var cargasExercicios = await _cargaExercicioService.ListarPorTesteCarga(testeCargaId);
-
-        return Ok(cargasExercicios);
+        await _ownership.EnsureTesteCargaAccessAsync(testeCargaId);
+        return Ok(await _service.ListarPorTesteCarga(testeCargaId));
     }
 
-    [HttpGet("api/carga-exercicio/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
-        var cargaExercicio = await _cargaExercicioService.ObterPorId(id);
-
-        if (cargaExercicio == null)
-            return NotFound("Carga de exercício não encontrada");
-
-        return Ok(cargaExercicio);
+        await _ownership.EnsureCargaExercicioAccessAsync(id);
+        var result = await _service.ObterPorId(id);
+        return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpPut("api/carga-exercicio/{id}")]
-    public async Task<IActionResult> Atualizar(
-        Guid id,
-        AtualizarCargaExercicioDTO dto)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Atualizar(Guid id, [FromBody] AtualizarCargaExercicioDTO dto)
     {
-        var cargaExercicio = await _cargaExercicioService.Atualizar(id, dto);
-
-        if (cargaExercicio == null)
-            return NotFound("Carga de exercício não encontrada");
-
-        return Ok(cargaExercicio);
+        await _ownership.EnsureCargaExercicioAccessAsync(id);
+        var result = await _service.Atualizar(id, dto);
+        return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpDelete("api/carga-exercicio/{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Deletar(Guid id)
     {
-        var sucesso = await _cargaExercicioService.Deletar(id);
-
-        if (!sucesso)
-            return NotFound("Carga de exercício não encontrada");
-
-        return NoContent();
+        await _ownership.EnsureCargaExercicioAccessAsync(id);
+        return await _service.Deletar(id) ? NoContent() : NotFound();
     }
 }

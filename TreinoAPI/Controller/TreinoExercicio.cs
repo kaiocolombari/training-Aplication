@@ -1,83 +1,60 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TreinoAPI.DTOs.Exercicio;
+using TreinoAPI.Security;
 using TreinoAPI.Services;
 
 namespace TreinoAPI.Controllers;
 
 [ApiController]
-[Route("api/treinos/{treinoId}/exercicios")]
-public class TreinoExercicioController : ControllerBase
+[Authorize(Roles = "PERSONAL,ADMIN")]
+[Route("api/treinos/{treinoId:guid}/exercicios")]
+public sealed class TreinoExercicioController : ControllerBase
 {
     private readonly TreinoExercicioService _service;
+    private readonly OwnershipService _ownership;
 
-    public TreinoExercicioController(TreinoExercicioService service)
+    public TreinoExercicioController(TreinoExercicioService service, OwnershipService ownership)
     {
         _service = service;
+        _ownership = ownership;
     }
 
     [HttpPost]
-    public async Task<IActionResult> Criar(
-        Guid treinoId,
-        CriarTreinoExercicioDTO dto)
+    public async Task<IActionResult> Criar(Guid treinoId, [FromBody] CriarTreinoExercicioDTO dto)
     {
-        var resultado = await _service.Criar(treinoId, dto);
-
-        return CreatedAtAction(
-            nameof(ObterPorId),
-            new
-            {
-                treinoId,
-                id = resultado.Id
-            },
-            resultado
-        );
+        await _ownership.EnsureTreinoAccessAsync(treinoId);
+        var result = await _service.Criar(treinoId, dto);
+        return CreatedAtAction(nameof(ObterPorId), new { treinoId, id = result.Id }, result);
     }
 
     [HttpGet]
     public async Task<IActionResult> Listar(Guid treinoId)
     {
-        var resultado = await _service.ListarPorTreino(treinoId);
-
-        return Ok(resultado);
+        await _ownership.EnsureTreinoAccessAsync(treinoId);
+        return Ok(await _service.ListarPorTreino(treinoId));
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> ObterPorId(
-        Guid treinoId,
-        Guid id)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> ObterPorId(Guid treinoId, Guid id)
     {
-        var resultado = await _service.ObterPorId(treinoId, id);
-
-        if (resultado == null)
-            return NotFound("Exercício não encontrado");
-
-        return Ok(resultado);
+        await _ownership.EnsureTreinoExercicioAccessAsync(treinoId, id);
+        var result = await _service.ObterPorId(treinoId, id);
+        return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Atualizar(
-        Guid treinoId,
-        Guid id,
-        AtualizarTreinoExercicioDTO dto)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Atualizar(Guid treinoId, Guid id, [FromBody] AtualizarTreinoExercicioDTO dto)
     {
-        var resultado = await _service.Atualizar(treinoId, id, dto);
-
-        if (resultado == null)
-            return NotFound("Exercício não encontrado");
-
-        return Ok(resultado);
+        await _ownership.EnsureTreinoExercicioAccessAsync(treinoId, id);
+        var result = await _service.Atualizar(treinoId, id, dto);
+        return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Deletar(
-        Guid treinoId,
-        Guid id)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Deletar(Guid treinoId, Guid id)
     {
-        var sucesso = await _service.Deletar(treinoId, id);
-
-        if (!sucesso)
-            return NotFound("Exercício não encontrado");
-
-        return NoContent();
+        await _ownership.EnsureTreinoExercicioAccessAsync(treinoId, id);
+        return await _service.Deletar(treinoId, id) ? NoContent() : NotFound();
     }
 }

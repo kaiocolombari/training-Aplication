@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.DobraCutanea;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -22,7 +23,7 @@ public class DobraCutaneaService
             .FirstOrDefaultAsync(a => a.Id == avaliacaoId);
 
         if (avaliacao == null)
-            throw new Exception("Avaliação não encontrada");
+            throw DomainException.NotFound("Avaliação não encontrada.");
 
         var dobra = new DobraCutanea
         {

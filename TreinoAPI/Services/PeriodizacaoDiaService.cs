@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.Periodizacao;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -22,12 +23,12 @@ public class PeriodizacaoDiaService
             .FirstOrDefaultAsync(s => s.Id == semanaId);
 
         if (semana == null)
-            throw new Exception("Semana não encontrada");
+            throw DomainException.NotFound("Semana não encontrada.");
 
         var dia = new PeriodizacaoDia
         {
             SemanaId = semanaId,
-            Data = dto.Data,
+            Data = DateTime.SpecifyKind(dto.Data.Date, DateTimeKind.Utc),
             DiaSemana = dto.DiaSemana
         };
 
@@ -84,7 +85,7 @@ public class PeriodizacaoDiaService
         if (dia == null)
             return null;
 
-        dia.Data = dto.Data;
+        dia.Data = DateTime.SpecifyKind(dto.Data.Date, DateTimeKind.Utc);
         dia.DiaSemana = dto.DiaSemana;
 
         await _context.SaveChangesAsync();

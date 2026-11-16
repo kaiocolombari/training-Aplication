@@ -39,9 +39,12 @@ public class AnamneseService
         };
     }
 
-    public async Task<List<AnamneseDTO>> Listar()
+    public async Task<List<AnamneseDTO>> Listar(IEnumerable<Guid> alunoIds)
     {
+        var ids = alunoIds.Distinct().ToArray();
         return await _context.Anamnese
+        .AsNoTracking()
+        .Where(a => ids.Contains(a.AlunoId))
         .Include(a => a.Aluno)
         .Select(a => new AnamneseDTO
         {

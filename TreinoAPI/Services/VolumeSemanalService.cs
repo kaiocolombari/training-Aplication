@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.VolumeSemanal;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -22,13 +23,13 @@ public class VolumeSemanalService
             .FirstOrDefaultAsync(s => s.Id == semanaId);
 
         if (semana == null)
-            throw new Exception("Semana não encontrada");
+            throw DomainException.NotFound("Semana não encontrada.");
 
         var grupo = await _context.GruposMusculares
             .FirstOrDefaultAsync(g => g.Id == dto.GrupoMuscularId);
 
         if (grupo == null)
-            throw new Exception("Grupo muscular não encontrado");
+            throw DomainException.NotFound("Grupo muscular não encontrado.");
 
         var volumeExistente = await _context.VolumesSemanais
             .FirstOrDefaultAsync(v =>
@@ -36,8 +37,7 @@ public class VolumeSemanalService
                 v.GrupoMuscularId == dto.GrupoMuscularId);
 
         if (volumeExistente != null)
-            throw new Exception(
-                "Esse grupo muscular já possui volume nessa semana");
+            throw DomainException.Conflict("Esse grupo muscular já possui volume nessa semana.");
 
         var volume = new VolumeSemanal
         {
@@ -91,11 +91,14 @@ public class VolumeSemanalService
         if (volume == null)
             return null;
 
+        if (dto.SeriesDiretas < 0 || dto.SeriesLivres < 0)
+            throw DomainException.BadRequest("A quantidade de séries não pode ser negativa.");
+
         var grupo = await _context.GruposMusculares
             .FirstOrDefaultAsync(g => g.Id == dto.GrupoMuscularId);
 
         if (grupo == null)
-            throw new Exception("Grupo muscular não encontrado");
+            throw DomainException.NotFound("Grupo muscular não encontrado.");
 
         var outroVolume = await _context.VolumesSemanais
             .FirstOrDefaultAsync(v =>
@@ -104,8 +107,7 @@ public class VolumeSemanalService
                 v.GrupoMuscularId == dto.GrupoMuscularId);
 
         if (outroVolume != null)
-            throw new Exception(
-                "Esse grupo muscular já possui volume nessa semana");
+            throw DomainException.Conflict("Esse grupo muscular já possui volume nessa semana.");
 
         volume.GrupoMuscularId = dto.GrupoMuscularId;
         volume.SeriesDiretas = dto.SeriesDiretas;

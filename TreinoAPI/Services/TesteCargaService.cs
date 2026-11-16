@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.TesteCarga;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -22,7 +23,7 @@ public class TesteCargaService
             .FirstOrDefaultAsync(a => a.Id == alunoId);
 
         if (aluno == null)
-            throw new Exception("Aluno não encontrado");
+            throw DomainException.NotFound("Aluno não encontrado.");
 
         var testeCarga = new TesteCarga
         {
@@ -44,9 +45,12 @@ public class TesteCargaService
         };
     }
 
-    public async Task<List<TesteCargaDTO>> Listar()
+    public async Task<List<TesteCargaDTO>> Listar(IEnumerable<Guid> alunoIds)
     {
+        var ids = alunoIds.Distinct().ToArray();
         return await _context.TestesCarga
+            .AsNoTracking()
+            .Where(t => ids.Contains(t.AlunoId))
             .Select(t => new TesteCargaDTO
             {
                 Id = t.Id,

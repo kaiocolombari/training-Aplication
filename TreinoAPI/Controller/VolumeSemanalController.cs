@@ -1,77 +1,59 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TreinoAPI.DTOs.VolumeSemanal;
+using TreinoAPI.Security;
 using TreinoAPI.Services;
 
 namespace TreinoAPI.Controllers;
 
 [ApiController]
+[Authorize(Roles = "PERSONAL,ADMIN")]
 [Route("api/volumes-semanais")]
-public class VolumeSemanalController : ControllerBase
+public sealed class VolumeSemanalController : ControllerBase
 {
     private readonly VolumeSemanalService _service;
+    private readonly OwnershipService _ownership;
 
-    public VolumeSemanalController(
-        VolumeSemanalService service)
+    public VolumeSemanalController(VolumeSemanalService service, OwnershipService ownership)
     {
         _service = service;
+        _ownership = ownership;
     }
 
-    [HttpPost("/api/periodizacao-semanas/{semanaId}/volumes")]
-    public async Task<IActionResult> Criar(
-        Guid semanaId,
-        CriarVolumeSemanalDTO dto)
+    [HttpPost("/api/periodizacao-semanas/{semanaId:guid}/volumes")]
+    public async Task<IActionResult> Criar(Guid semanaId, [FromBody] CriarVolumeSemanalDTO dto)
     {
-        var resultado = await _service.Criar(
-            semanaId,
-            dto);
-
-        return Ok(resultado);
+        await _ownership.EnsureSemanaAccessAsync(semanaId);
+        return Ok(await _service.Criar(semanaId, dto));
     }
 
-    [HttpGet("/api/periodizacao-semanas/{semanaId}/volumes")]
-    public async Task<IActionResult> ListarPorSemana(
-        Guid semanaId)
+    [HttpGet("/api/periodizacao-semanas/{semanaId:guid}/volumes")]
+    public async Task<IActionResult> ListarPorSemana(Guid semanaId)
     {
-        var resultado = await _service.ListarPorSemana(
-            semanaId);
-
-        return Ok(resultado);
+        await _ownership.EnsureSemanaAccessAsync(semanaId);
+        return Ok(await _service.ListarPorSemana(semanaId));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
-        var resultado = await _service.ObterPorId(id);
-
-        if (resultado == null)
-            return NotFound("Volume semanal não encontrado");
-
-        return Ok(resultado);
+        await _ownership.EnsureVolumeAccessAsync(id);
+        var result = await _service.ObterPorId(id);
+        return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Atualizar(
-        Guid id,
-        AtualizarVolumeSemanalDTO dto)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Atualizar(Guid id, [FromBody] AtualizarVolumeSemanalDTO dto)
     {
-        var resultado = await _service.Atualizar(
-            id,
-            dto);
-
-        if (resultado == null)
-            return NotFound("Volume semanal não encontrado");
-
-        return Ok(resultado);
+        await _ownership.EnsureVolumeAccessAsync(id);
+        var result = await _service.Atualizar(id, dto);
+        return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Deletar(Guid id)
     {
-        var sucesso = await _service.Deletar(id);
-
-        if (!sucesso)
-            return NotFound("Volume semanal não encontrado");
-
-        return NoContent();
+        await _ownership.EnsureVolumeAccessAsync(id);
+        return await _service.Deletar(id) ? NoContent() : NotFound();
     }
 }

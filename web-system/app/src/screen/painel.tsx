@@ -26,18 +26,66 @@ import { FaPeopleGroup, FaRegCircleQuestion } from "react-icons/fa6";
 import { VscFeedback } from "react-icons/vsc";
 import { IoChatbubblesSharp } from "react-icons/io5";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAvaliacao, initialState } from "../context/avaliacaoContext";
-import type { Avaliacao } from "../types/avaliacao";
+import { useAvaliacao } from "../context/avaliacaoContext";
 import { useNavigate } from "react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { cadastroService, mapearCadastroParaAvaliacao, salvarFicha, type AlunoResumoApi, type CadastroCompletoApi } from "../service/cadastroService";
+import type { Avaliacao } from "../types/avaliacao";
+import { useAuth } from "../context/authContext";
+import { ApiError } from "../service/api";
 
 interface AlunoPainel {
   id: string;
   nome: string;
-  dados: Avaliacao;
+  email: string;
+  telefone: string;
   criadoEm: string;
 }
 
-const CHAVE_ALUNOS = "painel_alunos";
+function clonarIdsFicha(ficha: Avaliacao): Avaliacao {
+  const idsTreino = new Map<string, string>();
+  const idsExercicio = new Map<string, string>();
+  const treino = ficha.treino.map(item => {
+    const id = crypto.randomUUID();
+    idsTreino.set(item.id, id);
+    const exercicios = item.exercicios.map(exercicio => {
+      const exercicioId = crypto.randomUUID();
+      idsExercicio.set(exercicio.id, exercicioId);
+      return {
+        ...exercicio,
+        id: exercicioId,
+        variacoes: (exercicio.variacoes ?? []).map(variacao => ({
+          ...variacao,
+          id: crypto.randomUUID(),
+        })),
+      };
+    });
+    return { ...item, id, exercicios };
+  });
+
+  return {
+    ...ficha,
+    treino,
+    periodizacao: {
+      ...ficha.periodizacao,
+      semanas: ficha.periodizacao.semanas.map(semana => ({
+        ...semana,
+        dias: semana.dias.map(dia => ({
+          ...dia,
+          treinoIds: dia.treinoIds.map(id => idsTreino.get(id) ?? ""),
+        })),
+      })),
+    },
+    seriesRIR: ficha.seriesRIR.map(execucao => ({
+      ...execucao,
+      treinoId: idsTreino.get(execucao.treinoId) ?? "",
+      exercicios: execucao.exercicios.map(exercicio => ({
+        ...exercicio,
+        exercicioId: idsExercicio.get(exercicio.exercicioId) ?? "",
+      })),
+    })),
+  };
+}
 
 const secoes = [
   {
@@ -103,7 +151,7 @@ const secoes = [
   },
 ];
 
-const gruposNavegacao = ["Workspace", "Treinamento", "Comunicação", "Sistema"];
+const gruposNavegacao = ["Workspace"];
 
 const cores = {
   primaryButton:
@@ -130,8 +178,16 @@ function formatarData(data: string) {
 }
 
 export default function Painel() {
-  const { carregarAvaliacao } = useAvaliacao();
+  const {
+    carregarAvaliacao,
+    alunoSelecionadoId,
+    setAlunoSelecionadoId,
+    alteracoesPendentes,
+    avaliacao: fichaAtual,
+  } = useAvaliacao();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [tema, setTema] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "light";
@@ -139,7 +195,36 @@ export default function Painel() {
   });
 
   const [secaoAtual, setSecaoAtual] = useState("alunos");
-  const [alunos, setAlunos] = useState<AlunoPainel[]>([]);
+  const alunosQuery = useQuery({
+    queryKey: ["alunos"],
+    queryFn: cadastroService.listarAlunos,
+  });
+  const personaisQuery = useQuery({
+    queryKey: ["personais"],
+    queryFn: cadastroService.listarPersonais,
+    enabled: user?.tipo === "ADMIN",
+  });
+  const [personalSelecionadoId, setPersonalSelecionadoId] = useState("");
+  const vinculosQuery = useQuery({
+    queryKey: ["personal-alunos", personalSelecionadoId],
+    queryFn: () => cadastroService.listarVinculos(personalSelecionadoId),
+    enabled: user?.tipo === "ADMIN" && Boolean(personalSelecionadoId),
+  });
+  const [novoPersonalNome, setNovoPersonalNome] = useState("");
+  const [novoPersonalEmail, setNovoPersonalEmail] = useState("");
+  const [novoPersonalTelefone, setNovoPersonalTelefone] = useState("");
+  const [novoPersonalSenha, setNovoPersonalSenha] = useState("");
+  const [alunoParaVincularId, setAlunoParaVincularId] = useState("");
+  const [erroEquipe, setErroEquipe] = useState("");
+  const [sucessoEquipe, setSucessoEquipe] = useState("");
+  const [salvandoEquipe, setSalvandoEquipe] = useState(false);
+  const alunos: AlunoPainel[] = (alunosQuery.data ?? []).map((aluno: AlunoResumoApi) => ({
+    id: aluno.id,
+    nome: aluno.nomeCompleto,
+    email: aluno.email,
+    telefone: aluno.telefone ?? "",
+    criadoEm: aluno.criadoEm ?? "",
+  }));
   const [alunoParaExcluir, setAlunoParaExcluir] = useState<AlunoPainel | null>(
     null,
   );
@@ -147,17 +232,31 @@ export default function Painel() {
   const [menuPerfilAberto, setMenuPerfilAberto] = useState(false);
   const [menuAlunoAberto, setMenuAlunoAberto] = useState<string | null>(null);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+  const [modalNovoAluno, setModalNovoAluno] = useState(false);
+  const [novoNome, setNovoNome] = useState("");
+  const [novoEmail, setNovoEmail] = useState("");
+  const [novoTelefone, setNovoTelefone] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarNovaSenha, setConfirmarNovaSenha] = useState("");
+  const [novaDataNascimento, setNovaDataNascimento] = useState("");
+  const [erroNovoAluno, setErroNovoAluno] = useState("");
+  const [infoNovoAluno, setInfoNovoAluno] = useState("");
+  const [dadosImportacao, setDadosImportacao] = useState<CadastroCompletoApi | null>(null);
+  const [carregandoAlunoId, setCarregandoAlunoId] = useState<string | null>(null);
 
   const inputImportarRef = useRef<HTMLInputElement>(null);
   const menuPerfilRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    carregarAlunos();
-  }, []);
-
-  useEffect(() => {
     localStorage.setItem("painel_tema", tema);
   }, [tema]);
+
+  useEffect(() => {
+    const personais = personaisQuery.data ?? [];
+    if (!personais.some(personal => personal.id === personalSelecionadoId)) {
+      setPersonalSelecionadoId(personais[0]?.id ?? "");
+    }
+  }, [personaisQuery.data, personalSelecionadoId]);
 
   useEffect(() => {
     function fecharMenus(event: MouseEvent) {
@@ -197,48 +296,65 @@ export default function Painel() {
     return alunos.filter(
       (aluno) =>
         aluno.nome.toLocaleLowerCase("pt-BR").includes(termo) ||
+        aluno.email.toLocaleLowerCase("pt-BR").includes(termo) ||
         aluno.id.toLowerCase().includes(termo),
     );
   }, [alunos, busca]);
 
-  function carregarAlunos() {
-    try {
-      const dadosSalvos = localStorage.getItem(CHAVE_ALUNOS);
-      setAlunos(dadosSalvos ? (JSON.parse(dadosSalvos) as AlunoPainel[]) : []);
-    } catch (erro) {
-      console.error("Erro ao carregar alunos:", erro);
-      setAlunos([]);
-    }
-  }
-
-  function salvarAlunos(lista: AlunoPainel[]) {
-    localStorage.setItem(CHAVE_ALUNOS, JSON.stringify(lista));
-    setAlunos(lista);
-  }
-
-  function criarAvaliacaoInicial(): Avaliacao {
-    const nova = structuredClone(initialState);
-    nova.treino = nova.treino.map((treino) => ({
-      ...treino,
-      id: crypto.randomUUID(),
-    }));
-    return nova;
-  }
-
   function criarAluno() {
-    const dadosIniciais = criarAvaliacaoInicial();
-    dadosIniciais.aluno.nomeCompleto = "Novo aluno";
+    setNovoNome("");
+    setNovoEmail("");
+    setNovoTelefone("");
+    setNovaSenha("");
+    setConfirmarNovaSenha("");
+    setNovaDataNascimento("");
+    setErroNovoAluno("");
+    setInfoNovoAluno("");
+    setDadosImportacao(null);
+    setModalNovoAluno(true);
+  }
 
-    const novoAluno: AlunoPainel = {
-      id: crypto.randomUUID(),
-      nome: "Novo aluno",
-      criadoEm: new Date().toISOString(),
-      dados: dadosIniciais,
-    };
-
-    salvarAlunos([...alunos, novoAluno]);
-    setSecaoAtual("alunos");
-    setBusca("");
+  async function confirmarCriacaoAluno(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErroNovoAluno("");
+    if (novaSenha.length < 12) {
+      setErroNovoAluno("A senha inicial deve possuir pelo menos 12 caracteres.");
+      return;
+    }
+    if (novaSenha !== confirmarNovaSenha) {
+      setErroNovoAluno("As senhas não coincidem.");
+      return;
+    }
+    try {
+      const alunoCriado = await cadastroService.criarAluno({
+        nomeCompleto: novoNome.trim(),
+        email: novoEmail.trim(),
+        telefone: novoTelefone.trim() || undefined,
+        senha: novaSenha,
+        dataNascimento: novaDataNascimento || undefined,
+      });
+      if (dadosImportacao) {
+        try {
+          const grupos = await cadastroService.listarGruposMusculares();
+          const fichaImportada = mapearCadastroParaAvaliacao(dadosImportacao, grupos);
+          fichaImportada.aluno.nomeCompleto = novoNome.trim();
+          fichaImportada.aluno.email = novoEmail.trim();
+          fichaImportada.aluno.telefone = novoTelefone.trim();
+          fichaImportada.aluno.dataNascimento = novaDataNascimento;
+          const ficha = clonarIdsFicha(fichaImportada);
+          await salvarFicha(alunoCriado.id, ficha);
+        } catch (error) {
+          alert(`A conta foi criada, mas a ficha importada não pôde ser restaurada: ${error instanceof ApiError ? error.message : "erro inesperado"}`);
+        }
+      }
+      await queryClient.invalidateQueries({ queryKey: ["alunos"] });
+      setModalNovoAluno(false);
+      setDadosImportacao(null);
+      setSecaoAtual("alunos");
+      setBusca("");
+    } catch (error) {
+      setErroNovoAluno(error instanceof ApiError ? error.message : "Não foi possível criar o aluno.");
+    }
   }
 
   function importarAluno(evento: React.ChangeEvent<HTMLInputElement>) {
@@ -252,20 +368,19 @@ export default function Painel() {
         const texto = e.target?.result;
         if (typeof texto !== "string") throw new Error("Arquivo inválido.");
 
-        const dados = JSON.parse(texto);
-        const nome =
-          dados?.aluno?.nome || dados?.aluno?.nomeCompleto || "Aluno sem nome";
-
-        const novoAluno: AlunoPainel = {
-          id: crypto.randomUUID(),
-          nome,
-          dados,
-          criadoEm: new Date().toISOString(),
-        };
-
-        salvarAlunos([...alunos, novoAluno]);
-        setSecaoAtual("alunos");
-        setBusca("");
+        const dados = JSON.parse(texto) as CadastroCompletoApi;
+        const nome = dados?.aluno?.nomeCompleto || "";
+        if (!nome || !dados?.aluno?.email || !Array.isArray(dados.treinos)) {
+          throw new Error("O JSON precisa conter nome e e-mail do aluno para criar a conta no servidor.");
+        }
+        setNovoNome(nome);
+        setNovoEmail(dados.aluno.email);
+        setNovoTelefone(dados.aluno.telefone ?? "");
+        setNovaDataNascimento(dados.aluno.dataNascimento?.slice(0, 10) ?? "");
+        setDadosImportacao(dados);
+        setInfoNovoAluno("A ficha será copiada para a nova conta após o cadastro. Os IDs internos serão recriados para não manter vínculos com o aluno original.");
+        setErroNovoAluno("");
+        setModalNovoAluno(true);
       } catch (erro) {
         console.error("Erro ao importar aluno:", erro);
         alert("Não foi possível importar o arquivo JSON.");
@@ -276,45 +391,130 @@ export default function Painel() {
     evento.target.value = "";
   }
 
-  function exportarAluno(aluno: AlunoPainel) {
-    const blob = new Blob([JSON.stringify(aluno.dados, null, 2)], {
+  async function exportarAluno(aluno: AlunoPainel) {
+    try {
+      const cadastro = await cadastroService.obterCadastro(aluno.id);
+      const blob = new Blob([JSON.stringify(cadastro, null, 2)], {
       type: "application/json",
-    });
+      });
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-    link.href = url;
-    link.download = `${aluno.nome || "aluno"}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    setMenuAlunoAberto(null);
+      link.href = url;
+      link.download = `${aluno.nome || "aluno"}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setMenuAlunoAberto(null);
+    } catch (error) {
+      alert(error instanceof ApiError ? error.message : "Não foi possível exportar a ficha.");
+    }
   }
 
-  function abrirAluno(aluno: AlunoPainel) {
-    localStorage.setItem("aluno_selecionado_id", aluno.id);
-    carregarAvaliacao(aluno.dados as Avaliacao);
-    navigate("/avaliacao1");
-  }
-
-  function excluirAluno() {
-    if (!alunoParaExcluir) return;
-
-    const novaLista = alunos.filter(
-      (aluno) => aluno.id !== alunoParaExcluir.id,
-    );
-
-    salvarAlunos(novaLista);
-
-    const alunoSelecionado = localStorage.getItem("aluno_selecionado_id");
-    if (alunoSelecionado === alunoParaExcluir.id) {
-      localStorage.removeItem("aluno_selecionado_id");
-      localStorage.removeItem("avaliacao_temp");
+  async function abrirAluno(aluno: AlunoPainel) {
+    if (alunoSelecionadoId === aluno.id) {
+      navigate("/avaliacoes");
+      return;
+    }
+    if (alunoSelecionadoId && alteracoesPendentes) {
+      const continuar = window.confirm(
+        `Há alterações não salvas na ficha de ${fichaAtual.aluno.nomeCompleto || "outro aluno"}. Se trocar agora, elas serão descartadas. Deseja continuar?`,
+      );
+      if (!continuar) return;
     }
 
-    setAlunoParaExcluir(null);
+    setCarregandoAlunoId(aluno.id);
+    try {
+      const [cadastro, grupos] = await Promise.all([
+        cadastroService.obterCadastro(aluno.id),
+        cadastroService.listarGruposMusculares(),
+      ]);
+      carregarAvaliacao(mapearCadastroParaAvaliacao(cadastro, grupos), aluno.id);
+      navigate("/avaliacoes");
+    } catch (error) {
+      alert(error instanceof ApiError ? error.message : "Não foi possível carregar a ficha do aluno.");
+    } finally {
+      setCarregandoAlunoId(null);
+    }
+  }
+
+  async function excluirAluno() {
+    if (!alunoParaExcluir) return;
+    try {
+      await cadastroService.excluirAluno(alunoParaExcluir.id);
+      await queryClient.invalidateQueries({ queryKey: ["alunos"] });
+      if (alunoSelecionadoId === alunoParaExcluir.id) setAlunoSelecionadoId(null);
+      setAlunoParaExcluir(null);
+    } catch (error) {
+      alert(error instanceof ApiError ? error.message : "Não foi possível excluir o aluno.");
+    }
+  }
+
+  async function criarPersonal(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErroEquipe("");
+    setSucessoEquipe("");
+    if (novoPersonalSenha.length < 12) {
+      setErroEquipe("A senha inicial do Personal deve possuir pelo menos 12 caracteres.");
+      return;
+    }
+
+    setSalvandoEquipe(true);
+    try {
+      const personal = await cadastroService.criarPersonal({
+        nomeCompleto: novoPersonalNome.trim(),
+        email: novoPersonalEmail.trim(),
+        telefone: novoPersonalTelefone.trim() || undefined,
+        senha: novoPersonalSenha,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["personais"] });
+      setPersonalSelecionadoId(personal.id);
+      setNovoPersonalNome("");
+      setNovoPersonalEmail("");
+      setNovoPersonalTelefone("");
+      setNovoPersonalSenha("");
+      setSucessoEquipe("Personal cadastrado com sucesso.");
+    } catch (error) {
+      setErroEquipe(error instanceof ApiError ? error.message : "Não foi possível cadastrar o Personal.");
+    } finally {
+      setSalvandoEquipe(false);
+    }
+  }
+
+  async function vincularAlunoEquipe(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErroEquipe("");
+    setSucessoEquipe("");
+    if (!personalSelecionadoId || !alunoParaVincularId) {
+      setErroEquipe("Selecione um Personal e um aluno.");
+      return;
+    }
+
+    setSalvandoEquipe(true);
+    try {
+      await cadastroService.vincularAluno(personalSelecionadoId, alunoParaVincularId);
+      await queryClient.invalidateQueries({ queryKey: ["personal-alunos", personalSelecionadoId] });
+      setAlunoParaVincularId("");
+      setSucessoEquipe("Aluno vinculado à equipe.");
+    } catch (error) {
+      setErroEquipe(error instanceof ApiError ? error.message : "Não foi possível criar o vínculo.");
+    } finally {
+      setSalvandoEquipe(false);
+    }
+  }
+
+  async function desativarVinculoEquipe(vinculoId: string) {
+    setErroEquipe("");
+    setSucessoEquipe("");
+    try {
+      await cadastroService.atualizarVinculo(vinculoId, false);
+      await queryClient.invalidateQueries({ queryKey: ["personal-alunos", personalSelecionadoId] });
+      setSucessoEquipe("Vínculo desativado. O histórico foi preservado.");
+    } catch (error) {
+      setErroEquipe(error instanceof ApiError ? error.message : "Não foi possível desativar o vínculo.");
+    }
   }
 
   function navegar(secao: string) {
@@ -325,6 +525,187 @@ export default function Painel() {
 
   const secaoSelecionada =
     secoes.find((secao) => secao.id === secaoAtual) ?? secoes[1];
+  // A navegação do MVP mostra apenas áreas concluídas; os módulos da ficha
+  // continuam acessíveis depois que um aluno é aberto.
+  const secoesVisiveis = secoes.filter(secao =>
+    secao.id === "inicio" ||
+    secao.id === "alunos" ||
+    (secao.id === "equipe" && user?.tipo === "ADMIN")
+  );
+
+  function renderEquipe() {
+    const personais = personaisQuery.data ?? [];
+    const vinculos = vinculosQuery.data ?? [];
+    const personalSelecionado = personais.find(personal => personal.id === personalSelecionadoId);
+    const alunosVinculados = vinculos
+      .map(vinculo => ({
+        vinculo,
+        aluno: alunos.find(aluno => aluno.id === vinculo.alunoId),
+      }))
+      .filter(item => item.aluno);
+    const alunosDisponiveis = alunos.filter(aluno =>
+      !vinculos.some(vinculo => vinculo.alunoId === aluno.id)
+    );
+
+    return (
+      <section className="w-full max-w-[1440px] space-y-6">
+        <div className="flex flex-col justify-between gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-text)]">
+              Workspace / Administração
+            </p>
+            <h1 className={"text-[28px] font-semibold tracking-[-0.045em] " + cores.heading}>
+              Gestão da equipe
+            </h1>
+            <p className={"mt-2 text-[13px] " + cores.bodyText}>
+              Cadastre profissionais com login próprio e escolha quais alunos cada um pode acompanhar. O acesso profissional é limitado aos alunos vinculados.
+            </p>
+          </div>
+          <span className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[11px] text-[var(--text-secondary)]">
+            {personais.length} {personais.length === 1 ? "profissional" : "profissionais"}
+          </span>
+        </div>
+
+        {erroEquipe && (
+          <p role="alert" className="rounded-lg border border-[var(--danger)]/20 bg-[var(--danger-soft)] px-4 py-3 text-[11px] text-[var(--danger)]">
+            {erroEquipe}
+          </p>
+        )}
+        {sucessoEquipe && (
+          <p role="status" className="rounded-lg border border-[var(--success)]/20 bg-[var(--success-soft)] px-4 py-3 text-[11px] text-[var(--success)]">
+            {sucessoEquipe}
+          </p>
+        )}
+        {personaisQuery.isError && (
+          <p role="alert" className="text-[11px] text-[var(--danger)]">
+            {personaisQuery.error instanceof ApiError ? personaisQuery.error.message : "Não foi possível carregar a equipe."}
+          </p>
+        )}
+
+        <div className="grid gap-5 xl:grid-cols-2">
+          <form onSubmit={criarPersonal} className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div>
+              <h2 className={"text-[15px] font-semibold " + cores.heading}>Novo Personal</h2>
+              <p className={"mt-1 text-[11px] " + cores.bodyText}>O profissional entra com este e-mail e senha. Ele não terá acesso à administração nem aos alunos de outros profissionais.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1.5 sm:col-span-2">
+                <span className={"text-[10px] font-semibold " + cores.bodyText}>Nome completo</span>
+                <input required minLength={2} maxLength={160} value={novoPersonalNome} onChange={event => setNovoPersonalNome(event.target.value)} className={"h-10 px-3 text-[12px] outline-none " + cores.input} />
+              </label>
+              <label className="grid gap-1.5 sm:col-span-2">
+                <span className={"text-[10px] font-semibold " + cores.bodyText}>E-mail</span>
+                <input required type="email" maxLength={254} value={novoPersonalEmail} onChange={event => setNovoPersonalEmail(event.target.value)} className={"h-10 px-3 text-[12px] outline-none " + cores.input} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className={"text-[10px] font-semibold " + cores.bodyText}>Telefone</span>
+                <input value={novoPersonalTelefone} onChange={event => setNovoPersonalTelefone(event.target.value)} className={"h-10 px-3 text-[12px] outline-none " + cores.input} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className={"text-[10px] font-semibold " + cores.bodyText}>Senha inicial</span>
+                <input required type="password" minLength={12} maxLength={128} value={novoPersonalSenha} onChange={event => setNovoPersonalSenha(event.target.value)} className={"h-10 px-3 text-[12px] outline-none " + cores.input} />
+              </label>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+              <span className={"text-[10px] " + cores.subtleText}>Mínimo de 12 caracteres</span>
+              <button disabled={salvandoEquipe} type="submit" className={"h-9 px-4 text-[11px] font-semibold disabled:opacity-50 " + cores.primaryButton}>
+                {salvandoEquipe ? "Salvando..." : "Cadastrar Personal"}
+              </button>
+            </div>
+          </form>
+
+          <form onSubmit={vincularAlunoEquipe} className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div>
+              <h2 className={"text-[15px] font-semibold " + cores.heading}>Vincular aluno</h2>
+              <p className={"mt-1 text-[11px] " + cores.bodyText}>Um aluno pode ter até três Personais ativos.</p>
+            </div>
+            <label className="grid gap-1.5">
+              <span className={"text-[10px] font-semibold " + cores.bodyText}>Personal responsável</span>
+              <select required value={personalSelecionadoId} onChange={event => setPersonalSelecionadoId(event.target.value)} className={"h-10 px-3 text-[12px] outline-none " + cores.input} disabled={!personais.length}>
+                <option value="">Selecione um Personal</option>
+                {personais.map(personal => (
+                  <option key={personal.id} value={personal.id}>{personal.nomeCompleto}</option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1.5">
+              <span className={"text-[10px] font-semibold " + cores.bodyText}>Aluno</span>
+              <select required value={alunoParaVincularId} onChange={event => setAlunoParaVincularId(event.target.value)} className={"h-10 px-3 text-[12px] outline-none " + cores.input} disabled={!personalSelecionadoId || !alunosDisponiveis.length}>
+                <option value="">Selecione um aluno</option>
+                {alunosDisponiveis.map(aluno => (
+                  <option key={aluno.id} value={aluno.id}>{aluno.nome} · {aluno.email}</option>
+                ))}
+              </select>
+            </label>
+            <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+              <span className={"text-[10px] " + cores.subtleText}>{alunosDisponiveis.length} alunos disponíveis para este Personal</span>
+              <button disabled={salvandoEquipe || !personalSelecionadoId || !alunoParaVincularId} type="submit" className={"h-9 px-4 text-[11px] font-semibold disabled:opacity-50 " + cores.primaryButton}>
+                Vincular aluno
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[minmax(240px,0.75fr)_minmax(0,1.5fr)]">
+          <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+            <div className="border-b border-[var(--border)] px-4 py-3">
+              <h2 className={"text-[12px] font-semibold " + cores.heading}>Profissionais cadastrados</h2>
+            </div>
+            {personaisQuery.isLoading ? (
+              <p className={"p-4 text-[11px] " + cores.subtleText}>Carregando profissionais...</p>
+            ) : personais.length === 0 ? (
+              <p className={"p-4 text-[11px] " + cores.subtleText}>Nenhum Personal cadastrado.</p>
+            ) : (
+              <div className="divide-y divide-[var(--border)]">
+                {personais.map(personal => {
+                  const ativo = personal.id === personalSelecionadoId;
+                  return (
+                    <button key={personal.id} type="button" onClick={() => setPersonalSelecionadoId(personal.id)} className={"w-full px-4 py-3 text-left transition " + (ativo ? "bg-[var(--accent-soft)]" : "hover:bg-[var(--row-hover)]")}>
+                      <span className={"block text-[12px] font-semibold " + (ativo ? "text-[var(--accent-text)]" : cores.heading)}>{personal.nomeCompleto}</span>
+                      <span className={"mt-1 block truncate text-[10px] " + cores.subtleText}>{personal.email}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+            <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+              <div>
+                <h2 className={"text-[12px] font-semibold " + cores.heading}>Alunos vinculados</h2>
+                <p className={"mt-0.5 text-[10px] " + cores.subtleText}>{personalSelecionado?.nomeCompleto ?? "Selecione um profissional"}</p>
+              </div>
+              <span className={"text-[10px] " + cores.subtleText}>{alunosVinculados.length} ativos</span>
+            </div>
+            {vinculosQuery.isLoading && personalSelecionadoId ? (
+              <p className={"p-4 text-[11px] " + cores.subtleText}>Carregando vínculos...</p>
+            ) : vinculosQuery.isError ? (
+              <p role="alert" className="p-4 text-[11px] text-[var(--danger)]">
+                {vinculosQuery.error instanceof ApiError ? vinculosQuery.error.message : "Não foi possível carregar os vínculos."}
+              </p>
+            ) : alunosVinculados.length === 0 ? (
+              <p className={"p-4 text-[11px] " + cores.subtleText}>Este Personal ainda não possui alunos ativos.</p>
+            ) : (
+              <div className="divide-y divide-[var(--border)]">
+                {alunosVinculados.map(({ vinculo, aluno }) => (
+                  <div key={vinculo.id} className="flex flex-col justify-between gap-3 px-4 py-3 sm:flex-row sm:items-center">
+                    <div className="min-w-0">
+                      <p className={"truncate text-[12px] font-semibold " + cores.heading}>{aluno!.nome}</p>
+                      <p className={"mt-0.5 truncate text-[10px] " + cores.subtleText}>{aluno!.email}</p>
+                    </div>
+                    <button type="button" onClick={() => void desativarVinculoEquipe(vinculo.id)} className="self-start rounded-md border border-[var(--border)] px-3 py-2 text-[10px] font-semibold text-[var(--danger)] transition hover:bg-[var(--danger-soft)] sm:self-auto">
+                      Desativar vínculo
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </section>
+    );
+  }
 
   function renderAlunos() {
     return (
@@ -390,7 +771,7 @@ export default function Painel() {
               <p
                 className={`mt-0.5 text-[20px] font-semibold tracking-[-0.04em] ${cores.heading}`}
               >
-                {alunos.length}
+                {alunosQuery.isLoading ? "—" : alunos.length}
               </p>
             </div>
           </div>
@@ -420,7 +801,7 @@ export default function Painel() {
                 Armazenamento
               </p>
               <p className={`mt-1 text-[13px] font-semibold ${cores.heading}`}>
-                Neste dispositivo
+                PostgreSQL
               </p>
             </div>
           </div>
@@ -460,7 +841,17 @@ export default function Painel() {
           </div>
 
           {/* Lista vazia */}
-          {alunos.length === 0 ? (
+          {alunosQuery.isLoading ? (
+            <div className="flex min-h-[240px] items-center justify-center gap-3 text-[12px] text-[var(--text-muted)]">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent)]" />
+              Carregando alunos do servidor...
+            </div>
+          ) : alunosQuery.isError ? (
+            <div className="flex min-h-[240px] flex-col items-center justify-center px-6 text-center">
+              <p className="text-[13px] font-semibold text-[var(--danger)]">Não foi possível carregar os alunos.</p>
+              <button onClick={() => void alunosQuery.refetch()} className={`mt-3 h-9 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}>Tentar novamente</button>
+            </div>
+          ) : alunos.length === 0 ? (
             <div className="flex min-h-[300px] flex-col items-center justify-center px-5 py-10 text-center">
               <span className="grid h-14 w-14 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <BsPeople className="text-2xl" />
@@ -561,7 +952,7 @@ export default function Painel() {
                         onClick={() => abrirAluno(aluno)}
                         className="inline-flex h-9 min-w-[112px] items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-[11px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
                       >
-                        Abrir ficha
+                        {user?.tipo === "PERSONAL" ? "Assumir atendimento" : "Abrir ficha"}
                         <BsArrowUpRight />
                       </button>
 
@@ -589,18 +980,21 @@ export default function Painel() {
                               Exportar JSON
                             </button>
 
-                            <div className="my-1 border-t border-[var(--border)]" />
-
-                            <button
-                              onClick={() => {
-                                setAlunoParaExcluir(aluno);
-                                setMenuAlunoAberto(null);
-                              }}
-                              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
-                            >
-                              <BsTrash3 />
-                              Excluir aluno
-                            </button>
+                            {user?.tipo === "ADMIN" && (
+                              <>
+                                <div className="my-1 border-t border-[var(--border)]" />
+                                <button
+                                  onClick={() => {
+                                    setAlunoParaExcluir(aluno);
+                                    setMenuAlunoAberto(null);
+                                  }}
+                                  className="flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                                >
+                                  <BsTrash3 />
+                                  Excluir aluno
+                                </button>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
@@ -614,7 +1008,7 @@ export default function Painel() {
 
         {/* Rodapé */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[10px] text-[var(--text-muted)]">
-          <span>Os registros são armazenados localmente neste navegador.</span>
+          <span>Os cadastros são armazenados no PostgreSQL.</span>
 
           <span>
             {alunos.length}{" "}
@@ -720,11 +1114,11 @@ export default function Painel() {
             <p
               className={`mt-4 text-[17px] font-semibold tracking-[-0.03em] ${cores.heading}`}
             >
-              Local
+              Servidor
             </p>
 
             <p className="mt-1 text-[10px] text-[var(--text-muted)]">
-              Dados neste navegador
+              Dados sincronizados com o PostgreSQL
             </p>
           </div>
         </div>
@@ -860,7 +1254,7 @@ export default function Painel() {
                         onClick={() => abrirAluno(aluno)}
                         className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent-text)]"
                       >
-                        Abrir <BsArrowUpRight />
+                        {user?.tipo === "PERSONAL" ? "Assumir" : "Abrir"} <BsArrowUpRight />
                       </button>
                     </div>
                   ))}
@@ -875,27 +1269,27 @@ export default function Painel() {
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-[var(--warning)]" />
                 <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                  Desenvolvimento
+                  MVP disponível
                 </span>
               </div>
 
               <h2 className={`mt-4 text-[15px] font-semibold ${cores.heading}`}>
-                Seu workspace está evoluindo.
+                Sua rotina de treinamento em um só lugar.
               </h2>
 
               <p className={`mt-2 text-[11px] leading-5 ${cores.bodyText}`}>
-                Novas funcionalidades de gestão, acompanhamento e análise de
-                desempenho serão disponibilizadas gradualmente.
+                Cadastre alunos, monte avaliações físicas, prescreva treinos,
+                organize a periodização e acompanhe a execução das séries.
               </p>
 
               <div className="mt-5 border-t border-[var(--border)] pt-4">
                 <span className="text-[10px] text-[var(--text-muted)]">
-                  Estado atual
+                  Módulos disponíveis
                 </span>
                 <p
                   className={`mt-1 text-[11px] font-semibold ${cores.heading}`}
                 >
-                  Gestão de alunos disponível
+                  Ficha completa e equipe
                 </p>
               </div>
             </div>
@@ -973,11 +1367,7 @@ export default function Painel() {
       case "alunos":
         return renderAlunos();
       case "equipe":
-        return renderSecaoVazia(
-          "Equipe",
-          "Gestão de profissionais, treinadores e permissões de acesso.",
-          <FaPeopleGroup />,
-        );
+        return user?.tipo === "ADMIN" ? renderEquipe() : renderAlunos();
       case "avaliacoes":
         return renderSecaoVazia(
           "Avaliações",
@@ -1076,7 +1466,7 @@ export default function Painel() {
               </p>
 
               <div className="space-y-0.5">
-                {secoes
+                {secoesVisiveis
                   .filter((secao) => secao.grupo === grupo)
                   .map((secao) => {
                     const ativo = secaoAtual === secao.id;
@@ -1114,10 +1504,10 @@ export default function Painel() {
             className={`flex items-center gap-2 text-[10px] ${cores.bodyText}`}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
-            Ambiente local
+            {import.meta.env.DEV ? "Ambiente local" : "Ambiente publicado"}
           </div>
           <p className={`mt-1 text-[9px] ${cores.subtleText}`}>
-            Versão de desenvolvimento
+            {import.meta.env.DEV ? "Versão de desenvolvimento" : "Versão de produção"}
           </p>
         </div>
       </aside>
@@ -1187,12 +1577,12 @@ export default function Painel() {
                 className="flex h-8 items-center gap-2 rounded-lg border-l border-[var(--border)] pl-3 text-left"
               >
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--surface-tertiary)] text-[10px] font-semibold text-[var(--text-primary)]">
-                  P
+                  {(user?.nome?.[0] ?? "U").toUpperCase()}
                 </span>
                 <span
                   className={`hidden text-[11px] font-semibold sm:block ${cores.bodyText}`}
                 >
-                  Personal
+                  {user?.nome ?? "Usuário"}
                 </span>
               </button>
 
@@ -1200,28 +1590,24 @@ export default function Painel() {
                 <div className="absolute right-0 top-10 z-40 w-56 rounded-xl border border-[var(--border)] bg-[var(--menu-bg)] py-2 shadow-lg">
                   <div className="border-b border-[var(--border)] px-4 pb-3">
                     <p className={`text-[12px] font-semibold ${cores.heading}`}>
-                      Personal
+                      {user?.nome ?? "Usuário"}
                     </p>
                     <p className={`mt-0.5 text-[10px] ${cores.subtleText}`}>
-                      Administrador
+                      {user?.tipo === "ADMIN" ? "Administrador" : "Personal trainer"}
                     </p>
                   </div>
-
-                  <button
-                    onClick={() => {
-                      navegar("configuracoes");
-                      setMenuPerfilAberto(false);
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-left text-[11px] text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
-                  >
-                    <BsGear /> Configurações
-                  </button>
 
                   <button
                     onClick={() => setMenuPerfilAberto(false)}
                     className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                   >
                     <BsX /> Fechar menu
+                  </button>
+                  <button
+                    onClick={() => void logout()}
+                    className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                  >
+                    <BsX /> Sair da conta
                   </button>
                 </div>
               )}
@@ -1264,7 +1650,7 @@ export default function Painel() {
                     {grupo}
                   </p>
 
-                  {secoes
+                  {secoesVisiveis
                     .filter((secao) => secao.grupo === grupo)
                     .map((secao) => {
                       const ativo = secaoAtual === secao.id;
@@ -1306,9 +1692,71 @@ export default function Painel() {
 
         <footer className="flex min-h-9 items-center justify-between border-t border-[var(--border)] bg-[var(--header)] px-4 text-[9px] text-[var(--text-muted)] sm:px-7">
           <span>G. Fernando · Gestão de treinamento</span>
-          <span>Dados armazenados localmente</span>
+          <span>Dados sincronizados com o servidor</span>
         </footer>
       </div>
+
+      {modalNovoAluno && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setModalNovoAluno(false);
+          }}
+        >
+          <form
+            onSubmit={confirmarCriacaoAluno}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-novo-aluno"
+            className="w-full max-w-[500px] rounded-2xl border border-[var(--border)] bg-[var(--modal-bg)] p-6 shadow-2xl"
+          >
+            <div className="mb-5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--accent-text)]">Cadastro no servidor</p>
+              <h2 id="titulo-novo-aluno" className={`mt-1 text-[20px] font-semibold ${cores.heading}`}>Novo aluno</h2>
+              <p className={`mt-2 text-[11px] leading-5 ${cores.bodyText}`}>
+                A conta será criada no PostgreSQL. Para um Personal, o vínculo com sua equipe será feito automaticamente.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1.5 sm:col-span-2">
+                <span className={`text-[10px] font-semibold ${cores.bodyText}`}>Nome completo</span>
+                <input required minLength={2} value={novoNome} onChange={event => setNovoNome(event.target.value)} className={`h-10 px-3 text-[12px] outline-none ${cores.input}`} />
+              </label>
+              <label className="grid gap-1.5 sm:col-span-2">
+                <span className={`text-[10px] font-semibold ${cores.bodyText}`}>E-mail</span>
+                <input required type="email" value={novoEmail} onChange={event => setNovoEmail(event.target.value)} className={`h-10 px-3 text-[12px] outline-none ${cores.input}`} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className={`text-[10px] font-semibold ${cores.bodyText}`}>Telefone</span>
+                <input value={novoTelefone} onChange={event => setNovoTelefone(event.target.value)} className={`h-10 px-3 text-[12px] outline-none ${cores.input}`} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className={`text-[10px] font-semibold ${cores.bodyText}`}>Data de nascimento</span>
+                <input type="date" value={novaDataNascimento} onChange={event => setNovaDataNascimento(event.target.value)} className={`h-10 px-3 text-[12px] outline-none ${cores.input}`} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className={`text-[10px] font-semibold ${cores.bodyText}`}>Senha inicial</span>
+                <input required type="password" minLength={12} value={novaSenha} onChange={event => setNovaSenha(event.target.value)} className={`h-10 px-3 text-[12px] outline-none ${cores.input}`} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className={`text-[10px] font-semibold ${cores.bodyText}`}>Confirmar senha</span>
+                <input required type="password" minLength={12} value={confirmarNovaSenha} onChange={event => setConfirmarNovaSenha(event.target.value)} className={`h-10 px-3 text-[12px] outline-none ${cores.input}`} />
+              </label>
+            </div>
+
+            <p className={`mt-3 text-[10px] ${cores.subtleText}`}>A senha inicial deve ter ao menos 12 caracteres. Combine a senha com o aluno por um canal seguro.</p>
+            {erroNovoAluno && <p role="alert" className="mt-3 rounded-lg bg-[var(--danger-soft)] px-3 py-2 text-[11px] text-[var(--danger)]">{erroNovoAluno}</p>}
+            {infoNovoAluno && <p className="mt-3 rounded-lg bg-[var(--accent-soft)] px-3 py-2 text-[11px] text-[var(--accent-text)]">{infoNovoAluno}</p>}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setModalNovoAluno(false)} className={`h-9 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}>Cancelar</button>
+              <button type="submit" className={`h-9 px-4 text-[11px] font-semibold ${cores.primaryButton}`}>Criar conta</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {alunoParaExcluir && (
         <div
@@ -1350,8 +1798,7 @@ export default function Painel() {
                 {alunoParaExcluir.nome}
               </p>
               <p className={`mt-3 text-[11px] leading-5 ${cores.bodyText}`}>
-                Os dados deste aluno serão removidos da lista armazenada neste
-                navegador. Esta ação não poderá ser desfeita.
+                O cadastro e os dados vinculados deste aluno serão removidos do banco de dados. Esta ação não poderá ser desfeita.
               </p>
             </div>
 

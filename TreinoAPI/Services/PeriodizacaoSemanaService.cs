@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.Periodizacao;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -22,7 +23,7 @@ public class PeriodizacaoSemanaService
             .FirstOrDefaultAsync(p => p.Id == periodizacaoId);
 
         if (periodizacao == null)
-            throw new Exception("Periodização não encontrada");
+            throw DomainException.NotFound("Periodização não encontrada.");
 
         var semana = new PeriodizacaoSemana
         {

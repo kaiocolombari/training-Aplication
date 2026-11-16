@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.Perimetro;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -22,7 +23,7 @@ public class PerimetroService
             .FirstOrDefaultAsync(a => a.Id == avaliacaoId);
 
         if (avaliacao == null)
-            throw new Exception("Avaliação não encontrada");
+            throw DomainException.NotFound("Avaliação não encontrada.");
 
         var perimetro = new Perimetro
         {

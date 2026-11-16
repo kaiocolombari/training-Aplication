@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.DTOs.CargaExercicio;
 using TreinoAPI.Data;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -22,7 +23,7 @@ public class CargaExercicioService
             .FirstOrDefaultAsync(t => t.Id == testeCargaId);
 
         if (testeCarga == null)
-            throw new Exception("Teste de carga não encontrado");
+            throw DomainException.NotFound("Teste de carga não encontrado.");
 
         var cargaExercicio = new CargaExercicio
         {

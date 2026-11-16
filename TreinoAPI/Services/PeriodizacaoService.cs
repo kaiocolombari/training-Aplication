@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.Periodizacao;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -22,13 +23,13 @@ public class PeriodizacaoService
             .FirstOrDefaultAsync(a => a.Id == alunoId);
 
         if (aluno == null)
-            throw new Exception("Aluno não encontrado");
+            throw DomainException.NotFound("Aluno não encontrado.");
 
         var periodizacao = new Periodizacao
         {
             AlunoId = alunoId,
             Nome = dto.Nome,
-            DataInicio = dto.DataInicio
+            DataInicio = DateTime.SpecifyKind(dto.DataInicio.Date, DateTimeKind.Utc)
         };
 
         _context.Periodizacoes.Add(periodizacao);
@@ -83,7 +84,7 @@ public class PeriodizacaoService
             return null;
 
         periodizacao.Nome = dto.Nome;
-        periodizacao.DataInicio = dto.DataInicio;
+        periodizacao.DataInicio = DateTime.SpecifyKind(dto.DataInicio.Date, DateTimeKind.Utc);
 
         await _context.SaveChangesAsync();
 

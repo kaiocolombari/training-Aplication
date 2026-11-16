@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useAuth } from "../context/authContext";
+import { ApiError } from "../service/api";
 import "../../app.css";
 
 type Mode = "signup" | "login";
@@ -38,6 +40,8 @@ function EyeIcon() {
 }
 
 export default function Register() {
+    const navigate = useNavigate();
+    const { login, registerStudent } = useAuth();
     const [mode, setMode] = useState<Mode>("login");
 
     const [nome, setNome] = useState("");
@@ -50,6 +54,7 @@ export default function Register() {
     const [message, setMessage] = useState("");
 
     const [mostrarSenha, setMostrarSenha] = useState(false);
+    const [enviando, setEnviando] = useState(false);
 
     const isSignup = mode === "signup";
 
@@ -60,33 +65,48 @@ export default function Register() {
         setMostrarSenha(false);
     }
 
-    function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
         setErro("");
         setMessage("");
+        setEnviando(true);
 
-        if (isSignup) {
-            if (!nome || !email || !telefone || !senha || !confirmarSenha) {
-                setErro("Preencha todos os campos.");
-                return;
+        try {
+            if (isSignup) {
+                if (!nome.trim() || !email.trim() || !senha || !confirmarSenha) {
+                    setErro("Preencha nome, e-mail e senha.");
+                    return;
+                }
+                if (senha !== confirmarSenha) {
+                    setErro("As senhas não coincidem.");
+                    return;
+                }
+                if (senha.length < 12) {
+                    setErro("A senha deve possuir pelo menos 12 caracteres.");
+                    return;
+                }
+
+                await registerStudent({
+                    nomeCompleto: nome.trim(),
+                    email: email.trim(),
+                    telefone: telefone.trim() || undefined,
+                    senha,
+                });
+            } else {
+                if (!email.trim() || !senha) {
+                    setErro("Informe seu e-mail e senha.");
+                    return;
+                }
+                await login({ email: email.trim(), senha });
             }
 
-            if (senha !== confirmarSenha) {
-                setErro("As senhas não coincidem.");
-                return;
-            }
-
-            if (senha.length < 6) {
-                setErro("A senha deve possuir pelo menos 6 caracteres.");
-                return;
-            }
-
-            setMessage("O cadastro de alunos depende da disponibilização do endpoint de auto cadastro na API.");
-            return;
+            navigate("/", { replace: true });
+        } catch (error) {
+            setErro(error instanceof ApiError ? error.message : "Não foi possível concluir o acesso. Tente novamente.");
+        } finally {
+            setEnviando(false);
         }
-
-        setMessage("A autenticação depende da validação de senha e da emissão de token pela API.");
     }
 
     return (
@@ -320,8 +340,8 @@ export default function Register() {
                                         value={senha}
                                         onChange={(e) => setSenha(e.target.value)}
                                         autoComplete={isSignup ? "new-password" : "current-password"}
-                                        placeholder="Mínimo de 6 caracteres"
-                                        minLength={6}
+                                        placeholder={isSignup ? "Mínimo de 12 caracteres" : "Sua senha"}
+                                        minLength={isSignup ? 12 : undefined}
                                         required
                                         className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13px] text-[14px] text-zinc-700 outline-none transition placeholder:text-[13px] placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white"
                                     />
@@ -416,9 +436,10 @@ export default function Register() {
 
                         <button
                             type="submit"
-                            className="mt-[22px] flex w-full items-center justify-center gap-4 rounded-xl border border-[#a85f60] bg-[#a85f60] px-[21px] py-[11px] text-[11px] font-extrabold tracking-wide text-white shadow-[0_12px_28px_rgba(168,95,96,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#914f50] hover:shadow-[0_16px_34px_rgba(145,79,80,0.25)]"
+                            disabled={enviando}
+                            className="mt-[22px] flex w-full items-center justify-center gap-4 rounded-xl border border-[#a85f60] bg-[#a85f60] px-[21px] py-[11px] text-[11px] font-extrabold tracking-wide text-white shadow-[0_12px_28px_rgba(168,95,96,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#914f50] hover:shadow-[0_16px_34px_rgba(145,79,80,0.25)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {isSignup ? "Criar conta de aluno" : "Entrar na plataforma"}
+                            {enviando ? "Aguarde..." : isSignup ? "Criar conta de aluno" : "Entrar na plataforma"}
 
                             <span className="text-base font-normal">→</span>
                         </button>

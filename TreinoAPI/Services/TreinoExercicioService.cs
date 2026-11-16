@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.Exercicio;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -17,7 +18,7 @@ public class TreinoExercicioService
     public async Task<List<TreinoExercicioDTO>> ListarPorTreino(Guid treinoId)
     {
         var treinoExercicios = await _context.TreinosExercicios
-            .Where(te => te.TreinoId == treinoId)
+            .Where(te => te.TreinoId == treinoId && te.Treino.Ativo)
             .Include(te => te.Variacoes)
             .OrderBy(te => te.Ordem)
             .ToListAsync();
@@ -29,7 +30,7 @@ public class TreinoExercicioService
     {
         var treinoExercicio = await _context.TreinosExercicios
             .Include(te => te.Variacoes)
-            .FirstOrDefaultAsync(te => te.TreinoId == treinoId && te.Id == id);
+            .FirstOrDefaultAsync(te => te.TreinoId == treinoId && te.Id == id && te.Treino.Ativo);
 
         if (treinoExercicio == null)
             return null;
@@ -42,10 +43,10 @@ public class TreinoExercicioService
         CriarTreinoExercicioDTO dto)
     {
         var treino = await _context.Treinos
-            .FirstOrDefaultAsync(t => t.Id == treinoId);
+            .FirstOrDefaultAsync(t => t.Id == treinoId && t.Ativo);
 
         if (treino == null)
-            throw new Exception("Treino não encontrado");
+            throw DomainException.NotFound("Treino não encontrado.");
 
         var treinoExercicio = new TreinoExercicio
         {
@@ -77,7 +78,7 @@ public class TreinoExercicioService
     {
         var treinoExercicio = await _context.TreinosExercicios
             .Include(te => te.Variacoes)
-            .FirstOrDefaultAsync(te => te.TreinoId == treinoId && te.Id == id);
+            .FirstOrDefaultAsync(te => te.TreinoId == treinoId && te.Id == id && te.Treino.Ativo);
 
         if (treinoExercicio == null)
             return null;
@@ -131,7 +132,7 @@ public class TreinoExercicioService
     public async Task<bool> Deletar(Guid treinoId, Guid id)
     {
         var treinoExercicio = await _context.TreinosExercicios
-            .FirstOrDefaultAsync(te => te.TreinoId == treinoId && te.Id == id);
+            .FirstOrDefaultAsync(te => te.TreinoId == treinoId && te.Id == id && te.Treino.Ativo);
 
         if (treinoExercicio == null)
             return false;

@@ -35,9 +35,12 @@ public class TreinoService
         };
     }
 
-    public async Task<List<TreinoDTO>> Listar()
+    public async Task<List<TreinoDTO>> Listar(IEnumerable<Guid> alunoIds)
     {
+        var ids = alunoIds.Distinct().ToArray();
         return await _context.Treinos
+            .AsNoTracking()
+            .Where(t => ids.Contains(t.AlunoId) && t.Ativo)
             .Include(t => t.Aluno)
             .Select(t => new TreinoDTO
             {
@@ -52,7 +55,7 @@ public class TreinoService
     {
         var treino = await _context.Treinos
             .Include(t => t.Aluno)
-            .FirstOrDefaultAsync(t => t.Id == id);
+            .FirstOrDefaultAsync(t => t.Id == id && t.Ativo);
 
         if (treino == null)
         {
@@ -70,7 +73,7 @@ public class TreinoService
 
     public async Task<bool> Atualizar(Guid id, AtualizarTreinoDTO dto)
     {
-        var treino = await _context.Treinos.FindAsync(id);
+        var treino = await _context.Treinos.FirstOrDefaultAsync(t => t.Id == id && t.Ativo);
 
         if (treino == null)
         {
@@ -87,14 +90,18 @@ public class TreinoService
 
     public async Task<bool> Deletar(Guid id)
     {
-        var treino = await _context.Treinos.FindAsync(id);
+        var treino = await _context.Treinos.FirstOrDefaultAsync(t => t.Id == id && t.Ativo);
 
         if (treino == null)
         {
             return false;
         }
 
-        _context.Treinos.Remove(treino);
+        treino.Ativo = false;
+        var vinculos = await _context.DiaTreinos
+            .Where(d => d.TreinoId == id)
+            .ToListAsync();
+        _context.DiaTreinos.RemoveRange(vinculos);
         await _context.SaveChangesAsync();
 
         return true;

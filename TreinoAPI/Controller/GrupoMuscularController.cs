@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TreinoAPI.DTOs.GrupoMuscular;
 using TreinoAPI.Services;
@@ -5,66 +6,39 @@ using TreinoAPI.Services;
 namespace TreinoAPI.Controllers;
 
 [ApiController]
+[Authorize(Roles = "PERSONAL,ADMIN")]
 [Route("api/grupos-musculares")]
-public class GrupoMuscularController : ControllerBase
+public sealed class GrupoMuscularController : ControllerBase
 {
     private readonly GrupoMuscularService _service;
 
-    public GrupoMuscularController(
-        GrupoMuscularService service)
-    {
-        _service = service;
-    }
+    public GrupoMuscularController(GrupoMuscularService service) => _service = service;
 
+    [Authorize(Roles = "ADMIN")]
     [HttpPost]
-    public async Task<IActionResult> Criar(
-        CriarGrupoMuscularDTO dto)
-    {
-        var resultado = await _service.Criar(dto);
-
-        return Ok(resultado);
-    }
+    public async Task<IActionResult> Criar([FromBody] CriarGrupoMuscularDTO dto) =>
+        Ok(await _service.Criar(dto));
 
     [HttpGet]
-    public async Task<IActionResult> Listar()
-    {
-        var resultado = await _service.Listar();
+    public async Task<IActionResult> Listar() => Ok(await _service.Listar());
 
-        return Ok(resultado);
-    }
-
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
-        var resultado = await _service.ObterPorId(id);
-
-        if (resultado == null)
-            return NotFound("Grupo muscular não encontrado");
-
-        return Ok(resultado);
+        var result = await _service.ObterPorId(id);
+        return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Atualizar(
-        Guid id,
-        AtualizarGrupoMuscularDTO dto)
+    [Authorize(Roles = "ADMIN")]
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Atualizar(Guid id, [FromBody] AtualizarGrupoMuscularDTO dto)
     {
-        var resultado = await _service.Atualizar(id, dto);
-
-        if (resultado == null)
-            return NotFound("Grupo muscular não encontrado");
-
-        return Ok(resultado);
+        var result = await _service.Atualizar(id, dto);
+        return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Deletar(Guid id)
-    {
-        var sucesso = await _service.Deletar(id);
-
-        if (!sucesso)
-            return NotFound("Grupo muscular não encontrado");
-
-        return NoContent();
-    }
+    [Authorize(Roles = "ADMIN")]
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Deletar(Guid id) =>
+        await _service.Deletar(id) ? NoContent() : NotFound();
 }

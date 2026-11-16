@@ -6,6 +6,7 @@ namespace TreinoAPI.Model
         public Guid AlunoId { get; set; }
         public string Nome { get; set; } = string.Empty;
         public DateTime CriadoEm { get; set; }
+        public bool Ativo { get; set; } = true;
         public Aluno Aluno { get; set; } = null!;
         public ICollection<TreinoExercicio> TreinoExercicios { get; set; } = new List<TreinoExercicio>();
     }

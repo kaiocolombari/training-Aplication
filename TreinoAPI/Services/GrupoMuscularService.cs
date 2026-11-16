@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.GrupoMuscular;
 using TreinoAPI.Model;
+using TreinoAPI.Security;
 
 namespace TreinoAPI.Services;
 
@@ -17,9 +18,13 @@ public class GrupoMuscularService
     public async Task<GrupoMuscularDTO> Criar(
         CriarGrupoMuscularDTO dto)
     {
+        var nome = dto.Nome!.Trim();
+        if (await _context.GruposMusculares.AnyAsync(g => (g.Nome ?? string.Empty).ToLower() == nome.ToLower()))
+            throw DomainException.Conflict("Já existe um grupo muscular com esse nome.");
+
         var grupo = new GrupoMuscular
         {
-            Nome = dto.Nome
+            Nome = nome
         };
 
         _context.GruposMusculares.Add(grupo);
@@ -61,7 +66,11 @@ public class GrupoMuscularService
         if (grupo == null)
             return null;
 
-        grupo.Nome = dto.Nome;
+        var nome = dto.Nome!.Trim();
+        if (await _context.GruposMusculares.AnyAsync(g => g.Id != id && (g.Nome ?? string.Empty).ToLower() == nome.ToLower()))
+            throw DomainException.Conflict("Já existe um grupo muscular com esse nome.");
+
+        grupo.Nome = nome;
 
         await _context.SaveChangesAsync();
 

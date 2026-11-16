@@ -1,20 +1,25 @@
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.TesteCarga;
+using TreinoAPI.Security;
 using TreinoAPI.Services;
 
 namespace TreinoAPI.Controllers;
 
 [ApiController]
+[Authorize(Roles = "PERSONAL,ADMIN")]
 [Route("api/[controller]")]
 public class TesteCargaController : ControllerBase
 {
     private readonly TesteCargaService _service;
+    private readonly OwnershipService _ownership;
 
-    public TesteCargaController(TesteCargaService service)
+    public TesteCargaController(TesteCargaService service, OwnershipService ownership)
     {
         _service = service;
+        _ownership = ownership;
     }
 
     [HttpPost("{alunoId}")]
@@ -22,6 +27,7 @@ public class TesteCargaController : ControllerBase
         Guid alunoId,
         CriarTesteCargaDTO dto)
     {
+        await _ownership.EnsureAlunoAccessAsync(alunoId);
         var testeCarga = await _service.Criar(alunoId, dto);
 
         return CreatedAtAction(
@@ -34,7 +40,8 @@ public class TesteCargaController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
-        var testesCarga = await _service.Listar();
+        var ids = await _ownership.GetAccessibleAlunoIdsAsync();
+        var testesCarga = await _service.Listar(ids);
 
         return Ok(testesCarga);
     }
@@ -42,6 +49,7 @@ public class TesteCargaController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
+        await _ownership.EnsureTesteCargaAccessAsync(id);
         var testeCarga = await _service.ObterPorId(id);
 
         if (testeCarga == null)
@@ -53,6 +61,7 @@ public class TesteCargaController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Atualizar(Guid id, AtualizarTesteCargaDTO dto)
     {
+        await _ownership.EnsureTesteCargaAccessAsync(id);
         var testeCarga = await _service.Atualizar(id, dto);
 
         if (testeCarga == null)
@@ -64,6 +73,7 @@ public class TesteCargaController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Deletar(Guid id)
     {
+        await _ownership.EnsureTesteCargaAccessAsync(id);
         var sucesso = await _service.Deletar(id);
 
         if (!sucesso)

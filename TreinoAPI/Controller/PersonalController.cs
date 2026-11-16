@@ -1,11 +1,13 @@
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using TreinoAPI.DTOs.Personal;
 using TreinoAPI.Services;
 
 namespace TreinoAPI.Controllers;
 
 [ApiController]
+[Authorize(Roles = "ADMIN")]
 [Route("api/[controller]")]
 public class PersonalController : ControllerBase
 {
