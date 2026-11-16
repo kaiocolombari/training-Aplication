@@ -30,7 +30,7 @@ public sealed class CadastroAlunoService
 
         var aluno = await _db.Alunos
             .Include(a => a.SolicitacaoCadastro)
-            .FirstOrDefaultAsync(a => a.UsuarioId == _current.UsuarioId);
+            .FirstOrDefaultAsync(a => a.UsuarioId == _current.UsuarioId && a.Usuario.Ativo);
 
         if (aluno is null)
             throw DomainException.NotFound("Cadastro de aluno não encontrado.");
@@ -52,7 +52,7 @@ public sealed class CadastroAlunoService
     {
         var alunos = await _db.Alunos
             .AsNoTracking()
-            .Where(a => a.StatusCadastro == StatusCadastroAluno.PENDENTE)
+            .Where(a => a.Usuario.Ativo && a.StatusCadastro == StatusCadastroAluno.PENDENTE)
             .Include(a => a.Usuario)
             .Include(a => a.SolicitacaoCadastro)
             .OrderBy(a => a.CriadoEm)
@@ -75,7 +75,7 @@ public sealed class CadastroAlunoService
 
     public async Task<object> ObterResumoPendentesAsync()
     {
-        var pendentes = _db.Alunos.Where(a => a.StatusCadastro == StatusCadastroAluno.PENDENTE);
+        var pendentes = _db.Alunos.Where(a => a.Usuario.Ativo && a.StatusCadastro == StatusCadastroAluno.PENDENTE);
         var total = await pendentes.CountAsync();
         var enviados = await pendentes.CountAsync(a => a.SolicitacaoCadastro != null);
         return new { total, enviados, aguardandoFormulario = total - enviados };
@@ -84,16 +84,17 @@ public sealed class CadastroAlunoService
     public async Task AprovarAsync(Guid alunoId, Guid? personalIdSolicitado)
     {
         var personalId = _current.Role == "PERSONAL"
-            ? await _db.Personais.Where(p => p.UsuarioId == _current.UsuarioId).Select(p => (Guid?)p.Id).FirstOrDefaultAsync()
+            ? await _db.Personais.Where(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo)
+                .Select(p => (Guid?)p.Id).FirstOrDefaultAsync()
             : personalIdSolicitado;
 
-        if (!personalId.HasValue || !await _db.Personais.AnyAsync(p => p.Id == personalId.Value))
+        if (!personalId.HasValue || !await _db.Personais.AnyAsync(p => p.Id == personalId.Value && p.Usuario!.Ativo))
             throw DomainException.BadRequest("Informe um personal válido para vincular o aluno.");
 
         await using var transaction = await _db.Database.BeginTransactionAsync();
         var aluno = await _db.Alunos
             .Include(a => a.SolicitacaoCadastro)
-            .FirstOrDefaultAsync(a => a.Id == alunoId);
+            .FirstOrDefaultAsync(a => a.Id == alunoId && a.Usuario.Ativo);
 
         if (aluno is null)
             throw DomainException.NotFound("Aluno não encontrado.");
@@ -105,7 +106,8 @@ public sealed class CadastroAlunoService
         if (vinculoExistente?.Ativo == true)
             throw DomainException.Conflict("Este aluno já está vinculado ao personal selecionado.");
 
-        var vinculosAtivos = await _db.PersonalAlunos.CountAsync(pa => pa.AlunoId == alunoId && pa.Ativo);
+        var vinculosAtivos = await _db.PersonalAlunos.CountAsync(pa =>
+            pa.AlunoId == alunoId && pa.Ativo && pa.Personal.Usuario!.Ativo);
         if (vinculosAtivos >= 3)
             throw DomainException.Conflict("O aluno já possui o limite de 3 personais ativos.");
 

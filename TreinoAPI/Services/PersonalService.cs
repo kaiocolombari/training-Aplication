@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
+using TreinoAPI.DTOs;
 using TreinoAPI.DTOs.Personal;
 using TreinoAPI.Model;
 using TreinoAPI.Security;
@@ -10,11 +11,19 @@ public class PersonalService
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwords;
+    private readonly ComunicacaoService _comunicacao;
+    private readonly AuditoriaService _auditoria;
 
-    public PersonalService(AppDbContext context, PasswordService passwords)
+    public PersonalService(
+        AppDbContext context,
+        PasswordService passwords,
+        ComunicacaoService comunicacao,
+        AuditoriaService auditoria)
     {
         _context = context;
         _passwords = passwords;
+        _comunicacao = comunicacao;
+        _auditoria = auditoria;
     }
 
     public async Task<PersonalDTO> Criar(CriarPersonalDTO dto)
@@ -49,6 +58,7 @@ public class PersonalService
         return await _context.Personais
             .AsNoTracking()
             .Include(p => p.Usuario)
+            .Where(p => p.Usuario!.Ativo)
             .Select(p => new PersonalDTO
             {
                 Id = p.Id,
@@ -65,7 +75,7 @@ public class PersonalService
         var personal = await _context.Personais
             .AsNoTracking()
             .Include(p => p.Usuario)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p => p.Id == id && p.Usuario!.Ativo);
 
         return personal is null ? null : Mapear(personal, personal.Usuario!);
     }
@@ -74,7 +84,7 @@ public class PersonalService
     {
         var personal = await _context.Personais
             .Include(p => p.Usuario)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p => p.Id == id && p.Usuario!.Ativo);
 
         if (personal is null || personal.Usuario is null)
             return null;
@@ -98,14 +108,105 @@ public class PersonalService
         return Mapear(personal, personal.Usuario);
     }
 
-    public async Task<bool> Deletar(Guid id)
+    public async Task<PersonalExclusaoResumoDTO> ObterResumoExclusao(Guid id)
     {
-        var personal = await _context.Personais.FirstOrDefaultAsync(p => p.Id == id);
-        if (personal is null)
+        var personal = await _context.Personais.AsNoTracking()
+            .Include(p => p.Usuario)
+            .FirstOrDefaultAsync(p => p.Id == id && p.Usuario!.Ativo)
+            ?? throw DomainException.NotFound("Personal não encontrado.");
+
+        var alunos = await _context.PersonalAlunos.AsNoTracking()
+            .Where(pa => pa.PersonalId == id && pa.Ativo && pa.Aluno.Usuario.Ativo)
+            .OrderBy(pa => pa.Aluno.NomeCompleto)
+            .Select(pa => new AlunoAfetadoExclusaoDTO
+            {
+                Id = pa.AlunoId,
+                NomeCompleto = pa.Aluno.NomeCompleto,
+                Email = pa.Aluno.Usuario.Email,
+                OutrosPersonaisAtivos = _context.PersonalAlunos.Count(outro =>
+                    outro.AlunoId == pa.AlunoId && outro.Ativo && outro.PersonalId != id &&
+                    outro.Personal.Usuario!.Ativo)
+            })
+            .ToListAsync();
+
+        return new PersonalExclusaoResumoDTO
+        {
+            Id = personal.Id,
+            NomeCompleto = personal.Nome,
+            Email = personal.Usuario!.Email,
+            TotalAlunos = alunos.Count,
+            AlunosQueFicaraoSemPersonal = alunos.Count(aluno => aluno.OutrosPersonaisAtivos == 0),
+            Alunos = alunos
+        };
+    }
+
+    public async Task<bool> Deletar(Guid id, MotivoOperacaoDTO? dto)
+    {
+        var motivo = MotivoOperacaoHelper.Formatar(dto);
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        var personal = await _context.Personais
+            .Include(p => p.Usuario)
+            .FirstOrDefaultAsync(p => p.Id == id && p.Usuario!.Ativo);
+        if (personal?.Usuario is null)
             return false;
 
-        _context.Personais.Remove(personal);
+        var vinculos = await _context.PersonalAlunos
+            .Include(pa => pa.Aluno).ThenInclude(a => a.Usuario)
+            .Where(pa => pa.PersonalId == id && pa.Ativo && pa.Aluno.Usuario.Ativo)
+            .ToListAsync();
+
+        foreach (var vinculo in vinculos)
+            vinculo.Ativo = false;
+
+        personal.Usuario.Ativo = false;
+        var tokens = await _context.RefreshTokens
+            .Where(token => token.UsuarioId == personal.UsuarioId && token.RevogadoEm == null)
+            .ToListAsync();
+        foreach (var token in tokens)
+            token.RevogadoEm = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
+
+        foreach (var vinculo in vinculos)
+        {
+            var outrosPersonais = await _context.PersonalAlunos.CountAsync(outro =>
+                outro.AlunoId == vinculo.AlunoId && outro.Ativo && outro.Personal.Usuario!.Ativo);
+
+            if (outrosPersonais == 0)
+            {
+                var mensagem = $"O personal {personal.Nome} foi removido da equipe. No momento você não possui nenhum personal ativo. Entre em contato com a administração para retomar seu acompanhamento. Motivo: {motivo}";
+                await _comunicacao.NotificarUsuarioAsync(
+                    vinculo.Aluno.UsuarioId,
+                    "Você está sem acompanhamento",
+                    mensagem,
+                    "ALERTA_ACOMPANHAMENTO",
+                    vinculo.AlunoId);
+                await _comunicacao.NotificarAdministradoresAsync(
+                    "Aluno sem personal ativo",
+                    $"{vinculo.Aluno.NomeCompleto} ficou sem nenhum personal ativo após a desativação de {personal.Nome}. Motivo: {motivo}",
+                    "ALERTA_ACOMPANHAMENTO",
+                    vinculo.AlunoId);
+            }
+            else
+            {
+                await _comunicacao.NotificarUsuarioAsync(
+                    vinculo.Aluno.UsuarioId,
+                    "Personal removido da equipe",
+                    $"O personal {personal.Nome} foi removido da sua equipe. Você ainda possui {outrosPersonais} personal(is) ativo(s).",
+                    "VINCULO_REMOVIDO",
+                    vinculo.AlunoId);
+            }
+        }
+
+        var nomes = string.Join(", ", vinculos.Select(vinculo => vinculo.Aluno.NomeCompleto).Take(8));
+        if (vinculos.Count > 8)
+            nomes += $" e mais {vinculos.Count - 8}";
+        var resumo = $"Personal {personal.Nome} desativado. Alunos afetados: {vinculos.Count}. Lista: {nomes}. Motivo: {motivo}";
+        await _auditoria.RegistrarOperacaoDetalhadaAsync(
+            "EXCLUSAO_PERSONAL", "DELETE", $"/api/Personal/{id}", id, resumo);
+
+        await transaction.CommitAsync();
         return true;
     }
 

@@ -39,6 +39,7 @@ public sealed class RelatoriosService
             !a.TestesCarga.Any() &&
             !a.Periodizacoes.Any());
         var pendentes = _db.Alunos.Where(a => a.StatusCadastro == StatusCadastroAluno.PENDENTE);
+        pendentes = pendentes.Where(a => a.Usuario.Ativo);
         var totalPendentes = await pendentes.CountAsync();
         var aguardandoFormulario = await pendentes.CountAsync(a => a.SolicitacaoCadastro == null);
         var treinosAtivos = await _db.Treinos.CountAsync(t => alunoIdsAprovados.Contains(t.AlunoId) && t.Ativo);

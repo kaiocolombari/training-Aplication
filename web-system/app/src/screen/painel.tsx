@@ -31,6 +31,7 @@ import {
 import { FaPeopleGroup, FaRegCircleQuestion } from "react-icons/fa6";
 import { VscFeedback } from "react-icons/vsc";
 import { IoChatbubblesSharp } from "react-icons/io5";
+import { TbUserStar } from "react-icons/tb";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
 import { useNavigate } from "react-router";
@@ -41,6 +42,8 @@ import {
     salvarFicha,
     type AlunoResumoApi,
     type CadastroCompletoApi,
+    type PersonalResumoApi,
+    type PersonalExclusaoResumoApi,
 } from "../service/cadastroService";
 import type { Avaliacao } from "../types/avaliacao";
 import { useAuth } from "../context/authContext";
@@ -80,6 +83,17 @@ interface AlunoPainel {
     statusCadastro: string;
     possuiFichaTecnica: boolean;
 }
+
+const MOTIVOS_OPERACAO = [
+    ["DIRETRIZES", "Quebra das diretrizes"],
+    ["SOLICITACAO_USUARIO", "Solicitação do próprio usuário (mobile)"],
+    ["DUPLICIDADE", "Cadastro duplicado"],
+    ["ENCERRAMENTO_ADMINISTRATIVO", "Encerramento administrativo"],
+    ["SOLICITACAO_PERSONAL", "Solicitação do próprio personal"],
+    ["SOLICITACAO_ALUNO", "Solicitação do aluno"],
+    ["REORGANIZACAO_EQUIPE", "Reorganização da equipe"],
+    ["OUTRO", "Outro motivo"],
+] as const;
 
 function clonarIdsFicha(ficha: Avaliacao): Avaliacao {
     const idsTreino = new Map<string, string>();
@@ -141,7 +155,7 @@ const secoes = [
         grupo: "Workspace",
         icone: <FaPeopleGroup />,
     },
-    { id: "indicadores", nome: "Indicadores da equipe", grupo: "Workspace", icone: <BsBarChart /> },
+    { id: "indicadores", nome: "Indicadores da equipe", grupo: "Workspace", icone: <TbUserStar /> },
     {
         id: "avaliacoes",
         nome: "Avaliações",
@@ -323,6 +337,18 @@ export default function Painel() {
     const [erroEquipe, setErroEquipe] = useState("");
     const [sucessoEquipe, setSucessoEquipe] = useState("");
     const [salvandoEquipe, setSalvandoEquipe] = useState(false);
+    const [personalParaExcluir, setPersonalParaExcluir] = useState<PersonalResumoApi | null>(null);
+    const [resumoExclusaoPersonal, setResumoExclusaoPersonal] =
+        useState<PersonalExclusaoResumoApi | null>(null);
+    const [carregandoResumoExclusao, setCarregandoResumoExclusao] = useState(false);
+    const [vinculoParaDesvincular, setVinculoParaDesvincular] = useState<{
+        id: string;
+        alunoNome: string;
+        personalNome: string;
+    } | null>(null);
+    const [motivoExclusao, setMotivoExclusao] = useState("ENCERRAMENTO_ADMINISTRATIVO");
+    const [detalheExclusao, setDetalheExclusao] = useState("");
+    const [executandoExclusao, setExecutandoExclusao] = useState(false);
     const alunos: AlunoPainel[] = (alunosQuery.data ?? []).map((aluno: AlunoResumoApi) => ({
         id: aluno.id,
         nome: aluno.nomeCompleto,
@@ -392,6 +418,8 @@ export default function Painel() {
                 setMenuAlunoAberto(null);
                 setMenuMobileAberto(false);
                 setAlunoParaExcluir(null);
+                setPersonalParaExcluir(null);
+                setVinculoParaDesvincular(null);
             }
         }
 
@@ -585,14 +613,76 @@ export default function Painel() {
 
     async function excluirAluno() {
         if (!alunoParaExcluir) return;
+        setExecutandoExclusao(true);
         try {
-            await cadastroService.excluirAluno(alunoParaExcluir.id);
+            await cadastroService.excluirAluno(alunoParaExcluir.id, {
+                motivo: motivoExclusao,
+                detalhe: detalheExclusao.trim() || undefined,
+            });
             await queryClient.invalidateQueries({ queryKey: ["alunos"] });
             await queryClient.invalidateQueries({ queryKey: ["relatorios"] });
             if (alunoSelecionadoId === alunoParaExcluir.id) setAlunoSelecionadoId(null);
             setAlunoParaExcluir(null);
+            setDetalheExclusao("");
+            setSucessoEquipe("Conta do aluno desativada. O histórico foi preservado.");
         } catch (error) {
             alert(error instanceof ApiError ? error.message : "Não foi possível excluir o aluno.");
+        } finally {
+            setExecutandoExclusao(false);
+        }
+    }
+
+    async function abrirConfirmacaoExclusaoPersonal(personal: PersonalResumoApi) {
+        setPersonalParaExcluir(personal);
+        setResumoExclusaoPersonal(null);
+        setCarregandoResumoExclusao(true);
+        setMotivoExclusao("ENCERRAMENTO_ADMINISTRATIVO");
+        setDetalheExclusao("");
+        try {
+            const resumo = await cadastroService.obterResumoExclusaoPersonal(personal.id);
+            setResumoExclusaoPersonal(resumo);
+        } catch (error) {
+            setPersonalParaExcluir(null);
+            alert(
+                error instanceof ApiError
+                    ? error.message
+                    : "Não foi possível consultar os alunos vinculados a este Personal.",
+            );
+        } finally {
+            setCarregandoResumoExclusao(false);
+        }
+    }
+
+    async function excluirPersonal() {
+        if (!personalParaExcluir || !resumoExclusaoPersonal || carregandoResumoExclusao) return;
+        setExecutandoExclusao(true);
+        try {
+            await cadastroService.excluirPersonal(personalParaExcluir.id, {
+                motivo: motivoExclusao,
+                detalhe: detalheExclusao.trim() || undefined,
+            });
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["personais"] }),
+                queryClient.invalidateQueries({ queryKey: ["alunos"] }),
+                queryClient.invalidateQueries({ queryKey: ["relatorios"] }),
+                queryClient.invalidateQueries({ queryKey: ["personal-alunos"] }),
+                queryClient.invalidateQueries({ queryKey: ["comunicacao", "notificacoes"] }),
+            ]);
+            if (personalSelecionadoId === personalParaExcluir.id) setPersonalSelecionadoId("");
+            setPersonalParaExcluir(null);
+            setResumoExclusaoPersonal(null);
+            setDetalheExclusao("");
+            setSucessoEquipe(
+                "Personal desativado. Os históricos e as fichas dos alunos foram preservados.",
+            );
+        } catch (error) {
+            alert(
+                error instanceof ApiError
+                    ? error.message
+                    : "Não foi possível desativar o Personal.",
+            );
+        } finally {
+            setExecutandoExclusao(false);
         }
     }
 
@@ -657,19 +747,33 @@ export default function Painel() {
         }
     }
 
-    async function desativarVinculoEquipe(vinculoId: string) {
+    async function confirmarDesvinculacaoEquipe() {
+        if (!vinculoParaDesvincular) return;
         setErroEquipe("");
         setSucessoEquipe("");
+        setExecutandoExclusao(true);
         try {
-            await cadastroService.atualizarVinculo(vinculoId, false);
-            await queryClient.invalidateQueries({
-                queryKey: ["personal-alunos", personalSelecionadoId],
+            await cadastroService.desvincularAluno(vinculoParaDesvincular.id, {
+                motivo: motivoExclusao,
+                detalhe: detalheExclusao.trim() || undefined,
             });
-            setSucessoEquipe("Vínculo desativado. O histórico foi preservado.");
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: ["personal-alunos", personalSelecionadoId],
+                }),
+                queryClient.invalidateQueries({ queryKey: ["comunicacao", "notificacoes"] }),
+            ]);
+            setVinculoParaDesvincular(null);
+            setDetalheExclusao("");
+            setSucessoEquipe(
+                "Vínculo encerrado. O histórico foi preservado e os envolvidos foram notificados.",
+            );
         } catch (error) {
             setErroEquipe(
-                error instanceof ApiError ? error.message : "Não foi possível desativar o vínculo.",
+                error instanceof ApiError ? error.message : "Não foi possível encerrar o vínculo.",
             );
+        } finally {
+            setExecutandoExclusao(false);
         }
     }
 
@@ -777,6 +881,7 @@ export default function Painel() {
                 <div className="grid gap-5 xl:grid-cols-2">
                     <form
                         onSubmit={criarPersonal}
+                        autoComplete="off"
                         className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
                     >
                         <div>
@@ -797,6 +902,7 @@ export default function Painel() {
                                     required
                                     minLength={2}
                                     maxLength={160}
+                                    autoComplete="off"
                                     value={novoPersonalNome}
                                     onChange={event => setNovoPersonalNome(event.target.value)}
                                     className={"h-10 px-3 text-[12px] outline-none " + cores.input}
@@ -810,6 +916,7 @@ export default function Painel() {
                                     required
                                     type="email"
                                     maxLength={254}
+                                    autoComplete="off"
                                     value={novoPersonalEmail}
                                     onChange={event => setNovoPersonalEmail(event.target.value)}
                                     className={"h-10 px-3 text-[12px] outline-none " + cores.input}
@@ -820,6 +927,7 @@ export default function Painel() {
                                     Telefone
                                 </span>
                                 <input
+                                    autoComplete="off"
                                     value={novoPersonalTelefone}
                                     onChange={event => setNovoPersonalTelefone(event.target.value)}
                                     className={"h-10 px-3 text-[12px] outline-none " + cores.input}
@@ -834,6 +942,7 @@ export default function Painel() {
                                     type="password"
                                     minLength={12}
                                     maxLength={128}
+                                    autoComplete="new-password"
                                     value={novoPersonalSenha}
                                     onChange={event => setNovoPersonalSenha(event.target.value)}
                                     className={"h-10 px-3 text-[12px] outline-none " + cores.input}
@@ -860,6 +969,7 @@ export default function Painel() {
 
                     <form
                         onSubmit={vincularAlunoEquipe}
+                        autoComplete="off"
                         className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
                     >
                         <div>
@@ -946,40 +1056,60 @@ export default function Painel() {
                                 Nenhum Personal cadastrado.
                             </p>
                         ) : (
-                            <div className="divide-y divide-[var(--border)]">
+                            <div className="ui-stagger divide-y divide-[var(--border)]">
                                 {personais.map(personal => {
                                     const ativo = personal.id === personalSelecionadoId;
                                     return (
-                                        <button
+                                        <div
                                             key={personal.id}
-                                            type="button"
-                                            onClick={() => setPersonalSelecionadoId(personal.id)}
                                             className={
-                                                "w-full px-4 py-3 text-left transition " +
+                                                "flex items-center gap-2 px-3 py-2 transition " +
                                                 (ativo
                                                     ? "bg-[var(--accent-soft)]"
                                                     : "hover:bg-[var(--row-hover)]")
                                             }
                                         >
-                                            <span
-                                                className={
-                                                    "block text-[12px] font-semibold " +
-                                                    (ativo
-                                                        ? "text-[var(--accent-text)]"
-                                                        : cores.heading)
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setPersonalSelecionadoId(personal.id)
                                                 }
+                                                className="min-w-0 flex-1 px-1 py-2 text-left"
                                             >
-                                                {personal.nomeCompleto}
-                                            </span>
-                                            <span
-                                                className={
-                                                    "mt-1 block truncate text-[10px] " +
-                                                    cores.subtleText
+                                                <span
+                                                    className={
+                                                        "block truncate text-[12px] font-semibold " +
+                                                        (ativo
+                                                            ? "text-[var(--accent-text)]"
+                                                            : cores.heading)
+                                                    }
+                                                >
+                                                    {personal.nomeCompleto}
+                                                </span>
+                                                <span
+                                                    className={
+                                                        "mt-1 block truncate text-[10px] " +
+                                                        cores.subtleText
+                                                    }
+                                                >
+                                                    {personal.email}
+                                                </span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    void abrirConfirmacaoExclusaoPersonal(personal)
                                                 }
+                                                disabled={
+                                                    executandoExclusao || carregandoResumoExclusao
+                                                }
+                                                aria-label={`Desativar ${personal.nomeCompleto}`}
+                                                title="Desativar Personal"
+                                                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[var(--danger)] transition hover:bg-[var(--danger-soft)] disabled:opacity-40"
                                             >
-                                                {personal.email}
-                                            </span>
-                                        </button>
+                                                <BsTrash3 />
+                                            </button>
+                                        </div>
                                     );
                                 })}
                             </div>
@@ -1043,10 +1173,20 @@ export default function Painel() {
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={() => void desativarVinculoEquipe(vinculo.id)}
+                                            onClick={() => {
+                                                setMotivoExclusao("ENCERRAMENTO_ADMINISTRATIVO");
+                                                setDetalheExclusao("");
+                                                setVinculoParaDesvincular({
+                                                    id: vinculo.id,
+                                                    alunoNome: aluno!.nome,
+                                                    personalNome:
+                                                        personalSelecionado?.nomeCompleto ??
+                                                        "Personal",
+                                                });
+                                            }}
                                             className="self-start rounded-md border border-[var(--border)] px-3 py-2 text-[10px] font-semibold text-[var(--danger)] transition hover:bg-[var(--danger-soft)] sm:self-auto"
                                         >
-                                            Desativar vínculo
+                                            Desvincular aluno
                                         </button>
                                     </div>
                                 ))}
@@ -1463,12 +1603,16 @@ export default function Painel() {
                                                                 <button
                                                                     onClick={() => {
                                                                         setAlunoParaExcluir(aluno);
+                                                                        setMotivoExclusao(
+                                                                            "ENCERRAMENTO_ADMINISTRATIVO",
+                                                                        );
+                                                                        setDetalheExclusao("");
                                                                         setMenuAlunoAberto(null);
                                                                     }}
                                                                     className="flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                                                                 >
                                                                     <BsTrash3 />
-                                                                    Excluir aluno
+                                                                    Desativar conta
                                                                 </button>
                                                             </>
                                                         )}
@@ -2631,6 +2775,7 @@ export default function Painel() {
                 >
                     <form
                         onSubmit={confirmarCriacaoAluno}
+                        autoComplete="off"
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="titulo-novo-aluno"
@@ -2660,6 +2805,7 @@ export default function Painel() {
                                 <input
                                     required
                                     minLength={2}
+                                    autoComplete="off"
                                     value={novoNome}
                                     onChange={event => setNovoNome(event.target.value)}
                                     className={`h-10 px-3 text-[12px] outline-none ${cores.input}`}
@@ -2672,6 +2818,7 @@ export default function Painel() {
                                 <input
                                     required
                                     type="email"
+                                    autoComplete="off"
                                     value={novoEmail}
                                     onChange={event => setNovoEmail(event.target.value)}
                                     className={`h-10 px-3 text-[12px] outline-none ${cores.input}`}
@@ -2682,6 +2829,7 @@ export default function Painel() {
                                     Telefone
                                 </span>
                                 <input
+                                    autoComplete="off"
                                     value={novoTelefone}
                                     onChange={event => setNovoTelefone(event.target.value)}
                                     className={`h-10 px-3 text-[12px] outline-none ${cores.input}`}
@@ -2693,6 +2841,7 @@ export default function Painel() {
                                 </span>
                                 <input
                                     type="date"
+                                    autoComplete="off"
                                     value={novaDataNascimento}
                                     onChange={event => setNovaDataNascimento(event.target.value)}
                                     className={`h-10 px-3 text-[12px] outline-none ${cores.input}`}
@@ -2706,6 +2855,7 @@ export default function Painel() {
                                     required
                                     type="password"
                                     minLength={12}
+                                    autoComplete="new-password"
                                     value={novaSenha}
                                     onChange={event => setNovaSenha(event.target.value)}
                                     className={`h-10 px-3 text-[12px] outline-none ${cores.input}`}
@@ -2719,6 +2869,7 @@ export default function Painel() {
                                     required
                                     type="password"
                                     minLength={12}
+                                    autoComplete="new-password"
                                     value={confirmarNovaSenha}
                                     onChange={event => setConfirmarNovaSenha(event.target.value)}
                                     className={`h-10 px-3 text-[12px] outline-none ${cores.input}`}
@@ -2780,13 +2931,13 @@ export default function Painel() {
                         <div className="mb-5 flex items-start justify-between">
                             <div>
                                 <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--danger)]">
-                                    Ação permanente
+                                    Desativação de conta
                                 </p>
                                 <h2
                                     id="titulo-excluir-aluno"
                                     className={`mt-1 text-[19px] font-semibold tracking-[-0.03em] ${cores.heading}`}
                                 >
-                                    Excluir aluno?
+                                    Desativar aluno?
                                 </h2>
                             </div>
 
@@ -2803,23 +2954,334 @@ export default function Painel() {
                                 {alunoParaExcluir.nome}
                             </p>
                             <p className={`mt-3 text-[11px] leading-5 ${cores.bodyText}`}>
-                                O cadastro e os dados vinculados deste aluno serão removidos do
-                                banco de dados. Esta ação não poderá ser desfeita.
+                                A conta será desativada e o acesso será bloqueado. Avaliações,
+                                anamneses, treinos, execuções e histórico serão preservados. Os
+                                Personais vinculados serão avisados da remoção do aluno.
                             </p>
+                            <div className="mt-4 grid gap-2">
+                                <label
+                                    className={`grid gap-1.5 text-[10px] font-semibold ${cores.bodyText}`}
+                                >
+                                    Motivo da desativação
+                                    <select
+                                        value={motivoExclusao}
+                                        onChange={event => setMotivoExclusao(event.target.value)}
+                                        className={`h-10 rounded-lg px-3 text-[11px] ${cores.input}`}
+                                    >
+                                        {MOTIVOS_OPERACAO.map(([valor, rotulo]) => (
+                                            <option key={valor} value={valor}>
+                                                {rotulo}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <label
+                                    className={`grid gap-1.5 text-[10px] font-semibold ${cores.bodyText}`}
+                                >
+                                    Detalhes (opcional; obrigatório para "Outro")
+                                    <textarea
+                                        value={detalheExclusao}
+                                        onChange={event => setDetalheExclusao(event.target.value)}
+                                        maxLength={500}
+                                        rows={2}
+                                        className={`resize-y rounded-lg px-3 py-2 text-[11px] ${cores.input}`}
+                                    />
+                                </label>
+                            </div>
                         </div>
 
                         <div className="mt-5 flex justify-end gap-2">
                             <button
-                                onClick={() => setAlunoParaExcluir(null)}
+                                onClick={() => {
+                                    setAlunoParaExcluir(null);
+                                    setDetalheExclusao("");
+                                }}
                                 className={`h-9 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={excluirAluno}
+                                disabled={
+                                    executandoExclusao ||
+                                    (motivoExclusao === "OUTRO" && !detalheExclusao.trim())
+                                }
+                                aria-busy={executandoExclusao}
                                 className="h-9 rounded-lg bg-[var(--danger)] px-4 text-[11px] font-semibold text-white hover:brightness-95"
                             >
-                                Excluir registro
+                                {executandoExclusao ? "Desativando..." : "Desativar conta"}
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            )}
+
+            {personalParaExcluir && (
+                <div
+                    className="ui-modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-[var(--overlay)] p-4"
+                    role="presentation"
+                    onMouseDown={event => {
+                        if (event.target === event.currentTarget && !executandoExclusao) {
+                            setPersonalParaExcluir(null);
+                            setResumoExclusaoPersonal(null);
+                        }
+                    }}
+                >
+                    <section
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="titulo-desativar-personal"
+                        className="flex max-h-[90vh] w-full max-w-[560px] flex-col rounded-2xl border border-[var(--border)] bg-[var(--modal-bg)] p-6 shadow-2xl"
+                    >
+                        <div className="mb-4 flex items-start justify-between gap-3">
+                            <div>
+                                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--danger)]">
+                                    Desativação administrativa
+                                </p>
+                                <h2
+                                    id="titulo-desativar-personal"
+                                    className={`mt-1 text-[19px] font-semibold ${cores.heading}`}
+                                >
+                                    Desativar Personal?
+                                </h2>
+                                <p className={`mt-1 text-[11px] ${cores.bodyText}`}>
+                                    {personalParaExcluir.nomeCompleto} · {personalParaExcluir.email}
+                                </p>
+                            </div>
+                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--danger-soft)] text-[var(--danger)]">
+                                <BsTrash3 />
+                            </span>
+                        </div>
+
+                        {carregandoResumoExclusao ? (
+                            <LoadingState
+                                label="Consultando alunos vinculados..."
+                                className="min-h-28"
+                            />
+                        ) : resumoExclusaoPersonal ? (
+                            <>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="rounded-lg border border-[var(--border)] p-3">
+                                        <p className={`text-[10px] ${cores.subtleText}`}>
+                                            Alunos vinculados
+                                        </p>
+                                        <p
+                                            className={`mt-1 text-xl font-semibold ${cores.heading}`}
+                                        >
+                                            {resumoExclusaoPersonal.totalAlunos}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-3">
+                                        <p className="text-[10px] text-amber-700">
+                                            Ficarão sem Personal
+                                        </p>
+                                        <p className="mt-1 text-xl font-semibold text-amber-700">
+                                            {resumoExclusaoPersonal.alunosQueFicaraoSemPersonal}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-lg border border-[var(--border)]">
+                                    <div className="sticky top-0 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+                                        <p
+                                            className={`text-[10px] font-semibold ${cores.bodyText}`}
+                                        >
+                                            Alunos afetados por esta desativação
+                                        </p>
+                                    </div>
+                                    {resumoExclusaoPersonal.alunos.length === 0 ? (
+                                        <p className={`p-3 text-[11px] ${cores.subtleText}`}>
+                                            Este Personal não possui alunos ativos vinculados.
+                                        </p>
+                                    ) : (
+                                        <ul className="divide-y divide-[var(--border)]">
+                                            {resumoExclusaoPersonal.alunos.map(aluno => (
+                                                <li
+                                                    key={aluno.id}
+                                                    className="flex items-center justify-between gap-3 px-3 py-2.5"
+                                                >
+                                                    <span className="min-w-0">
+                                                        <span
+                                                            className={`block truncate text-[11px] font-semibold ${cores.heading}`}
+                                                        >
+                                                            {aluno.nomeCompleto}
+                                                        </span>
+                                                        <span
+                                                            className={`mt-0.5 block truncate text-[10px] ${cores.subtleText}`}
+                                                        >
+                                                            {aluno.email}
+                                                        </span>
+                                                    </span>
+                                                    <span
+                                                        className={`shrink-0 text-right text-[9px] ${aluno.outrosPersonaisAtivos > 0 ? "text-[var(--success)]" : "text-amber-700"}`}
+                                                    >
+                                                        {aluno.outrosPersonaisAtivos > 0
+                                                            ? `${aluno.outrosPersonaisAtivos} outro(s) Personal(is)`
+                                                            : "Sem outro Personal"}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                                <p className={`mt-3 text-[10px] leading-5 ${cores.bodyText}`}>
+                                    A conta e os vínculos ativos serão desativados, mas fichas,
+                                    avaliações, treinos e histórico permanecerão no banco. Alunos
+                                    que ficarem sem acompanhamento e a administração receberão
+                                    alertas.
+                                </p>
+                                <div className="mt-3 grid gap-2">
+                                    <label
+                                        className={`grid gap-1.5 text-[10px] font-semibold ${cores.bodyText}`}
+                                    >
+                                        Motivo da desativação
+                                        <select
+                                            value={motivoExclusao}
+                                            onChange={event =>
+                                                setMotivoExclusao(event.target.value)
+                                            }
+                                            className={`h-10 rounded-lg px-3 text-[11px] ${cores.input}`}
+                                        >
+                                            {MOTIVOS_OPERACAO.map(([valor, rotulo]) => (
+                                                <option key={valor} value={valor}>
+                                                    {rotulo}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <label
+                                        className={`grid gap-1.5 text-[10px] font-semibold ${cores.bodyText}`}
+                                    >
+                                        Detalhes (opcional; obrigatório para "Outro")
+                                        <textarea
+                                            value={detalheExclusao}
+                                            onChange={event =>
+                                                setDetalheExclusao(event.target.value)
+                                            }
+                                            maxLength={500}
+                                            rows={2}
+                                            className={`resize-y rounded-lg px-3 py-2 text-[11px] ${cores.input}`}
+                                        />
+                                    </label>
+                                </div>
+                            </>
+                        ) : (
+                            <p role="alert" className="text-[11px] text-[var(--danger)]">
+                                Não foi possível obter a lista de alunos. Feche e tente novamente.
+                            </p>
+                        )}
+
+                        <div className="mt-5 flex justify-end gap-2 border-t border-[var(--border)] pt-4">
+                            <button
+                                type="button"
+                                disabled={executandoExclusao}
+                                onClick={() => {
+                                    setPersonalParaExcluir(null);
+                                    setResumoExclusaoPersonal(null);
+                                }}
+                                className={`h-9 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => void excluirPersonal()}
+                                disabled={
+                                    executandoExclusao ||
+                                    carregandoResumoExclusao ||
+                                    !resumoExclusaoPersonal ||
+                                    (motivoExclusao === "OUTRO" && !detalheExclusao.trim())
+                                }
+                                aria-busy={executandoExclusao}
+                                className="h-9 rounded-lg bg-[var(--danger)] px-4 text-[11px] font-semibold text-white disabled:opacity-50"
+                            >
+                                {executandoExclusao ? "Desativando..." : "Confirmar desativação"}
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            )}
+
+            {vinculoParaDesvincular && (
+                <div
+                    className="ui-modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-[var(--overlay)] p-4"
+                    role="presentation"
+                    onMouseDown={event => {
+                        if (event.target === event.currentTarget && !executandoExclusao)
+                            setVinculoParaDesvincular(null);
+                    }}
+                >
+                    <section
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="titulo-desvincular-aluno"
+                        className="w-full max-w-[440px] rounded-2xl border border-[var(--border)] bg-[var(--modal-bg)] p-6 shadow-2xl"
+                    >
+                        <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--danger)]">
+                            Encerramento de vínculo
+                        </p>
+                        <h2
+                            id="titulo-desvincular-aluno"
+                            className={`mt-1 text-[19px] font-semibold ${cores.heading}`}
+                        >
+                            Desvincular aluno?
+                        </h2>
+                        <p className={`mt-3 text-[11px] leading-5 ${cores.bodyText}`}>
+                            <strong>{vinculoParaDesvincular.alunoNome}</strong> deixará a carteira
+                            de <strong>{vinculoParaDesvincular.personalNome}</strong>. Se este for o
+                            último Personal ativo do aluno, ele e a administração receberão um
+                            alerta de falta de acompanhamento. O histórico e a ficha técnica serão
+                            preservados.
+                        </p>
+                        <div className="mt-4 grid gap-2">
+                            <label
+                                className={`grid gap-1.5 text-[10px] font-semibold ${cores.bodyText}`}
+                            >
+                                Motivo
+                                <select
+                                    value={motivoExclusao}
+                                    onChange={event => setMotivoExclusao(event.target.value)}
+                                    className={`h-10 rounded-lg px-3 text-[11px] ${cores.input}`}
+                                >
+                                    {MOTIVOS_OPERACAO.map(([valor, rotulo]) => (
+                                        <option key={valor} value={valor}>
+                                            {rotulo}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label
+                                className={`grid gap-1.5 text-[10px] font-semibold ${cores.bodyText}`}
+                            >
+                                Detalhes (opcional; obrigatório para "Outro")
+                                <textarea
+                                    value={detalheExclusao}
+                                    onChange={event => setDetalheExclusao(event.target.value)}
+                                    maxLength={500}
+                                    rows={2}
+                                    className={`resize-y rounded-lg px-3 py-2 text-[11px] ${cores.input}`}
+                                />
+                            </label>
+                        </div>
+                        <div className="mt-5 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                disabled={executandoExclusao}
+                                onClick={() => setVinculoParaDesvincular(null)}
+                                className={`h-9 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => void confirmarDesvinculacaoEquipe()}
+                                disabled={
+                                    executandoExclusao ||
+                                    (motivoExclusao === "OUTRO" && !detalheExclusao.trim())
+                                }
+                                aria-busy={executandoExclusao}
+                                className="h-9 rounded-lg bg-[var(--danger)] px-4 text-[11px] font-semibold text-white disabled:opacity-50"
+                            >
+                                {executandoExclusao ? "Encerrando..." : "Confirmar desvinculação"}
                             </button>
                         </div>
                     </section>

@@ -46,6 +46,12 @@ public sealed class AuthService
             return null;
         }
 
+        if (!usuario.Ativo)
+        {
+            await RegistrarTentativaLoginAsync(email, usuario, "FALHA");
+            return null;
+        }
+
         var (valid, needsRehash) = _passwords.Verify(dto.Senha, usuario.SenhaHashed);
         if (!valid)
         {
@@ -113,6 +119,17 @@ public sealed class AuthService
         if (stored is null)
             return null;
 
+        if (!stored.Usuario.Ativo)
+        {
+            var tokensDaConta = await _context.RefreshTokens
+                .Where(t => t.UsuarioId == stored.UsuarioId && t.RevogadoEm == null)
+                .ToListAsync();
+            foreach (var token in tokensDaConta)
+                token.RevogadoEm = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return null;
+        }
+
         if (stored.RevogadoEm is not null)
         {
             // Reutilização de refresh token revogado invalida as sessões da conta.
@@ -163,7 +180,7 @@ public sealed class AuthService
             .Include(u => u.Personal)
             .Include(u => u.Aluno)
                 .ThenInclude(a => a!.SolicitacaoCadastro)
-            .FirstOrDefaultAsync(u => u.Id == usuarioId);
+            .FirstOrDefaultAsync(u => u.Id == usuarioId && u.Ativo);
 
         return usuario is null ? null : MapearUsuario(usuario);
     }

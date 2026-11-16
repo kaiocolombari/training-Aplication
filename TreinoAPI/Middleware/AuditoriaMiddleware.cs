@@ -22,6 +22,15 @@ public sealed class AuditoriaMiddleware
             context.Request.Path.StartsWithSegments("/api/auditoria"))
             return;
 
+        var exclusaoComAuditoriaDetalhada =
+            HttpMethods.IsDelete(context.Request.Method) &&
+            context.Response.StatusCode is >= 200 and < 300 &&
+            (context.Request.Path.StartsWithSegments("/api/Personal") ||
+             context.Request.Path.StartsWithSegments("/api/Aluno") ||
+             context.Request.Path.StartsWithSegments("/api/PersonalAluno"));
+        if (exclusaoComAuditoriaDetalhada)
+            return;
+
         var usuarioIdClaim = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!Guid.TryParse(usuarioIdClaim, out var usuarioId))
             return;

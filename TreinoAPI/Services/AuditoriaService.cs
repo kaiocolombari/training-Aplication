@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.Auditoria;
 using TreinoAPI.Model;
@@ -8,8 +9,49 @@ namespace TreinoAPI.Services;
 public sealed class AuditoriaService
 {
     private readonly AppDbContext _db;
+    private readonly IHttpContextAccessor _httpContext;
 
-    public AuditoriaService(AppDbContext db) => _db = db;
+    public AuditoriaService(AppDbContext db, IHttpContextAccessor httpContext)
+    {
+        _db = db;
+        _httpContext = httpContext;
+    }
+
+    public async Task RegistrarOperacaoDetalhadaAsync(
+        string acao,
+        string metodo,
+        string rota,
+        Guid recursoId,
+        string resumo,
+        int statusCode = StatusCodes.Status204NoContent)
+    {
+        var context = _httpContext.HttpContext;
+        var idClaim = context?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var usuarioId = Guid.TryParse(idClaim, out var id) ? id : (Guid?)null;
+        var usuarioEmail = context?.User.FindFirstValue(ClaimTypes.Email) ?? "E-mail não disponível";
+        var usuarioTipo = context?.User.FindFirstValue(ClaimTypes.Role) ?? "INDEFINIDO";
+        var metodoNormalizado = metodo.ToUpperInvariant();
+
+        _db.RegistrosAuditoria.Add(new RegistroAuditoria
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = usuarioId,
+            UsuarioEmail = Limitar(usuarioEmail, 256),
+            UsuarioTipo = Limitar(usuarioTipo, 30),
+            Acao = Limitar(acao, 30),
+            MetodoHttp = Limitar(metodoNormalizado, 10),
+            Rota = Limitar(rota, 300),
+            RecursoId = recursoId.ToString(),
+            Resumo = Limitar(resumo, 500),
+            StatusCode = statusCode,
+            Resultado = statusCode is >= 200 and < 400 ? "SUCESSO" : "FALHA",
+            EnderecoIp = LimitarOpcional(context?.Connection.RemoteIpAddress?.ToString(), 64),
+            UserAgent = LimitarOpcional(context?.Request.Headers.UserAgent.ToString(), 500),
+            CriadoEm = DateTime.UtcNow
+        });
+
+        await _db.SaveChangesAsync();
+    }
 
     public async Task RegistrarAsync(
         Guid? usuarioId,

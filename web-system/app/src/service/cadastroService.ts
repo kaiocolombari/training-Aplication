@@ -45,6 +45,25 @@ export interface PersonalAlunoApi {
     criadoEm: string;
 }
 
+export interface MotivoOperacaoPayload {
+    motivo: string;
+    detalhe?: string;
+}
+
+export interface PersonalExclusaoResumoApi {
+    id: string;
+    nomeCompleto: string;
+    email: string;
+    totalAlunos: number;
+    alunosQueFicaraoSemPersonal: number;
+    alunos: Array<{
+        id: string;
+        nomeCompleto: string;
+        email: string;
+        outrosPersonaisAtivos: number;
+    }>;
+}
+
 export interface AvaliacaoHistoricoApi {
     id: string;
     avaliacaoId: string;
@@ -576,10 +595,14 @@ export const cadastroService = {
         apiGet<PersonalAlunoApi[]>("/api/PersonalAluno/" + personalId + "/alunos"),
     criarPersonal: (payload: { nomeCompleto: string; email: string; senha: string; telefone?: string }) =>
         apiPost<PersonalResumoApi>("/api/Personal", payload),
+    obterResumoExclusaoPersonal: (personalId: string) =>
+        apiGet<PersonalExclusaoResumoApi>(`/api/Personal/${personalId}/resumo-exclusao`),
+    excluirPersonal: (personalId: string, payload: MotivoOperacaoPayload) =>
+        apiDelete<void>(`/api/Personal/${personalId}`, payload),
     vincularAluno: (personalId: string, alunoId: string) =>
         apiPost<PersonalAlunoApi>("/api/PersonalAluno", { personalId, alunoId }),
-    desvincularAluno: (vinculoId: string) =>
-        apiDelete<void>("/api/PersonalAluno/" + vinculoId),
+    desvincularAluno: (vinculoId: string, payload: MotivoOperacaoPayload) =>
+        apiDelete<void>("/api/PersonalAluno/" + vinculoId, payload),
     atualizarVinculo: (vinculoId: string, ativo: boolean) =>
         apiPatch<PersonalAlunoApi>("/api/PersonalAluno/" + vinculoId, { ativo }),
     obterCadastro: (alunoId: string) => apiGet<CadastroCompletoApi>(`/api/cadastros/alunos/${alunoId}`),
@@ -592,5 +615,6 @@ export const cadastroService = {
         apiDelete<void>(`/api/avaliacoes/${avaliacaoId}`),
     criarAluno: (payload: { nomeCompleto: string; email: string; senha: string; telefone?: string; dataNascimento?: string }) =>
         apiPost<AlunoResumoApi>("/api/Aluno", payload),
-    excluirAluno: (alunoId: string) => apiDelete<void>(`/api/Aluno/${alunoId}`),
+    excluirAluno: (alunoId: string, payload: MotivoOperacaoPayload) =>
+        apiDelete<void>(`/api/Aluno/${alunoId}`, payload),
 };

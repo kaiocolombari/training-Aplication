@@ -20,8 +20,7 @@ public sealed class ComunicacaoService
     // Reusable hooks for domain services to raise alerts when important events occur.
     public async Task NotificarUsuarioAsync(Guid usuarioId, string titulo, string mensagem, string tipo = "SISTEMA", Guid? referenciaId = null)
     {
-        if (!await _db.Usuarios.AnyAsync(u => u.Id == usuarioId &&
-            (u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL)))
+        if (!await _db.Usuarios.AnyAsync(u => u.Id == usuarioId && u.Ativo))
             return;
 
         _db.NotificacoesUsuarios.Add(new NotificacaoUsuario
@@ -37,10 +36,34 @@ public sealed class ComunicacaoService
         await _db.SaveChangesAsync();
     }
 
+    public async Task NotificarAdministradoresAsync(
+        string titulo,
+        string mensagem,
+        string tipo = "ALERTA",
+        Guid? referenciaId = null)
+    {
+        var administradores = await _db.Usuarios
+            .Where(u => u.Ativo && u.Tipo == TipoUsuario.ADMIN)
+            .Select(u => u.Id)
+            .ToListAsync();
+        var agora = DateTime.UtcNow;
+        _db.NotificacoesUsuarios.AddRange(administradores.Select(usuarioId => new NotificacaoUsuario
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = usuarioId,
+            Titulo = titulo.Trim(),
+            Mensagem = mensagem.Trim(),
+            Tipo = tipo,
+            ReferenciaId = referenciaId,
+            CriadaEm = agora
+        }));
+        await _db.SaveChangesAsync();
+    }
+
     public async Task NotificarEquipeAsync(string titulo, string mensagem, string tipo = "SISTEMA", Guid? referenciaId = null)
     {
         var usuarios = await _db.Usuarios
-            .Where(u => u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL)
+            .Where(u => u.Ativo && (u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL))
             .Select(u => u.Id)
             .ToListAsync();
         var agora = DateTime.UtcNow;
@@ -62,7 +85,7 @@ public sealed class ComunicacaoService
         var atual = _current.UsuarioId;
         return await _db.Usuarios
             .AsNoTracking()
-            .Where(u => u.Id != atual && (u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL))
+            .Where(u => u.Ativo && u.Id != atual && (u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL))
             .OrderBy(u => u.Tipo)
             .ThenBy(u => u.Personal != null ? u.Personal.Nome : u.Email)
             .Select(u => new MembroEquipeDTO
@@ -80,7 +103,8 @@ public sealed class ComunicacaoService
         var atual = _current.UsuarioId;
         var conversas = await _db.ConversasEquipe
             .AsNoTracking()
-            .Where(c => c.UsuarioAId == atual || c.UsuarioBId == atual)
+            .Where(c => (c.UsuarioAId == atual || c.UsuarioBId == atual) &&
+                c.UsuarioA.Ativo && c.UsuarioB.Ativo)
             .Include(c => c.UsuarioA).ThenInclude(u => u.Personal)
             .Include(c => c.UsuarioB).ThenInclude(u => u.Personal)
             .Include(c => c.Mensagens.OrderByDescending(m => m.EnviadaEm).Take(1))
@@ -116,7 +140,8 @@ public sealed class ComunicacaoService
     {
         var atual = _current.UsuarioId;
         var conversa = await _db.ConversasEquipe
-            .FirstOrDefaultAsync(c => c.Id == conversaId && (c.UsuarioAId == atual || c.UsuarioBId == atual));
+            .FirstOrDefaultAsync(c => c.Id == conversaId &&
+                (c.UsuarioAId == atual || c.UsuarioBId == atual) && c.UsuarioA.Ativo && c.UsuarioB.Ativo);
         if (conversa is null)
             throw DomainException.NotFound("Conversa não encontrada.");
 
@@ -164,7 +189,7 @@ public sealed class ComunicacaoService
             throw DomainException.BadRequest("A mensagem deve conter entre 1 e 4.000 caracteres.");
 
         var destinatario = await _db.Usuarios
-            .FirstOrDefaultAsync(u => u.Id == destinatarioId &&
+            .FirstOrDefaultAsync(u => u.Id == destinatarioId && u.Ativo &&
                 (u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL));
         if (destinatario is null || destinatarioId == atual)
             throw DomainException.NotFound("Membro da equipe não encontrado.");
@@ -245,7 +270,7 @@ public sealed class ComunicacaoService
         _db.AvisosGlobais.Add(aviso);
 
         var membros = await _db.Usuarios
-            .Where(u => u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL)
+            .Where(u => u.Ativo && (u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL))
             .Select(u => u.Id)
             .ToListAsync();
         var agora = DateTime.UtcNow;
@@ -325,7 +350,7 @@ public sealed class ComunicacaoService
         if (_current.Role != "ADMIN")
             throw DomainException.Forbidden();
 
-        var membros = _db.Usuarios.Where(u => u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL);
+        var membros = _db.Usuarios.Where(u => u.Ativo && (u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL));
         if (dto.UsuarioDestinoId.HasValue)
             membros = membros.Where(u => u.Id == dto.UsuarioDestinoId.Value);
 

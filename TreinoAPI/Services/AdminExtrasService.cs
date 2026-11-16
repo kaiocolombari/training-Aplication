@@ -89,7 +89,7 @@ public sealed class AdminExtrasService
     {
         var alunoId = await ObterAlunoAtualIdAsync();
         var registros = await _db.PersonalAlunos.AsNoTracking()
-            .Where(pa => pa.AlunoId == alunoId && pa.Ativo)
+            .Where(pa => pa.AlunoId == alunoId && pa.Ativo && pa.Personal.Usuario!.Ativo)
             .OrderBy(pa => pa.Personal.Nome)
             .Select(pa => new { pa.PersonalId, Nome = pa.Personal.Nome })
             .ToListAsync();
@@ -301,7 +301,8 @@ public sealed class AdminExtrasService
         var dataInicio = inicio ?? dataFim.AddDays(-29);
         var inicioUtc = dataInicio.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var fimUtc = dataFim.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var personais = await _db.Personais.AsNoTracking().Include(p => p.Usuario).OrderBy(p => p.Nome).ToListAsync();
+        var personais = await _db.Personais.AsNoTracking().Include(p => p.Usuario)
+            .Where(p => p.Usuario!.Ativo).OrderBy(p => p.Nome).ToListAsync();
         var resultado = new List<IndicadoresPersonalDTO>();
 
         foreach (var personal in personais)
@@ -378,6 +379,7 @@ public sealed class AdminExtrasService
     public async Task<List<object>> ListarPersonaisAsync()
     {
         var registros = await _db.Personais.AsNoTracking().Include(p => p.Usuario).OrderBy(p => p.Nome)
+            .Where(p => p.Usuario!.Ativo)
             .Select(p => new { p.Id, p.Nome, Email = p.Usuario!.Email }).ToListAsync();
         return registros.Cast<object>().ToList();
     }
@@ -386,6 +388,7 @@ public sealed class AdminExtrasService
     {
         var registros = await _db.Usuarios.AsNoTracking()
             .Where(u => u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL)
+            .Where(u => u.Ativo)
             .OrderBy(u => u.Tipo).ThenBy(u => u.Personal != null ? u.Personal.Nome : u.Email)
             .Select(u => new { u.Id, Nome = u.Personal != null ? u.Personal.Nome : u.Email, Tipo = u.Tipo.ToString() })
             .ToListAsync();
@@ -396,7 +399,8 @@ public sealed class AdminExtrasService
     {
         var id = await ResolverPersonalIdAsync(personalId);
         var registros = await _db.PersonalAlunos.AsNoTracking()
-            .Where(pa => pa.PersonalId == id && pa.Ativo && pa.Aluno.StatusCadastro == StatusCadastroAluno.APROVADO)
+            .Where(pa => pa.PersonalId == id && pa.Ativo && pa.Personal.Usuario!.Ativo &&
+                pa.Aluno.Usuario.Ativo && pa.Aluno.StatusCadastro == StatusCadastroAluno.APROVADO)
             .OrderBy(pa => pa.Aluno.NomeCompleto)
             .Select(pa => new { pa.AlunoId, Nome = pa.Aluno.NomeCompleto })
             .ToListAsync();
@@ -413,7 +417,7 @@ public sealed class AdminExtrasService
 
     private async Task ValidarPersonalAsync(Guid personalId)
     {
-        if (!await _db.Personais.AnyAsync(p => p.Id == personalId))
+        if (!await _db.Personais.AnyAsync(p => p.Id == personalId && p.Usuario!.Ativo))
             throw DomainException.NotFound("Personal não encontrado.");
         if (_current.Role == "PERSONAL" && !await _db.Personais.AnyAsync(p => p.Id == personalId && p.UsuarioId == _current.UsuarioId))
             throw DomainException.Forbidden();
@@ -422,13 +426,15 @@ public sealed class AdminExtrasService
     private async Task ValidarAlunoDaTarefaAsync(Guid personalId, Guid? alunoId)
     {
         if (!alunoId.HasValue) return;
-        var vinculado = await _db.PersonalAlunos.AnyAsync(pa => pa.PersonalId == personalId && pa.AlunoId == alunoId && pa.Ativo);
+        var vinculado = await _db.PersonalAlunos.AnyAsync(pa => pa.PersonalId == personalId &&
+            pa.AlunoId == alunoId && pa.Ativo && pa.Personal.Usuario!.Ativo && pa.Aluno.Usuario.Ativo);
         if (!vinculado) throw DomainException.BadRequest("O aluno selecionado não está vinculado ao personal responsável.");
     }
 
     private async Task<Guid> ObterAlunoAtualIdAsync()
     {
-        return await _db.Alunos.Where(a => a.UsuarioId == _current.UsuarioId && a.StatusCadastro == StatusCadastroAluno.APROVADO)
+        return await _db.Alunos.Where(a => a.UsuarioId == _current.UsuarioId && a.Usuario.Ativo &&
+                a.StatusCadastro == StatusCadastroAluno.APROVADO)
             .Select(a => (Guid?)a.Id).FirstOrDefaultAsync() ?? throw DomainException.Forbidden("Somente alunos aprovados podem enviar feedback.");
     }
 

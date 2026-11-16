@@ -6,7 +6,7 @@ using TreinoAPI.Services;
 namespace TreinoAPI.Controllers;
 
 [ApiController]
-[Authorize(Roles = "ADMIN,PERSONAL")]
+[Authorize(Roles = "ADMIN,PERSONAL,ALUNO")]
 [Route("api/comunicacao")]
 public sealed class ComunicacaoController : ControllerBase
 {
@@ -14,18 +14,22 @@ public sealed class ComunicacaoController : ControllerBase
 
     public ComunicacaoController(ComunicacaoService service) => _service = service;
 
+    [Authorize(Roles = "ADMIN,PERSONAL")]
     [HttpGet("equipe")]
     public async Task<IActionResult> ListarEquipe() =>
         Ok(await _service.ListarEquipeAsync());
 
+    [Authorize(Roles = "ADMIN,PERSONAL")]
     [HttpGet("conversas")]
     public async Task<IActionResult> ListarConversas() =>
         Ok(await _service.ListarConversasAsync());
 
+    [Authorize(Roles = "ADMIN,PERSONAL")]
     [HttpGet("conversas/{conversaId:guid}/mensagens")]
     public async Task<IActionResult> ListarMensagens(Guid conversaId) =>
         Ok(await _service.ListarMensagensAsync(conversaId));
 
+    [Authorize(Roles = "ADMIN,PERSONAL")]
     [HttpPost("mensagens/para/{destinatarioId:guid}")]
     public async Task<IActionResult> EnviarMensagem(
         Guid destinatarioId,
@@ -35,6 +39,7 @@ public sealed class ComunicacaoController : ControllerBase
         return Ok(new { conversaId });
     }
 
+    [Authorize(Roles = "ADMIN,PERSONAL")]
     [HttpGet("avisos")]
     public async Task<IActionResult> ListarAvisos() =>
         Ok(await _service.ListarAvisosAsync());

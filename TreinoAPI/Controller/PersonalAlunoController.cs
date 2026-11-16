@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TreinoAPI.DTOs;
 using TreinoAPI.DTOs.PersonalAluno;
 using TreinoAPI.Security;
 using TreinoAPI.Services;
@@ -53,10 +54,10 @@ public class PersonalAlunoController : ControllerBase
 
     [Authorize(Roles = "ADMIN")]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeletarVinculo(Guid id)
+    public async Task<IActionResult> DeletarVinculo(Guid id, [FromBody] MotivoOperacaoDTO? dto)
     {
         await _ownership.EnsureVinculoAccessAsync(id);
-        var removido = await _service.DeletarVinculo(id);
+        var removido = await _service.DeletarVinculo(id, dto);
         return removido ? NoContent() : NotFound("Vínculo não encontrado.");
     }
 }

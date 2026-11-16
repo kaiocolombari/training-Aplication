@@ -426,6 +426,10 @@ public class AppDbContext : DbContext
             .HasConversion<string>();
 
         modelBuilder.Entity<Usuario>()
+            .Property(u => u.Ativo)
+            .HasDefaultValue(true);
+
+        modelBuilder.Entity<Usuario>()
             .HasIndex(u => u.Email)
             .IsUnique();
 

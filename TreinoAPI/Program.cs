@@ -187,6 +187,21 @@ builder.Services
                 if (context.Request.Cookies.TryGetValue("treino_access", out var token))
                     context.Token = token;
                 return Task.CompletedTask;
+            },
+            OnTokenValidated = async context =>
+            {
+                var usuarioIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!Guid.TryParse(usuarioIdClaim, out var usuarioId))
+                {
+                    context.Fail("Token sem identificador de usuário válido.");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var contaAtiva = await db.Usuarios.AsNoTracking()
+                    .AnyAsync(usuario => usuario.Id == usuarioId && usuario.Ativo);
+                if (!contaAtiva)
+                    context.Fail("Esta conta foi desativada.");
             }
         };
     });

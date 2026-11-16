@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TreinoAPI.Data;
+using TreinoAPI.DTOs;
 using TreinoAPI.DTOs.Aluno;
 using TreinoAPI.Model;
 using TreinoAPI.Security;
@@ -10,11 +11,19 @@ public class AlunoService
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwords;
+    private readonly ComunicacaoService _comunicacao;
+    private readonly AuditoriaService _auditoria;
 
-    public AlunoService(AppDbContext context, PasswordService passwords)
+    public AlunoService(
+        AppDbContext context,
+        PasswordService passwords,
+        ComunicacaoService comunicacao,
+        AuditoriaService auditoria)
     {
         _context = context;
         _passwords = passwords;
+        _comunicacao = comunicacao;
+        _auditoria = auditoria;
     }
 
     public async Task<AlunoDTO> Criar(CriarAlunoDTO dto, Guid? personalId)
@@ -23,7 +32,7 @@ public class AlunoService
         if (await _context.Usuarios.AnyAsync(u => u.Email == email))
             throw DomainException.Conflict("Já existe uma conta cadastrada com este e-mail.");
 
-        if (personalId.HasValue && !await _context.Personais.AnyAsync(p => p.Id == personalId.Value))
+        if (personalId.HasValue && !await _context.Personais.AnyAsync(p => p.Id == personalId.Value && p.Usuario!.Ativo))
             throw DomainException.NotFound("Personal não encontrado.");
 
         var usuario = new Usuario
@@ -79,7 +88,7 @@ public class AlunoService
     {
         var query = _context.Alunos.AsNoTracking()
             .Include(a => a.Usuario)
-            .Where(a => a.StatusCadastro == StatusCadastroAluno.APROVADO)
+            .Where(a => a.Usuario.Ativo && a.StatusCadastro == StatusCadastroAluno.APROVADO)
             .AsQueryable();
         if (alunoIds is not null)
         {
@@ -117,7 +126,7 @@ public class AlunoService
             .Include(a => a.Anamneses)
             .Include(a => a.TestesCarga)
             .Include(a => a.Periodizacoes)
-            .FirstOrDefaultAsync(a => a.Id == id);
+            .FirstOrDefaultAsync(a => a.Id == id && a.Usuario.Ativo);
 
         return aluno is null ? null : Mapear(aluno, aluno.Usuario);
     }
@@ -131,7 +140,7 @@ public class AlunoService
             .Include(a => a.Anamneses)
             .Include(a => a.TestesCarga)
             .Include(a => a.Periodizacoes)
-            .FirstOrDefaultAsync(a => a.Id == id);
+            .FirstOrDefaultAsync(a => a.Id == id && a.Usuario.Ativo);
 
         if (aluno is null)
             return null;
@@ -159,14 +168,52 @@ public class AlunoService
         return Mapear(aluno, aluno.Usuario);
     }
 
-    public async Task<bool> Deletar(Guid id)
+    public async Task<bool> Deletar(Guid id, MotivoOperacaoDTO? dto)
     {
-        var aluno = await _context.Alunos.FindAsync(id);
-        if (aluno is null)
+        var motivo = MotivoOperacaoHelper.Formatar(dto);
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        var aluno = await _context.Alunos
+            .Include(a => a.Usuario)
+            .FirstOrDefaultAsync(a => a.Id == id && a.Usuario.Ativo);
+        if (aluno?.Usuario is null)
             return false;
 
-        _context.Alunos.Remove(aluno);
+        var vinculos = await _context.PersonalAlunos
+            .Include(pa => pa.Personal).ThenInclude(p => p.Usuario)
+            .Where(pa => pa.AlunoId == id && pa.Ativo && pa.Personal.Usuario!.Ativo)
+            .ToListAsync();
+
+        foreach (var vinculo in vinculos)
+            vinculo.Ativo = false;
+
+        aluno.Usuario.Ativo = false;
+        var tokens = await _context.RefreshTokens
+            .Where(token => token.UsuarioId == aluno.UsuarioId && token.RevogadoEm == null)
+            .ToListAsync();
+        foreach (var token in tokens)
+            token.RevogadoEm = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
+
+        foreach (var vinculo in vinculos)
+        {
+            await _comunicacao.NotificarUsuarioAsync(
+                vinculo.Personal.UsuarioId,
+                "Aluno removido da carteira",
+                $"{aluno.NomeCompleto} foi removido da sua carteira pela administração. Motivo: {motivo}",
+                "VINCULO_REMOVIDO",
+                aluno.Id);
+        }
+
+        await _auditoria.RegistrarOperacaoDetalhadaAsync(
+            "EXCLUSAO_ALUNO",
+            "DELETE",
+            $"/api/Aluno/{id}",
+            id,
+            $"Aluno {aluno.NomeCompleto} desativado. Personais notificados: {vinculos.Count}. Motivo: {motivo}");
+
+        await transaction.CommitAsync();
         return true;
     }
 

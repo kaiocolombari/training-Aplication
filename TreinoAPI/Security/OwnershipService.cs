@@ -17,16 +17,19 @@ public sealed class OwnershipService
     public async Task<List<Guid>> GetAccessibleAlunoIdsAsync()
     {
         if (_current.Role == "ADMIN")
-            return await _db.Alunos.AsNoTracking().Select(a => a.Id).ToListAsync();
+            return await _db.Alunos.AsNoTracking()
+                .Where(a => a.Usuario.Ativo)
+                .Select(a => a.Id).ToListAsync();
 
         if (_current.Role == "PERSONAL")
             return await _db.PersonalAlunos.AsNoTracking()
-                .Where(pa => pa.Personal.UsuarioId == _current.UsuarioId && pa.Ativo)
+                .Where(pa => pa.Personal.UsuarioId == _current.UsuarioId &&
+                    pa.Personal.Usuario!.Ativo && pa.Aluno.Usuario.Ativo && pa.Ativo)
                 .Select(pa => pa.AlunoId).Distinct().ToListAsync();
 
         if (_current.Role == "ALUNO")
             return await _db.Alunos.AsNoTracking()
-                .Where(a => a.UsuarioId == _current.UsuarioId)
+                .Where(a => a.UsuarioId == _current.UsuarioId && a.Usuario.Ativo)
                 .Select(a => a.Id).ToListAsync();
 
         throw DomainException.Forbidden();
@@ -35,7 +38,7 @@ public sealed class OwnershipService
     public async Task<Guid> GetCurrentPersonalIdAsync()
     {
         var id = await _db.Personais.AsNoTracking()
-            .Where(p => p.UsuarioId == _current.UsuarioId)
+            .Where(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo)
             .Select(p => (Guid?)p.Id)
             .FirstOrDefaultAsync();
         return id ?? throw DomainException.Forbidden();
@@ -44,13 +47,19 @@ public sealed class OwnershipService
     public async Task EnsureAlunoAccessAsync(Guid alunoId)
     {
         if (_current.Role == "ADMIN")
+        {
+            if (!await _db.Alunos.AnyAsync(a => a.Id == alunoId && a.Usuario.Ativo))
+                throw DomainException.NotFound("Aluno não encontrado.");
             return;
+        }
 
         var allowed = _current.Role switch
         {
             "PERSONAL" => await _db.PersonalAlunos.AnyAsync(pa =>
-                pa.AlunoId == alunoId && pa.Personal.UsuarioId == _current.UsuarioId && pa.Ativo),
-            "ALUNO" => await _db.Alunos.AnyAsync(a => a.Id == alunoId && a.UsuarioId == _current.UsuarioId),
+                pa.AlunoId == alunoId && pa.Personal.UsuarioId == _current.UsuarioId &&
+                pa.Personal.Usuario!.Ativo && pa.Aluno.Usuario.Ativo && pa.Ativo),
+            "ALUNO" => await _db.Alunos.AnyAsync(a => a.Id == alunoId &&
+                a.UsuarioId == _current.UsuarioId && a.Usuario.Ativo),
             _ => false
         };
 
@@ -61,10 +70,14 @@ public sealed class OwnershipService
     public async Task EnsurePersonalAccessAsync(Guid personalId)
     {
         if (_current.Role == "ADMIN")
+        {
+            if (!await _db.Personais.AnyAsync(p => p.Id == personalId && p.Usuario!.Ativo))
+                throw DomainException.NotFound("Personal não encontrado.");
             return;
+        }
 
         if (_current.Role != "PERSONAL" ||
-            !await _db.Personais.AnyAsync(p => p.Id == personalId && p.UsuarioId == _current.UsuarioId))
+            !await _db.Personais.AnyAsync(p => p.Id == personalId && p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo))
             throw DomainException.NotFound("Personal não encontrado.");
     }
 
@@ -171,7 +184,7 @@ public sealed class OwnershipService
             return;
 
         var allowed = _current.Role == "PERSONAL" && await _db.PersonalAlunos.AnyAsync(pa =>
-            pa.Id == id && pa.Personal.UsuarioId == _current.UsuarioId);
+            pa.Id == id && pa.Ativo && pa.Personal.UsuarioId == _current.UsuarioId && pa.Personal.Usuario!.Ativo);
         if (!allowed)
             throw DomainException.NotFound("Vínculo não encontrado.");
     }

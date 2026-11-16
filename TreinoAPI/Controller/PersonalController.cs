@@ -38,6 +38,13 @@ public class PersonalController : ControllerBase
         return Ok(personais);
     }
 
+    [HttpGet("{id}/resumo-exclusao")]
+    public async Task<IActionResult> ObterResumoExclusao(Guid id)
+    {
+        var resumo = await _service.ObterResumoExclusao(id);
+        return Ok(resumo);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> BuscarPorId(Guid id)
     {
@@ -63,9 +70,9 @@ public class PersonalController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Deletar(Guid id)
+    public async Task<IActionResult> Deletar(Guid id, [FromBody] TreinoAPI.DTOs.MotivoOperacaoDTO? dto)
     {
-        var deletado = await _service.Deletar(id);
+        var deletado = await _service.Deletar(id, dto);
 
         if (!deletado)
             return NotFound();

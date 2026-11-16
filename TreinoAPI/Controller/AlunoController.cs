@@ -75,10 +75,12 @@ public class AlunoController : ControllerBase
 
     [Authorize(Roles = "ADMIN")]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Deletar(Guid id)
+    public async Task<IActionResult> Deletar(
+        Guid id,
+        [FromBody] TreinoAPI.DTOs.MotivoOperacaoDTO? dto)
     {
         await _ownership.EnsureAlunoAccessAsync(id);
-        var deletado = await _service.Deletar(id);
+        var deletado = await _service.Deletar(id, dto);
 
         if (!deletado)
             return NotFound();
