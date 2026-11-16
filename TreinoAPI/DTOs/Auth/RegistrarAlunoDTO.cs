@@ -13,6 +13,6 @@ public sealed class RegistrarAlunoDTO
     [StringLength(30)]
     public string? Telefone { get; set; }
 
-    [Required, MinLength(12), StringLength(128)]
+    [Required, MinLength(8), StringLength(128)]
     public string Senha { get; set; } = string.Empty;
 }

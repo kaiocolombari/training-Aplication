@@ -61,6 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
         logout: async () => {
             try {
+                // Evita que uma consulta /me iniciada antes do logout restaure o usuário no cache.
+                await queryClient.cancelQueries({ queryKey: ["auth", "me"], exact: true });
                 await authService.logout();
             } finally {
                 queryClient.setQueryData(["auth", "me"], null);

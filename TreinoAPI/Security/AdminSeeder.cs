@@ -18,8 +18,8 @@ public static class AdminSeeder
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             throw new InvalidOperationException("Configure ADMIN_EMAIL e ADMIN_PASSWORD para criar o primeiro administrador.");
 
-        if (password.Length < 12)
-            throw new InvalidOperationException("ADMIN_PASSWORD deve possuir pelo menos 12 caracteres.");
+        if (password.Length < 8)
+            throw new InvalidOperationException("ADMIN_PASSWORD deve possuir pelo menos 8 caracteres.");
 
         if (await db.Usuarios.AnyAsync(u => u.Email == email))
             throw new InvalidOperationException("ADMIN_EMAIL já pertence a uma conta que não é administradora.");

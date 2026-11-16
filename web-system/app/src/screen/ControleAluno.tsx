@@ -10,6 +10,7 @@ import {
     BsClockHistory,
     BsExclamationTriangle,
     BsFileEarmarkText,
+    BsGraphUp,
     BsHeartPulse,
     BsJournalText,
     BsPersonCheck,
@@ -18,6 +19,7 @@ import {
 } from "react-icons/bs";
 import type { Avaliacao } from "../types/avaliacao";
 import type { AlunoResumoApi } from "../service/cadastroService";
+import ControleVolumeTreino from "./ControleVolumeTreino";
 
 type AlunoControle = Pick<
     AlunoResumoApi,
@@ -26,6 +28,7 @@ type AlunoControle = Pick<
 const abas = [
     { id: "resumo", label: "Visão 360°", icon: <BsActivity /> },
     { id: "treinos", label: "Treinos", icon: <BsClipboard2Pulse /> },
+    { id: "volume", label: "Volume mensal", icon: <BsGraphUp /> },
     { id: "checkins", label: "Check-ins", icon: <BsHeartPulse /> },
     { id: "dor", label: "Dor e limitações", icon: <BsShieldCheck /> },
     { id: "evolucao", label: "Evolução", icon: <BsStars /> },
@@ -88,13 +91,19 @@ function Metrica({
 
 export default function ControleAluno({
     aluno,
+    alunosDisponiveis,
     ficha,
+    alunoCarregando,
     onBack,
+    onSelecionarAluno,
     onNavigate,
 }: {
     aluno: AlunoControle;
+    alunosDisponiveis: Array<{ id: string; nomeCompleto: string }>;
     ficha: Avaliacao;
+    alunoCarregando: boolean;
     onBack: () => void;
+    onSelecionarAluno: (alunoId: string) => void;
     onNavigate: (section: string) => void;
 }) {
     const [aba, setAba] = useState<AbaId>("resumo");
@@ -223,7 +232,7 @@ export default function ControleAluno({
                     </p>
                 </section>
             </div>
-            <div className="grid gap-4 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <button
                     onClick={() => setAba("treinos")}
                     className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left transition hover:border-[var(--accent)]"
@@ -256,6 +265,23 @@ export default function ControleAluno({
                     </p>
                     <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">
                         Abrir módulo <BsArrowUpRight />
+                    </span>
+                </button>
+                <button
+                    onClick={() => setAba("volume")}
+                    className="rounded-2xl border border-[var(--accent)]/35 bg-[var(--accent-soft)] p-4 text-left transition hover:border-[var(--accent)]"
+                >
+                    <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--accent)] text-white">
+                        <BsGraphUp />
+                    </span>
+                    <h3 className="mt-3 text-[12px] font-semibold text-[var(--text-primary)]">
+                        Volume mensal
+                    </h3>
+                    <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
+                        Inicie um ciclo e acompanhe os registros mensais deste treino.
+                    </p>
+                    <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">
+                        Abrir acompanhamento <BsArrowUpRight />
                     </span>
                 </button>
                 <button
@@ -555,6 +581,7 @@ export default function ControleAluno({
     const conteudo = (() => {
         if (aba === "resumo") return resumo;
         if (aba === "treinos") return treinosView;
+        if (aba === "volume") return <ControleVolumeTreino alunoId={aluno.id} treinos={treinos} />;
         if (aba === "evolucao") return evolucaoView;
         if (aba === "periodizacao") return periodizacaoView;
         if (aba === "pendencias")
@@ -763,9 +790,28 @@ export default function ControleAluno({
                 >
                     <BsArrowLeft /> Voltar aos alunos
                 </button>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-[9px] font-semibold text-[var(--success)]">
-                    <BsCheck2Circle /> Atendimento ativo
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                    <label className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[9px] font-semibold text-[var(--text-muted)]">
+                        Aluno monitorado
+                        <select
+                            aria-label="Selecionar aluno para monitoramento"
+                            value={aluno.id}
+                            disabled={alunoCarregando}
+                            onChange={event => onSelecionarAluno(event.target.value)}
+                            className="max-w-[190px] bg-transparent text-[10px] font-semibold text-[var(--text-primary)] outline-none disabled:opacity-50"
+                        >
+                            {alunosDisponiveis.map(opcao => (
+                                <option key={opcao.id} value={opcao.id}>
+                                    {opcao.nomeCompleto}
+                                </option>
+                            ))}
+                        </select>
+                        {alunoCarregando && <span className="ui-spinner" aria-hidden="true" />}
+                    </label>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-[9px] font-semibold text-[var(--success)]">
+                        <BsCheck2Circle /> Atendimento ativo
+                    </span>
+                </div>
             </div>
             <header className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-7">
                 <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-[var(--accent)] opacity-[.07] blur-3xl" />

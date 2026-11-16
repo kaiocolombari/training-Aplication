@@ -178,6 +178,15 @@ public sealed class OwnershipService
         await EnsureAlunoAccessAsync(alunoId ?? throw DomainException.NotFound("Execução de treino não encontrada."));
     }
 
+    public async Task EnsureVolumeCicloAccessAsync(Guid cicloId)
+    {
+        var alunoId = await _db.TreinoVolumeCiclos
+            .Where(c => c.Id == cicloId)
+            .Select(c => (Guid?)c.AlunoId)
+            .FirstOrDefaultAsync();
+        await EnsureAlunoAccessAsync(alunoId ?? throw DomainException.NotFound("Ciclo de volume não encontrado."));
+    }
+
     public async Task EnsureVinculoAccessAsync(Guid id)
     {
         if (_current.Role == "ADMIN")

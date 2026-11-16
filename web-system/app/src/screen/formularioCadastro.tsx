@@ -43,7 +43,11 @@ export default function FormularioCadastro() {
                         TREINO <span className="text-[#c47c7d]">/ SYSTEM</span>
                     </span>
                     <button
-                        onClick={() => void logout()}
+                        onClick={() => {
+                            void logout()
+                                .catch(() => undefined)
+                                .then(() => navigate("/register", { replace: true }));
+                        }}
                         className="text-xs text-white/55 transition hover:text-white"
                     >
                         Sair

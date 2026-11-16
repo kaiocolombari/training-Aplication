@@ -1307,6 +1307,90 @@ namespace TreinoAPI.Migrations
                     b.ToTable("TreinoExercicioVariacoes");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.TreinoVolumeCiclo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AlunoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CriadoPorUsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("DataInicio")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("EncerradoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExerciciosSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("ReferenciaSeries")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TreinoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TreinoNomeSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlunoId");
+
+                    b.HasIndex("CriadoPorUsuarioId");
+
+                    b.HasIndex("TreinoId")
+                        .IsUnique()
+                        .HasFilter("\"EncerradoEm\" IS NULL");
+
+                    b.ToTable("TreinoVolumeCiclos");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.TreinoVolumeRegistroMensal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CicloId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("MesCiclo")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("RegistradoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RegistradoPorUsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SeriesInformadas")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegistradoPorUsuarioId");
+
+                    b.HasIndex("CicloId", "MesCiclo")
+                        .IsUnique();
+
+                    b.ToTable("TreinoVolumeRegistrosMensais");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.Usuario", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1826,6 +1910,50 @@ namespace TreinoAPI.Migrations
                     b.Navigation("TreinoExercicio");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.TreinoVolumeCiclo", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.Aluno", "Aluno")
+                        .WithMany()
+                        .HasForeignKey("AlunoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TreinoAPI.Model.Usuario", "CriadoPorUsuario")
+                        .WithMany()
+                        .HasForeignKey("CriadoPorUsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TreinoAPI.Model.Treino", "Treino")
+                        .WithMany()
+                        .HasForeignKey("TreinoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Aluno");
+
+                    b.Navigation("CriadoPorUsuario");
+
+                    b.Navigation("Treino");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.TreinoVolumeRegistroMensal", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.TreinoVolumeCiclo", "Ciclo")
+                        .WithMany("Registros")
+                        .HasForeignKey("CicloId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TreinoAPI.Model.Usuario", "RegistradoPorUsuario")
+                        .WithMany()
+                        .HasForeignKey("RegistradoPorUsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Ciclo");
+
+                    b.Navigation("RegistradoPorUsuario");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.VolumeSemanal", b =>
                 {
                     b.HasOne("TreinoAPI.Model.GrupoMuscular", "GrupoMuscular")
@@ -1929,6 +2057,11 @@ namespace TreinoAPI.Migrations
             modelBuilder.Entity("TreinoAPI.Model.TreinoExercicio", b =>
                 {
                     b.Navigation("Variacoes");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.TreinoVolumeCiclo", b =>
+                {
+                    b.Navigation("Registros");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.Usuario", b =>

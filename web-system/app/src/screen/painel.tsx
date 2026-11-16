@@ -349,6 +349,7 @@ export default function Painel() {
     const [motivoExclusao, setMotivoExclusao] = useState("ENCERRAMENTO_ADMINISTRATIVO");
     const [detalheExclusao, setDetalheExclusao] = useState("");
     const [executandoExclusao, setExecutandoExclusao] = useState(false);
+    const [alunoParaMonitorarId, setAlunoParaMonitorarId] = useState("");
     const alunos: AlunoPainel[] = (alunosQuery.data ?? []).map((aluno: AlunoResumoApi) => ({
         id: aluno.id,
         nome: aluno.nomeCompleto,
@@ -465,8 +466,8 @@ export default function Painel() {
     async function confirmarCriacaoAluno(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setErroNovoAluno("");
-        if (novaSenha.length < 12) {
-            setErroNovoAluno("A senha inicial deve possuir pelo menos 12 caracteres.");
+        if (novaSenha.length < 8) {
+            setErroNovoAluno("A senha inicial deve possuir pelo menos 8 caracteres.");
             return;
         }
         if (novaSenha !== confirmarNovaSenha) {
@@ -572,6 +573,7 @@ export default function Painel() {
 
     async function abrirAluno(aluno: AlunoPainel, destino: "ficha" | "controle" = "ficha") {
         if (alunoSelecionadoId === aluno.id) {
+            setAlunoParaMonitorarId(aluno.id);
             if (destino === "ficha") navigate("/avaliacoes");
             else navegar("controleAluno");
             return;
@@ -591,6 +593,7 @@ export default function Painel() {
             if (!continuar) return;
         }
 
+        setAlunoParaMonitorarId(aluno.id);
         setCarregandoAlunoId(aluno.id);
         try {
             const [cadastro, grupos] = await Promise.all([
@@ -621,7 +624,10 @@ export default function Painel() {
             });
             await queryClient.invalidateQueries({ queryKey: ["alunos"] });
             await queryClient.invalidateQueries({ queryKey: ["relatorios"] });
-            if (alunoSelecionadoId === alunoParaExcluir.id) setAlunoSelecionadoId(null);
+            if (alunoSelecionadoId === alunoParaExcluir.id) {
+                setAlunoSelecionadoId(null);
+                setAlunoParaMonitorarId("");
+            }
             setAlunoParaExcluir(null);
             setDetalheExclusao("");
             setSucessoEquipe("Conta do aluno desativada. O histórico foi preservado.");
@@ -690,8 +696,8 @@ export default function Painel() {
         event.preventDefault();
         setErroEquipe("");
         setSucessoEquipe("");
-        if (novoPersonalSenha.length < 12) {
-            setErroEquipe("A senha inicial do Personal deve possuir pelo menos 12 caracteres.");
+        if (novoPersonalSenha.length < 8) {
+            setErroEquipe("A senha inicial do Personal deve possuir pelo menos 8 caracteres.");
             return;
         }
 
@@ -807,7 +813,6 @@ export default function Painel() {
             (secao.id === "log" && user?.tipo === "ADMIN") ||
             (secao.id === "equipe" && user?.tipo === "ADMIN") ||
             (secao.id === "controleAluno" &&
-                Boolean(alunoSelecionadoId) &&
                 (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             (secao.id === "controleAvancado" &&
                 (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")),
@@ -940,7 +945,7 @@ export default function Painel() {
                                 <input
                                     required
                                     type="password"
-                                    minLength={12}
+                                    minLength={8}
                                     maxLength={128}
                                     autoComplete="new-password"
                                     value={novoPersonalSenha}
@@ -951,7 +956,7 @@ export default function Painel() {
                         </div>
                         <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
                             <span className={"text-[10px] " + cores.subtleText}>
-                                Mínimo de 12 caracteres
+                                Mínimo de 8 caracteres
                             </span>
                             <button
                                 disabled={salvandoEquipe}
@@ -2411,12 +2416,86 @@ export default function Painel() {
                 return renderConfiguracoes();
             case "controleAluno": {
                 const aluno = alunos.find(item => item.id === alunoSelecionadoId);
-                if (!aluno || !alunoSelecionadoId)
-                    return renderSecaoVazia(
-                        "Controle do aluno",
-                        "Selecione um aluno no diretório para abrir o acompanhamento individual.",
-                        <BsActivity />,
+                if (!aluno || !alunoSelecionadoId) {
+                    return (
+                        <section className="w-full max-w-3xl space-y-5">
+                            <header>
+                                <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
+                                    Acompanhamento individual
+                                </p>
+                                <h1
+                                    className={`mt-1 text-2xl font-semibold tracking-tight ${cores.heading}`}
+                                >
+                                    Escolha um aluno para monitorar
+                                </h1>
+                                <p className={`mt-2 text-xs leading-5 ${cores.bodyText}`}>
+                                    Selecione um aluno da sua carteira para abrir o painel 360°,
+                                    consultar os ciclos de volume e acompanhar os próximos
+                                    registros.
+                                </p>
+                            </header>
+                            {alunosQuery.isLoading ? (
+                                <LoadingState label="Carregando alunos disponíveis..." />
+                            ) : alunosQuery.isError ? (
+                                <div className="rounded-2xl border border-[var(--danger)]/20 bg-[var(--danger-soft)] p-5 text-xs text-[var(--danger)]">
+                                    Não foi possível carregar a lista de alunos.
+                                    <button
+                                        type="button"
+                                        onClick={() => void alunosQuery.refetch()}
+                                        className="ml-2 font-semibold underline"
+                                    >
+                                        Tentar novamente
+                                    </button>
+                                </div>
+                            ) : alunos.length ? (
+                                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
+                                    <label className="grid gap-2 text-[10px] font-semibold text-[var(--text-secondary)]">
+                                        Aluno
+                                        <select
+                                            value={alunoParaMonitorarId}
+                                            onChange={event =>
+                                                setAlunoParaMonitorarId(event.target.value)
+                                            }
+                                            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] px-3 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                                        >
+                                            <option value="">Selecione um aluno...</option>
+                                            {alunos.map(opcao => (
+                                                <option key={opcao.id} value={opcao.id}>
+                                                    {opcao.nome}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <button
+                                        type="button"
+                                        disabled={
+                                            !alunoParaMonitorarId || Boolean(carregandoAlunoId)
+                                        }
+                                        onClick={() => {
+                                            const selecionado = alunos.find(
+                                                item => item.id === alunoParaMonitorarId,
+                                            );
+                                            if (selecionado)
+                                                void abrirAluno(selecionado, "controle");
+                                        }}
+                                        className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-[10px] font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45"
+                                    >
+                                        {carregandoAlunoId
+                                            ? "Carregando aluno..."
+                                            : "Abrir acompanhamento"}
+                                        <BsArrowUpRight />
+                                    </button>
+                                </div>
+                            ) : (
+                                renderSecaoVazia(
+                                    "Nenhum aluno disponível",
+                                    "Quando houver alunos ativos vinculados à sua carteira, eles aparecerão aqui.",
+                                    <BsActivity />,
+                                )
+                            )}
+                        </section>
                     );
+                }
                 return (
                     <ControleAluno
                         aluno={{
@@ -2427,8 +2506,17 @@ export default function Painel() {
                             criadoEm: aluno.criadoEm,
                             possuiFichaTecnica: aluno.possuiFichaTecnica,
                         }}
+                        alunosDisponiveis={alunos.map(opcao => ({
+                            id: opcao.id,
+                            nomeCompleto: opcao.nome,
+                        }))}
                         ficha={fichaAtual}
+                        alunoCarregando={Boolean(carregandoAlunoId)}
                         onBack={() => navegar("alunos")}
+                        onSelecionarAluno={alunoId => {
+                            const proximoAluno = alunos.find(item => item.id === alunoId);
+                            if (proximoAluno) void abrirAluno(proximoAluno, "controle");
+                        }}
                         onNavigate={navegar}
                     />
                 );
@@ -2657,7 +2745,12 @@ export default function Painel() {
                                         <BsX /> Fechar menu
                                     </button>
                                     <button
-                                        onClick={() => void logout()}
+                                        onClick={() => {
+                                            setMenuPerfilAberto(false);
+                                            void logout()
+                                                .catch(() => undefined)
+                                                .then(() => navigate("/register", { replace: true }));
+                                        }}
                                         className="flex w-full items-center gap-2 rounded-md px-4 py-2.5 text-left text-[11px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                                     >
                                         <BsX /> Sair da conta
@@ -2854,7 +2947,7 @@ export default function Painel() {
                                 <input
                                     required
                                     type="password"
-                                    minLength={12}
+                                    minLength={8}
                                     autoComplete="new-password"
                                     value={novaSenha}
                                     onChange={event => setNovaSenha(event.target.value)}
@@ -2868,7 +2961,7 @@ export default function Painel() {
                                 <input
                                     required
                                     type="password"
-                                    minLength={12}
+                                    minLength={8}
                                     autoComplete="new-password"
                                     value={confirmarNovaSenha}
                                     onChange={event => setConfirmarNovaSenha(event.target.value)}
@@ -2878,7 +2971,7 @@ export default function Painel() {
                         </div>
 
                         <p className={`mt-3 text-[10px] ${cores.subtleText}`}>
-                            A senha inicial deve ter ao menos 12 caracteres. Combine a senha com o
+                            A senha inicial deve ter ao menos 8 caracteres. Combine a senha com o
                             aluno por um canal seguro.
                         </p>
                         {erroNovoAluno && (

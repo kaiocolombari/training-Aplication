@@ -67,7 +67,7 @@ Preencha os valores locais:
 | **AUTH_JWT_SECRET** | Segredo aleatório exclusivo com pelo menos 32 bytes |
 | **FRONTEND_ORIGINS** | Origem do frontend; localmente http://localhost:5173 |
 | **ADMIN_EMAIL** | E-mail da conta ADMIN inicial |
-| **ADMIN_PASSWORD** | Senha forte da conta ADMIN inicial (mínimo 12 caracteres) |
+| **ADMIN_PASSWORD** | Senha forte da conta ADMIN inicial (mínimo 8 caracteres) |
 
 Gere um segredo JWT no PowerShell sem reutilizar o exemplo:
 

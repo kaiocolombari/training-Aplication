@@ -96,6 +96,7 @@ builder.Services.AddScoped<PerimetroService>();
 builder.Services.AddScoped<TreinoDiaService>();
 builder.Services.AddScoped<TreinoExercicioService>();
 builder.Services.AddScoped<ExecucaoTreinoService>();
+builder.Services.AddScoped<VolumeAcompanhamentoService>();
 builder.Services.AddScoped<VolumeSemanalService>();
 builder.Services.AddScoped<GrupoMuscularService>();
 builder.Services.AddScoped<DobraCutaneaService>();

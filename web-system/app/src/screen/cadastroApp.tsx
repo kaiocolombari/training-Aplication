@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 import { useAuth } from "../context/authContext";
 import { comunicacaoService } from "../service/comunicacaoService";
 import FeedbackAlunoPortal from "./FeedbackAlunoPortal";
+import AcompanhamentoVolumePortal from "./AcompanhamentoVolumePortal";
 
 export default function CadastroApp() {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const notificacoesQuery = useQuery({
         queryKey: ["comunicacao", "notificacoes"],
@@ -40,7 +43,9 @@ export default function CadastroApp() {
                 >
                     <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
                         <div>
-                            <h2 className="text-sm font-semibold text-white">Avisos de acompanhamento</h2>
+                            <h2 className="text-sm font-semibold text-white">
+                                Avisos de acompanhamento
+                            </h2>
                             <p className="mt-1 text-[11px] text-white/45">
                                 Atualizações importantes sobre sua equipe e seu acompanhamento.
                             </p>
@@ -50,7 +55,10 @@ export default function CadastroApp() {
                         </span>
                     </div>
                     {notificacoesQuery.isLoading ? (
-                        <div role="status" className="flex items-center gap-2 px-4 py-5 text-xs text-white/50">
+                        <div
+                            role="status"
+                            className="flex items-center gap-2 px-4 py-5 text-xs text-white/50"
+                        >
                             <span className="ui-spinner" aria-hidden="true" />
                             Verificando avisos...
                         </div>
@@ -112,9 +120,16 @@ export default function CadastroApp() {
                         O link do aplicativo será disponibilizado em breve.
                     </p>
                 )}
+                {user?.tipo === "ALUNO" && (
+                    <AcompanhamentoVolumePortal alunoId={user.alunoId ?? null} />
+                )}
                 <FeedbackAlunoPortal />
                 <button
-                    onClick={() => void logout()}
+                    onClick={() => {
+                        void logout()
+                            .catch(() => undefined)
+                            .then(() => navigate("/register", { replace: true }));
+                    }}
                     className="mx-auto mt-5 block text-xs text-white/45 hover:text-white"
                 >
                     Sair da conta

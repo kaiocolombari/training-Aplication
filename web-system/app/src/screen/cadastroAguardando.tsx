@@ -46,7 +46,11 @@ export default function CadastroAguardando() {
                         Instalar aplicativo mobile ↗
                     </a>
                     <button
-                        onClick={() => void logout().then(() => navigate("/register"))}
+                        onClick={() => {
+                            void logout()
+                                .catch(() => undefined)
+                                .then(() => navigate("/register", { replace: true }));
+                        }}
                         className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/5"
                     >
                         Sair

@@ -8,7 +8,7 @@ namespace TreinoAPI.DTOs.Personal
         public string NomeCompleto { get; set; } = string.Empty;
         [Required, EmailAddress, StringLength(254)]
         public string Email { get; set; } = string.Empty;
-        [Required, MinLength(12), StringLength(128)]
+        [Required, MinLength(8), StringLength(128)]
         public string Senha { get; set; } = string.Empty;
         [Phone, StringLength(30)]
         public string? Telefone { get; set; }

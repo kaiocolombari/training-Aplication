@@ -67,6 +67,7 @@ async function refreshSession(): Promise<boolean> {
                     credentials: "include",
                     headers: { "X-CSRF-TOKEN": token, Accept: "application/json" },
                 });
+                if (response.ok) csrfToken = null;
                 return response.ok;
             } catch {
                 return false;
@@ -91,10 +92,20 @@ async function parseError(response: Response): Promise<ApiError> {
     return new ApiError(message, response.status, payload);
 }
 
+async function isCsrfFailure(response: Response): Promise<boolean> {
+    if (response.status !== 400) return false;
+
+    const payload = await response.clone().json().catch(() => null) as
+        | { message?: string }
+        | null;
+    return payload?.message?.includes("Token de segurança ausente ou inválido") ?? false;
+}
+
 export async function api<T = unknown>(
     endpoint: string,
     options: RequestInit = {},
     retried = false,
+    csrfRetried = false,
 ): Promise<T> {
     const method = (options.method || "GET").toUpperCase();
     const headers = new Headers(options.headers);
@@ -116,6 +127,18 @@ export async function api<T = unknown>(
     });
 
     const endpointPath = endpoint.split("?")[0];
+    if (response.ok && ["/api/auth/login", "/api/auth/register", "/api/auth/logout"].includes(endpointPath)) {
+        // O token anterior pode ter sido emitido para a identidade anônima ou para a sessão encerrada.
+        csrfToken = null;
+    }
+
+    if (!csrfRetried && await isCsrfFailure(response)) {
+        // Recria o par cookie/token antes de repetir a operação que foi barrada pelo middleware.
+        csrfToken = null;
+        await loadCsrfToken(true);
+        return api<T>(endpoint, options, retried, true);
+    }
+
     const canRefresh = ![
         "/api/auth/csrf",
         "/api/auth/login",
@@ -125,7 +148,7 @@ export async function api<T = unknown>(
     ].includes(endpointPath);
     if (response.status === 401 && !retried && canRefresh) {
         const refreshed = await refreshSession();
-        if (refreshed) return api<T>(endpoint, options, true);
+        if (refreshed) return api<T>(endpoint, options, true, csrfRetried);
         notifySessionExpired();
     } else if (response.status === 401 && retried && canRefresh) {
         notifySessionExpired();

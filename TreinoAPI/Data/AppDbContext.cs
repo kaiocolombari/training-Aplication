@@ -14,6 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<ExecucaoTreino> ExecucoesTreino { get; set; }
     public DbSet<ExecucaoExercicio> ExecucoesExercicio { get; set; }
     public DbSet<ExecucaoSerie> ExecucoesSerie { get; set; }
+    public DbSet<TreinoVolumeCiclo> TreinoVolumeCiclos { get; set; }
+    public DbSet<TreinoVolumeRegistroMensal> TreinoVolumeRegistrosMensais { get; set; }
     public DbSet<Aluno> Alunos { get; set; }
     public DbSet<SolicitacaoCadastro> SolicitacoesCadastro { get; set; }
     public DbSet<ConversaEquipe> ConversasEquipe { get; set; }
@@ -478,6 +480,28 @@ public class AppDbContext : DbContext
             .WithMany(e => e.Series)
             .HasForeignKey(s => s.ExecucaoExercicioId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TreinoVolumeCiclo>()
+            .Property(c => c.TreinoNomeSnapshot).HasMaxLength(140);
+        modelBuilder.Entity<TreinoVolumeCiclo>()
+            .Property(c => c.ExerciciosSnapshotJson).HasColumnType("jsonb");
+        modelBuilder.Entity<TreinoVolumeCiclo>()
+            .HasOne(c => c.Aluno).WithMany().HasForeignKey(c => c.AlunoId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<TreinoVolumeCiclo>()
+            .HasOne(c => c.Treino).WithMany().HasForeignKey(c => c.TreinoId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<TreinoVolumeCiclo>()
+            .HasOne(c => c.CriadoPorUsuario).WithMany().HasForeignKey(c => c.CriadoPorUsuarioId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<TreinoVolumeCiclo>()
+            .HasIndex(c => c.TreinoId).IsUnique().HasFilter("\"EncerradoEm\" IS NULL");
+
+        modelBuilder.Entity<TreinoVolumeRegistroMensal>()
+            .Property(r => r.Observacao).HasMaxLength(500);
+        modelBuilder.Entity<TreinoVolumeRegistroMensal>()
+            .HasOne(r => r.Ciclo).WithMany(c => c.Registros).HasForeignKey(r => r.CicloId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<TreinoVolumeRegistroMensal>()
+            .HasOne(r => r.RegistradoPorUsuario).WithMany().HasForeignKey(r => r.RegistradoPorUsuarioId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<TreinoVolumeRegistroMensal>()
+            .HasIndex(r => new { r.CicloId, r.MesCiclo }).IsUnique();
 
         modelBuilder.Entity<DiaTreino>()
             .HasOne(td => td.PeriodizacaoDia)

@@ -79,8 +79,8 @@ export default function Register() {
                     setErro("As senhas não coincidem.");
                     return;
                 }
-                if (senha.length < 12) {
-                    setErro("A senha deve possuir pelo menos 12 caracteres.");
+                if (senha.length < 8) {
+                    setErro("A senha deve possuir pelo menos 8 caracteres.");
                     return;
                 }
 
@@ -340,9 +340,9 @@ export default function Register() {
                                             isSignup ? "new-password" : "current-password"
                                         }
                                         placeholder={
-                                            isSignup ? "Mínimo de 12 caracteres" : "Sua senha"
+                                            isSignup ? "Mínimo de 8 caracteres" : "Sua senha"
                                         }
-                                        minLength={isSignup ? 12 : undefined}
+                                        minLength={isSignup ? 8 : undefined}
                                         required
                                         className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13px] text-[14px] text-zinc-700 outline-none transition placeholder:text-[13px] placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white"
                                     />
@@ -372,6 +372,7 @@ export default function Register() {
                                         onChange={e => setConfirmarSenha(e.target.value)}
                                         autoComplete="new-password"
                                         placeholder="Digite a senha novamente"
+                                        minLength={8}
                                         required
                                         className="w-full rounded-[10px] border-2 border-zinc-200 bg-zinc-50 px-4 py-[13px] text-[14px] text-zinc-700 outline-none transition placeholder:text-[13px] placeholder:text-zinc-400 focus:border-[#a85f60] focus:bg-white focus:shadow-[0_0_0_3px_rgba(168,95,96,0.08)]"
                                     />
