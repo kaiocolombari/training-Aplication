@@ -8,9 +8,11 @@ import {
 export default [
   layout("src/components/ProtectedLayout.tsx", [
     index("src/screen/painel.tsx"),
+    route("acesso-negado", "src/screen/acessoNegado.tsx"),
     route("cadastro/formulario", "src/screen/formularioCadastro.tsx"),
     route("cadastro/aguardando", "src/screen/cadastroAguardando.tsx"),
     route("cadastro/app", "src/screen/cadastroApp.tsx"),
+    route("*", "src/screen/notFound.tsx"),
 
     layout("src/components/AvaliacaoLayout.tsx", [
       route("avaliacoes", "src/screen/avaliacoes.tsx"),
@@ -24,5 +26,7 @@ export default [
     ]),
   ]),
 
-  route("register", "src/screen/register.tsx"),
+  layout("src/components/PublicOnlyLayout.tsx", [
+    route("register", "src/screen/register.tsx"),
+  ]),
 ] satisfies RouteConfig;

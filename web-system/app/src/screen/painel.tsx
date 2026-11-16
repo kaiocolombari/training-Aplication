@@ -24,6 +24,9 @@ import {
   BsSun,
   BsActivity,
   BsCpu,
+  BsPalette,
+  BsType,
+  BsEnvelope,
 } from "react-icons/bs";
 import { FaPeopleGroup, FaRegCircleQuestion } from "react-icons/fa6";
 import { VscFeedback } from "react-icons/vsc";
@@ -44,6 +47,9 @@ import AtividadesAdmin from "./AtividadesAdmin";
 import Relatorios from "./Relatorios";
 import ControleAluno from "./ControleAluno";
 import ControleAvancado from "./ControleAvancado";
+import { ESCALAS_TEXTO, FONTES_UI, TEMAS, gerarVariaveisTema, type EscalaTextoId, type FonteUiId, type TemaId } from "../types/temas";
+import EmailCenter from "./EmailCenter";
+import { Skeleton } from "../components/Skeleton";
 
 interface AlunoPainel {
   id: string;
@@ -139,6 +145,7 @@ const secoes = [
     grupo: "Comunicação",
     icone: <IoChatbubblesSharp />,
   },
+  { id: "emails", nome: "Central de e-mails", grupo: "Comunicação", icone: <BsEnvelope /> },
   {
     id: "feedback",
     nome: "Feedback",
@@ -222,6 +229,26 @@ export default function Painel() {
     if (typeof window === "undefined") return "light";
     return localStorage.getItem("painel_tema") === "dark" ? "dark" : "light";
   });
+  const [temaVisualId, setTemaVisualId] = useState<TemaId>(() => {
+    if (typeof window === "undefined") return "indigo";
+    const salvo = localStorage.getItem("painel_tema_visual");
+    return salvo && salvo in TEMAS ? salvo as TemaId : "indigo";
+  });
+  const [tamanhoTexto, setTamanhoTexto] = useState<EscalaTextoId>(() => {
+    if (typeof window === "undefined") return "padrao";
+    const salvo = localStorage.getItem("painel_tamanho_texto");
+    return salvo && salvo in ESCALAS_TEXTO ? salvo as EscalaTextoId : "padrao";
+  });
+  const [fonteUi, setFonteUi] = useState<FonteUiId>(() => {
+    if (typeof window === "undefined") return "sistema";
+    const salvo = localStorage.getItem("painel_fonte_ui");
+    return salvo && salvo in FONTES_UI ? salvo as FonteUiId : "sistema";
+  });
+  const estiloPainel = useMemo(() => ({
+    ...gerarVariaveisTema(temaVisualId, tema),
+    fontFamily: FONTES_UI[fonteUi].css,
+    "--ui-font-scale": String(ESCALAS_TEXTO[tamanhoTexto].escala),
+  }) as React.CSSProperties, [temaVisualId, tema, fonteUi, tamanhoTexto]);
 
   const [secaoAtual, setSecaoAtual] = useState("alunos");
   const alunosQuery = useQuery({
@@ -288,6 +315,18 @@ export default function Painel() {
   useEffect(() => {
     localStorage.setItem("painel_tema", tema);
   }, [tema]);
+
+  useEffect(() => {
+    localStorage.setItem("painel_tema_visual", temaVisualId);
+  }, [temaVisualId]);
+
+  useEffect(() => {
+    localStorage.setItem("painel_tamanho_texto", tamanhoTexto);
+  }, [tamanhoTexto]);
+
+  useEffect(() => {
+    localStorage.setItem("painel_fonte_ui", fonteUi);
+  }, [fonteUi]);
 
   useEffect(() => {
     const personais = personaisQuery.data ?? [];
@@ -436,7 +475,7 @@ export default function Painel() {
     try {
       const cadastro = await cadastroService.obterCadastro(aluno.id);
       const blob = new Blob([JSON.stringify(cadastro, null, 2)], {
-      type: "application/json",
+        type: "application/json",
       });
 
       const url = URL.createObjectURL(blob);
@@ -587,6 +626,7 @@ export default function Painel() {
     secao.id === "solicitacoes" ||
     secao.id === "relatorios" ||
     secao.id === "chat" ||
+    (secao.id === "emails" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
     (secao.id === "log" && user?.tipo === "ADMIN") ||
     (secao.id === "equipe" && user?.tipo === "ADMIN") ||
     (secao.id === "controleAluno" && Boolean(alunoSelecionadoId) && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
@@ -841,11 +881,9 @@ export default function Painel() {
               <p className="text-[10px] text-[var(--text-muted)]">
                 Total de alunos
               </p>
-              <p
-                className={`mt-0.5 text-[20px] font-semibold tracking-[-0.04em] ${cores.heading}`}
-              >
-                {alunosQuery.isLoading ? "—" : alunos.length}
-              </p>
+              {alunosQuery.isLoading
+                ? <Skeleton className="mt-2 h-7 w-12 rounded-md" />
+                : <p className={`mt-0.5 text-[20px] font-semibold tracking-[-0.04em] ${cores.heading}`}>{alunos.length}</p>}
             </div>
           </div>
 
@@ -908,9 +946,18 @@ export default function Painel() {
 
           {/* Lista vazia */}
           {alunosQuery.isLoading ? (
-            <div className="flex min-h-[240px] items-center justify-center gap-3 text-[12px] text-[var(--text-muted)]">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent)]" />
-              Carregando alunos do servidor...
+            <div aria-label="Carregando diretório de alunos" aria-busy="true" className="space-y-4 p-5">
+              {Array.from({ length: 5 }, (_, index) => (
+                <div key={index} className="flex items-center gap-3 rounded-xl border border-[var(--border)] p-3">
+                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-3 w-2/5 rounded" />
+                    <Skeleton className="h-2.5 w-3/5 rounded" />
+                  </div>
+                  <Skeleton className="hidden h-7 w-20 rounded-lg sm:block" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+              ))}
             </div>
           ) : alunosQuery.isError ? (
             <div className="flex min-h-[240px] flex-col items-center justify-center px-6 text-center">
@@ -1433,9 +1480,10 @@ export default function Painel() {
   }
 
   function renderConfiguracoes() {
+    const temaSelecionado = TEMAS[temaVisualId];
     return (
-      <section className="w-full max-w-[1100px]">
-        <div className={`mb-7 border-b ${cores.divider} pb-6`}>
+      <section className="w-full max-w-[1200px] space-y-5">
+        <div className={`border-b ${cores.divider} pb-6`}>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-text)]">
             Sistema / Preferências
           </p>
@@ -1443,8 +1491,90 @@ export default function Painel() {
             Configurações
           </h1>
           <p className={`mt-1.5 text-[13px] ${cores.bodyText}`}>
-            Ajuste como o sistema salva suas fichas durante o atendimento.
+            Personalize a aparência, leitura e comportamento do seu workspace.
           </p>
+        </div>
+
+        <section className={`rounded-2xl border ${cores.divider} bg-[var(--surface)] p-5 sm:p-6`}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2"><BsPalette className="text-[var(--accent)]" /><h2 className={`text-[14px] font-bold ${cores.heading}`}>Temas e identidade visual</h2></div>
+              <p className={`mt-1.5 max-w-2xl text-[11px] leading-5 ${cores.bodyText}`}>Escolha uma paleta pronta. Cada tema possui cores próprias para o modo claro e escuro; para criar outro, adicione uma nova chave no arquivo <code className="rounded bg-[var(--surface-tertiary)] px-1.5 py-0.5">src/types/temas.ts</code>.</p>
+            </div>
+            <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[9px] font-semibold text-[var(--accent-text)]">{temaSelecionado.nome}</span>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {(Object.keys(TEMAS) as TemaId[]).map(id => {
+              const item = TEMAS[id];
+              const ativo = temaVisualId === id;
+              return (
+                <button key={id} type="button" aria-pressed={ativo} onClick={() => setTemaVisualId(id)} className={`rounded-xl border p-4 text-left transition ${ativo ? "border-[var(--accent)] bg-[var(--accent-soft)] ring-2 ring-[var(--ring)]" : "border-[var(--border)] bg-[var(--surface-secondary)] hover:border-[var(--accent)]"}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className={`text-[12px] font-semibold ${cores.heading}`}>{item.nome}</span>
+                    {ativo && <span className="rounded-full bg-[var(--accent)] px-2 py-1 text-[8px] font-bold text-white">ATIVO</span>}
+                  </div>
+                  <p className={`mt-1 min-h-8 text-[9px] leading-4 ${cores.subtleText}`}>{item.descricao}</p>
+                  <div className="mt-3 flex items-center gap-1.5" aria-label="Cores principais do tema">
+                    {item.amostras.map((cor, index) => <span key={index} className="h-6 w-6 rounded-md border border-black/10 shadow-sm" style={{ backgroundColor: cor }} />)}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className={`mt-5 flex flex-wrap items-center justify-between gap-3 border-t ${cores.divider} pt-4`}>
+            <div><p className={`text-[10px] font-semibold ${cores.bodyText}`}>Modo de exibição</p><p className={`mt-0.5 text-[9px] ${cores.subtleText}`}>A paleta selecionada adapta suas cores ao modo claro ou escuro.</p></div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setTema("light")} aria-pressed={tema === "light"} className={tema === "light" ? "inline-flex h-9 items-center gap-2 rounded-lg bg-[var(--accent)] px-3 text-[10px] font-semibold text-white" : `inline-flex h-9 items-center gap-2 rounded-lg border ${cores.divider} px-3 text-[10px] font-semibold ${cores.bodyText}`}><BsSun /> Claro</button>
+              <button type="button" onClick={() => setTema("dark")} aria-pressed={tema === "dark"} className={tema === "dark" ? "inline-flex h-9 items-center gap-2 rounded-lg bg-[var(--accent)] px-3 text-[10px] font-semibold text-white" : `inline-flex h-9 items-center gap-2 rounded-lg border ${cores.divider} px-3 text-[10px] font-semibold ${cores.bodyText}`}><BsMoonStars /> Escuro</button>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-5 xl:grid-cols-2">
+          <section className={`rounded-2xl border ${cores.divider} bg-[var(--surface)] p-5 sm:p-6`}>
+            <div className="flex items-center gap-2"><BsType className="text-[var(--accent)]" /><h2 className={`text-[14px] font-bold ${cores.heading}`}>Tamanho das letras</h2></div>
+            <p className={`mt-1.5 text-[11px] leading-5 ${cores.bodyText}`}>Ajuste a escala tipográfica para priorizar mais conteúdo ou uma leitura mais confortável.</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {(Object.keys(ESCALAS_TEXTO) as EscalaTextoId[]).map(id => {
+                const item = ESCALAS_TEXTO[id];
+                const ativo = tamanhoTexto === id;
+                return <button key={id} type="button" aria-pressed={ativo} onClick={() => setTamanhoTexto(id)} className={`rounded-xl border p-3 text-left transition ${ativo ? "border-[var(--accent)] bg-[var(--accent-soft)]" : `border-[var(--border)] bg-[var(--surface-secondary)] hover:border-[var(--accent)]`}`}>
+                  <span className={`block text-[10px] font-semibold ${cores.heading}`}>{item.nome}</span>
+                  <span className="mt-2 block font-semibold text-[var(--text-primary)]" style={{ fontSize: (14 * item.escala) + "px" }}>Aa</span>
+                  <span className={`mt-1 block text-[9px] ${cores.subtleText}`}>{item.exemplo}</span>
+                </button>;
+              })}
+            </div>
+            <div className={`mt-4 rounded-xl border ${cores.divider} bg-[var(--surface-secondary)] p-3`}>
+              <p className={`text-[9px] font-semibold uppercase tracking-wide ${cores.subtleText}`}>Prévia da leitura</p>
+              <p className={`mt-2 font-semibold ${cores.heading}`} style={{ fontSize: (15 * ESCALAS_TEXTO[tamanhoTexto].escala) + "px" }}>Acompanhe a evolução do aluno</p>
+              <p className={`mt-1 leading-5 ${cores.bodyText}`} style={{ fontSize: (12 * ESCALAS_TEXTO[tamanhoTexto].escala) + "px" }}>Os indicadores e informações do painel acompanham a escala escolhida.</p>
+            </div>
+          </section>
+
+          <section className={`rounded-2xl border ${cores.divider} bg-[var(--surface)] p-5 sm:p-6`}>
+            <div className="flex items-center gap-2"><BsType className="text-[var(--accent)]" /><h2 className={`text-[14px] font-bold ${cores.heading}`}>Família tipográfica</h2></div>
+            <p className={`mt-1.5 text-[11px] leading-5 ${cores.bodyText}`}>Escolha a fonte usada nos textos, títulos, menus e formulários do painel.</p>
+            <label className="mt-4 grid gap-1.5">
+              <span className={`text-[10px] font-semibold ${cores.bodyText}`}>Fonte do workspace</span>
+              <select value={fonteUi} onChange={event => setFonteUi(event.target.value as FonteUiId)} className={`${cores.input} h-10 px-3 text-[11px] outline-none`}>
+                {(Object.keys(FONTES_UI) as FonteUiId[]).map(id => <option key={id} value={id}>{FONTES_UI[id].nome}</option>)}
+              </select>
+            </label>
+            <div className={`mt-4 rounded-xl border ${cores.divider} bg-[var(--surface-secondary)] p-4`}>
+              <p className={`text-[9px] font-semibold uppercase tracking-wide ${cores.subtleText}`}>Prévia da fonte · {FONTES_UI[fonteUi].nome}</p>
+              <p className={`mt-3 text-[20px] font-semibold tracking-tight ${cores.heading}`} style={{ fontFamily: FONTES_UI[fonteUi].css }}>Gestão de treinamento</p>
+              <p className={`mt-1 text-[11px] leading-5 ${cores.bodyText}`} style={{ fontFamily: FONTES_UI[fonteUi].css }}>Prescrição, acompanhamento e evolução em um só lugar.</p>
+              <p className={`mt-3 text-[10px] ${cores.subtleText}`} style={{ fontFamily: FONTES_UI[fonteUi].css }}>Aa Bb Cc · 0123456789</p>
+            </div>
+          </section>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] px-4 py-3">
+          <p className={`text-[10px] ${cores.subtleText}`}>As preferências visuais são salvas neste navegador e não alteram os dados dos alunos.</p>
+          <button type="button" onClick={() => { setTemaVisualId("indigo"); setTamanhoTexto("padrao"); setFonteUi("sistema"); setTema("light"); }} className={`h-8 rounded-lg border ${cores.divider} bg-[var(--surface)] px-3 text-[9px] font-semibold ${cores.bodyText} hover:bg-[var(--row-hover)]`}>Restaurar aparência padrão</button>
         </div>
 
         <div className={`max-w-3xl rounded-xl border ${cores.divider} bg-[var(--surface)] p-5 sm:p-6`}>
@@ -1517,6 +1647,10 @@ export default function Painel() {
         return <SolicitacoesCadastro />;
       case "chat":
         return <CentralComunicacao />;
+      case "emails":
+        return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL"
+          ? <EmailCenter tipoUsuario={user.tipo} />
+          : renderInicio();
       case "equipe":
         return user?.tipo === "ADMIN" ? renderEquipe() : renderAlunos();
 
@@ -1576,9 +1710,10 @@ export default function Painel() {
     <div
       data-theme={tema}
       className="painel-theme flex min-h-screen bg-[var(--surface-secondary)] text-[var(--text-primary)]"
+      style={estiloPainel}
     >
       {/* Sidebar desktop */}
-      <aside className="hidden w-[232px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)] lg:flex">
+      <aside className="sticky top-0 hidden h-screen max-h-screen w-[232px] shrink-0 self-start flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--sidebar)] lg:flex">
         <div className="flex h-[76px] items-center gap-3 border-b border-[var(--border)] px-5">
           <div className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent)] text-[12px] font-bold tracking-[-0.08em] text-white">
             GF
@@ -1608,7 +1743,7 @@ export default function Painel() {
 
         <nav
           aria-label="Navegação principal"
-          className="flex-1 overflow-y-auto px-3 py-4"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4"
         >
           {gruposNavegacao.filter(grupo => secoesVisiveis.some(secao => secao.grupo === grupo)).map((grupo) => (
             <div key={grupo} className="mb-5">
@@ -1627,11 +1762,10 @@ export default function Painel() {
                         key={secao.id}
                         onClick={() => navegar(secao.id)}
                         aria-current={ativo ? "page" : undefined}
-                        className={`relative flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)] ${
-                          ativo
+                        className={`relative flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)] ${ativo
                             ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
                             : "text-[var(--text-secondary)] hover:bg-[var(--row-hover)] hover:text-[var(--text-primary)]"
-                        }`}
+                          }`}
                       >
                         {ativo && (
                           <span className="absolute inset-y-1 left-0 w-[2px] rounded-full bg-[var(--accent)]" />
@@ -1835,11 +1969,10 @@ export default function Painel() {
                           key={secao.id}
                           onClick={() => navegar(secao.id)}
                           aria-current={ativo ? "page" : undefined}
-                          className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2.5 text-left text-[12px] ${
-                            ativo
+                          className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2.5 text-left text-[12px] ${ativo
                               ? "bg-[var(--accent-soft)] font-semibold text-[var(--accent-text)]"
                               : "text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
-                          }`}
+                            }`}
                         >
                           <span
                             className={`text-[15px] ${ativo ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}
@@ -1864,7 +1997,7 @@ export default function Painel() {
           style={{ backgroundColor: "var(--surface-secondary)" }}
         >
           <div className="mx-auto w-full max-w-[1600px]">
-            {renderConteudo()}
+            <div key={secaoAtual} className="route-enter">{renderConteudo()}</div>
           </div>
         </main>
 

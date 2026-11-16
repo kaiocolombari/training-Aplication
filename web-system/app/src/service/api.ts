@@ -13,6 +13,21 @@ const API_URL = (import.meta.env.VITE_API_URL || "https://localhost:7285").repla
 let csrfToken: string | null = null;
 let refreshInFlight: Promise<boolean> | null = null;
 
+export const AUTH_SESSION_EXPIRED_EVENT = "app:auth-session-expired";
+export const API_FORBIDDEN_EVENT = "app:api-forbidden";
+
+function notifySessionExpired() {
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
+    }
+}
+
+function notifyForbidden(endpoint: string) {
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(API_FORBIDDEN_EVENT, { detail: { endpoint } }));
+    }
+}
+
 function isUnsafe(method: string) {
     return !["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase());
 }
@@ -104,7 +119,12 @@ export async function api<T = unknown>(
     if (response.status === 401 && !retried && canRefresh) {
         const refreshed = await refreshSession();
         if (refreshed) return api<T>(endpoint, options, true);
+        notifySessionExpired();
+    } else if (response.status === 401 && retried && canRefresh) {
+        notifySessionExpired();
     }
+
+    if (response.status === 403) notifyForbidden(endpointPath);
 
     if (!response.ok) throw await parseError(response);
     if (response.status === 204) return null as T;

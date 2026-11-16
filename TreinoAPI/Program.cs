@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TreinoAPI.Data;
+using TreinoAPI.Configuration;
 using TreinoAPI.Middleware;
 using TreinoAPI.Security;
 using TreinoAPI.Services;
@@ -54,6 +55,8 @@ builder.Services.Configure<AuthOptions>(options =>
     options.RefreshTokenDays = refreshDays;
 });
 
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -69,6 +72,7 @@ builder.Services.AddScoped<OwnershipService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CadastroAlunoService>();
 builder.Services.AddScoped<ComunicacaoService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<RelatoriosService>();
 builder.Services.AddScoped<AlunoService>();
@@ -125,6 +129,18 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = 8,
                 Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("email-send", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 4,
+                Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
@@ -196,9 +212,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
-app.UseRateLimiter();
 app.UseMiddleware<CsrfProtectionMiddleware>();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 

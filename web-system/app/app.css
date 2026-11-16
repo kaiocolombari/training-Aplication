@@ -2,6 +2,34 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@keyframes skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.skeleton-shimmer {
+  display: block;
+  background-color: var(--surface-tertiary, #e5e7eb);
+  background-image: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 48%) 45%, transparent 70%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes route-enter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.route-enter {
+  min-width: 0;
+  animation: route-enter 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer { animation: none; }
+  .route-enter { animation: none; }
+}
+
 @layer base {
   button {
     @apply cursor-pointer;
@@ -393,3 +421,48 @@
 .painel-theme *::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Escala tipográfica configurável no workspace */
+.painel-theme [class~="text-[8px]"] { font-size: calc(8px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[9px]"] { font-size: calc(9px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[10px]"] { font-size: calc(10px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[11px]"] { font-size: calc(11px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[12px]"] { font-size: calc(12px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[13px]"] { font-size: calc(13px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[14px]"] { font-size: calc(14px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[15px]"] { font-size: calc(15px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[16px]"] { font-size: calc(16px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[17px]"] { font-size: calc(17px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[18px]"] { font-size: calc(18px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[20px]"] { font-size: calc(20px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[22px]"] { font-size: calc(22px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[24px]"] { font-size: calc(24px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[25px]"] { font-size: calc(25px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[27px]"] { font-size: calc(27px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[28px]"] { font-size: calc(28px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[30px]"] { font-size: calc(30px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-[34px]"] { font-size: calc(34px * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-xs"] { font-size: calc(0.75rem * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-sm"] { font-size: calc(0.875rem * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-base"] { font-size: calc(1rem * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-lg"] { font-size: calc(1.125rem * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-xl"] { font-size: calc(1.25rem * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-2xl"] { font-size: calc(1.5rem * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-3xl"] { font-size: calc(1.875rem * var(--ui-font-scale, 1)) !important; }
+.painel-theme [class~="text-4xl"] { font-size: calc(2.25rem * var(--ui-font-scale, 1)) !important; }
+
+/* O Controle Avançado usa uma escala ligeiramente maior por padrão. */
+.controle-avancado [class~="text-[8px]"] { font-size: calc(8px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[9px]"] { font-size: calc(9px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[10px]"] { font-size: calc(10px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[11px]"] { font-size: calc(11px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[12px]"] { font-size: calc(12px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[14px]"] { font-size: calc(14px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[17px]"] { font-size: calc(17px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[25px]"] { font-size: calc(25px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[27px]"] { font-size: calc(27px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-[34px]"] { font-size: calc(34px * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-lg"] { font-size: calc(1.125rem * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-xl"] { font-size: calc(1.25rem * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-2xl"] { font-size: calc(1.5rem * var(--ui-font-scale, 1) * 1.08) !important; }
+.controle-avancado [class~="text-3xl"] { font-size: calc(1.875rem * var(--ui-font-scale, 1) * 1.08) !important; }

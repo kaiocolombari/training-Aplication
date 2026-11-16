@@ -4,6 +4,7 @@ import { BsBell, BsChatDots, BsMegaphone, BsSend, BsCheck2All, BsPersonPlus, BsA
 import { useAuth } from "../context/authContext";
 import { comunicacaoService, type Notificacao } from "../service/comunicacaoService";
 import { ApiError } from "../service/api";
+import { Skeleton } from "../components/Skeleton";
 
 type Aba = "mensagens" | "mural" | "alertas";
 
@@ -235,7 +236,7 @@ export default function CentralComunicacao() {
                             <p className="mt-1 text-[10px] text-[var(--text-muted)]">Converse com administradores e personais.</p>
                         </div>
                         <div className="max-h-[250px] overflow-y-auto p-2 lg:max-h-[560px]">
-                            {equipe.isLoading && <p className="p-3 text-xs text-[var(--text-muted)]">Carregando equipe...</p>}
+                            {equipe.isLoading && <div aria-label="Carregando equipe" aria-busy="true" className="space-y-4 p-3">{Array.from({ length: 4 }, (_, index) => <div key={index} className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-2.5 w-3/5 rounded" /><Skeleton className="h-2 w-2/5 rounded" /></div></div>)}</div>}
                             {(equipe.data ?? []).map(membro => {
                                 const conversa = conversasPorUsuario.get(membro.usuarioId);
                                 const ativo = usuarioSelecionadoId === membro.usuarioId;
@@ -266,7 +267,7 @@ export default function CentralComunicacao() {
                                     </div>
                                 </div>
                                 <div className="flex-1 space-y-3 overflow-y-auto bg-[var(--surface-secondary)]/60 p-4 sm:p-6">
-                                    {mensagens.isLoading && conversaSelecionadaId && <p className="text-center text-xs text-[var(--text-muted)]">Carregando mensagens...</p>}
+                                    {mensagens.isLoading && conversaSelecionadaId && <div aria-label="Carregando mensagens" aria-busy="true" className="space-y-4 py-3">{["w-3/5", "w-2/5", "w-1/2"].map((width, index) => <div key={index} className={`flex ${index === 1 ? "justify-end" : "justify-start"}`}><Skeleton className={`h-16 ${width} max-w-[78%] rounded-2xl`} /></div>)}</div>}
                                     {!conversaSelecionadaId && <div className="grid h-full min-h-[260px] place-items-center text-center"><div><BsChatDots className="mx-auto text-3xl text-[var(--text-muted)]" /><p className="mt-3 text-xs font-semibold text-[var(--text-primary)]">Comece uma conversa</p><p className="mt-1 text-[10px] text-[var(--text-muted)]">Envie a primeira mensagem para {membroSelecionado?.nome}.</p></div></div>}
                                     {mensagensAtuais.map(item => {
                                         const propria = item.remetenteId === user?.usuarioId;
@@ -302,7 +303,7 @@ export default function CentralComunicacao() {
                             <div><h2 className="text-sm font-semibold text-[var(--text-primary)]">Comunicados oficiais</h2><p className="mt-1 text-[10px] text-[var(--text-muted)]">Avisos publicados para todos os membros da equipe.</p></div>
                             <span className="rounded-full border border-[var(--border)] px-3 py-1 text-[10px] text-[var(--text-muted)]">{avisos.data?.length ?? 0} recentes</span>
                         </div>
-                        {avisos.isLoading && <p className="py-8 text-center text-xs text-[var(--text-muted)]">Carregando mural...</p>}
+                        {avisos.isLoading && <div aria-label="Carregando comunicados" aria-busy="true" className="space-y-3">{Array.from({ length: 2 }, (_, index) => <div key={index} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"><Skeleton className="h-2.5 w-2/5 rounded" /><Skeleton className="mt-4 h-4 w-3/4 rounded" /><Skeleton className="mt-4 h-2.5 w-full rounded" /><Skeleton className="mt-2 h-2.5 w-5/6 rounded" /></div>)}</div>}
                         {(avisos.data ?? []).map(aviso => (
                             <article key={aviso.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
                                 <div className="flex items-start justify-between gap-4">

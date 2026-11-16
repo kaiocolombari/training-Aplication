@@ -1,15 +1,18 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "../service/api";
+import { ApiError, AUTH_SESSION_EXPIRED_EVENT } from "../service/api";
 import { authService, type AuthUser, type LoginPayload, type RegisterStudentPayload } from "../service/authService";
 
 interface AuthContextValue {
     user: AuthUser | null;
     isLoading: boolean;
+    isError: boolean;
+    error: unknown;
     login: (payload: LoginPayload) => Promise<AuthUser>;
     registerStudent: (payload: RegisterStudentPayload) => Promise<AuthUser>;
     logout: () => Promise<void>;
     refreshUser: () => Promise<void>;
+    retrySession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -31,9 +34,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         enabled: typeof window !== "undefined",
     });
 
+    useEffect(() => {
+        function handleSessionExpired() {
+            queryClient.setQueryData(["auth", "me"], null);
+            queryClient.removeQueries({ predicate: query => query.queryKey[0] !== "auth" });
+        }
+
+        window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+        return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+    }, [queryClient]);
+
     const value = useMemo<AuthContextValue>(() => ({
         user: session.data ?? null,
         isLoading: session.isPending,
+        isError: session.isError,
+        error: session.error,
         login: async (payload) => {
             const user = await authService.login(payload);
             queryClient.setQueryData(["auth", "me"], user);
@@ -55,7 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refreshUser: async () => {
             await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
         },
-    }), [session.data, session.isPending, queryClient]);
+        retrySession: async () => {
+            await queryClient.invalidateQueries({ queryKey: ["auth", "me"], exact: true });
+        },
+    }), [session.data, session.isPending, session.isError, session.error, queryClient]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
