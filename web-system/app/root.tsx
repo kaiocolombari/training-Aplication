@@ -13,6 +13,7 @@ import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AvaliacaoProvider } from "./src/context/avaliacaoContext";
 import { AuthProvider } from "./src/context/authContext";
+import AutoSaveController from "./src/components/AutoSaveController";
 import type { Route } from "./+types/root";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AvaliacaoProvider>
+          <AutoSaveController />
           <Outlet />
         </AvaliacaoProvider>
       </AuthProvider>

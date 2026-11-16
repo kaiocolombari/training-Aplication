@@ -17,8 +17,22 @@ public sealed class AvaliacaoAuditService
         _currentUser = currentUser;
     }
 
-    public async Task RegistrarAsync(Avaliacao avaliacao, string acao, string resumo, object? snapshot)
+    public async Task<bool> RegistrarAsync(Avaliacao avaliacao, string acao, string resumo, object? snapshot)
     {
+        var dadosJson = snapshot is null ? null : JsonSerializer.Serialize(snapshot);
+        if (dadosJson is not null)
+        {
+            var ultimoSnapshot = await _db.AvaliacoesHistorico
+                .AsNoTracking()
+                .Where(item => item.AvaliacaoId == avaliacao.Id)
+                .OrderByDescending(item => item.CriadoEm)
+                .Select(item => item.DadosJson)
+                .FirstOrDefaultAsync();
+
+            if (string.Equals(ultimoSnapshot, dadosJson, StringComparison.Ordinal))
+                return false;
+        }
+
         var usuarioId = _currentUser.UsuarioId;
         var ator = usuarioId == Guid.Empty
             ? null
@@ -36,7 +50,9 @@ public sealed class AvaliacaoAuditService
             Acao = acao,
             Resumo = resumo,
             CriadoEm = DateTime.UtcNow,
-            DadosJson = snapshot is null ? null : JsonSerializer.Serialize(snapshot)
+            DadosJson = dadosJson
         });
+
+        return true;
     }
 }

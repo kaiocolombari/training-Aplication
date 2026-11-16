@@ -18,6 +18,7 @@ import type {
 } from "../types/avaliacao";
 import { criarAvaliacaoFisicaInicial } from "../types/avaliacao";
 import { gruposMusculares } from "../interface/gruposMusculares";
+import { useAuth } from "./authContext";
 
 const criarTesteCargaVazio = (): TesteCargaAvaliacao => ({
   supino: { carga: "", repeticoes: "" },
@@ -94,6 +95,7 @@ export const initialState: Avaliacao = {
 };
 
 export type TelaAvaliacao =
+  | "aluno"
   | "avaliacoes"
   | "comparacao"
   | "prescricao"
@@ -102,6 +104,7 @@ export type TelaAvaliacao =
   | "intensidade";
 
 type AlteracoesPorTela = Record<TelaAvaliacao, boolean>;
+export type AutoSaveStatus = "idle" | "waiting" | "saving" | "saved" | "error";
 
 type AvaliacaoEditorView = Omit<Avaliacao, "avaliacoes"> & {
   avaliacao1: AvaliacaoFisica;
@@ -124,12 +127,24 @@ type AvaliacaoContextType = {
   setAlunoSelecionadoId: Dispatch<SetStateAction<string | null>>;
   alteracoesPendentes: boolean;
   alteracoesPorTela: AlteracoesPorTela;
-  marcarComoSalvo: () => void;
+  marcarComoSalvo: (snapshot?: Avaliacao, alunoId?: string) => boolean;
+  isAlunoSelecionado: (alunoId: string) => boolean;
+  autoSaveEnabled: boolean;
+  setAutoSaveEnabled: Dispatch<SetStateAction<boolean>>;
+  autoSaveDelayMs: number;
+  setAutoSaveDelayMs: Dispatch<SetStateAction<number>>;
+  autoSaveStatus: AutoSaveStatus;
+  setAutoSaveStatus: Dispatch<SetStateAction<AutoSaveStatus>>;
+  autoSaveLastSavedAt: Date | null;
+  setAutoSaveLastSavedAt: Dispatch<SetStateAction<Date | null>>;
+  autoSaveError: string | null;
+  setAutoSaveError: Dispatch<SetStateAction<string | null>>;
 };
 
 const AvaliacaoContext = createContext<AvaliacaoContextType | undefined>(undefined);
 
 const telas: TelaAvaliacao[] = [
+  "aluno",
   "avaliacoes",
   "comparacao",
   "prescricao",
@@ -140,6 +155,7 @@ const telas: TelaAvaliacao[] = [
 
 function criarAlteracoesZeradas(): AlteracoesPorTela {
   return {
+    aluno: false,
     avaliacoes: false,
     comparacao: false,
     prescricao: false,
@@ -149,7 +165,49 @@ function criarAlteracoesZeradas(): AlteracoesPorTela {
   };
 }
 
+function calcularAlteracoes(atual: Avaliacao, anterior: Avaliacao): AlteracoesPorTela {
+  const novasAlteracoes = criarAlteracoesZeradas();
+
+  for (const tela of telas) {
+    if (tela === "prescricao" || tela === "intensidade") continue;
+    novasAlteracoes[tela] = propriedadesPorTela[tela].some(
+      (propriedade) =>
+        JSON.stringify(atual[propriedade]) !== JSON.stringify(anterior[propriedade]),
+    );
+  }
+
+  const removerSeriesIntensidade = (treinos: Avaliacao["treino"]) =>
+    treinos.map((treino) => ({
+      ...treino,
+      exercicios: treino.exercicios.map((exercicio) => ({
+        ...exercicio,
+        seriesIntensidade: undefined,
+      })),
+    }));
+
+  novasAlteracoes.prescricao =
+    JSON.stringify(removerSeriesIntensidade(atual.treino)) !==
+      JSON.stringify(removerSeriesIntensidade(anterior.treino)) ||
+    JSON.stringify(atual.seriesRIR) !== JSON.stringify(anterior.seriesRIR);
+
+  const extrairSeriesIntensidade = (treinos: Avaliacao["treino"]) =>
+    treinos.map((treino) => ({
+      treinoId: treino.id,
+      exercicios: treino.exercicios.map((exercicio) => ({
+        exercicioId: exercicio.id,
+        series: exercicio.seriesIntensidade ?? [],
+      })),
+    }));
+
+  novasAlteracoes.intensidade =
+    JSON.stringify(extrairSeriesIntensidade(atual.treino)) !==
+    JSON.stringify(extrairSeriesIntensidade(anterior.treino));
+
+  return novasAlteracoes;
+}
+
 const propriedadesPorTela: Record<TelaAvaliacao, (keyof Avaliacao)[]> = {
+  aluno: ["aluno"],
   avaliacoes: ["avaliacoes"],
   comparacao: ["avaliacoes", "anamneseComparacao"],
   prescricao: ["treino", "seriesRIR"],
@@ -159,57 +217,86 @@ const propriedadesPorTela: Record<TelaAvaliacao, (keyof Avaliacao)[]> = {
 };
 
 export function AvaliacaoProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [avaliacao, setAvaliacao] = useState<Avaliacao>(initialState);
   const [alunoSelecionadoId, setAlunoSelecionadoId] = useState<string | null>(null);
+  const alunoSelecionadoIdRef = useRef(alunoSelecionadoId);
+  alunoSelecionadoIdRef.current = alunoSelecionadoId;
   const [alteracoesPorTela, setAlteracoesPorTela] = useState<AlteracoesPorTela>(criarAlteracoesZeradas);
   const avaliacaoSalva = useRef<string>(JSON.stringify(initialState));
+  const avaliacaoAtualRef = useRef(avaliacao);
+  avaliacaoAtualRef.current = avaliacao;
+  const [autoSaveEnabledState, setAutoSaveEnabledState] = useState(false);
+  const [autoSaveDelayMsState, setAutoSaveDelayMsState] = useState(4000);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>("idle");
+  const [autoSaveLastSavedAt, setAutoSaveLastSavedAt] = useState<Date | null>(null);
+  const [autoSaveError, setAutoSaveError] = useState<string | null>(null);
   const alteracoesPendentes = telas.some((tela) => alteracoesPorTela[tela]);
 
   useEffect(() => {
     try {
       const anterior = JSON.parse(avaliacaoSalva.current) as Avaliacao;
-      const novasAlteracoes = criarAlteracoesZeradas();
-
-      for (const tela of telas) {
-        if (tela === "prescricao" || tela === "intensidade") continue;
-        novasAlteracoes[tela] = propriedadesPorTela[tela].some(
-          (propriedade) =>
-            JSON.stringify(avaliacao[propriedade]) !== JSON.stringify(anterior[propriedade]),
-        );
-      }
-
-      const removerSeriesIntensidade = (treinos: Avaliacao["treino"]) =>
-        treinos.map((treino) => ({
-          ...treino,
-          exercicios: treino.exercicios.map((exercicio) => ({
-            ...exercicio,
-            seriesIntensidade: undefined,
-          })),
-        }));
-
-      novasAlteracoes.prescricao =
-        JSON.stringify(removerSeriesIntensidade(avaliacao.treino)) !==
-          JSON.stringify(removerSeriesIntensidade(anterior.treino)) ||
-        JSON.stringify(avaliacao.seriesRIR) !== JSON.stringify(anterior.seriesRIR);
-
-      const extrairSeriesIntensidade = (treinos: Avaliacao["treino"]) =>
-        treinos.map((treino) => ({
-          treinoId: treino.id,
-          exercicios: treino.exercicios.map((exercicio) => ({
-            exercicioId: exercicio.id,
-            series: exercicio.seriesIntensidade ?? [],
-          })),
-        }));
-
-      novasAlteracoes.intensidade =
-        JSON.stringify(extrairSeriesIntensidade(avaliacao.treino)) !==
-        JSON.stringify(extrairSeriesIntensidade(anterior.treino));
-
-      setAlteracoesPorTela(novasAlteracoes);
+      setAlteracoesPorTela(calcularAlteracoes(avaliacao, anterior));
     } catch (error) {
       console.error("Erro ao detectar alterações:", error);
     }
   }, [avaliacao]);
+
+  useEffect(() => {
+    if (!user?.usuarioId) {
+      setAutoSaveEnabledState(false);
+      setAutoSaveDelayMsState(4000);
+      setAutoSaveStatus("idle");
+      setAutoSaveLastSavedAt(null);
+      setAutoSaveError(null);
+      return;
+    }
+
+    try {
+      const prefixo = `treino_autosave_${user.usuarioId}`;
+      setAutoSaveEnabledState(localStorage.getItem(`${prefixo}_enabled`) === "true");
+      const delaySalvo = Number(localStorage.getItem(`${prefixo}_delay`));
+      setAutoSaveDelayMsState([2000, 4000, 6000, 10000].includes(delaySalvo) ? delaySalvo : 4000);
+    } catch {
+      setAutoSaveEnabledState(false);
+      setAutoSaveDelayMsState(4000);
+    }
+  }, [user?.usuarioId]);
+
+  const setAutoSaveEnabled = useCallback<Dispatch<SetStateAction<boolean>>>(
+    (value) => {
+      setAutoSaveEnabledState((atual) => {
+        const proximo = typeof value === "function" ? value(atual) : value;
+        if (user?.usuarioId && typeof window !== "undefined") {
+          try {
+            localStorage.setItem(`treino_autosave_${user.usuarioId}_enabled`, String(proximo));
+          } catch {
+            // A preferência continua válida durante a sessão mesmo se o storage estiver indisponível.
+          }
+        }
+        return proximo;
+      });
+    },
+    [user?.usuarioId],
+  );
+
+  const setAutoSaveDelayMs = useCallback<Dispatch<SetStateAction<number>>>(
+    (value) => {
+      setAutoSaveDelayMsState((atual) => {
+        const solicitado = typeof value === "function" ? value(atual) : value;
+        const proximo = [2000, 4000, 6000, 10000].includes(solicitado) ? solicitado : 4000;
+        if (user?.usuarioId && typeof window !== "undefined") {
+          try {
+            localStorage.setItem(`treino_autosave_${user.usuarioId}_delay`, String(proximo));
+          } catch {
+            // A preferência continua válida durante a sessão mesmo se o storage estiver indisponível.
+          }
+        }
+        return proximo;
+      });
+    },
+    [user?.usuarioId],
+  );
 
   const carregarAvaliacao = useCallback((dados: Avaliacao, alunoId?: string) => {
     avaliacaoSalva.current = JSON.stringify(dados);
@@ -218,10 +305,18 @@ export function AvaliacaoProvider({ children }: { children: ReactNode }) {
     setAlteracoesPorTela(criarAlteracoesZeradas());
   }, []);
 
-  const marcarComoSalvo = useCallback(() => {
-    avaliacaoSalva.current = JSON.stringify(avaliacao);
-    setAlteracoesPorTela(criarAlteracoesZeradas());
-  }, [avaliacao]);
+  const marcarComoSalvo = useCallback((snapshot?: Avaliacao, alunoId?: string) => {
+    if (alunoId && alunoSelecionadoIdRef.current !== alunoId) return false;
+    const dadosSalvos = snapshot ?? avaliacaoAtualRef.current;
+    avaliacaoSalva.current = JSON.stringify(dadosSalvos);
+    setAlteracoesPorTela(calcularAlteracoes(avaliacaoAtualRef.current, dadosSalvos));
+    return true;
+  }, []);
+
+  const isAlunoSelecionado = useCallback(
+    (alunoId: string) => alunoSelecionadoIdRef.current === alunoId,
+    [],
+  );
 
   const limparAvaliacao = useCallback(() => {
     const novaAvaliacao: Avaliacao = {
@@ -253,6 +348,17 @@ export function AvaliacaoProvider({ children }: { children: ReactNode }) {
         alteracoesPendentes,
         alteracoesPorTela,
         marcarComoSalvo,
+        isAlunoSelecionado,
+        autoSaveEnabled: autoSaveEnabledState,
+        setAutoSaveEnabled,
+        autoSaveDelayMs: autoSaveDelayMsState,
+        setAutoSaveDelayMs,
+        autoSaveStatus,
+        setAutoSaveStatus,
+        autoSaveLastSavedAt,
+        setAutoSaveLastSavedAt,
+        autoSaveError,
+        setAutoSaveError,
       }}
     >
       {children}

@@ -18,6 +18,7 @@ Plataforma web para personal trainers criarem e acompanharem fichas de alunos. E
 - Cada avaliação reúne medidas, perímetros, dobras cutâneas, teste de carga e parecer/observações.
 - Comparação entre quaisquer duas avaliações, arquivamento sem exclusão física e histórico de quem criou/alterou cada avaliação.
 - Atendimento simples: o Personal assume um aluno, volta à lista para trocar de aluno ou encerra o atendimento atual.
+- Salvamento automático opcional, configurável por profissional (2, 4, 6 ou 10 segundos de inatividade), disponível em Configurações e na tela Salvar; o salvamento manual continua disponível.
 - Prescrição de treinos, exercícios e variações.
 - Periodização por semanas/dias e associação de treinos.
 - Volume semanal por grupo muscular.
@@ -124,7 +125,8 @@ Acesse http://localhost:5173/training-Aplication/. O arquivo **web-system/.env**
 5. Compartilhe as credenciais iniciais com cada profissional por um canal seguro. O Personal entra pela mesma tela de login, mas não terá acesso à seção Equipe nem às funções administrativas.
 6. Um Personal pode cadastrar alunos diretamente; nesse caso, o vínculo com ele é criado automaticamente.
 7. No painel, o Personal usa **Assumir atendimento** para abrir um aluno. Na barra superior pode voltar à lista para trocar de aluno ou **Encerrar atendimento** para limpar a seleção atual. Alterações não salvas são protegidas por confirmação antes de trocar/encerrar.
-8. Abra **Avaliações** para criar quantos registros forem necessários. Use **Comparação** para escolher duas avaliações e **Histórico** para consultar autoria e alterações. Use **Salvar** para persistir a ficha no PostgreSQL.
+8. Abra **Avaliações** para criar quantos registros forem necessários. Use **Comparação** para escolher duas avaliações e **Histórico** para consultar autoria e alterações.
+9. Se quiser, ative o **Salvamento automático** em **Configurações** ou em **Salvar** e escolha o intervalo de inatividade. A preferência é individual e fica neste navegador; apenas a configuração é local, os dados da ficha continuam sendo enviados ao PostgreSQL. O botão **Salvar agora** permanece disponível.
 
 ## Comandos de validação
 

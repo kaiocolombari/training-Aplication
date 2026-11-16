@@ -10,6 +10,8 @@ export default function AvaliacaoLayout() {
         alunoSelecionadoId,
         alteracoesPendentes,
         limparAvaliacao,
+        autoSaveEnabled,
+        autoSaveStatus,
     } = useAvaliacao();
     const navigate = useNavigate();
     const [tema] = useState<"light" | "dark">(() => {
@@ -45,6 +47,14 @@ export default function AvaliacaoLayout() {
     }
 
     function encerrarAtendimento() {
+        if (autoSaveEnabled && alteracoesPendentes) {
+            window.alert(
+                autoSaveStatus === "error"
+                    ? "O salvamento automático falhou. Salve a ficha manualmente antes de encerrar o atendimento."
+                    : "A ficha ainda tem alterações aguardando salvamento. Aguarde a confirmação antes de encerrar o atendimento.",
+            );
+            return;
+        }
         if (!confirmarSaida()) return;
         limparAvaliacao();
         navigate("/");

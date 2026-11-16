@@ -1,8 +1,19 @@
 import { Link, Navigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
 import { salvarFicha } from "../service/cadastroService";
 import { ApiError } from "../service/api";
+
+const nomesTelas: Record<string, string> = {
+    aluno: "Dados do aluno",
+    avaliacoes: "Avaliações físicas",
+    comparacao: "Comparação",
+    prescricao: "Prescrição de treino",
+    periodizacao: "Periodização",
+    volume: "Volume semanal",
+    intensidade: "Intensidade",
+};
 
 export default function SalvarFicha() {
     const {
@@ -11,17 +22,58 @@ export default function SalvarFicha() {
         alteracoesPendentes,
         alteracoesPorTela,
         carregarAvaliacao,
+        marcarComoSalvo,
+        isAlunoSelecionado,
+        autoSaveEnabled,
+        setAutoSaveEnabled,
+        autoSaveDelayMs,
+        setAutoSaveDelayMs,
+        autoSaveStatus,
+        setAutoSaveStatus,
+        autoSaveLastSavedAt,
+        setAutoSaveLastSavedAt,
+        autoSaveError,
+        setAutoSaveError,
     } = useAvaliacao();
     const queryClient = useQueryClient();
+    const estadoAtualRef = useRef({ avaliacao, alunoSelecionadoId });
+    const componenteMontado = useRef(false);
+    estadoAtualRef.current = { avaliacao, alunoSelecionadoId };
+
+    useEffect(() => {
+        componenteMontado.current = true;
+        return () => { componenteMontado.current = false; };
+    }, []);
 
     const salvar = useMutation({
-        mutationFn: async () => {
-            if (!alunoSelecionadoId) throw new Error("Selecione um aluno antes de salvar.");
-            return salvarFicha(alunoSelecionadoId, avaliacao);
+        onMutate: ({ alunoId }: { alunoId: string; snapshot: typeof avaliacao }) => {
+            if (isAlunoSelecionado(alunoId)) {
+                setAutoSaveStatus("saving");
+                setAutoSaveError(null);
+            }
         },
-        onSuccess: (dadosAtualizados) => {
-            carregarAvaliacao(dadosAtualizados, alunoSelecionadoId ?? undefined);
+        mutationFn: async ({ alunoId, snapshot }: { alunoId: string; snapshot: typeof avaliacao }) => {
+            return salvarFicha(alunoId, snapshot);
+        },
+        onSuccess: (dadosAtualizados, variables) => {
+            if (isAlunoSelecionado(variables.alunoId)) {
+                const estadoMudouDuranteSave = componenteMontado.current &&
+                    JSON.stringify(estadoAtualRef.current.avaliacao) !== JSON.stringify(variables.snapshot);
+                const marcado = marcarComoSalvo(variables.snapshot, variables.alunoId);
+                if (marcado && componenteMontado.current && !estadoMudouDuranteSave) {
+                    carregarAvaliacao(dadosAtualizados, variables.alunoId);
+                }
+                setAutoSaveStatus("saved");
+                setAutoSaveLastSavedAt(new Date());
+                setAutoSaveError(null);
+            }
             void queryClient.invalidateQueries({ queryKey: ["alunos"] });
+        },
+        onError: (error, variables) => {
+            if (isAlunoSelecionado(variables.alunoId)) {
+                setAutoSaveStatus(autoSaveEnabled ? "error" : "idle");
+                setAutoSaveError(error instanceof Error ? error.message : "Não foi possível salvar a ficha.");
+            }
         },
     });
 
@@ -63,12 +115,70 @@ export default function SalvarFicha() {
                         <div className="mt-3 flex flex-wrap gap-2">
                             {telasAlteradas.map(tela => (
                                 <span key={tela} className="rounded-lg bg-zinc-100 px-3 py-1.5 text-[10px] font-medium text-zinc-600">
-                                    {tela}
+                                    {nomesTelas[tela] ?? tela}
                                 </span>
                             ))}
                         </div>
                     ) : (
                         <p className="mt-2 text-xs text-zinc-500">Nenhuma alteração local pendente.</p>
+                    )}
+                </div>
+
+                <div className="mb-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h3 className="text-xs font-bold text-zinc-800">Salvamento automático</h3>
+                            <p className="mt-1 text-[11px] leading-5 text-zinc-500">
+                                Salva a ficha no banco depois que você parar de editar.
+                            </p>
+                        </div>
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-zinc-700">
+                            <input
+                                type="checkbox"
+                                checked={autoSaveEnabled}
+                                onChange={event => setAutoSaveEnabled(event.target.checked)}
+                                className="h-4 w-4 accent-[#a85f60]"
+                            />
+                            Ativar
+                        </label>
+                    </div>
+
+                    {autoSaveEnabled && (
+                        <label className="mt-4 flex flex-wrap items-center gap-3 text-[11px] font-medium text-zinc-600">
+                            Salvar após
+                            <select
+                                value={autoSaveDelayMs}
+                                onChange={event => setAutoSaveDelayMs(Number(event.target.value))}
+                                className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-[#a85f60]"
+                            >
+                                <option value={2000}>2 segundos</option>
+                                <option value={4000}>4 segundos</option>
+                                <option value={6000}>6 segundos</option>
+                                <option value={10000}>10 segundos</option>
+                            </select>
+                            de inatividade
+                        </label>
+                    )}
+
+                    <p role="status" className="mt-3 text-[11px] font-medium text-zinc-600">
+                        {!autoSaveEnabled && "Desativado. Você pode continuar salvando manualmente."}
+                        {autoSaveEnabled && autoSaveStatus === "idle" && "Ativo. Aguardando alterações."}
+                        {autoSaveEnabled && autoSaveStatus === "waiting" && `Salvando ${autoSaveDelayMs / 1000}s após a última alteração...`}
+                        {autoSaveEnabled && autoSaveStatus === "saving" && "Salvando no banco..."}
+                        {autoSaveEnabled && autoSaveStatus === "saved" && `Salvo${autoSaveLastSavedAt ? ` às ${autoSaveLastSavedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}.`}
+                        {autoSaveEnabled && autoSaveStatus === "error" && "Não foi possível salvar automaticamente."}
+                    </p>
+                    {autoSaveEnabled && autoSaveError && (
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <p role="alert" className="text-[11px] text-red-600">{autoSaveError} Você ainda pode salvar manualmente.</p>
+                            <button
+                                type="button"
+                                onClick={() => { setAutoSaveError(null); setAutoSaveStatus("idle"); }}
+                                className="text-[11px] font-bold text-[#a85f60] underline underline-offset-2"
+                            >
+                                Tentar novamente
+                            </button>
+                        </div>
                     )}
                 </div>
 
@@ -87,8 +197,14 @@ export default function SalvarFicha() {
                 <div className="flex flex-wrap items-center justify-end gap-3 border-t border-zinc-100 pt-5">
                     <button
                         type="button"
-                        onClick={() => void salvar.mutateAsync()}
-                        disabled={salvar.isPending || !alteracoesPendentes}
+                        onClick={() => {
+                            if (!alunoSelecionadoId) return;
+                            salvar.mutate({
+                                alunoId: alunoSelecionadoId,
+                                snapshot: JSON.parse(JSON.stringify(avaliacao)) as typeof avaliacao,
+                            });
+                        }}
+                        disabled={salvar.isPending || autoSaveStatus === "saving" || !alteracoesPendentes}
                         className="inline-flex h-11 items-center justify-center rounded-xl bg-[#a85f60] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#914f50] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {salvar.isPending ? "Salvando..." : "Salvar no PostgreSQL"}

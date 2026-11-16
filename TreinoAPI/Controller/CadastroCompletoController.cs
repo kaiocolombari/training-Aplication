@@ -40,4 +40,12 @@ public class CadastroCompletoController : ControllerBase
         var cadastro = await _salvarService.SalvarAsync(alunoId, dto);
         return Ok(cadastro);
     }
+
+    [HttpPut("alunos/{alunoId:guid}/autosave")]
+    public async Task<IActionResult> AutoSalvar(Guid alunoId, [FromBody] TreinoAPI.DTOs.CadastroCompleto.SalvarFichaDTO dto)
+    {
+        await _ownership.EnsureAlunoAccessAsync(alunoId);
+        await _salvarService.SalvarAsync(alunoId, dto, retornarCadastro: false);
+        return NoContent();
+    }
 }

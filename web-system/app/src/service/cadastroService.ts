@@ -8,6 +8,14 @@ import type { VolumeMuscular } from "../interface/interfaceVolume";
 import type { VolumeSemanal } from "../interface/interfaceVolumeSemanal";
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from "./api";
 
+let filaSalvarFicha: Promise<void> = Promise.resolve();
+
+function enfileirarSalvarFicha<T>(operacao: () => Promise<T>): Promise<T> {
+    const resultado = filaSalvarFicha.then(operacao, operacao);
+    filaSalvarFicha = resultado.then(() => undefined, () => undefined);
+    return resultado;
+}
+
 export interface AlunoResumoApi {
     id: string;
     nomeCompleto: string;
@@ -541,13 +549,22 @@ export function mapearAvaliacaoParaSalvarFicha(dados: Avaliacao) {
 }
 
 export async function salvarFicha(alunoId: string, dados: Avaliacao) {
-    const payload = mapearAvaliacaoParaSalvarFicha(dados);
-    await apiPut<CadastroCompletoApi>(`/api/cadastros/alunos/${alunoId}`, payload);
-    const [cadastro, grupos] = await Promise.all([
-        cadastroService.obterCadastro(alunoId),
-        cadastroService.listarGruposMusculares(),
-    ]);
-    return mapearCadastroParaAvaliacao(cadastro, grupos);
+    return enfileirarSalvarFicha(async () => {
+        const payload = mapearAvaliacaoParaSalvarFicha(dados);
+        await apiPut<CadastroCompletoApi>(`/api/cadastros/alunos/${alunoId}`, payload);
+        const [cadastro, grupos] = await Promise.all([
+            cadastroService.obterCadastro(alunoId),
+            cadastroService.listarGruposMusculares(),
+        ]);
+        return mapearCadastroParaAvaliacao(cadastro, grupos);
+    });
+}
+
+export async function salvarFichaAutosave(alunoId: string, dados: Avaliacao) {
+    return enfileirarSalvarFicha(async () => {
+        const payload = mapearAvaliacaoParaSalvarFicha(dados);
+        await apiPut<void>(`/api/cadastros/alunos/${alunoId}/autosave`, payload);
+    });
 }
 
 export const cadastroService = {

@@ -29,7 +29,7 @@ public sealed class SalvarFichaService
         _currentUser = currentUser;
     }
 
-    public async Task<CadastroCompletoDTO> SalvarAsync(Guid alunoId, SalvarFichaDTO dto)
+    public async Task<CadastroCompletoDTO?> SalvarAsync(Guid alunoId, SalvarFichaDTO dto, bool retornarCadastro = true)
     {
         var aluno = await _db.Alunos.Include(a => a.Usuario)
             .FirstOrDefaultAsync(a => a.Id == alunoId);
@@ -132,8 +132,6 @@ public sealed class SalvarFichaService
                 if (avaliacao.Numero != input.Numero)
                     throw DomainException.BadRequest("O número sequencial de uma avaliação existente não pode ser alterado.");
 
-                avaliacao.AtualizadaEm = agora;
-                avaliacao.AtualizadaPorUsuarioId = usuarioId == Guid.Empty ? null : usuarioId;
             }
 
             avaliacao.Idade = input.Idade;
@@ -147,8 +145,6 @@ public sealed class SalvarFichaService
                 avaliacao.RealizadaEm = DateTime.SpecifyKind(input.RealizadaEm.Value, DateTimeKind.Utc);
             else if (novaAvaliacao)
                 avaliacao.RealizadaEm = agora;
-            await _db.SaveChangesAsync();
-
             if (input.Perimetros is not null)
             {
                 var perimetro = await _db.Perimetros.FirstOrDefaultAsync(p => p.AvaliacaoId == avaliacao.Id);
@@ -179,11 +175,18 @@ public sealed class SalvarFichaService
             }
 
             var testeCarga = dto.TestesCarga.FirstOrDefault(teste => teste.Numero == input.Numero);
-            await _avaliacaoAudit.RegistrarAsync(
+            var novoRegistroHistorico = await _avaliacaoAudit.RegistrarAsync(
                 avaliacao,
                 novaAvaliacao ? "CRIADA" : "ATUALIZADA",
                 novaAvaliacao ? "Avaliação criada pela ficha" : "Dados da avaliação atualizados pela ficha",
                 new { avaliacao = input, testeCarga });
+
+            if (!novaAvaliacao && novoRegistroHistorico)
+            {
+                avaliacao.AtualizadaEm = agora;
+                avaliacao.AtualizadaPorUsuarioId = usuarioId == Guid.Empty ? null : usuarioId;
+            }
+
             await _db.SaveChangesAsync();
         }
 
@@ -504,6 +507,8 @@ public sealed class SalvarFichaService
         }
 
         await transaction.CommitAsync();
+        if (!retornarCadastro) return null;
+
         return await _cadastro.ObterCadastro(alunoId)
             ?? throw DomainException.NotFound("Ficha do aluno não encontrada após salvar.");
     }
