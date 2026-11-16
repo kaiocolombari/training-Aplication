@@ -1,4 +1,5 @@
 import { useAuth } from "../context/authContext";
+import FeedbackAlunoPortal from "./FeedbackAlunoPortal";
 
 export default function CadastroApp() {
     const { user, logout } = useAuth();
@@ -14,6 +15,7 @@ export default function CadastroApp() {
                 ) : (
                     <p className="mt-8 text-xs text-white/40">O link do aplicativo será disponibilizado em breve.</p>
                 )}
+                <FeedbackAlunoPortal />
                 <button onClick={() => void logout()} className="mx-auto mt-5 block text-xs text-white/45 hover:text-white">Sair da conta</button>
             </section>
         </main>

@@ -50,6 +50,11 @@ import ControleAvancado from "./ControleAvancado";
 import { ESCALAS_TEXTO, FONTES_UI, TEMAS, gerarVariaveisTema, type EscalaTextoId, type FonteUiId, type TemaId } from "../types/temas";
 import EmailCenter from "./EmailCenter";
 import { Skeleton } from "../components/Skeleton";
+import ArquivosEquipe from "./ArquivosEquipe";
+import TarefasPersonal from "./TarefasPersonal";
+import FeedbackAlunos from "./FeedbackAlunos";
+import IndicadoresEquipe from "./IndicadoresEquipe";
+import ManutencaoSistema from "./ManutencaoSistema";
 
 interface AlunoPainel {
   id: string;
@@ -121,6 +126,7 @@ const secoes = [
     grupo: "Workspace",
     icone: <FaPeopleGroup />,
   },
+  { id: "indicadores", nome: "Indicadores da equipe", grupo: "Workspace", icone: <BsBarChart /> },
   {
     id: "avaliacoes",
     nome: "Avaliações",
@@ -146,6 +152,7 @@ const secoes = [
     icone: <IoChatbubblesSharp />,
   },
   { id: "emails", nome: "Central de e-mails", grupo: "Comunicação", icone: <BsEnvelope /> },
+  { id: "arquivos", nome: "Arquivos da equipe", grupo: "Comunicação", icone: <BsFolder2Open /> },
   {
     id: "feedback",
     nome: "Feedback",
@@ -172,6 +179,8 @@ const secoes = [
   },
   { id: "controleAluno", nome: "Controle do aluno", grupo: "Acompanhamento", icone: <BsActivity /> },
   { id: "controleAvancado", nome: "Controle avançado", grupo: "Acompanhamento", icone: <BsCpu /> },
+  { id: "tarefas", nome: "Agenda de tarefas", grupo: "Acompanhamento", icone: <BsClipboard2Pulse /> },
+  { id: "manutencao", nome: "Manutenção", grupo: "Sistema", icone: <BsGear /> },
 ];
 
 const gruposNavegacao = ["Workspace", "Treinamento", "Acompanhamento", "Comunicação", "Sistema"];
@@ -627,6 +636,11 @@ export default function Painel() {
     secao.id === "relatorios" ||
     secao.id === "chat" ||
     (secao.id === "emails" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
+    (secao.id === "arquivos" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
+    (secao.id === "feedback" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
+    (secao.id === "indicadores" && user?.tipo === "ADMIN") ||
+    (secao.id === "tarefas" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
+    (secao.id === "manutencao" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
     (secao.id === "log" && user?.tipo === "ADMIN") ||
     (secao.id === "equipe" && user?.tipo === "ADMIN") ||
     (secao.id === "controleAluno" && Boolean(alunoSelecionadoId) && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
@@ -1651,6 +1665,16 @@ export default function Painel() {
         return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL"
           ? <EmailCenter tipoUsuario={user.tipo} />
           : renderInicio();
+      case "arquivos":
+        return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL"
+          ? <ArquivosEquipe isAdmin={user.tipo === "ADMIN"} />
+          : renderInicio();
+      case "indicadores":
+        return user?.tipo === "ADMIN" ? <IndicadoresEquipe /> : renderInicio();
+      case "tarefas":
+        return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL" ? <TarefasPersonal /> : renderInicio();
+      case "manutencao":
+        return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL" ? <ManutencaoSistema /> : renderInicio();
       case "equipe":
         return user?.tipo === "ADMIN" ? renderEquipe() : renderAlunos();
 
@@ -1667,11 +1691,7 @@ export default function Painel() {
           <BsQuestionCircle />,
         );
       case "feedback":
-        return renderSecaoVazia(
-          "Feedback",
-          "Sugestões, críticas e retornos enviados pelos alunos.",
-          <VscFeedback />,
-        );
+        return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL" ? <FeedbackAlunos /> : renderInicio();
       case "log":
         return user?.tipo === "ADMIN" ? <AtividadesAdmin /> : renderInicio();
       case "periodizacao":

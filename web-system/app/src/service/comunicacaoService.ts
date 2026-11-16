@@ -40,7 +40,7 @@ export interface Notificacao {
     id: string;
     titulo: string;
     mensagem: string;
-    tipo: "CHAT" | "MURAL" | "ALERTA" | "SISTEMA";
+    tipo: "CHAT" | "MURAL" | "ALERTA" | "SISTEMA" | "ARQUIVO_EQUIPE" | "TAREFA_PERSONAL";
     referenciaId: string | null;
     criadaEm: string;
     lidaEm: string | null;

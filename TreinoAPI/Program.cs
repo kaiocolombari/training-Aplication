@@ -72,9 +72,12 @@ builder.Services.AddScoped<OwnershipService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CadastroAlunoService>();
 builder.Services.AddScoped<ComunicacaoService>();
+builder.Services.AddSingleton<ArquivoEquipeStorage>();
+builder.Services.AddScoped<ArquivoEquipeService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<RelatoriosService>();
+builder.Services.AddScoped<AdminExtrasService>();
 builder.Services.AddScoped<AlunoService>();
 builder.Services.AddScoped<PersonalService>();
 builder.Services.AddScoped<PersonalAlunoService>();
@@ -96,6 +99,7 @@ builder.Services.AddScoped<ExecucaoTreinoService>();
 builder.Services.AddScoped<VolumeSemanalService>();
 builder.Services.AddScoped<GrupoMuscularService>();
 builder.Services.AddScoped<DobraCutaneaService>();
+builder.Services.AddHostedService<ArquivoEquipeRetentionWorker>();
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -141,6 +145,18 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = 4,
                 Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("team-files-upload", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5),
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));

@@ -20,6 +20,12 @@ public class AppDbContext : DbContext
     public DbSet<MensagemEquipe> MensagensEquipe { get; set; }
     public DbSet<NotificacaoUsuario> NotificacoesUsuarios { get; set; }
     public DbSet<AvisoGlobal> AvisosGlobais { get; set; }
+    public DbSet<ArquivoEquipe> ArquivosEquipe { get; set; }
+    public DbSet<ArquivoEquipeAnexo> ArquivosEquipeAnexos { get; set; }
+    public DbSet<FeedbackAluno> FeedbacksAlunos { get; set; }
+    public DbSet<TarefaPersonal> TarefasPersonais { get; set; }
+    public DbSet<ConfiguracaoAcompanhamentoPersonal> ConfiguracoesAcompanhamento { get; set; }
+    public DbSet<RegistroManutencao> RegistrosManutencao { get; set; }
     public DbSet<RegistroAuditoria> RegistrosAuditoria { get; set; }
     public DbSet<Personal> Personais { get; set; }
     public DbSet<PersonalAluno> PersonalAlunos { get; set; }
@@ -110,6 +116,96 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<NotificacaoUsuario>()
             .HasIndex(n => new { n.UsuarioId, n.LidaEm, n.CriadaEm });
+
+        modelBuilder.Entity<ArquivoEquipe>()
+            .Property(a => a.Nome).HasMaxLength(120);
+        modelBuilder.Entity<ArquivoEquipe>()
+            .Property(a => a.Descricao).HasMaxLength(2000);
+        modelBuilder.Entity<ArquivoEquipe>()
+            .Property(a => a.PrazoRetencao).HasMaxLength(10);
+        modelBuilder.Entity<ArquivoEquipe>()
+            .HasIndex(a => a.ExpiraEm);
+        modelBuilder.Entity<ArquivoEquipe>()
+            .HasOne(a => a.CriadoPorUsuario)
+            .WithMany()
+            .HasForeignKey(a => a.CriadoPorUsuarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ArquivoEquipeAnexo>()
+            .Property(a => a.NomeOriginal).HasMaxLength(255);
+        modelBuilder.Entity<ArquivoEquipeAnexo>()
+            .Property(a => a.NomeArmazenado).HasMaxLength(32);
+        modelBuilder.Entity<ArquivoEquipeAnexo>()
+            .Property(a => a.TipoConteudo).HasMaxLength(255);
+        modelBuilder.Entity<ArquivoEquipeAnexo>()
+            .HasOne(a => a.ArquivoEquipe)
+            .WithMany(a => a.Arquivos)
+            .HasForeignKey(a => a.ArquivoEquipeId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ArquivoEquipeAnexo>()
+            .HasIndex(a => new { a.ArquivoEquipeId, a.EnviadoEm });
+
+        modelBuilder.Entity<FeedbackAluno>()
+            .Property(f => f.Categoria).HasMaxLength(30);
+        modelBuilder.Entity<FeedbackAluno>()
+            .Property(f => f.Status).HasMaxLength(20);
+        modelBuilder.Entity<FeedbackAluno>()
+            .Property(f => f.Comentario).HasMaxLength(2000);
+        modelBuilder.Entity<FeedbackAluno>()
+            .Property(f => f.RespostaEquipe).HasMaxLength(2000);
+        modelBuilder.Entity<FeedbackAluno>()
+            .HasOne(f => f.Aluno).WithMany().HasForeignKey(f => f.AlunoId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<FeedbackAluno>()
+            .HasOne(f => f.Personal).WithMany().HasForeignKey(f => f.PersonalId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<FeedbackAluno>()
+            .HasIndex(f => new { f.PersonalId, f.CriadoEm });
+        modelBuilder.Entity<FeedbackAluno>()
+            .HasIndex(f => new { f.AlunoId, f.CriadoEm });
+
+        modelBuilder.Entity<TarefaPersonal>()
+            .Property(t => t.Titulo).HasMaxLength(140);
+        modelBuilder.Entity<TarefaPersonal>()
+            .Property(t => t.Descricao).HasMaxLength(3000);
+        modelBuilder.Entity<TarefaPersonal>()
+            .Property(t => t.DicaContexto).HasMaxLength(1500);
+        modelBuilder.Entity<TarefaPersonal>()
+            .Property(t => t.Categoria).HasMaxLength(30);
+        modelBuilder.Entity<TarefaPersonal>()
+            .Property(t => t.Prioridade).HasMaxLength(20);
+        modelBuilder.Entity<TarefaPersonal>()
+            .Property(t => t.Status).HasMaxLength(20);
+        modelBuilder.Entity<TarefaPersonal>()
+            .HasOne(t => t.Personal).WithMany().HasForeignKey(t => t.PersonalId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<TarefaPersonal>()
+            .HasOne(t => t.Aluno).WithMany().HasForeignKey(t => t.AlunoId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<TarefaPersonal>()
+            .HasOne(t => t.CriadoPorUsuario).WithMany().HasForeignKey(t => t.CriadoPorUsuarioId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<TarefaPersonal>()
+            .HasIndex(t => new { t.PersonalId, t.Status, t.DataLimite });
+
+        modelBuilder.Entity<ConfiguracaoAcompanhamentoPersonal>()
+            .HasOne(c => c.Personal).WithMany().HasForeignKey(c => c.PersonalId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ConfiguracaoAcompanhamentoPersonal>()
+            .HasIndex(c => c.PersonalId).IsUnique();
+
+        modelBuilder.Entity<RegistroManutencao>()
+            .Property(m => m.Titulo).HasMaxLength(140);
+        modelBuilder.Entity<RegistroManutencao>()
+            .Property(m => m.Descricao).HasMaxLength(3000);
+        modelBuilder.Entity<RegistroManutencao>()
+            .Property(m => m.Categoria).HasMaxLength(30);
+        modelBuilder.Entity<RegistroManutencao>()
+            .Property(m => m.Prioridade).HasMaxLength(20);
+        modelBuilder.Entity<RegistroManutencao>()
+            .Property(m => m.Status).HasMaxLength(20);
+        modelBuilder.Entity<RegistroManutencao>()
+            .Property(m => m.Resolucao).HasMaxLength(3000);
+        modelBuilder.Entity<RegistroManutencao>()
+            .HasOne(m => m.CriadoPorUsuario).WithMany().HasForeignKey(m => m.CriadoPorUsuarioId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<RegistroManutencao>()
+            .HasOne(m => m.ResponsavelUsuario).WithMany().HasForeignKey(m => m.ResponsavelUsuarioId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<RegistroManutencao>()
+            .HasIndex(m => new { m.Status, m.CriadoEm });
 
         modelBuilder.Entity<AvisoGlobal>()
             .HasOne(a => a.Autor)

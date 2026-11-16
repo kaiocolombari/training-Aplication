@@ -134,6 +134,35 @@ export async function api<T = unknown>(
     return await response.json() as T;
 }
 
+export async function apiBlob(endpoint: string, retried = false): Promise<Blob> {
+    const response = await fetch(`${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/octet-stream" },
+    });
+
+    const endpointPath = endpoint.split("?")[0];
+    const canRefresh = ![
+        "/api/auth/csrf",
+        "/api/auth/login",
+        "/api/auth/register",
+        "/api/auth/refresh",
+        "/api/auth/logout",
+    ].includes(endpointPath);
+
+    if (response.status === 401 && !retried && canRefresh) {
+        const refreshed = await refreshSession();
+        if (refreshed) return apiBlob(endpoint, true);
+        notifySessionExpired();
+    } else if (response.status === 401 && retried && canRefresh) {
+        notifySessionExpired();
+    }
+
+    if (response.status === 403) notifyForbidden(endpointPath);
+    if (!response.ok) throw await parseError(response);
+    return response.blob();
+}
+
 export const apiGet = <T>(endpoint: string) => api<T>(endpoint);
 
 export const apiPost = <T>(endpoint: string, body?: unknown) =>

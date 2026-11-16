@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsBell, BsChatDots, BsMegaphone, BsSend, BsCheck2All, BsPersonPlus, BsArrowLeft, BsPinAngleFill } from "react-icons/bs";
+import { BsBell, BsChatDots, BsMegaphone, BsSend, BsCheck2All, BsPersonPlus, BsArrowLeft, BsPinAngleFill, BsFolder2Open } from "react-icons/bs";
 import { useAuth } from "../context/authContext";
 import { comunicacaoService, type Notificacao } from "../service/comunicacaoService";
 import { ApiError } from "../service/api";
@@ -338,7 +338,7 @@ export default function CentralComunicacao() {
                         <div className="divide-y divide-[var(--border)]">
                             {(notificacoes.data ?? []).map(item => (
                                 <button key={item.id} onClick={() => abrirNotificacao(item)} className={`flex w-full items-start gap-3 px-5 py-4 text-left transition hover:bg-[var(--row-hover)] ${item.lidaEm ? "opacity-65" : "bg-[var(--accent-soft)]/35"}`}>
-                                    <span className={`mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${item.tipo === "CHAT" ? "bg-sky-500/10 text-sky-600" : item.tipo === "MURAL" ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "bg-amber-500/10 text-amber-600"}`}>{item.tipo === "CHAT" ? <BsChatDots /> : item.tipo === "MURAL" ? <BsMegaphone /> : <BsBell />}</span>
+                                    <span className={`mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${item.tipo === "CHAT" ? "bg-sky-500/10 text-sky-600" : item.tipo === "MURAL" ? "bg-[var(--accent-soft)] text-[var(--accent)]" : item.tipo === "ARQUIVO_EQUIPE" ? "bg-violet-500/10 text-violet-600" : "bg-amber-500/10 text-amber-600"}`}>{item.tipo === "CHAT" ? <BsChatDots /> : item.tipo === "MURAL" ? <BsMegaphone /> : item.tipo === "ARQUIVO_EQUIPE" ? <BsFolder2Open /> : <BsBell />}</span>
                                     <span className="min-w-0 flex-1"><span className="flex flex-wrap items-center gap-2"><strong className="text-xs font-semibold text-[var(--text-primary)]">{item.titulo}</strong>{!item.lidaEm && <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />}</span><span className="mt-1 block whitespace-pre-wrap text-[11px] leading-5 text-[var(--text-secondary)]">{item.mensagem}</span><time className="mt-1.5 block text-[9px] text-[var(--text-muted)]">{dataHora(item.criadaEm)}</time></span>
                                     {!item.lidaEm && <span className="mt-2 text-[9px] font-semibold text-[var(--accent-text)]">Novo</span>}
                                 </button>

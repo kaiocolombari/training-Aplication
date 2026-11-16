@@ -4,6 +4,7 @@
 # Build
 bin/
 obj/
+App_Data/arquivos-equipe/
 
 # Visual Studio
 .vs/
