@@ -1,6 +1,7 @@
 import { useAvaliacaoComparison } from "../context/avaliacaoContext";
 import { useMemo, useEffect } from "react";
 import React from "react";
+import { useNavigate } from "react-router";
 import navTool from "../components/navTool";
 import type { PerimetroField } from "../types/perimetroField";
 import type { PerimetroKey } from "../types/perimetroKey";
@@ -69,6 +70,7 @@ function sanitizeDecimal(value: string) {
 }
 
 export default function comparacao() {
+    const navigate = useNavigate();
     const { avaliacao, setAvaliacao, avaliacaoIds, setAvaliacaoIds, hasPair } =
         useAvaliacaoComparison();
     let perimetros = avaliacao.avaliacao1.perimetros;
@@ -1106,6 +1108,22 @@ export default function comparacao() {
                 <p className="max-w-md text-sm text-[var(--text-secondary)]">
                     Cadastre pelo menos duas avaliações físicas para comparar a evolução do aluno.
                 </p>
+                <div className="mt-3 flex flex-wrap justify-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/avaliacoes")}
+                        className="rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)]"
+                    >
+                        {avaliacao.avaliacoes.length === 0 ? "Criar ficha" : "Criar outra avaliação"}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)]"
+                    >
+                        Sair e voltar ao painel
+                    </button>
+                </div>
             </main>
         );
     }

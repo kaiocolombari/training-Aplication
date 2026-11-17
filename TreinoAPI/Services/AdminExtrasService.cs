@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using TreinoAPI.Configuration;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.AdminExtras;
 using TreinoAPI.Model;
@@ -22,20 +20,20 @@ public sealed class AdminExtrasService
     private readonly CurrentUserService _current;
     private readonly OwnershipService _ownership;
     private readonly ArquivoEquipeStorage _storage;
-    private readonly EmailOptions _email;
+    private readonly EmailService _emailService;
 
     public AdminExtrasService(
         AppDbContext db,
         CurrentUserService current,
         OwnershipService ownership,
         ArquivoEquipeStorage storage,
-        IOptions<EmailOptions> email)
+        EmailService emailService)
     {
         _db = db;
         _current = current;
         _ownership = ownership;
         _storage = storage;
-        _email = email.Value;
+        _emailService = emailService;
     }
 
     public async Task<List<FeedbackAlunoDTO>> ListarFeedbackAsync(bool meus)
@@ -355,13 +353,14 @@ public sealed class AdminExtrasService
             verificacoes.Add(new VerificacaoSistemaDTO { Nome = "Armazenamento de arquivos", Status = "ERRO", Detalhe = $"Falha na verificação ({ex.GetType().Name})." });
         }
 
-        var smtpConfigurado = _email.Enabled && !string.IsNullOrWhiteSpace(_email.Smtp.Host) &&
-            !string.IsNullOrWhiteSpace(_email.Smtp.Username) && !string.IsNullOrWhiteSpace(_email.Smtp.Password) &&
-            !string.IsNullOrWhiteSpace(_email.SenderEmail);
+        var statusEmail = await _emailService.ObterStatusAsync();
+        var erroSmtp = statusEmail.Estado is "ERRO_CONEXAO" or "ERRO_AUTENTICACAO" or "TIMEOUT";
         verificacoes.Add(new VerificacaoSistemaDTO
         {
-            Nome = "Envio de e-mails", Status = smtpConfigurado ? "OK" : "AVISO",
-            Detalhe = smtpConfigurado ? "SMTP está configurado. A conectividade do provedor não é testada nesta verificação." : "SMTP não está completamente configurado; envios permanecem desabilitados."
+            Nome = "Envio de e-mails",
+            Status = statusEmail.ProntoParaEnvio ? "OK" : erroSmtp ? "ERRO" : "AVISO",
+            Detalhe = $"{statusEmail.Mensagem} Biblioteca: {statusEmail.Biblioteca} {statusEmail.VersaoBiblioteca}.",
+            DuracaoMs = statusEmail.DuracaoMs
         });
 
         var erros = verificacoes.Count(v => v.Status == "ERRO");
@@ -471,6 +470,7 @@ public sealed class AdminExtrasService
     {
         Id = t.Id, PersonalId = t.PersonalId, PersonalNome = t.Personal?.Nome ?? t.Personal?.Usuario?.Email ?? string.Empty,
         AlunoId = t.AlunoId, AlunoNome = t.Aluno?.NomeCompleto, CriadoPor = t.CriadoPorUsuario?.Email ?? string.Empty,
+        CriadoPorTipo = t.CriadoPorUsuario?.Tipo.ToString() ?? string.Empty,
         Titulo = t.Titulo, Descricao = t.Descricao, DicaContexto = t.DicaContexto,
         Categoria = t.Categoria, Prioridade = t.Prioridade, Status = t.Status,
         DataLimite = t.DataLimite, CriadaEm = t.CriadaEm, ConcluidaEm = t.ConcluidaEm

@@ -21,6 +21,7 @@ export interface TarefaPersonal {
     alunoId?: string | null;
     alunoNome?: string | null;
     criadoPor: string;
+    criadoPorTipo: string;
     titulo: string;
     descricao: string;
     dicaContexto?: string | null;

@@ -17,6 +17,7 @@ import {
 import { ApiError } from "../service/api";
 import {
     emailService,
+    type EmailAparencia,
     type EmailEnvioResultado,
     type TipoDestinatarioEmail,
 } from "../service/emailService";
@@ -67,7 +68,38 @@ type RascunhoEmail = {
     mensagem: string;
     modelo: string;
     destinatariosIds: string[];
+    aparencia?: EmailAparencia;
 };
+
+const APARENCIA_PADRAO: EmailAparencia = {
+    nomeRemetente: "",
+    marca: "",
+    logoUrl: "",
+    textoRodape: "",
+    corPrincipal: "#5558D9",
+    corFundo: "#F4F5F8",
+    corCartao: "#FFFFFF",
+    corCabecalho: "#FFFFFF",
+    corTexto: "#20232B",
+    corTextoSecundario: "#505664",
+    corBorda: "#E7E9EF",
+    corRodape: "#F8F9FB",
+    corTextoRodape: "#858B98",
+};
+
+const CAMPOS_CORES: { chave: keyof Pick<EmailAparencia,
+    "corPrincipal" | "corFundo" | "corCartao" | "corCabecalho" | "corTexto" |
+    "corTextoSecundario" | "corBorda" | "corRodape" | "corTextoRodape">; nome: string }[] = [
+    { chave: "corPrincipal", nome: "Destaque e identidade" },
+    { chave: "corFundo", nome: "Fundo externo" },
+    { chave: "corCartao", nome: "Cartão da mensagem" },
+    { chave: "corCabecalho", nome: "Cabeçalho" },
+    { chave: "corTexto", nome: "Título e texto principal" },
+    { chave: "corTextoSecundario", nome: "Corpo da mensagem" },
+    { chave: "corBorda", nome: "Divisórias e bordas" },
+    { chave: "corRodape", nome: "Fundo do rodapé" },
+    { chave: "corTextoRodape", nome: "Texto do rodapé" },
+];
 
 function textoPersonalizado(texto: string) {
     return texto.replaceAll("{{nome}}", "Ana Silva").replaceAll("{{primeiro_nome}}", "Ana");
@@ -80,6 +112,7 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
     const [modelo, setModelo] = useState("personalizado");
     const [assunto, setAssunto] = useState("");
     const [mensagem, setMensagem] = useState("");
+    const [aparencia, setAparencia] = useState<EmailAparencia>(APARENCIA_PADRAO);
     const [confirmacao, setConfirmacao] = useState(false);
     const [feedbackRascunho, setFeedbackRascunho] = useState("");
     const [resultado, setResultado] = useState<EmailEnvioResultado | null>(null);
@@ -114,12 +147,37 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
         destinatariosFiltrados.length > 0 &&
         destinatariosFiltrados.every(item => selecionados.includes(item.usuarioId));
     const status = statusQuery.data;
-    const corPrincipal = status?.corPrincipal || "#5558D9";
+    const aparenciaPreview: EmailAparencia = {
+        ...aparencia,
+        nomeRemetente: aparencia.nomeRemetente.trim() || status?.remetenteNome || "",
+        marca: aparencia.marca.trim() || status?.marca || "GGP",
+        logoUrl: aparencia.logoUrl.trim() || status?.logoUrl || "",
+        textoRodape: aparencia.textoRodape.trim() || `Esta mensagem foi enviada pela equipe ${aparencia.marca.trim() || status?.marca || "GGP"} para o endereço de e-mail cadastrado na plataforma.`,
+        corPrincipal: aparencia.corPrincipal || status?.corPrincipal || "#5558D9",
+    };
     const assuntoPreview = textoPersonalizado(assunto || "Assunto do seu comunicado");
     const mensagemPreview = textoPersonalizado(
         mensagem ||
             "O conteúdo do seu e-mail aparecerá aqui. Escreva sua mensagem para visualizar o resultado final.",
     );
+    const falhaSmtp = status?.estado === "ERRO_CONEXAO" ||
+        status?.estado === "ERRO_AUTENTICACAO" || status?.estado === "TIMEOUT";
+    const textoStatusSmtp = statusQuery.isFetching
+        ? "Testando servidor SMTP..."
+        : statusQuery.isError
+          ? "Status indisponível"
+          : status?.prontoParaEnvio
+            ? "SMTP autenticado e pronto"
+            : status?.autenticado
+              ? "SMTP autenticado · pendências"
+              : falhaSmtp
+                ? "Falha na conexão SMTP"
+                : "Configuração incompleta";
+    const classeStatusSmtp = status?.prontoParaEnvio
+        ? "bg-[var(--success-soft)] text-[var(--success)]"
+        : falhaSmtp
+          ? "bg-[var(--danger-soft)] text-[var(--danger)]"
+          : "bg-[var(--warning-soft)] text-[var(--warning)]";
 
     const envioMutation = useMutation({
         mutationFn: emailService.enviar,
@@ -184,6 +242,7 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
             mensagem,
             modelo,
             destinatariosIds: selecionados,
+            aparencia,
         };
         localStorage.setItem("ggp_email_rascunho", JSON.stringify(rascunho));
         setRascunhoDisponivel(true);
@@ -201,6 +260,7 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
             setAssunto(rascunho.assunto || "");
             setMensagem(rascunho.mensagem || "");
             setModelo(rascunho.modelo || "personalizado");
+            setAparencia({ ...APARENCIA_PADRAO, ...(rascunho.aparencia ?? {}) });
             setSelecionados(
                 tipoRascunho === rascunho.tipo
                     ? (rascunho.destinatariosIds || []).slice(0, 100)
@@ -223,6 +283,7 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
             destinatariosIds: selecionados,
             assunto: assunto.trim(),
             mensagem: mensagem.trim(),
+            aparencia: aparenciaPreview,
         });
     }
 
@@ -243,52 +304,79 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <span
-                        className={
-                            status?.configurado
-                                ? "inline-flex items-center gap-2 rounded-full bg-[var(--success-soft)] px-3 py-2 text-[9px] font-semibold text-[var(--success)]"
-                                : "inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-2 text-[9px] font-semibold text-amber-700"
-                        }
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-[9px] font-semibold ${classeStatusSmtp}`}
                     >
-                        {statusQuery.isLoading ? (
+                        {statusQuery.isFetching ? (
                             <span className="ui-spinner" aria-hidden="true" />
-                        ) : status?.configurado ? (
+                        ) : status?.prontoParaEnvio ? (
                             <BsCheckCircle />
+                        ) : falhaSmtp ? (
+                            <BsExclamationTriangle />
                         ) : (
                             <BsExclamationTriangle />
                         )}
-                        {statusQuery.isLoading
-                            ? "Verificando SMTP..."
-                            : status?.configurado
-                              ? "Remetente configurado"
-                              : "SMTP aguardando configuração"}
+                        {textoStatusSmtp}
                     </span>
+                    <button
+                        type="button"
+                        onClick={() => statusQuery.refetch()}
+                        disabled={statusQuery.isFetching}
+                        className="inline-flex h-8 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[9px] font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)] disabled:opacity-50"
+                    >
+                        <BsArrowRepeat className={statusQuery.isFetching ? "animate-spin" : ""} />
+                        Testar conexão
+                    </button>
                 </div>
             </header>
 
-            {!statusQuery.isLoading && !status?.configurado && (
-                <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4 sm:flex-row sm:items-start">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-600">
+            {!statusQuery.isLoading && status && !status.prontoParaEnvio && (
+                <div className={`flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-start ${falhaSmtp ? "border-[var(--danger)]/25 bg-[var(--danger-soft)]" : "border-[var(--warning)]/25 bg-[var(--warning-soft)]"}`}>
+                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${falhaSmtp ? "bg-[var(--danger)]/10 text-[var(--danger)]" : "bg-[var(--warning)]/10 text-[var(--warning)]"}`}>
                         <BsExclamationTriangle />
                     </span>
                     <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-semibold text-[var(--text-primary)]">
-                            O envio real ainda não está habilitado
+                            {status.autenticado ? "Servidor autenticado, mas o envio ainda possui pendências" : "O servidor SMTP ainda não está pronto para envio"}
                         </p>
                         <p className="mt-1 text-[10px] leading-5 text-[var(--text-secondary)]">
-                            {status?.mensagem ||
-                                "Não foi possível verificar a configuração do servidor de e-mail."}{" "}
-                            Você já pode preparar a mensagem, visualizar o modelo e salvar um
-                            rascunho.
+                            {status.mensagem} Você ainda pode preparar a mensagem, personalizar o visual e salvar um rascunho.
+                        </p>
+                        {status.configuracoesPendentes.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                {status.configuracoesPendentes.map(campo => (
+                                    <code key={campo} className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[9px] text-[var(--text-secondary)]">{campo}</code>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {status && (
+                <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="min-w-0">
+                        <p className="text-[9px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Biblioteca de envio</p>
+                        <p className="mt-1 text-[12px] font-bold text-[var(--text-primary)]">{status.biblioteca} <span className="font-normal text-[var(--text-muted)]">v{status.versaoBiblioteca}</span></p>
+                        <p className="mt-1 text-[9px] text-[var(--success)]">{status.bibliotecaDisponivel ? "Biblioteca carregada" : "Biblioteca indisponível"}</p>
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[9px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Servidor SMTP</p>
+                        <p className="mt-1 truncate text-[12px] font-bold text-[var(--text-primary)]">{status.servidor}</p>
+                        <p className={`mt-1 text-[9px] font-medium ${status.servidorAcessivel ? "text-[var(--success)]" : "text-[var(--text-muted)]"}`}>
+                            {status.servidorAcessivel ? "Conexão estabelecida" : "Sem conexão confirmada"}
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => statusQuery.refetch()}
-                        className="inline-flex h-8 shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[9px] font-semibold text-[var(--text-secondary)]"
-                    >
-                        <BsArrowRepeat /> Verificar novamente
-                    </button>
-                </div>
+                    <div className="min-w-0">
+                        <p className="text-[9px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Autenticação</p>
+                        <p className="mt-1 text-[12px] font-bold text-[var(--text-primary)]">{status.autenticado ? "Credenciais aceitas" : "Não autenticado"}</p>
+                        <p className="mt-1 text-[9px] text-[var(--text-muted)]">{status.prontoParaEnvio ? "Envio liberado" : "Envio bloqueado até corrigir as pendências"}</p>
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[9px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Último teste</p>
+                        <p className="mt-1 text-[12px] font-bold text-[var(--text-primary)]">{status.verificadoEm ? new Date(status.verificadoEm).toLocaleString("pt-BR") : "Não testado"}</p>
+                        <p className="mt-1 text-[9px] text-[var(--text-muted)]">Resposta em {status.duracaoMs} ms</p>
+                    </div>
+                </section>
             )}
 
             {statusQuery.isError && (
@@ -554,6 +642,98 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
                             </p>
                         </div>
                     </section>
+
+                    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <p className="text-[9px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
+                                    Identidade visual
+                                </p>
+                                <h2 className="mt-1 text-[14px] font-semibold text-[var(--text-primary)]">
+                                    Personalizar aparência do e-mail
+                                </h2>
+                                <p className="mt-1 max-w-xl text-[10px] leading-5 text-[var(--text-muted)]">
+                                    Personalize o nome exibido, a marca, o logo, o rodapé e as cores. O endereço SMTP continua sendo o remetente verificado no servidor.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setAparencia(APARENCIA_PADRAO)}
+                                className="rounded-lg border border-[var(--border)] px-3 py-2 text-[9px] font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)]"
+                            >
+                                Restaurar padrão
+                            </button>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            <label className="grid gap-1.5">
+                                <span className="text-[9px] font-semibold text-[var(--text-secondary)]">Nome exibido como remetente</span>
+                                <input
+                                    value={aparencia.nomeRemetente}
+                                    maxLength={80}
+                                    onChange={event => setAparencia(atual => ({ ...atual, nomeRemetente: event.target.value }))}
+                                    placeholder={status?.remetenteNome || "Equipe GGP"}
+                                    className="h-10 rounded-lg border border-[var(--border)] bg-[var(--input-bg)] px-3 text-[10px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                                />
+                            </label>
+                            <label className="grid gap-1.5">
+                                <span className="text-[9px] font-semibold text-[var(--text-secondary)]">Nome da marca no e-mail</span>
+                                <input
+                                    value={aparencia.marca}
+                                    maxLength={80}
+                                    onChange={event => setAparencia(atual => ({ ...atual, marca: event.target.value }))}
+                                    placeholder={status?.marca || "Nome da equipe"}
+                                    className="h-10 rounded-lg border border-[var(--border)] bg-[var(--input-bg)] px-3 text-[10px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                                />
+                            </label>
+                            <label className="grid gap-1.5">
+                                <span className="text-[9px] font-semibold text-[var(--text-secondary)]">Logo (URL HTTPS, opcional)</span>
+                                <input
+                                    type="url"
+                                    value={aparencia.logoUrl}
+                                    maxLength={2048}
+                                    onChange={event => setAparencia(atual => ({ ...atual, logoUrl: event.target.value }))}
+                                    placeholder="https://seusite.com/logo.png"
+                                    className="h-10 rounded-lg border border-[var(--border)] bg-[var(--input-bg)] px-3 text-[10px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                                />
+                            </label>
+                            <label className="grid gap-1.5 sm:col-span-2">
+                                <span className="text-[9px] font-semibold text-[var(--text-secondary)]">Texto personalizado do rodapé</span>
+                                <textarea
+                                    value={aparencia.textoRodape}
+                                    maxLength={300}
+                                    rows={2}
+                                    onChange={event => setAparencia(atual => ({ ...atual, textoRodape: event.target.value }))}
+                                    placeholder={`Esta mensagem foi enviada pela equipe ${status?.marca || "GGP"}.`}
+                                    className="w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--input-bg)] p-3 text-[10px] leading-5 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                                />
+                            </label>
+                        </div>
+
+                        <div className="mt-5 border-t border-[var(--border)] pt-4">
+                            <div className="mb-3">
+                                <h3 className="text-[11px] font-semibold text-[var(--text-primary)]">Paleta completa</h3>
+                                <p className="mt-1 text-[9px] text-[var(--text-muted)]">Escolha a cor de cada elemento. A prévia é atualizada imediatamente.</p>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                {CAMPOS_CORES.map(campo => (
+                                    <label key={campo.chave} className="flex min-w-0 items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] p-3">
+                                        <input
+                                            type="color"
+                                            value={aparencia[campo.chave]}
+                                            onChange={event => setAparencia(atual => ({ ...atual, [campo.chave]: event.target.value }))}
+                                            aria-label={campo.nome}
+                                            className="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-[var(--border)] bg-transparent p-0.5"
+                                        />
+                                        <span className="min-w-0">
+                                            <span className="block truncate text-[9px] font-semibold text-[var(--text-primary)]">{campo.nome}</span>
+                                            <span className="mt-0.5 block text-[9px] uppercase text-[var(--text-muted)]">{aparencia[campo.chave]}</span>
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
                 <aside className="space-y-5 2xl:sticky 2xl:top-5">
@@ -571,46 +751,45 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
                                 <BsEye /> Visualização
                             </span>
                         </div>
-                        <div className="bg-[#F4F5F8] p-3 sm:p-5">
-                            <div className="mx-auto max-w-[560px] overflow-hidden rounded-xl border border-[#E7E9EF] bg-white shadow-sm">
-                                <div className="h-1.5" style={{ backgroundColor: corPrincipal }} />
-                                <div className="flex items-center justify-between gap-3 px-5 py-5">
-                                    <span
-                                        className="text-[14px] font-bold tracking-[.12em]"
-                                        style={{ color: corPrincipal }}
-                                    >
-                                        {status?.marca || "GGP"}
-                                    </span>
-                                    <span className="text-[8px] font-semibold tracking-[.14em] text-[#9297A4]">
+                        <div className="p-3 sm:p-5" style={{ backgroundColor: aparenciaPreview.corFundo }}>
+                            <div
+                                className="mx-auto max-w-[560px] overflow-hidden rounded-xl border shadow-sm"
+                                style={{ backgroundColor: aparenciaPreview.corCartao, borderColor: aparenciaPreview.corBorda }}
+                            >
+                                <div className="h-1.5" style={{ backgroundColor: aparenciaPreview.corPrincipal }} />
+                                <div className="flex min-h-20 items-center justify-between gap-3 px-5 py-5" style={{ backgroundColor: aparenciaPreview.corCabecalho }}>
+                                    {aparenciaPreview.logoUrl.startsWith("https://") ? (
+                                        <img src={aparenciaPreview.logoUrl} alt={aparenciaPreview.marca} className="block max-h-10 max-w-[132px] object-contain" />
+                                    ) : (
+                                        <span className="text-[14px] font-bold tracking-[.12em]" style={{ color: aparenciaPreview.corPrincipal }}>
+                                            {aparenciaPreview.marca}
+                                        </span>
+                                    )}
+                                    <span className="text-right text-[8px] font-semibold tracking-[.14em]" style={{ color: aparenciaPreview.corTextoSecundario }}>
                                         COMUNICAÇÃO OFICIAL
                                     </span>
                                 </div>
-                                <div className="px-5 pb-6">
-                                    <p
-                                        className="text-[9px] font-bold uppercase tracking-[.15em]"
-                                        style={{ color: corPrincipal }}
-                                    >
+                                <div className="px-5 pb-6" style={{ backgroundColor: aparenciaPreview.corCartao }}>
+                                    <p className="text-[9px] font-bold uppercase tracking-[.15em]" style={{ color: aparenciaPreview.corPrincipal }}>
                                         Mensagem da equipe
                                     </p>
-                                    <h3 className="mt-2 break-words text-[19px] font-bold leading-7 tracking-tight text-[#20232B]">
+                                    <h3 className="mt-2 break-words text-[19px] font-bold leading-7 tracking-tight" style={{ color: aparenciaPreview.corTexto }}>
                                         {assuntoPreview}
                                     </h3>
-                                    <p className="mt-4 whitespace-pre-wrap break-words text-[11px] leading-6 text-[#505664]">
+                                    <p className="mt-4 whitespace-pre-wrap break-words text-[11px] leading-6" style={{ color: aparenciaPreview.corTextoSecundario }}>
                                         {mensagemPreview}
                                     </p>
-                                    <div className="my-6 h-px bg-[#ECEEF2]" />
-                                    <p className="text-[9px] leading-5 text-[#777E8C]">
-                                        Esta mensagem foi enviada pela equipe{" "}
-                                        <strong className="text-[#333946]">
-                                            {status?.marca || "GGP"}
-                                        </strong>{" "}
-                                        para o endereço de e-mail cadastrado na plataforma.
+                                    <div className="my-6 h-px" style={{ backgroundColor: aparenciaPreview.corBorda }} />
+                                    <p className="text-[9px] leading-5" style={{ color: aparenciaPreview.corTextoRodape }}>
+                                        {aparenciaPreview.textoRodape}
                                     </p>
                                 </div>
-                                <div className="border-t border-[#ECEEF2] bg-[#F8F9FB] px-5 py-4">
-                                    <p className="text-[9px] text-[#858B98]">
-                                        © {new Date().getFullYear()} {status?.marca || "GGP"}.
-                                        Todos os direitos reservados.
+                                <div className="border-t px-5 py-4" style={{ backgroundColor: aparenciaPreview.corRodape, borderColor: aparenciaPreview.corBorda }}>
+                                    <p className="text-[9px]" style={{ color: aparenciaPreview.corTextoRodape }}>
+                                        © {new Date().getFullYear()} {aparenciaPreview.marca}. Todos os direitos reservados.
+                                    </p>
+                                    <p className="mt-1 text-[8px]" style={{ color: aparenciaPreview.corTextoRodape }}>
+                                        Este é um e-mail automático. Para responder, utilize o endereço de resposta informado pela equipe.
                                     </p>
                                 </div>
                             </div>
@@ -619,7 +798,7 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
                             <div className="flex items-center justify-between gap-3 text-[9px]">
                                 <span className="text-[var(--text-muted)]">Remetente</span>
                                 <span className="text-right font-semibold text-[var(--text-secondary)]">
-                                    {status?.remetenteNome || "GGP"}
+                                    {aparenciaPreview.nomeRemetente || "GGP"}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between gap-3 text-[9px]">
@@ -686,7 +865,7 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
                         <button
                             type="button"
                             disabled={
-                                !status?.configurado ||
+                                !status?.prontoParaEnvio ||
                                 selecionados.length === 0 ||
                                 assunto.trim().length < 3 ||
                                 mensagem.trim().length < 3 ||
@@ -694,11 +873,11 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
                             }
                             aria-busy={envioMutation.isPending}
                             onClick={iniciarEnvio}
-                            className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-[10px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+                            className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-[10px] font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             <BsSend /> Revisar e enviar
                         </button>
-                        {!status?.configurado && (
+                        {!status?.prontoParaEnvio && (
                             <p className="mt-2 text-center text-[9px] leading-4 text-[var(--text-muted)]">
                                 O botão de envio será liberado após a configuração SMTP no servidor.
                             </p>
@@ -755,7 +934,7 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
                                 onClick={confirmarEnvio}
                                 disabled={envioMutation.isPending}
                                 aria-busy={envioMutation.isPending}
-                                className="inline-flex h-9 items-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-[10px] font-semibold text-white disabled:opacity-50"
+                                className="inline-flex h-9 items-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-[10px] font-semibold text-[var(--on-accent)] disabled:opacity-50"
                             >
                                 <BsSend />{" "}
                                 {envioMutation.isPending ? "Enviando..." : "Confirmar envio"}

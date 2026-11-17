@@ -244,8 +244,10 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
-app.UseMiddleware<CsrfProtectionMiddleware>();
 app.UseAuthentication();
+// A validação antiforgery precisa enxergar os claims do usuário autenticado,
+// pois o request token é vinculado à identidade que recebeu o token em /api/auth/csrf.
+app.UseMiddleware<CsrfProtectionMiddleware>();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();

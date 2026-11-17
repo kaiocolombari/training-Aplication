@@ -1,8 +1,12 @@
 using System.Net;
 using System.Net.Mail;
-using System.Text;
+using System.Diagnostics;
+using MailKit;
+using MailKit.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using MimeKit;
+using MailKitSmtpClient = MailKit.Net.Smtp.SmtpClient;
 using TreinoAPI.Configuration;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.Email;
@@ -41,17 +45,140 @@ public sealed class EmailService
         MailAddress.TryCreate(_options.SenderEmail, out _) &&
         (string.IsNullOrWhiteSpace(_options.ReplyToEmail) || MailAddress.TryCreate(_options.ReplyToEmail, out _));
 
-    public EmailStatusDTO ObterStatus() => new()
+    public async Task<EmailStatusDTO> ObterStatusAsync(CancellationToken cancellationToken = default)
     {
-        Configurado = EstaConfigurado,
-        Marca = _options.BrandName,
-        RemetenteNome = _options.SenderName,
-        RemetenteEmail = _options.SenderEmail,
-        CorPrincipal = _options.PrimaryColor,
-        Mensagem = EstaConfigurado
-            ? "O serviço de e-mail está configurado e pronto para envio."
-            : "O envio ainda não está habilitado. Configure o remetente em appsettings.json e os dados SMTP no arquivo .env."
-    };
+        var cronometro = Stopwatch.StartNew();
+        var pendencias = new List<string>();
+
+        if (!_options.Enabled) pendencias.Add("Email__Enabled=true");
+        if (string.IsNullOrWhiteSpace(_options.Smtp.Host)) pendencias.Add("Email__Smtp__Host");
+        if (_options.Smtp.Port is < 1 or > 65535) pendencias.Add("Email__Smtp__Port");
+        if (string.IsNullOrWhiteSpace(_options.Smtp.Username)) pendencias.Add("Email__Smtp__Username");
+        if (string.IsNullOrWhiteSpace(_options.Smtp.Password)) pendencias.Add("Email__Smtp__Password");
+        if (!MailAddress.TryCreate(_options.SenderEmail, out _)) pendencias.Add("Email__SenderEmail (endereço verificado pelo provedor)");
+        if (!string.IsNullOrWhiteSpace(_options.ReplyToEmail) && !MailAddress.TryCreate(_options.ReplyToEmail, out _))
+            pendencias.Add("Email__ReplyToEmail (endereço válido)");
+
+        var smtpTemCredenciais =
+            !string.IsNullOrWhiteSpace(_options.Smtp.Host) &&
+            _options.Smtp.Port is > 0 and <= 65535 &&
+            !string.IsNullOrWhiteSpace(_options.Smtp.Username) &&
+            !string.IsNullOrWhiteSpace(_options.Smtp.Password);
+
+        var status = new EmailStatusDTO
+        {
+            Configurado = EstaConfigurado,
+            Biblioteca = "MailKit",
+            VersaoBiblioteca = typeof(MailKitSmtpClient).Assembly.GetName().Version?.ToString() ?? "Versão indisponível",
+            BibliotecaDisponivel = true,
+            Servidor = string.IsNullOrWhiteSpace(_options.Smtp.Host) ? "Não configurado" : $"{_options.Smtp.Host}:{_options.Smtp.Port}",
+            ConfiguracoesPendentes = pendencias.ToArray(),
+            Marca = _options.BrandName,
+            RemetenteNome = _options.SenderName,
+            RemetenteEmail = _options.SenderEmail,
+            LogoUrl = _options.LogoUrl,
+            CorPrincipal = _options.PrimaryColor
+        };
+
+        if (!smtpTemCredenciais)
+        {
+            status.Estado = "CONFIGURACAO_INCOMPLETA";
+            status.Mensagem = "A biblioteca MailKit está disponível, mas faltam host, porta ou credenciais SMTP. O teste de conexão não foi executado.";
+            FinalizarVerificacao(status, cronometro);
+            return status;
+        }
+
+        using var smtp = new MailKitSmtpClient
+        {
+            Timeout = Math.Clamp(_options.Smtp.TimeoutMs, 3000, 12000)
+        };
+
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(12));
+
+            await smtp.ConnectAsync(
+                _options.Smtp.Host,
+                _options.Smtp.Port,
+                ObterSegurancaSmtp(),
+                timeout.Token);
+            status.ServidorAcessivel = true;
+
+            await smtp.AuthenticateAsync(_options.Smtp.Username, _options.Smtp.Password, timeout.Token);
+            status.Autenticado = true;
+
+            if (!_options.Enabled)
+            {
+                status.Estado = "AUTENTICADO_DESABILITADO";
+                status.Mensagem = "O servidor SMTP está acessível e autenticou as credenciais, mas o envio está desativado. Defina Email__Enabled=true.";
+            }
+            else if (!MailAddress.TryCreate(_options.SenderEmail, out _))
+            {
+                status.Estado = "AUTENTICADO_INCOMPLETO";
+                status.Mensagem = "O servidor SMTP conectou e autenticou. Falta configurar Email__SenderEmail com um endereço remetente verificado no provedor.";
+            }
+            else if (!string.IsNullOrWhiteSpace(_options.ReplyToEmail) && !MailAddress.TryCreate(_options.ReplyToEmail, out _))
+            {
+                status.Estado = "AUTENTICADO_INCOMPLETO";
+                status.Mensagem = "O servidor SMTP autenticou, mas Email__ReplyToEmail não contém um endereço válido.";
+            }
+            else
+            {
+                status.Estado = "CONECTADO";
+                status.Mensagem = "MailKit conectou ao servidor SMTP e autenticou as credenciais. O envio está pronto.";
+            }
+        }
+        catch (MailKit.Security.AuthenticationException exception)
+        {
+            _logger.LogWarning(exception, "O servidor SMTP recusou a autenticação configurada para {Host}:{Port}.", _options.Smtp.Host, _options.Smtp.Port);
+            status.Estado = "ERRO_AUTENTICACAO";
+            status.Mensagem = "O servidor SMTP respondeu, mas recusou as credenciais. Confira usuário, senha e método de autenticação no provedor.";
+        }
+        catch (OperationCanceledException exception)
+        {
+            _logger.LogWarning(exception, "A verificação SMTP excedeu o tempo limite para {Host}:{Port}.", _options.Smtp.Host, _options.Smtp.Port);
+            status.Estado = "TIMEOUT";
+            status.Mensagem = "O servidor SMTP excedeu o limite de 12 segundos. Confira host, porta, SSL/TLS e disponibilidade do provedor.";
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Falha ao verificar SMTP em {Host}:{Port}.", _options.Smtp.Host, _options.Smtp.Port);
+            status.Estado = status.ServidorAcessivel ? "ERRO_AUTENTICACAO" : "ERRO_CONEXAO";
+            status.Mensagem = status.ServidorAcessivel
+                ? "A conexão foi aberta, mas não foi possível concluir a autenticação SMTP. Confira as credenciais e o método de segurança."
+                : "Não foi possível conectar ao servidor SMTP. Confira host, porta, SSL/TLS e disponibilidade do provedor.";
+        }
+        finally
+        {
+            if (smtp.IsConnected)
+            {
+                try { await smtp.DisconnectAsync(true, CancellationToken.None); }
+                catch (Exception exception) { _logger.LogDebug(exception, "Falha ao encerrar a conexão usada no teste SMTP."); }
+            }
+        }
+
+        status.ProntoParaEnvio = status.Autenticado && EstaConfigurado;
+        status.Configurado = EstaConfigurado;
+        FinalizarVerificacao(status, cronometro);
+        return status;
+    }
+
+    private SecureSocketOptions ObterSegurancaSmtp()
+    {
+        if (!_options.Smtp.EnableSsl) return SecureSocketOptions.None;
+        return _options.Smtp.Port == 465
+            ? SecureSocketOptions.SslOnConnect
+            : SecureSocketOptions.StartTls;
+    }
+
+    private static void FinalizarVerificacao(EmailStatusDTO status, Stopwatch cronometro)
+    {
+        cronometro.Stop();
+        status.VerificadoEm = DateTime.UtcNow;
+        status.DuracaoMs = cronometro.ElapsedMilliseconds;
+        status.ProntoParaEnvio = status.Autenticado && status.Configurado;
+    }
 
     public async Task<List<EmailDestinatarioDTO>> ListarDestinatariosAsync(string tipo, string? busca)
     {
@@ -167,14 +294,27 @@ public sealed class EmailService
             throw DomainException.BadRequest("Um ou mais destinatários não existem, não estão aprovados ou não podem receber este envio.");
 
         var resultado = new EmailEnvioResultadoDTO { TotalDestinatarios = destinatarios.Count };
-        using var smtp = new SmtpClient(_options.Smtp.Host, _options.Smtp.Port)
+        var aparencia = EmailTemplateService.NormalizarAparencia(dto.Aparencia, _options);
+        using var smtp = new MailKitSmtpClient
         {
-            EnableSsl = _options.Smtp.EnableSsl,
-            UseDefaultCredentials = false,
-            Credentials = new NetworkCredential(_options.Smtp.Username, _options.Smtp.Password),
-            DeliveryMethod = SmtpDeliveryMethod.Network,
             Timeout = Math.Clamp(_options.Smtp.TimeoutMs, 5000, 60000)
         };
+
+        try
+        {
+            await smtp.ConnectAsync(_options.Smtp.Host, _options.Smtp.Port, ObterSegurancaSmtp());
+            await smtp.AuthenticateAsync(_options.Smtp.Username, _options.Smtp.Password);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Não foi possível conectar ou autenticar no servidor SMTP {Host}:{Port}.", _options.Smtp.Host, _options.Smtp.Port);
+            if (smtp.IsConnected)
+            {
+                try { await smtp.DisconnectAsync(true); }
+                catch { /* Preserva a falha original de conexão/autenticação. */ }
+            }
+            throw DomainException.ServiceUnavailable("Não foi possível conectar ou autenticar no servidor SMTP. A mensagem não foi enviada; verifique o status da Central de e-mails.");
+        }
 
         foreach (var destinatario in destinatarios)
         {
@@ -195,25 +335,19 @@ public sealed class EmailService
             {
                 var assuntoPersonalizado = EmailTemplateService.Personalizar(assunto, destinatario.Nome);
                 var mensagemPersonalizada = EmailTemplateService.Personalizar(mensagem, destinatario.Nome);
-                using var email = new MailMessage
-                {
-                    From = new MailAddress(_options.SenderEmail, _options.SenderName, Encoding.UTF8),
-                    Subject = assuntoPersonalizado,
-                    SubjectEncoding = Encoding.UTF8,
-                    BodyEncoding = Encoding.UTF8,
-                    Priority = MailPriority.Normal
-                };
-
-                email.To.Add(new MailAddress(destinatario.Email, destinatario.Nome, Encoding.UTF8));
+                var email = new MimeMessage();
+                email.From.Add(new MailboxAddress(aparencia.NomeRemetente ?? _options.SenderName, _options.SenderEmail));
+                email.To.Add(new MailboxAddress(destinatario.Nome, destinatario.Email));
                 if (MailAddress.TryCreate(_options.ReplyToEmail, out var replyTo))
-                    email.ReplyToList.Add(replyTo);
+                    email.ReplyTo.Add(MailboxAddress.Parse(replyTo.Address));
+                email.Subject = assuntoPersonalizado;
+                email.Body = new BodyBuilder
+                {
+                    TextBody = EmailTemplateService.CriarTexto(_options, assuntoPersonalizado, mensagemPersonalizada, aparencia),
+                    HtmlBody = EmailTemplateService.CriarHtml(_options, assuntoPersonalizado, mensagemPersonalizada, aparencia)
+                }.ToMessageBody();
 
-                var html = EmailTemplateService.CriarHtml(_options, assuntoPersonalizado, mensagemPersonalizada);
-                var texto = EmailTemplateService.CriarTexto(_options, assuntoPersonalizado, mensagemPersonalizada);
-                email.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(texto, Encoding.UTF8, "text/plain"));
-                email.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(html, Encoding.UTF8, "text/html"));
-
-                await smtp.SendMailAsync(email);
+                await smtp.SendAsync(email);
                 resultado.Enviados++;
                 resultado.Resultados.Add(new EmailDestinatarioResultadoDTO
                 {
@@ -235,6 +369,12 @@ public sealed class EmailService
                     Mensagem = "Não foi possível enviar para este destinatário."
                 });
             }
+        }
+
+        if (smtp.IsConnected)
+        {
+            try { await smtp.DisconnectAsync(true); }
+            catch (Exception exception) { _logger.LogDebug(exception, "Falha ao encerrar a sessão SMTP após o envio."); }
         }
 
         return resultado;

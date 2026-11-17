@@ -4,6 +4,7 @@ import { useAuth } from "../context/authContext";
 import { comunicacaoService } from "../service/comunicacaoService";
 import FeedbackAlunoPortal from "./FeedbackAlunoPortal";
 import AcompanhamentoVolumePortal from "./AcompanhamentoVolumePortal";
+import ChatAlunoConversa from "../components/ChatAlunoConversa";
 
 export default function CadastroApp() {
     const { user, logout } = useAuth();
@@ -121,7 +122,19 @@ export default function CadastroApp() {
                     </p>
                 )}
                 {user?.tipo === "ALUNO" && (
-                    <AcompanhamentoVolumePortal alunoId={user.alunoId ?? null} />
+                    <>
+                        <AcompanhamentoVolumePortal alunoId={user.alunoId ?? null} />
+                        <section className="mt-10 space-y-3 text-left">
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[.2em] text-emerald-300">Comunicação direta</p>
+                                <h2 className="mt-2 text-xl font-semibold">Converse com seu personal</h2>
+                                <p className="mt-2 text-xs leading-6 text-white/55">Mensagens privadas com confirmação de leitura para manter seu acompanhamento organizado.</p>
+                            </div>
+                            <div className="[--surface:#171c19] [--surface-secondary:#121714] [--surface-tertiary:#252d28] [--input-bg:#121714] [--text-primary:#f5f7f5] [--text-secondary:#c1c9c2] [--text-muted:#7f8a81] [--border:rgba(255,255,255,.1)] [--accent:#6ee7a8] [--accent-soft:rgba(110,231,168,.12)] [--accent-text:#9af0c0] [--on-accent:#102019] [--accent-hover:#8af0b8] [--success:#6ee7a8] [--success-soft:rgba(110,231,168,.12)] [--danger:#fda4af] [--danger-soft:rgba(244,63,94,.12)]">
+                                <ChatAlunoConversa modo="aluno" />
+                            </div>
+                        </section>
+                    </>
                 )}
                 <FeedbackAlunoPortal />
                 <button

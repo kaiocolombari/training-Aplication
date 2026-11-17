@@ -104,7 +104,8 @@ public sealed class ComunicacaoService
         var conversas = await _db.ConversasEquipe
             .AsNoTracking()
             .Where(c => (c.UsuarioAId == atual || c.UsuarioBId == atual) &&
-                c.UsuarioA.Ativo && c.UsuarioB.Ativo)
+                c.UsuarioA.Ativo && c.UsuarioB.Ativo &&
+                c.UsuarioA.Tipo != TipoUsuario.ALUNO && c.UsuarioB.Tipo != TipoUsuario.ALUNO)
             .Include(c => c.UsuarioA).ThenInclude(u => u.Personal)
             .Include(c => c.UsuarioB).ThenInclude(u => u.Personal)
             .Include(c => c.Mensagens.OrderByDescending(m => m.EnviadaEm).Take(1))
@@ -136,6 +137,131 @@ public sealed class ComunicacaoService
         }).ToList();
     }
 
+    public async Task<List<ConversaAlunoDTO>> ListarConversasAlunosAsync()
+    {
+        var atual = _current.UsuarioId;
+        var linksQuery = _db.PersonalAlunos.AsNoTracking()
+            .Where(v => v.Ativo && v.Aluno.Usuario.Ativo && v.Personal.Usuario != null && v.Personal.Usuario.Ativo);
+
+        if (_current.Role == "PERSONAL")
+            linksQuery = linksQuery.Where(v => v.Personal.UsuarioId == atual);
+        else if (_current.Role != "ADMIN")
+            throw DomainException.Forbidden();
+
+        var links = await linksQuery.Select(v => new
+        {
+            v.AlunoId,
+            AlunoUsuarioId = v.Aluno.UsuarioId,
+            AlunoNome = v.Aluno.NomeCompleto,
+            PersonalUsuarioId = v.Personal.UsuarioId,
+            PersonalNome = v.Personal.Nome
+        }).ToListAsync();
+
+        if (links.Count == 0) return [];
+
+        var alunoUsuarios = links.Select(v => v.AlunoUsuarioId).Distinct().ToArray();
+        var personalUsuarios = links.Select(v => v.PersonalUsuarioId).Distinct().ToArray();
+        var conversas = await _db.ConversasEquipe.AsNoTracking()
+            .Where(c =>
+                (personalUsuarios.Contains(c.UsuarioAId) && alunoUsuarios.Contains(c.UsuarioBId)) ||
+                (personalUsuarios.Contains(c.UsuarioBId) && alunoUsuarios.Contains(c.UsuarioAId)))
+            .Include(c => c.Mensagens.OrderByDescending(m => m.EnviadaEm).Take(1))
+            .ToListAsync();
+        var porPar = conversas.ToDictionary(c => OrdenarUsuarios(c.UsuarioAId, c.UsuarioBId));
+        var conversaIds = conversas.Select(c => c.Id).ToArray();
+        var naoLidas = conversaIds.Length == 0
+            ? new Dictionary<Guid, int>()
+            : await _db.MensagensEquipe.AsNoTracking()
+                .Where(m => conversaIds.Contains(m.ConversaId) && m.LidaEm == null && alunoUsuarios.Contains(m.RemetenteId))
+                .GroupBy(m => m.ConversaId)
+                .Select(g => new { g.Key, Total = g.Count() })
+                .ToDictionaryAsync(g => g.Key, g => g.Total);
+
+        return links.Select(link =>
+        {
+            porPar.TryGetValue(OrdenarUsuarios(link.PersonalUsuarioId, link.AlunoUsuarioId), out var conversa);
+            var ultima = conversa?.Mensagens.OrderByDescending(m => m.EnviadaEm).FirstOrDefault();
+            return new ConversaAlunoDTO
+            {
+                AlunoId = link.AlunoId,
+                OutroUsuarioId = link.AlunoUsuarioId,
+                OutroUsuarioNome = link.AlunoNome,
+                OutroUsuarioTipo = "ALUNO",
+                ConversaId = conversa?.Id,
+                UltimaMensagem = ultima?.Conteudo,
+                UltimaMensagemEm = ultima?.EnviadaEm,
+                NaoLidas = conversa is null ? 0 : naoLidas.GetValueOrDefault(conversa.Id)
+            };
+        }).ToList();
+    }
+
+    public async Task<List<ResumoChatAlunoDTO>> ListarResumoChatsAlunosAsync()
+    {
+        var conversas = await ListarConversasAlunosAsync();
+        return conversas.GroupBy(c => c.AlunoId)
+            .Select(g => new ResumoChatAlunoDTO
+            {
+                AlunoId = g.Key,
+                NaoLidas = g.Sum(c => c.NaoLidas)
+            })
+            .ToList();
+    }
+
+    public async Task<List<ConversaAlunoDTO>> ListarConversasPersonaisAlunoAsync()
+    {
+        if (_current.Role != "ALUNO") throw DomainException.Forbidden();
+
+        var atual = _current.UsuarioId;
+        var links = await _db.PersonalAlunos.AsNoTracking()
+            .Where(v => v.Ativo && v.Aluno.UsuarioId == atual && v.Personal.Usuario != null && v.Personal.Usuario.Ativo)
+            .Select(v => new
+            {
+                v.AlunoId,
+                PersonalUsuarioId = v.Personal.UsuarioId,
+                PersonalNome = v.Personal.Nome
+            })
+            .ToListAsync();
+        if (links.Count == 0) return [];
+
+        var personalUsuarios = links.Select(v => v.PersonalUsuarioId).Distinct().ToArray();
+        var conversas = await _db.ConversasEquipe.AsNoTracking()
+            .Where(c =>
+                (c.UsuarioAId == atual && personalUsuarios.Contains(c.UsuarioBId)) ||
+                (c.UsuarioBId == atual && personalUsuarios.Contains(c.UsuarioAId)))
+            .Include(c => c.Mensagens.OrderByDescending(m => m.EnviadaEm).Take(1))
+            .ToListAsync();
+        var porPersonal = conversas.ToDictionary(
+            c => c.UsuarioAId == atual ? c.UsuarioBId : c.UsuarioAId);
+        var conversaIds = conversas.Select(c => c.Id).ToArray();
+        var naoLidas = conversaIds.Length == 0
+            ? new Dictionary<Guid, int>()
+            : await _db.MensagensEquipe.AsNoTracking()
+                .Where(m => conversaIds.Contains(m.ConversaId) && m.LidaEm == null && m.RemetenteId != atual)
+                .GroupBy(m => m.ConversaId)
+                .Select(g => new { g.Key, Total = g.Count() })
+                .ToDictionaryAsync(g => g.Key, g => g.Total);
+
+        return links.Select(link =>
+        {
+            porPersonal.TryGetValue(link.PersonalUsuarioId, out var conversa);
+            var ultima = conversa?.Mensagens.OrderByDescending(m => m.EnviadaEm).FirstOrDefault();
+            return new ConversaAlunoDTO
+            {
+                AlunoId = link.AlunoId,
+                OutroUsuarioId = link.PersonalUsuarioId,
+                OutroUsuarioNome = link.PersonalNome,
+                OutroUsuarioTipo = "PERSONAL",
+                ConversaId = conversa?.Id,
+                UltimaMensagem = ultima?.Conteudo,
+                UltimaMensagemEm = ultima?.EnviadaEm,
+                NaoLidas = conversa is null ? 0 : naoLidas.GetValueOrDefault(conversa.Id)
+            };
+        }).ToList();
+    }
+
+    private static (Guid A, Guid B) OrdenarUsuarios(Guid a, Guid b) =>
+        a.CompareTo(b) <= 0 ? (a, b) : (b, a);
+
     public async Task<List<MensagemEquipeDTO>> ListarMensagensAsync(Guid conversaId)
     {
         var atual = _current.UsuarioId;
@@ -143,6 +269,16 @@ public sealed class ComunicacaoService
             .FirstOrDefaultAsync(c => c.Id == conversaId &&
                 (c.UsuarioAId == atual || c.UsuarioBId == atual) && c.UsuarioA.Ativo && c.UsuarioB.Ativo);
         if (conversa is null)
+            throw DomainException.NotFound("Conversa não encontrada.");
+
+        var tiposParticipantes = await _db.Usuarios.AsNoTracking()
+            .Where(u => u.Id == conversa.UsuarioAId || u.Id == conversa.UsuarioBId)
+            .Select(u => u.Tipo)
+            .ToListAsync();
+        if (tiposParticipantes.Contains(TipoUsuario.ALUNO) &&
+            !await EhVinculoChatAlunoPersonalAsync(conversa.UsuarioAId, conversa.UsuarioBId))
+            throw DomainException.NotFound("Conversa não encontrada.");
+        if (_current.Role == "ALUNO" && !tiposParticipantes.Contains(TipoUsuario.PERSONAL))
             throw DomainException.NotFound("Conversa não encontrada.");
 
         var pendentes = await _db.MensagensEquipe
@@ -188,11 +324,24 @@ public sealed class ComunicacaoService
         if (conteudo.Length is < 1 or > 4000)
             throw DomainException.BadRequest("A mensagem deve conter entre 1 e 4.000 caracteres.");
 
+        var remetente = await _db.Usuarios.AsNoTracking()
+            .Where(u => u.Id == atual && u.Ativo)
+            .Select(u => u.Tipo)
+            .FirstOrDefaultAsync();
         var destinatario = await _db.Usuarios
-            .FirstOrDefaultAsync(u => u.Id == destinatarioId && u.Ativo &&
-                (u.Tipo == TipoUsuario.ADMIN || u.Tipo == TipoUsuario.PERSONAL));
+            .FirstOrDefaultAsync(u => u.Id == destinatarioId && u.Ativo);
         if (destinatario is null || destinatarioId == atual)
             throw DomainException.NotFound("Membro da equipe não encontrado.");
+
+        var conversaEquipe =
+            (remetente is TipoUsuario.ADMIN or TipoUsuario.PERSONAL) &&
+            (destinatario.Tipo is TipoUsuario.ADMIN or TipoUsuario.PERSONAL);
+        var conversaAlunoPersonal =
+            (remetente == TipoUsuario.PERSONAL && destinatario.Tipo == TipoUsuario.ALUNO) ||
+            (remetente == TipoUsuario.ALUNO && destinatario.Tipo == TipoUsuario.PERSONAL);
+        if (!conversaEquipe &&
+            (!conversaAlunoPersonal || !await EhVinculoChatAlunoPersonalAsync(atual, destinatarioId)))
+            throw DomainException.NotFound("Destinatário não encontrado ou sem vínculo ativo para conversa.");
 
         var usuarioA = atual.CompareTo(destinatarioId) < 0 ? atual : destinatarioId;
         var usuarioB = atual.CompareTo(destinatarioId) < 0 ? destinatarioId : atual;
@@ -234,6 +383,11 @@ public sealed class ComunicacaoService
         await _db.SaveChangesAsync();
         return conversa.Id;
     }
+
+    private Task<bool> EhVinculoChatAlunoPersonalAsync(Guid usuarioAId, Guid usuarioBId) =>
+        _db.PersonalAlunos.AnyAsync(v => v.Ativo &&
+            ((v.Personal.UsuarioId == usuarioAId && v.Aluno.UsuarioId == usuarioBId) ||
+             (v.Personal.UsuarioId == usuarioBId && v.Aluno.UsuarioId == usuarioAId)));
 
     public async Task<List<AvisoGlobalDTO>> ListarAvisosAsync()
     {

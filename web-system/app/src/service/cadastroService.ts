@@ -358,28 +358,46 @@ export function mapearCadastroParaAvaliacao(cadastro: CadastroCompletoApi, grupo
         const semanas = cadastro.semanas
             .filter(semana => semana.periodizacaoId === periodizacao.id)
             .sort((a, b) => a.numero - b.numero);
+        const dataInicio = periodizacao.dataInicio.slice(0, 10);
         dados.periodizacao = {
             nome: periodizacao.nome ?? "Periodização principal",
-            dataInicio: periodizacao.dataInicio.slice(0, 10),
-            semanas: semanas.map(semana => ({
-                numero: semana.numero,
-                dias: cadastro.dias
-                    .filter(dia => dia.semanaId === semana.id)
-                    .sort((a, b) => a.data.localeCompare(b.data))
-                    .map(dia => ({
-                        data: dia.data.slice(0, 10),
-                        treinoIds: cadastro.treinosDia
-                            .filter(link => link.diaId === dia.id)
-                            .sort((a, b) => a.ordem - b.ordem)
-                            .map(link => link.treinoId)
-                            .concat(["", "", ""])
-                            .slice(0, 3),
-                    })),
-            })),
+            dataInicio,
+            semanas: semanas.length > 0
+                ? semanas.map(semana => {
+                    const diasSalvos = cadastro.dias
+                        .filter(dia => dia.semanaId === semana.id)
+                        .sort((a, b) => a.data.localeCompare(b.data));
+                    const diaPorData = new Map(diasSalvos.map(dia => [dia.data.slice(0, 10), dia]));
+
+                    // O banco pode ter semanas antigas sem os sete registros de dia.
+                    // Reconstroi os dias ausentes para a interface nunca acessar um dia inexistente.
+                    const dias = Array.from({ length: 7 }, (_, diaIndex) => {
+                        const dataEsperada = new Date(`${dataInicio}T00:00:00`);
+                        dataEsperada.setDate(dataEsperada.getDate() + (semana.numero - 1) * 7 + diaIndex);
+                        const dataEsperadaIso = `${dataEsperada.getFullYear()}-${String(dataEsperada.getMonth() + 1).padStart(2, "0")}-${String(dataEsperada.getDate()).padStart(2, "0")}`;
+                        const dia = diaPorData.get(dataEsperadaIso) ??
+                            (diasSalvos.length === 7 ? diasSalvos[diaIndex] : undefined);
+
+                        return {
+                            data: dataEsperadaIso,
+                            treinoIds: dia
+                                ? cadastro.treinosDia
+                                    .filter(link => link.diaId === dia.id)
+                                    .sort((a, b) => a.ordem - b.ordem)
+                                    .map(link => link.treinoId)
+                                    .concat(["", "", ""])
+                                    .slice(0, 3)
+                                : ["", "", ""],
+                        };
+                    });
+
+                    return { numero: semana.numero, dias };
+                })
+                : dados.periodizacao.semanas,
         };
 
         const gruposById = new Map(grupos.map(group => [group.id, group.nome]));
-        dados.volume = semanas.map(semana => {
+        dados.volume = semanas.length > 0 ? semanas.map(semana => {
             const volumes = cadastro.volumesSemanais.filter(item => item.periodizacaoSemanaId === semana.id);
             const volumeByGroup = new Map(volumes.map(item => [item.grupoMuscularId, item]));
             const groups: VolumeMuscular[] = grupos.map(group => {
@@ -392,7 +410,15 @@ export function mapearCadastroParaAvaliacao(cadastro: CadastroCompletoApi, grupo
                 };
             });
             return { semana: semana.numero, grupos: groups } satisfies VolumeSemanal;
-        });
+        }) : dados.periodizacao.semanas.map(semana => ({
+            semana: semana.numero,
+            grupos: grupos.map(group => ({
+                id: group.id,
+                grupo: gruposById.get(group.id) ?? group.nome,
+                seriesDiretas: 0,
+                seriesLivres: 0,
+            })),
+        }));
     } else {
         // Alunos recém-criados ainda não têm periodização; use os IDs reais
         // dos grupos vindos da API em vez dos IDs estáticos do estado inicial.

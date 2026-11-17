@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
 import { FaRegTrashAlt, FaCalendarAlt, FaDumbbell, FaChartLine } from "react-icons/fa";
+import { useNavigate } from "react-router";
 
 export default function periodizacao() {
+    const navigate = useNavigate();
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             event.preventDefault();
@@ -32,12 +34,32 @@ export default function periodizacao() {
         const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
         setAvaliacao(prev => ({
             ...prev,
-            periodizacao: { ...prev.periodizacao, dataInicio: value },
+            periodizacao: {
+                ...prev.periodizacao,
+                dataInicio: value,
+                semanas: prev.periodizacao.semanas.map((semana, semanaIndex) => ({
+                    ...semana,
+                    dias: Array.from({ length: 7 }, (_, diaIndex) => {
+                        const dataDia = new Date(`${value}T00:00:00`);
+                        dataDia.setDate(dataDia.getDate() + semanaIndex * 7 + diaIndex);
+                        return {
+                            data: formatDateInput(dataDia),
+                            treinoIds: semana.dias?.[diaIndex]?.treinoIds ?? ["", "", ""],
+                        };
+                    }),
+                })),
+            },
         }));
     };
 
     const formatDateInput = (date: Date) => {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    };
+
+    const obterDataDia = (semanaIndex: number, diaIndex: number) => {
+        const data = new Date(dataInicio);
+        data.setDate(data.getDate() + semanaIndex * 7 + diaIndex);
+        return formatDateInput(data);
     };
 
     const opcoesTreino = avaliacao.treino.map(treino => ({
@@ -57,15 +79,24 @@ export default function periodizacao() {
 
         setAvaliacao(prev => {
             const semanas = [...prev.periodizacao.semanas];
+            const semanaAtual = semanas[semanaIndex];
+            if (!semanaAtual) return prev;
 
-            const treinoIds = [...semanas[semanaIndex].dias[diaIndex].treinoIds];
+            const dias = Array.from({ length: 7 }, (_, index) =>
+                semanaAtual.dias?.[index] ?? {
+                    data: obterDataDia(semanaIndex, index),
+                    treinoIds: ["", "", ""],
+                },
+            );
+            const diaAtual = dias[diaIndex] ?? { data: "", treinoIds: ["", "", ""] };
+            const treinoIds = [...(diaAtual.treinoIds ?? ["", "", ""])];
 
             treinoIds[slotIndex] = treinoId;
-
-            semanas[semanaIndex].dias[diaIndex] = {
-                ...semanas[semanaIndex].dias[diaIndex],
+            dias[diaIndex] = {
+                ...diaAtual,
                 treinoIds,
             };
+            semanas[semanaIndex] = { ...semanaAtual, dias };
 
             return {
                 ...prev,
@@ -121,8 +152,8 @@ export default function periodizacao() {
 
         let total = 0;
 
-        semana.dias.forEach(dia => {
-            dia.treinoIds.forEach(treinoId => {
+        semana?.dias?.forEach(dia => {
+            dia?.treinoIds?.forEach(treinoId => {
                 total += calcularQuilagemTreino(treinoId);
             });
         });
@@ -151,8 +182,8 @@ export default function periodizacao() {
 
         let total = 0;
 
-        semana.dias.forEach(dia => {
-            dia.treinoIds.forEach(treinoId => {
+        semana?.dias?.forEach(dia => {
+            dia?.treinoIds?.forEach(treinoId => {
                 total += calcularVolumeTreino(treinoId);
             });
         });
@@ -163,13 +194,17 @@ export default function periodizacao() {
     const limparSemana = (semanaIndex: number) => {
         setAvaliacao(prev => {
             const semanas = [...prev.periodizacao.semanas];
+            const semanaAtual = semanas[semanaIndex];
+            if (!semanaAtual) return prev;
 
             semanas[semanaIndex] = {
-                ...semanas[semanaIndex],
-
-                dias: semanas[semanaIndex].dias.map(dia => ({
+                ...semanaAtual,
+                dias: Array.from({ length: 7 }, (_, diaIndex) => semanaAtual.dias?.[diaIndex] ?? {
+                    data: obterDataDia(semanaIndex, diaIndex),
+                    treinoIds: ["", "", ""],
+                }).map(dia => ({
                     ...dia,
-                    treinoIds: dia.treinoIds.map(() => ""),
+                    treinoIds: (dia.treinoIds ?? ["", "", ""]).map(() => ""),
                 })),
             };
 
@@ -186,15 +221,22 @@ export default function periodizacao() {
     const limparDia = (semanaIndex: number, diaIndex: number) => {
         setAvaliacao(prev => {
             const semanas = [...prev.periodizacao.semanas];
+            const semanaAtual = semanas[semanaIndex];
+            if (!semanaAtual) return prev;
+            const dias = Array.from({ length: 7 }, (_, index) =>
+                semanaAtual.dias?.[index] ?? {
+                    data: obterDataDia(semanaIndex, index),
+                    treinoIds: ["", "", ""],
+                },
+            );
 
             semanas[semanaIndex] = {
-                ...semanas[semanaIndex],
-
-                dias: semanas[semanaIndex].dias.map((dia, index) =>
+                ...semanaAtual,
+                dias: dias.map((dia, index) =>
                     index === diaIndex
                         ? {
                               ...dia,
-                              treinoIds: dia.treinoIds.map(() => ""),
+                              treinoIds: (dia.treinoIds ?? ["", "", ""]).map(() => ""),
                           }
                         : dia,
                 ),
@@ -305,6 +347,24 @@ export default function periodizacao() {
                     </div>
                 </div>
             </header>
+
+            {opcoesTreino.length === 0 && (
+                <section className="mb-6 flex flex-col gap-3 rounded-2xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-raised)] p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 className="text-sm font-bold text-[var(--text-primary)]">Sem treinos cadastrados</h2>
+                        <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                            Crie os treinos na Prescrição para poder vinculá-los aos dias da periodização.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => navigate("/prescricao")}
+                        className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)]"
+                    >
+                        Criar treino
+                    </button>
+                </section>
+            )}
 
             {/* INFORMAÇÕES GERAIS */}
             <section
@@ -724,9 +784,7 @@ export default function periodizacao() {
 
                                                         <select
                                                             value={
-                                                                semana.dias[diaIndex].treinoIds[
-                                                                    slot
-                                                                ] || ""
+                                                                semana.dias?.[diaIndex]?.treinoIds?.[slot] || ""
                                                             }
                                                             onChange={e =>
                                                                 atualizarDia(

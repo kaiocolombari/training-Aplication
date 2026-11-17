@@ -31,9 +31,8 @@ export default function AutoSaveController() {
     useEffect(() => {
         lastFailed.current = null;
         setAutoSaveStatus("idle");
-        setAutoSaveLastSavedAt(null);
         setAutoSaveError(null);
-    }, [user?.usuarioId, alunoSelecionadoId, setAutoSaveStatus, setAutoSaveLastSavedAt, setAutoSaveError]);
+    }, [user?.usuarioId, alunoSelecionadoId, setAutoSaveStatus, setAutoSaveError]);
 
     useEffect(() => {
         if (autoSaveStatus === "idle" || autoSaveStatus === "saved") lastFailed.current = null;

@@ -95,181 +95,195 @@ export default function SalvarFicha() {
         .filter(([, alterada]) => alterada)
         .map(([tela]) => tela);
 
+    const statusTexto = !autoSaveEnabled
+        ? "Salvamento automático desativado. Você pode salvar manualmente."
+        : autoSaveStatus === "waiting"
+          ? `Salvamento agendado para ${autoSaveDelayMs / 1000}s após a última edição.`
+          : autoSaveStatus === "saving"
+            ? "Enviando alterações para o banco de dados..."
+            : autoSaveStatus === "error"
+              ? "O último salvamento automático não foi concluído."
+              : autoSaveStatus === "saved"
+                ? "As alterações foram sincronizadas."
+                : "Ativo e aguardando alterações.";
+
     return (
-        <main className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8">
-            <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
-                <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a85f60]">
-                        Persistência da ficha
-                    </p>
-                    <h1 className="mt-2 text-2xl font-bold text-zinc-800">Salvar alterações</h1>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                        Os dados são enviados à API e persistidos no PostgreSQL. As medidas e
-                        informações clínicas não ficam salvas no armazenamento local do navegador.
-                    </p>
-                </div>
-                <Link
-                    to="/"
-                    className="rounded-lg border border-zinc-200 px-4 py-2 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50"
-                >
-                    Voltar ao painel
-                </Link>
-            </div>
-
-            <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-7">
-                <div className="flex items-center justify-between gap-4 border-b border-zinc-100 pb-4">
+        <main className="min-h-full bg-[var(--surface-sunken)] p-4 text-[var(--text-primary)] md:p-6 lg:p-8">
+            <div className="mx-auto w-full max-w-5xl">
+                <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h2 className="text-sm font-bold text-zinc-800">
-                            {avaliacao.aluno.nomeCompleto || "Aluno selecionado"}
-                        </h2>
-                        <p className="mt-1 text-xs text-zinc-500">{avaliacao.aluno.email}</p>
-                    </div>
-                    <span
-                        className={
-                            "rounded-full px-3 py-1 text-[10px] font-bold " +
-                            (alteracoesPendentes
-                                ? "bg-amber-50 text-amber-700"
-                                : "bg-emerald-50 text-emerald-700")
-                        }
-                    >
-                        {alteracoesPendentes ? "Alterações pendentes" : "Tudo salvo"}
-                    </span>
-                </div>
-
-                <div className="py-5">
-                    <p className="text-xs font-semibold text-zinc-700">Seções alteradas</p>
-                    {telasAlteradas.length ? (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            {telasAlteradas.map(tela => (
-                                <span
-                                    key={tela}
-                                    className="rounded-lg bg-zinc-100 px-3 py-1.5 text-[10px] font-medium text-zinc-600"
-                                >
-                                    {nomesTelas[tela] ?? tela}
-                                </span>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="mt-2 text-xs text-zinc-500">
-                            Nenhuma alteração local pendente.
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+                            Persistência da ficha
                         </p>
-                    )}
-                </div>
+                        <h1 className="mt-2 text-2xl font-black tracking-tight text-[var(--text-primary)] md:text-3xl">
+                            Salvar alterações
+                        </h1>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+                            Revise o estado da ficha e sincronize as alterações com a API e o PostgreSQL.
+                        </p>
+                    </div>
+                    <Link
+                        to="/"
+                        className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--surface-raised)] px-4 py-2 text-xs font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+                    >
+                        Voltar ao painel
+                    </Link>
+                </header>
 
-                <div className="mb-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h3 className="text-xs font-bold text-zinc-800">
-                                Salvamento automático
-                            </h3>
-                            <p className="mt-1 text-[11px] leading-5 text-zinc-500">
-                                Salva a ficha no banco depois que você parar de editar.
+                <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] shadow-sm">
+                    <div className="flex flex-col gap-4 border-b border-[var(--border)] bg-[var(--surface-secondary)] p-5 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-6">
+                        <div className="min-w-0">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                                Atendimento atual
+                            </p>
+                            <h2 className="mt-1 truncate text-base font-bold text-[var(--text-primary)]">
+                                {avaliacao.aluno.nomeCompleto || "Aluno selecionado"}
+                            </h2>
+                            <p className="mt-1 truncate text-xs text-[var(--text-secondary)]">
+                                {avaliacao.aluno.email || "Sem e-mail cadastrado"}
                             </p>
                         </div>
-                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-zinc-700">
-                            <input
-                                type="checkbox"
-                                checked={autoSaveEnabled}
-                                onChange={event => setAutoSaveEnabled(event.target.checked)}
-                                className="h-4 w-4 accent-[#a85f60]"
-                            />
-                            Ativar
-                        </label>
+                        <span
+                            className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-2 text-[10px] font-bold ${alteracoesPendentes ? "bg-[var(--warning-soft)] text-[var(--warning)]" : "bg-[var(--success-soft)] text-[var(--success)]"}`}
+                        >
+                            <span className={`h-1.5 w-1.5 rounded-full ${alteracoesPendentes ? "bg-[var(--warning)]" : "bg-[var(--success)]"}`} />
+                            {alteracoesPendentes ? "Alterações pendentes" : "Tudo sincronizado"}
+                        </span>
                     </div>
 
-                    {autoSaveEnabled && (
-                        <label className="mt-4 flex flex-wrap items-center gap-3 text-[11px] font-medium text-zinc-600">
-                            Salvar após
-                            <select
-                                value={autoSaveDelayMs}
-                                onChange={event => setAutoSaveDelayMs(Number(event.target.value))}
-                                className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-[#a85f60]"
-                            >
-                                <option value={2000}>2 segundos</option>
-                                <option value={4000}>4 segundos</option>
-                                <option value={6000}>6 segundos</option>
-                                <option value={10000}>10 segundos</option>
-                            </select>
-                            de inatividade
-                        </label>
-                    )}
+                    <div className="grid gap-6 p-5 sm:p-7">
+                        <section>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <h3 className="text-sm font-bold text-[var(--text-primary)]">Resumo das alterações</h3>
+                                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                                        Seções da ficha que possuem mudanças desde a última gravação.
+                                    </p>
+                                </div>
+                                <span className="rounded-lg bg-[var(--surface-tertiary)] px-2.5 py-1.5 text-[10px] font-bold text-[var(--text-secondary)]">
+                                    {telasAlteradas.length} {telasAlteradas.length === 1 ? "seção" : "seções"}
+                                </span>
+                            </div>
+                            {telasAlteradas.length ? (
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    {telasAlteradas.map(tela => (
+                                        <span key={tela} className="rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] px-3 py-2 text-[10px] font-semibold text-[var(--text-secondary)]">
+                                            {nomesTelas[tela] ?? tela}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="mt-4 rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-secondary)] px-4 py-5 text-xs text-[var(--text-muted)]">
+                                    Nenhuma alteração local pendente. A ficha está sincronizada com o último estado confirmado.
+                                </p>
+                            )}
+                        </section>
 
-                    <p role="status" className="mt-3 text-[11px] font-medium text-zinc-600">
-                        {!autoSaveEnabled &&
-                            "Desativado. Você pode continuar salvando manualmente."}
-                        {autoSaveEnabled &&
-                            autoSaveStatus === "idle" &&
-                            "Ativo. Aguardando alterações."}
-                        {autoSaveEnabled &&
-                            autoSaveStatus === "waiting" &&
-                            `Salvando ${autoSaveDelayMs / 1000}s após a última alteração...`}
-                        {autoSaveEnabled && autoSaveStatus === "saving" && "Salvando no banco..."}
-                        {autoSaveEnabled &&
-                            autoSaveStatus === "saved" &&
-                            `Salvo${autoSaveLastSavedAt ? ` às ${autoSaveLastSavedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}.`}
-                        {autoSaveEnabled &&
-                            autoSaveStatus === "error" &&
-                            "Não foi possível salvar automaticamente."}
-                    </p>
-                    {autoSaveEnabled && autoSaveError && (
-                        <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <p role="alert" className="text-[11px] text-red-600">
-                                {autoSaveError} Você ainda pode salvar manualmente.
+                        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)] p-4 sm:p-5">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="min-w-0">
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--accent)]">
+                                        Preferência de persistência
+                                    </p>
+                                    <h3 className="mt-1 text-sm font-bold text-[var(--text-primary)]">
+                                        Salvamento automático
+                                    </h3>
+                                    <p className="mt-1 max-w-xl text-xs leading-5 text-[var(--text-secondary)]">
+                                        Quando ativado, as alterações são enviadas ao banco após um período sem edição.
+                                    </p>
+                                </div>
+                                <label className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)]">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoSaveEnabled}
+                                        onChange={event => setAutoSaveEnabled(event.target.checked)}
+                                        className="h-4 w-4 accent-[var(--accent)]"
+                                    />
+                                    {autoSaveEnabled ? "Ativado" : "Desativado"}
+                                </label>
+                            </div>
+
+                            {autoSaveEnabled && (
+                                <label className="mt-4 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4 text-xs font-medium text-[var(--text-secondary)]">
+                                    Salvar após
+                                    <select
+                                        value={autoSaveDelayMs}
+                                        onChange={event => setAutoSaveDelayMs(Number(event.target.value))}
+                                        className="min-h-9 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-raised)] px-3 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                                    >
+                                        <option value={2000}>2 segundos</option>
+                                        <option value={4000}>4 segundos</option>
+                                        <option value={6000}>6 segundos</option>
+                                        <option value={10000}>10 segundos</option>
+                                    </select>
+                                    de inatividade
+                                </label>
+                            )}
+
+                            <div className="mt-4 flex flex-col gap-2 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                                <p role="status" className="text-xs font-medium text-[var(--text-secondary)]">
+                                    {statusTexto}
+                                </p>
+                                <p className="text-[10px] text-[var(--text-muted)] sm:text-right">
+                                    Último salvamento confirmado: {autoSaveLastSavedAt ? autoSaveLastSavedAt.toLocaleString("pt-BR") : "Ainda não registrado"}
+                                </p>
+                            </div>
+                            {autoSaveEnabled && autoSaveError && (
+                                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-[var(--danger)]/25 bg-[var(--danger-soft)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <p role="alert" className="text-xs leading-5 text-[var(--danger)]">
+                                        {autoSaveError} Você ainda pode salvar manualmente.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setAutoSaveError(null);
+                                            setAutoSaveStatus("idle");
+                                        }}
+                                        className="shrink-0 text-left text-[11px] font-bold text-[var(--accent)] underline underline-offset-2"
+                                    >
+                                        Tentar novamente
+                                    </button>
+                                </div>
+                            )}
+                        </section>
+
+                        {salvar.isError && (
+                            <div role="alert" className="rounded-xl border border-[var(--danger)]/25 bg-[var(--danger-soft)] px-4 py-3 text-xs leading-5 text-[var(--danger)]">
+                                {salvar.error instanceof ApiError
+                                    ? salvar.error.message
+                                    : "Não foi possível salvar a ficha. Verifique a conexão com a API."}
+                            </div>
+                        )}
+
+                        {salvar.isSuccess && !alteracoesPendentes && (
+                            <div role="status" className="rounded-xl border border-[var(--success)]/25 bg-[var(--success-soft)] px-4 py-3 text-xs font-medium text-[var(--success)]">
+                                Ficha sincronizada com sucesso.
+                            </div>
+                        )}
+
+                        <div className="flex flex-col-reverse gap-3 border-t border-[var(--border)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="max-w-lg text-[10px] leading-5 text-[var(--text-muted)]">
+                                Os dados da ficha são persistidos no PostgreSQL. O navegador guarda apenas o horário da última gravação confirmada.
                             </p>
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setAutoSaveError(null);
-                                    setAutoSaveStatus("idle");
+                                    if (!alunoSelecionadoId) return;
+                                    salvar.mutate({
+                                        alunoId: alunoSelecionadoId,
+                                        snapshot: JSON.parse(JSON.stringify(avaliacao)) as typeof avaliacao,
+                                    });
                                 }}
-                                className="text-[11px] font-bold text-[#a85f60] underline underline-offset-2"
+                                disabled={salvar.isPending || autoSaveStatus === "saving" || !alteracoesPendentes}
+                                aria-busy={salvar.isPending || autoSaveStatus === "saving"}
+                                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--accent)] px-6 text-xs font-bold text-[var(--on-accent)] shadow-sm transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                Tentar novamente
+                                {salvar.isPending ? "Salvando no banco..." : "Salvar alterações"}
                             </button>
                         </div>
-                    )}
-                </div>
-
-                {salvar.isError && (
-                    <div
-                        role="alert"
-                        className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"
-                    >
-                        {salvar.error instanceof ApiError
-                            ? salvar.error.message
-                            : "Não foi possível salvar a ficha. Verifique a conexão com a API."}
                     </div>
-                )}
-
-                {salvar.isSuccess && (
-                    <div
-                        role="status"
-                        className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700"
-                    >
-                        Ficha sincronizada com sucesso.
-                    </div>
-                )}
-
-                <div className="flex flex-wrap items-center justify-end gap-3 border-t border-zinc-100 pt-5">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            if (!alunoSelecionadoId) return;
-                            salvar.mutate({
-                                alunoId: alunoSelecionadoId,
-                                snapshot: JSON.parse(JSON.stringify(avaliacao)) as typeof avaliacao,
-                            });
-                        }}
-                        disabled={
-                            salvar.isPending || autoSaveStatus === "saving" || !alteracoesPendentes
-                        }
-                        aria-busy={salvar.isPending || autoSaveStatus === "saving"}
-                        className="inline-flex h-11 items-center justify-center rounded-xl bg-[#a85f60] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#914f50] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {salvar.isPending ? "Salvando..." : "Salvar no PostgreSQL"}
-                    </button>
-                </div>
-            </section>
+                </section>
+            </div>
         </main>
     );
 }

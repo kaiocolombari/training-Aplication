@@ -25,11 +25,26 @@ public sealed class ComunicacaoController : ControllerBase
         Ok(await _service.ListarConversasAsync());
 
     [Authorize(Roles = "ADMIN,PERSONAL")]
+    [HttpGet("conversas/alunos")]
+    public async Task<IActionResult> ListarConversasAlunos() =>
+        Ok(await _service.ListarConversasAlunosAsync());
+
+    [Authorize(Roles = "ADMIN,PERSONAL")]
+    [HttpGet("conversas/alunos/resumo")]
+    public async Task<IActionResult> ListarResumoChatsAlunos() =>
+        Ok(await _service.ListarResumoChatsAlunosAsync());
+
+    [Authorize(Roles = "ALUNO")]
+    [HttpGet("conversas/personais")]
+    public async Task<IActionResult> ListarConversasPersonaisAluno() =>
+        Ok(await _service.ListarConversasPersonaisAlunoAsync());
+
+    [Authorize(Roles = "ADMIN,PERSONAL,ALUNO")]
     [HttpGet("conversas/{conversaId:guid}/mensagens")]
     public async Task<IActionResult> ListarMensagens(Guid conversaId) =>
         Ok(await _service.ListarMensagensAsync(conversaId));
 
-    [Authorize(Roles = "ADMIN,PERSONAL")]
+    [Authorize(Roles = "ADMIN,PERSONAL,ALUNO")]
     [HttpPost("mensagens/para/{destinatarioId:guid}")]
     public async Task<IActionResult> EnviarMensagem(
         Guid destinatarioId,

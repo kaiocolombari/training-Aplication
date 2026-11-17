@@ -18,10 +18,65 @@ if (!rawApiUrl) {
 const API_URL = rawApiUrl.replace(/\/$/, "");
 
 let csrfToken: string | null = null;
+let csrfTokenRequest: Promise<string> | null = null;
+let csrfTokenRequestVersion = 0;
 let refreshInFlight: Promise<boolean> | null = null;
 
 export const AUTH_SESSION_EXPIRED_EVENT = "app:auth-session-expired";
 export const API_FORBIDDEN_EVENT = "app:api-forbidden";
+export const API_READ_STARTED_EVENT = "app:api-read-started";
+export const API_READ_FINISHED_EVENT = "app:api-read-finished";
+export const API_READ_FAILURE_EVENT = "app:api-read-failure";
+
+function notifyApiReadFailure(endpoint: string, message: string) {
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(API_READ_FAILURE_EVENT, {
+            detail: { endpoint, message },
+        }));
+    }
+}
+
+async function fetchWithTimeout(
+    url: string,
+    options: RequestInit,
+    endpoint: string,
+    monitorarLeitura: boolean,
+): Promise<Response> {
+    const controller = new AbortController();
+    let expirou = false;
+    const timeout = setTimeout(() => {
+        expirou = true;
+        controller.abort();
+    }, 15_000);
+
+    if (monitorarLeitura && typeof window !== "undefined") {
+        window.dispatchEvent(new Event(API_READ_STARTED_EVENT));
+    }
+
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        if (monitorarLeitura && response.status >= 400 && response.status !== 401 && response.status !== 403) {
+            notifyApiReadFailure(
+                endpoint,
+                response.status >= 500
+                    ? "A API está indisponível no momento. A tela não conseguiu carregar os dados."
+                    : `A API retornou o erro ${response.status} ao carregar os dados da tela.`,
+            );
+        }
+        return response;
+    } catch (error) {
+        const message = expirou
+            ? "A API demorou mais de 15 segundos para responder. A tela não conseguiu carregar os dados."
+            : "A conexão com a API foi interrompida. Verifique se o servidor está ativo e tente novamente.";
+        if (monitorarLeitura) notifyApiReadFailure(endpoint, message);
+        throw new ApiError(message, 0, error);
+    } finally {
+        clearTimeout(timeout);
+        if (monitorarLeitura && typeof window !== "undefined") {
+            window.dispatchEvent(new Event(API_READ_FINISHED_EVENT));
+        }
+    }
+}
 
 function notifySessionExpired() {
     if (typeof window !== "undefined") {
@@ -41,20 +96,32 @@ function isUnsafe(method: string) {
 
 async function loadCsrfToken(force = false): Promise<string> {
     if (csrfToken && !force) return csrfToken;
+    if (csrfTokenRequest && !force) return csrfTokenRequest;
 
-    const response = await fetch(`${API_URL}/api/auth/csrf`, {
-        method: "GET",
-        credentials: "include",
-        headers: { Accept: "application/json" },
-    });
+    const version = ++csrfTokenRequestVersion;
+    const request = (async () => {
+        const response = await fetchWithTimeout(`${API_URL}/api/auth/csrf`, {
+            method: "GET",
+            credentials: "include",
+            headers: { Accept: "application/json" },
+        }, "/api/auth/csrf", false);
 
-    if (!response.ok) {
-        throw new ApiError("Não foi possível iniciar uma sessão segura.", response.status);
+        if (!response.ok) {
+            throw new ApiError("Não foi possível iniciar uma sessão segura.", response.status);
+        }
+
+        const data = await response.json() as { requestToken: string };
+        // Chamadas simultâneas compartilham a mesma emissão para manter cookie e token pareados.
+        if (version === csrfTokenRequestVersion) csrfToken = data.requestToken;
+        return data.requestToken;
+    })();
+
+    csrfTokenRequest = request;
+    try {
+        return await request;
+    } finally {
+        if (csrfTokenRequest === request) csrfTokenRequest = null;
     }
-
-    const data = await response.json() as { requestToken: string };
-    csrfToken = data.requestToken;
-    return csrfToken;
 }
 
 async function refreshSession(): Promise<boolean> {
@@ -62,11 +129,11 @@ async function refreshSession(): Promise<boolean> {
         refreshInFlight = (async () => {
             try {
                 const token = await loadCsrfToken();
-                const response = await fetch(`${API_URL}/api/auth/refresh`, {
+                const response = await fetchWithTimeout(`${API_URL}/api/auth/refresh`, {
                     method: "POST",
                     credentials: "include",
                     headers: { "X-CSRF-TOKEN": token, Accept: "application/json" },
-                });
+                }, "/api/auth/refresh", false);
                 if (response.ok) csrfToken = null;
                 return response.ok;
             } catch {
@@ -119,14 +186,14 @@ export async function api<T = unknown>(
         headers.set("X-CSRF-TOKEN", await loadCsrfToken());
     }
 
-    const response = await fetch(`${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, {
+    const endpointPath = endpoint.split("?")[0];
+    const response = await fetchWithTimeout(`${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, {
         ...options,
         method,
         headers,
         credentials: "include",
-    });
+    }, endpointPath, method === "GET" && !endpointPath.startsWith("/api/auth/"));
 
-    const endpointPath = endpoint.split("?")[0];
     if (response.ok && ["/api/auth/login", "/api/auth/register", "/api/auth/logout"].includes(endpointPath)) {
         // O token anterior pode ter sido emitido para a identidade anônima ou para a sessão encerrada.
         csrfToken = null;
@@ -161,17 +228,27 @@ export async function api<T = unknown>(
 
     const contentType = response.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) return null as T;
-    return await response.json() as T;
+    try {
+        return await response.json() as T;
+    } catch (error) {
+        if (method === "GET" && !endpointPath.startsWith("/api/auth/")) {
+            notifyApiReadFailure(
+                endpointPath,
+                "A API respondeu, mas enviou dados inválidos. A tela não conseguiu ser montada.",
+            );
+        }
+        throw new ApiError("A API retornou uma resposta inválida.", response.status, error);
+    }
 }
 
 export async function apiBlob(endpoint: string, retried = false): Promise<Blob> {
-    const response = await fetch(`${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, {
+    const endpointPath = endpoint.split("?")[0];
+    const response = await fetchWithTimeout(`${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, {
         method: "GET",
         credentials: "include",
         headers: { Accept: "application/octet-stream" },
-    });
+    }, endpointPath, !endpointPath.startsWith("/api/auth/"));
 
-    const endpointPath = endpoint.split("?")[0];
     const canRefresh = ![
         "/api/auth/csrf",
         "/api/auth/login",

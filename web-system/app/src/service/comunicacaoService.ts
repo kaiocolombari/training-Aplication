@@ -17,6 +17,22 @@ export interface ConversaEquipe {
     naoLidas: number;
 }
 
+export interface ConversaAluno {
+    alunoId: string;
+    outroUsuarioId: string;
+    outroUsuarioNome: string;
+    outroUsuarioTipo: "PERSONAL" | "ALUNO";
+    conversaId: string | null;
+    ultimaMensagem: string | null;
+    ultimaMensagemEm: string | null;
+    naoLidas: number;
+}
+
+export interface ResumoChatAluno {
+    alunoId: string;
+    naoLidas: number;
+}
+
 export interface MensagemEquipe {
     id: string;
     remetenteId: string;
@@ -57,6 +73,9 @@ export interface Notificacao {
 export const comunicacaoService = {
     listarEquipe: () => apiGet<MembroEquipe[]>("/api/comunicacao/equipe"),
     listarConversas: () => apiGet<ConversaEquipe[]>("/api/comunicacao/conversas"),
+    listarConversasAlunos: () => apiGet<ConversaAluno[]>("/api/comunicacao/conversas/alunos"),
+    listarResumoChatsAlunos: () => apiGet<ResumoChatAluno[]>("/api/comunicacao/conversas/alunos/resumo"),
+    listarConversasPersonaisAluno: () => apiGet<ConversaAluno[]>("/api/comunicacao/conversas/personais"),
     listarMensagens: (conversaId: string) =>
         apiGet<MensagemEquipe[]>(`/api/comunicacao/conversas/${conversaId}/mensagens`),
     enviarMensagem: (destinatarioId: string, conteudo: string) =>

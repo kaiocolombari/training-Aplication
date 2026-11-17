@@ -34,7 +34,7 @@ import { IoChatbubblesSharp } from "react-icons/io5";
 import { TbUserStar } from "react-icons/tb";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     cadastroService,
@@ -48,9 +48,11 @@ import {
 import type { Avaliacao } from "../types/avaliacao";
 import { useAuth } from "../context/authContext";
 import { ApiError } from "../service/api";
+import { lerUltimoSalvamento } from "../utils/lastSaved";
 import SolicitacoesCadastro from "./SolicitacoesCadastro";
 import CentralComunicacao from "./CentralComunicacao";
 import { comunicacaoService } from "../service/comunicacaoService";
+import { adminExtrasService } from "../service/adminExtrasService";
 import { cadastroAlunoService } from "../service/cadastroAlunoService";
 import AtividadesAdmin from "./AtividadesAdmin";
 import Relatorios from "./Relatorios";
@@ -68,6 +70,7 @@ import {
 import EmailCenter from "./EmailCenter";
 import { Skeleton } from "../components/Skeleton";
 import { LoadingState } from "../components/LoadingState";
+import AlunoMonitoramentoPicker from "../components/AlunoMonitoramentoPicker";
 import ArquivosEquipe from "./ArquivosEquipe";
 import TarefasPersonal from "./TarefasPersonal";
 import FeedbackAlunos from "./FeedbackAlunos";
@@ -268,6 +271,7 @@ export default function Painel() {
     } = useAvaliacao();
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const queryClient = useQueryClient();
     const notificacoesPainelQuery = useQuery({
         queryKey: ["comunicacao", "notificacoes"],
@@ -311,6 +315,18 @@ export default function Painel() {
     const alunosQuery = useQuery({
         queryKey: ["alunos"],
         queryFn: cadastroService.listarAlunos,
+    });
+    const tarefasControleQuery = useQuery({
+        queryKey: ["extras", "tarefas", "controle-aluno"],
+        queryFn: () => adminExtrasService.listarTarefas(),
+        enabled: (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL") && secaoAtual === "controleAluno",
+        refetchInterval: 30000,
+    });
+    const chatsAlunosResumoQuery = useQuery({
+        queryKey: ["comunicacao", "alunos", "resumo"],
+        queryFn: comunicacaoService.listarResumoChatsAlunos,
+        enabled: (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL") && secaoAtual === "controleAluno",
+        refetchInterval: 10000,
     });
     const solicitacoesResumoQuery = useQuery({
         queryKey: ["solicitacoes-cadastro", "resumo"],
@@ -359,6 +375,29 @@ export default function Painel() {
         statusCadastro: aluno.statusCadastro ?? "APROVADO",
         possuiFichaTecnica: aluno.possuiFichaTecnica === true,
     }));
+    const tarefasAbertasPorAluno = useMemo(() => {
+        const resumo = new Map<string, number>();
+        for (const tarefa of tarefasControleQuery.data ?? []) {
+            if (!tarefa.alunoId || tarefa.criadoPorTipo === "PERSONAL" || !["PENDENTE", "EM_ANDAMENTO"].includes(tarefa.status)) continue;
+            resumo.set(tarefa.alunoId, (resumo.get(tarefa.alunoId) ?? 0) + 1);
+        }
+        return resumo;
+    }, [tarefasControleQuery.data]);
+    const mensagensNaoLidasPorAluno = useMemo(
+        () => new Map((chatsAlunosResumoQuery.data ?? []).map(item => [item.alunoId, item.naoLidas])),
+        [chatsAlunosResumoQuery.data],
+    );
+    const alunosParaMonitoramento = useMemo(
+        () => alunos.map(aluno => ({
+            id: aluno.id,
+            nomeCompleto: aluno.nome,
+            email: aluno.email,
+            possuiFichaTecnica: aluno.possuiFichaTecnica,
+            tarefasAbertas: tarefasAbertasPorAluno.get(aluno.id) ?? 0,
+            mensagensNaoLidas: mensagensNaoLidasPorAluno.get(aluno.id) ?? 0,
+        })),
+        [alunos, tarefasAbertasPorAluno, mensagensNaoLidasPorAluno],
+    );
     const [alunoParaExcluir, setAlunoParaExcluir] = useState<AlunoPainel | null>(null);
     const [busca, setBusca] = useState("");
     const [filtroFicha, setFiltroFicha] = useState<"todos" | "sem-ficha" | "com-ficha">("todos");
@@ -376,6 +415,25 @@ export default function Painel() {
     const [infoNovoAluno, setInfoNovoAluno] = useState("");
     const [dadosImportacao, setDadosImportacao] = useState<CadastroCompletoApi | null>(null);
     const [carregandoAlunoId, setCarregandoAlunoId] = useState<string | null>(null);
+    const [avisoRecuperacao, setAvisoRecuperacao] = useState<{
+        mensagem: string;
+        ultimoSalvamento: Date | null;
+    } | null>(null);
+
+    useEffect(() => {
+        const estado = location.state as {
+            apiRecoveryError?: string;
+            lastSavedAt?: string | null;
+        } | null;
+        if (!estado?.apiRecoveryError) return;
+
+        const dataSalva = estado.lastSavedAt ? new Date(estado.lastSavedAt) : null;
+        setAvisoRecuperacao({
+            mensagem: estado.apiRecoveryError,
+            ultimoSalvamento: dataSalva && !Number.isNaN(dataSalva.getTime()) ? dataSalva : null,
+        });
+        navigate(location.pathname, { replace: true, state: null });
+    }, [location.key]);
 
     const inputImportarRef = useRef<HTMLInputElement>(null);
     const menuPerfilRef = useRef<HTMLDivElement>(null);
@@ -572,6 +630,7 @@ export default function Painel() {
     }
 
     async function abrirAluno(aluno: AlunoPainel, destino: "ficha" | "controle" = "ficha") {
+        setAvisoRecuperacao(null);
         if (alunoSelecionadoId === aluno.id) {
             setAlunoParaMonitorarId(aluno.id);
             if (destino === "ficha") navigate("/avaliacoes");
@@ -601,14 +660,16 @@ export default function Painel() {
                 cadastroService.listarGruposMusculares(),
             ]);
             carregarAvaliacao(mapearCadastroParaAvaliacao(cadastro, grupos), aluno.id);
+            setAvisoRecuperacao(null);
             if (destino === "ficha") navigate("/avaliacoes");
             else navegar("controleAluno");
         } catch (error) {
-            alert(
-                error instanceof ApiError
+            setAvisoRecuperacao({
+                mensagem: error instanceof ApiError
                     ? error.message
-                    : "Não foi possível carregar a ficha do aluno.",
-            );
+                    : "Não foi possível carregar a ficha do aluno. Verifique a conexão com a API.",
+                ultimoSalvamento: lerUltimoSalvamento(user?.usuarioId, aluno.id),
+            });
         } finally {
             setCarregandoAlunoId(null);
         }
@@ -1506,7 +1567,7 @@ export default function Painel() {
                             {alunosFiltrados.map(aluno => (
                                 <article
                                     key={aluno.id}
-                                    className="group flex flex-col gap-4 p-4 transition-colors hover:bg-[var(--row-hover)] sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                                    className={`group relative flex flex-col gap-4 p-4 transition-colors hover:bg-[var(--row-hover)] sm:flex-row sm:items-center sm:justify-between sm:px-5 ${menuAlunoAberto === aluno.id ? "z-[100]" : "z-0"}`}
                                 >
                                     {/* Identificação */}
                                     <div className="flex min-w-0 items-center gap-3">
@@ -1593,7 +1654,7 @@ export default function Painel() {
                                                 </button>
 
                                                 {menuAlunoAberto === aluno.id && (
-                                                    <div className="absolute right-0 top-11 z-30 w-44 rounded-lg border border-[var(--border)] bg-[var(--menu-bg)] py-1 shadow-xl">
+                                                    <div className="absolute right-0 top-11 z-[110] w-44 rounded-lg border border-[var(--border)] bg-[var(--menu-bg)] py-1 shadow-xl">
                                                         <button
                                                             onClick={() => exportarAluno(aluno)}
                                                             className="flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[11px] text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
@@ -2448,43 +2509,17 @@ export default function Painel() {
                                     </button>
                                 </div>
                             ) : alunos.length ? (
-                                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
-                                    <label className="grid gap-2 text-[10px] font-semibold text-[var(--text-secondary)]">
-                                        Aluno
-                                        <select
-                                            value={alunoParaMonitorarId}
-                                            onChange={event =>
-                                                setAlunoParaMonitorarId(event.target.value)
-                                            }
-                                            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] px-3 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-                                        >
-                                            <option value="">Selecione um aluno...</option>
-                                            {alunos.map(opcao => (
-                                                <option key={opcao.id} value={opcao.id}>
-                                                    {opcao.nome}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </label>
-                                    <button
-                                        type="button"
-                                        disabled={
-                                            !alunoParaMonitorarId || Boolean(carregandoAlunoId)
-                                        }
-                                        onClick={() => {
-                                            const selecionado = alunos.find(
-                                                item => item.id === alunoParaMonitorarId,
-                                            );
-                                            if (selecionado)
-                                                void abrirAluno(selecionado, "controle");
+                                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6">
+                                    <AlunoMonitoramentoPicker
+                                        alunos={alunosParaMonitoramento}
+                                        selectedId={alunoParaMonitorarId}
+                                        onSelectedChange={setAlunoParaMonitorarId}
+                                        loading={Boolean(carregandoAlunoId)}
+                                        onOpen={alunoId => {
+                                            const selecionado = alunos.find(item => item.id === alunoId);
+                                            if (selecionado) void abrirAluno(selecionado, "controle");
                                         }}
-                                        className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-[10px] font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45"
-                                    >
-                                        {carregandoAlunoId
-                                            ? "Carregando aluno..."
-                                            : "Abrir acompanhamento"}
-                                        <BsArrowUpRight />
-                                    </button>
+                                    />
                                 </div>
                             ) : (
                                 renderSecaoVazia(
@@ -2506,10 +2541,7 @@ export default function Painel() {
                             criadoEm: aluno.criadoEm,
                             possuiFichaTecnica: aluno.possuiFichaTecnica,
                         }}
-                        alunosDisponiveis={alunos.map(opcao => ({
-                            id: opcao.id,
-                            nomeCompleto: opcao.nome,
-                        }))}
+                        alunosDisponiveis={alunosParaMonitoramento}
                         ficha={fichaAtual}
                         alunoCarregando={Boolean(carregandoAlunoId)}
                         onBack={() => navegar("alunos")}
@@ -2518,6 +2550,7 @@ export default function Painel() {
                             if (proximoAluno) void abrirAluno(proximoAluno, "controle");
                         }}
                         onNavigate={navegar}
+                        canChat={user?.tipo === "PERSONAL"}
                     />
                 );
             }
@@ -2845,6 +2878,25 @@ export default function Painel() {
                     className="flex-1 px-4 py-6 transition-colors duration-200 sm:px-7 sm:py-8 xl:px-10"
                     style={{ backgroundColor: "var(--surface-secondary)" }}
                 >
+                    {avisoRecuperacao && (
+                        <section role="alert" className="mx-auto mb-5 flex w-full max-w-[1600px] flex-col gap-3 rounded-2xl border border-[var(--danger)]/25 bg-[var(--danger-soft)] p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                                <p className="text-xs font-bold text-[var(--danger)]">Não foi possível carregar a tela</p>
+                                <p className="mt-1 text-xs leading-5 text-[var(--text-primary)]">{avisoRecuperacao.mensagem}</p>
+                                <p className="mt-2 text-[11px] text-[var(--text-secondary)]">
+                                    Último salvamento confirmado: <strong className="text-[var(--text-primary)]">{avisoRecuperacao.ultimoSalvamento ? avisoRecuperacao.ultimoSalvamento.toLocaleString("pt-BR") : "Nenhum horário confirmado encontrado para este aluno neste navegador"}</strong>
+                                </p>
+                                <p className="mt-1 text-[10px] text-[var(--text-muted)]">Esse horário representa a última gravação confirmada no servidor; alterações posteriores podem não ter sido salvas.</p>
+                            </div>
+                            <button type="button" onClick={() => setAvisoRecuperacao(null)} className="shrink-0 rounded-lg border border-[var(--danger)]/30 px-3 py-2 text-[11px] font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/10">Fechar aviso</button>
+                        </section>
+                    )}
+                    {carregandoAlunoId && (
+                        <div role="status" aria-live="polite" className="mx-auto mb-5 flex w-full max-w-[1600px] items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs font-medium text-[var(--text-secondary)]">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)] border-r-transparent" />
+                            Carregando ficha do aluno. Aguarde a resposta da API...
+                        </div>
+                    )}
                     <div className="mx-auto w-full max-w-[1600px]">
                         <div key={secaoAtual} className="route-enter">
                             {renderConteudo()}

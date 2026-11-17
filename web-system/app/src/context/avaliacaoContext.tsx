@@ -19,6 +19,7 @@ import type {
 import { criarAvaliacaoFisicaInicial } from "../types/avaliacao";
 import { gruposMusculares } from "../interface/gruposMusculares";
 import { useAuth } from "./authContext";
+import { lerUltimoSalvamento, registrarUltimoSalvamento } from "../utils/lastSaved";
 
 const criarTesteCargaVazio = (): TesteCargaAvaliacao => ({
   supino: { carga: "", repeticoes: "" },
@@ -28,6 +29,13 @@ const criarTesteCargaVazio = (): TesteCargaAvaliacao => ({
 });
 
 const anamneseVazia = (): AnamneseAvaliacao => ({ objetivo: "", observacoes: "" });
+
+const formatarDataLocalIso = (data: Date) =>
+  `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+
+const dataInicioPadrao = new Date();
+dataInicioPadrao.setHours(0, 0, 0, 0);
+const dataInicioPadraoIso = formatarDataLocalIso(dataInicioPadrao);
 
 export const initialState: Avaliacao = {
   aluno: {
@@ -55,32 +63,20 @@ export const initialState: Avaliacao = {
   },
   avaliacoes: [],
   anamneseComparacao: anamneseVazia(),
-  treino: [
-    {
-      id: crypto.randomUUID(),
-      nome: "",
-      exercicios: Array.from({ length: 12 }, () => ({
-        id: crypto.randomUUID(),
-        exercicio: "",
-        series: "",
-        repeticoes: "",
-        intervalo: "",
-        carga: "",
-        rirMax: "",
-        observacoes: "",
-        variacoes: [],
-      })),
-    },
-  ],
+  treino: [],
   periodizacao: {
     nome: "Periodização principal",
-    dataInicio: new Date().toISOString().slice(0, 10),
+    dataInicio: dataInicioPadraoIso,
     semanas: Array.from({ length: 12 }, (_, semanaIndex) => ({
       numero: semanaIndex + 1,
-      dias: Array.from({ length: 7 }, () => ({
-        data: "",
-        treinoIds: ["", "", ""],
-      })),
+      dias: Array.from({ length: 7 }, (_, diaIndex) => {
+        const data = new Date(dataInicioPadrao);
+        data.setDate(data.getDate() + semanaIndex * 7 + diaIndex);
+        return {
+          data: formatarDataLocalIso(data),
+          treinoIds: ["", "", ""],
+        };
+      }),
     })),
   },
   volume: Array.from({ length: 12 }, (_, semana) => ({
@@ -229,9 +225,24 @@ export function AvaliacaoProvider({ children }: { children: ReactNode }) {
   const [autoSaveEnabledState, setAutoSaveEnabledState] = useState(false);
   const [autoSaveDelayMsState, setAutoSaveDelayMsState] = useState(4000);
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>("idle");
-  const [autoSaveLastSavedAt, setAutoSaveLastSavedAt] = useState<Date | null>(null);
+  const [autoSaveLastSavedAt, setAutoSaveLastSavedAtState] = useState<Date | null>(null);
   const [autoSaveError, setAutoSaveError] = useState<string | null>(null);
   const alteracoesPendentes = telas.some((tela) => alteracoesPorTela[tela]);
+
+  const setAutoSaveLastSavedAt = useCallback<Dispatch<SetStateAction<Date | null>>>(
+    (value) => {
+      setAutoSaveLastSavedAtState((atual) => {
+        const proximo = typeof value === "function" ? value(atual) : value;
+        registrarUltimoSalvamento(user?.usuarioId, alunoSelecionadoIdRef.current, proximo);
+        return proximo;
+      });
+    },
+    [user?.usuarioId],
+  );
+
+  useEffect(() => {
+    setAutoSaveLastSavedAtState(lerUltimoSalvamento(user?.usuarioId, alunoSelecionadoId));
+  }, [user?.usuarioId, alunoSelecionadoId]);
 
   useEffect(() => {
     try {
@@ -247,7 +258,7 @@ export function AvaliacaoProvider({ children }: { children: ReactNode }) {
       setAutoSaveEnabledState(false);
       setAutoSaveDelayMsState(4000);
       setAutoSaveStatus("idle");
-      setAutoSaveLastSavedAt(null);
+      setAutoSaveLastSavedAtState(null);
       setAutoSaveError(null);
       return;
     }
@@ -300,10 +311,25 @@ export function AvaliacaoProvider({ children }: { children: ReactNode }) {
 
   const carregarAvaliacao = useCallback((dados: Avaliacao, alunoId?: string) => {
     avaliacaoSalva.current = JSON.stringify(dados);
-    if (alunoId) setAlunoSelecionadoId(alunoId);
+    if (alunoId) {
+      setAlunoSelecionadoId(alunoId);
+      const ultimaAtualizacaoServidor = dados.avaliacoes
+        .map((item) => item.atualizadaEm)
+        .filter((item): item is string => Boolean(item))
+        .map((item) => new Date(item))
+        .filter((item) => !Number.isNaN(item.getTime()))
+        .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+      const ultimaAtualizacaoLocal = lerUltimoSalvamento(user?.usuarioId, alunoId);
+      const ultimaConfirmada = ultimaAtualizacaoServidor &&
+        (!ultimaAtualizacaoLocal || ultimaAtualizacaoServidor > ultimaAtualizacaoLocal)
+        ? ultimaAtualizacaoServidor
+        : ultimaAtualizacaoLocal;
+      setAutoSaveLastSavedAtState(ultimaConfirmada);
+      registrarUltimoSalvamento(user?.usuarioId, alunoId, ultimaConfirmada);
+    }
     setAvaliacao(dados);
     setAlteracoesPorTela(criarAlteracoesZeradas());
-  }, []);
+  }, [user?.usuarioId]);
 
   const marcarComoSalvo = useCallback((snapshot?: Avaliacao, alunoId?: string) => {
     if (alunoId && alunoSelecionadoIdRef.current !== alunoId) return false;

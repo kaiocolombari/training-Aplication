@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
 import type { SerieIntensidade } from "../interface/interfaceExercicio";
 import { FaRunning } from "react-icons/fa";
+import { useNavigate } from "react-router";
 
 const STIMULO_MAX_POSSIVEL = 15 * 1 * 1.1;
 
@@ -190,15 +191,13 @@ function calcularResumoTreino(treino: any) {
 
 export default function Intensidade() {
     const { avaliacao, setAvaliacao } = useAvaliacao();
+    const navigate = useNavigate();
 
     const [exerciciosAbertos, setExerciciosAbertos] = useState<Record<string, boolean>>({});
 
     const resumosTreino = useMemo(
-        () =>
-            Array.from({ length: 12 }).map((_, treinoIndex) =>
-                calcularResumoTreino(avaliacao?.treino?.[treinoIndex]),
-            ),
-        [avaliacao?.treino],
+        () => avaliacao.treino.map(treino => calcularResumoTreino(treino)),
+        [avaliacao.treino],
     );
 
     function alternarDetalhes(treinoIndex: number, exercicioIndex: number) {
@@ -341,14 +340,27 @@ export default function Intensidade() {
                                 text-[var(--text-primary)]
                             "
                         >
-                            12 disponíveis
+                            {avaliacao.treino.length} {avaliacao.treino.length === 1 ? "cadastrado" : "cadastrados"}
                         </p>
                     </div>
                 </div>
             </div>
             <section className="mt-6 grid gap-5">
-                {Array.from({ length: 12 }).map((_, treinoIndex) => {
-                    const treino = avaliacao?.treino?.[treinoIndex];
+                {avaliacao.treino.length === 0 ? (
+                    <div className="rounded-3xl border border-dashed border-[var(--border-strong)] bg-[var(--surface)] px-6 py-14 text-center">
+                        <h2 className="text-lg font-bold text-[var(--text-primary)]">Sem treinos cadastrados</h2>
+                        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--text-secondary)]">
+                            Crie os treinos na Prescrição para começar a configurar a intensidade dos exercícios.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => navigate("/prescricao")}
+                            className="mt-5 rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)]"
+                        >
+                            Criar treino
+                        </button>
+                    </div>
+                ) : avaliacao.treino.map((treino, treinoIndex) => {
 
                     const resumoTreino = resumosTreino[treinoIndex];
 

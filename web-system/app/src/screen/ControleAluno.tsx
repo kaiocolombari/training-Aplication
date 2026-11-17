@@ -6,6 +6,7 @@ import {
     BsBullseye,
     BsCalendar3,
     BsCheck2Circle,
+    BsChatDots,
     BsClipboard2Pulse,
     BsClockHistory,
     BsExclamationTriangle,
@@ -19,7 +20,9 @@ import {
 } from "react-icons/bs";
 import type { Avaliacao } from "../types/avaliacao";
 import type { AlunoResumoApi } from "../service/cadastroService";
+import AlunoMonitoramentoPicker, { type AlunoMonitoramentoOption } from "../components/AlunoMonitoramentoPicker";
 import ControleVolumeTreino from "./ControleVolumeTreino";
+import ChatAlunoConversa from "../components/ChatAlunoConversa";
 
 type AlunoControle = Pick<
     AlunoResumoApi,
@@ -27,6 +30,7 @@ type AlunoControle = Pick<
 >;
 const abas = [
     { id: "resumo", label: "Visão 360°", icon: <BsActivity /> },
+    { id: "mensagens", label: "Mensagens", icon: <BsChatDots /> },
     { id: "treinos", label: "Treinos", icon: <BsClipboard2Pulse /> },
     { id: "volume", label: "Volume mensal", icon: <BsGraphUp /> },
     { id: "checkins", label: "Check-ins", icon: <BsHeartPulse /> },
@@ -97,16 +101,19 @@ export default function ControleAluno({
     onBack,
     onSelecionarAluno,
     onNavigate,
+    canChat,
 }: {
     aluno: AlunoControle;
-    alunosDisponiveis: Array<{ id: string; nomeCompleto: string }>;
+    alunosDisponiveis: AlunoMonitoramentoOption[];
     ficha: Avaliacao;
     alunoCarregando: boolean;
     onBack: () => void;
     onSelecionarAluno: (alunoId: string) => void;
     onNavigate: (section: string) => void;
+    canChat: boolean;
 }) {
     const [aba, setAba] = useState<AbaId>("resumo");
+    const mensagensNaoLidasAluno = alunosDisponiveis.find(item => item.id === aluno.id)?.mensagensNaoLidas ?? 0;
     const treinos = useMemo(
         () => ficha.treino.filter(t => t.nome.trim() || t.exercicios.some(e => e.exercicio.trim())),
         [ficha.treino],
@@ -580,6 +587,7 @@ export default function ControleAluno({
 
     const conteudo = (() => {
         if (aba === "resumo") return resumo;
+        if (aba === "mensagens") return <ChatAlunoConversa modo="personal" alunoId={aluno.id} />;
         if (aba === "treinos") return treinosView;
         if (aba === "volume") return <ControleVolumeTreino alunoId={aluno.id} treinos={treinos} />;
         if (aba === "evolucao") return evolucaoView;
@@ -791,23 +799,13 @@ export default function ControleAluno({
                     <BsArrowLeft /> Voltar aos alunos
                 </button>
                 <div className="flex flex-wrap items-center gap-2">
-                    <label className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[9px] font-semibold text-[var(--text-muted)]">
-                        Aluno monitorado
-                        <select
-                            aria-label="Selecionar aluno para monitoramento"
-                            value={aluno.id}
-                            disabled={alunoCarregando}
-                            onChange={event => onSelecionarAluno(event.target.value)}
-                            className="max-w-[190px] bg-transparent text-[10px] font-semibold text-[var(--text-primary)] outline-none disabled:opacity-50"
-                        >
-                            {alunosDisponiveis.map(opcao => (
-                                <option key={opcao.id} value={opcao.id}>
-                                    {opcao.nomeCompleto}
-                                </option>
-                            ))}
-                        </select>
-                        {alunoCarregando && <span className="ui-spinner" aria-hidden="true" />}
-                    </label>
+                    <AlunoMonitoramentoPicker
+                        compact
+                        alunos={alunosDisponiveis}
+                        selectedId={aluno.id}
+                        loading={alunoCarregando}
+                        onOpen={onSelecionarAluno}
+                    />
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-[9px] font-semibold text-[var(--success)]">
                         <BsCheck2Circle /> Atendimento ativo
                     </span>
@@ -853,7 +851,7 @@ export default function ControleAluno({
                 aria-label="Módulos de acompanhamento do aluno"
                 className="flex gap-1 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1.5"
             >
-                {abas.map(item => (
+                {abas.filter(item => item.id !== "mensagens" || canChat).map(item => (
                     <button
                         key={item.id}
                         onClick={() => setAba(item.id)}
@@ -866,6 +864,11 @@ export default function ControleAluno({
                     >
                         <span className="text-[12px]">{item.icon}</span>
                         {item.label}
+                        {item.id === "mensagens" && mensagensNaoLidasAluno > 0 && (
+                            <span className="grid h-4 min-w-4 place-items-center rounded-full bg-white/20 px-1 text-[8px] font-bold">
+                                {mensagensNaoLidasAluno}
+                            </span>
+                        )}
                     </button>
                 ))}
             </nav>

@@ -60,6 +60,7 @@ public sealed class TarefaPersonalDTO
     public Guid? AlunoId { get; set; }
     public string? AlunoNome { get; set; }
     public string CriadoPor { get; set; } = string.Empty;
+    public string CriadoPorTipo { get; set; } = string.Empty;
     public string Titulo { get; set; } = string.Empty;
     public string Descricao { get; set; } = string.Empty;
     public string? DicaContexto { get; set; }

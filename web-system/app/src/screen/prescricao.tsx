@@ -1,6 +1,7 @@
 import { initialState, useAvaliacao } from "../context/avaliacaoContext";
 import navTool from "../components/navTool";
 import type { ExercicioTreino } from "../interface/interfaceExercicio";
+import type { Treino } from "../interface/interfaceTreino";
 import React, { useEffect, useState } from "react";
 import {
     FaDumbbell,
@@ -249,6 +250,47 @@ export default function Prescricao() {
     const { avaliacao, setAvaliacao } = useAvaliacao();
 
     const [expandedVariacoes, setExpandedVariacoes] = useState<Set<string>>(new Set());
+    const [novoTreinoNome, setNovoTreinoNome] = useState("");
+
+    const adicionarTreino = () => {
+        setAvaliacao(prev => {
+            const numero = prev.treino.length + 1;
+            const novoTreino: Treino = {
+                id: crypto.randomUUID(),
+                nome: novoTreinoNome.trim() || `Treino ${numero}`,
+                exercicios: [],
+            };
+
+            return { ...prev, treino: [...prev.treino, novoTreino] };
+        });
+        setNovoTreinoNome("");
+    };
+
+    const adicionarExercicioVazio = (treinoId: string) => {
+        setAvaliacao(prev => ({
+            ...prev,
+            treino: prev.treino.map(treino => {
+                if (treino.id !== treinoId || treino.exercicios.length >= 12) return treino;
+                return {
+                    ...treino,
+                    exercicios: [
+                        ...treino.exercicios,
+                        {
+                            id: crypto.randomUUID(),
+                            exercicio: "",
+                            series: "",
+                            repeticoes: "",
+                            intervalo: "",
+                            carga: "",
+                            rirMax: "",
+                            observacoes: "",
+                            variacoes: [],
+                        },
+                    ],
+                };
+            }),
+        }));
+    };
 
     const alternarVariacoes = (treinoId: string, exercicioId: string) => {
         const chave = `${treinoId}-${exercicioId}`;
@@ -450,37 +492,6 @@ export default function Prescricao() {
     };
 
     useEffect(() => {
-        setAvaliacao(prev => {
-            const treinos = [...(prev.treino ?? [])];
-
-            while (treinos.length < 12) {
-                const treinoIndex = treinos.length;
-
-                treinos.push({
-                    id: crypto.randomUUID(),
-                    nome: `Treino ${treinoIndex + 1}`,
-                    exercicios: Array.from({ length: 12 }, () => ({
-                        id: crypto.randomUUID(),
-                        exercicio: "",
-                        series: "",
-                        repeticoes: "",
-                        intervalo: "",
-                        carga: "",
-                        rirMax: "",
-                        observacoes: "",
-                        variacoes: [],
-                    })),
-                });
-            }
-
-            return {
-                ...prev,
-                treino: treinos.slice(0, 12),
-            };
-        });
-    }, [setAvaliacao]);
-
-    useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             event.preventDefault();
             event.returnValue = "Tem certeza que deseja sair?";
@@ -604,14 +615,50 @@ export default function Prescricao() {
                                 text-[var(--text-primary)]
                             "
                             >
-                                12 disponíveis
+                                {avaliacao.treino.length} {avaliacao.treino.length === 1 ? "cadastrado" : "cadastrados"}
                             </p>
                         </div>
                     </div>
                 </div>
 
+                <section className="mb-6 flex flex-col gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 sm:flex-row sm:items-center">
+                    <input
+                        type="text"
+                        value={novoTreinoNome}
+                        onChange={event => setNovoTreinoNome(event.target.value)}
+                        onKeyDown={event => {
+                            if (event.key === "Enter") {
+                                event.preventDefault();
+                                adicionarTreino();
+                            }
+                        }}
+                        placeholder={`Nome do novo treino (opcional)`}
+                        aria-label="Nome do novo treino"
+                        className="h-11 min-w-0 flex-1 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-tertiary)] px-4 text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--accent-border)] focus:ring-2 focus:ring-[var(--ring)]"
+                    />
+                    <button
+                        type="button"
+                        onClick={adicionarTreino}
+                        className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-sm font-bold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)]"
+                    >
+                        <FaPlus />
+                        Adicionar treino vazio
+                    </button>
+                </section>
+
+                {avaliacao.treino.length === 0 ? (
+                    <section className="rounded-3xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-raised)] px-6 py-14 text-center">
+                        <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-xl font-bold text-[var(--accent)]">
+                            <FaDumbbell />
+                        </div>
+                        <h2 className="mt-4 text-lg font-bold text-[var(--text-primary)]">Sem treinos cadastrados</h2>
+                        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--text-secondary)]">
+                            Os treinos não são mais criados automaticamente. Adicione somente os que o aluno realmente precisa.
+                        </p>
+                    </section>
+                ) : (
                 <div className="space-y-8">
-                    {avaliacao.treino.slice(0, 12).map((treino, treinoIndex) => {
+                    {avaliacao.treino.map((treino, treinoIndex) => {
                         const exerciciosPreenchidos =
                             treino.exercicios?.filter(exercicio => exercicio?.exercicio?.trim())
                                 .length ?? 0;
@@ -761,6 +808,15 @@ export default function Prescricao() {
                                                 {totalVariacoes === 1 ? "variação" : "variações"}
                                             </span>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => adicionarExercicioVazio(treino.id)}
+                                            disabled={treino.exercicios.length >= 12}
+                                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)] px-3 py-2 text-xs font-bold text-[var(--accent-text)] transition hover:bg-[var(--accent)] hover:text-[var(--on-accent)] disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            <FaPlus />
+                                            Adicionar exercício
+                                        </button>
                                     </div>
                                 </div>
 
@@ -836,8 +892,14 @@ export default function Prescricao() {
                                         </thead>
 
                                         <tbody>
+                                            {treino.exercicios.length === 0 && (
+                                                <tr>
+                                                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-[var(--text-muted)]">
+                                                        Sem exercícios adicionados. Use o botão acima para começar.
+                                                    </td>
+                                                </tr>
+                                            )}
                                             {treino.exercicios
-                                                .slice(0, 12)
                                                 .map((exercicio, exercicioIndex) => {
                                                     if (!exercicio) {
                                                         return null;
@@ -1282,6 +1344,7 @@ export default function Prescricao() {
                         );
                     })}
                 </div>
+                )}
             </div>
             <div className="h-24" />
         </main>

@@ -16,7 +16,8 @@ public sealed class EmailController : ControllerBase
     public EmailController(EmailService service) => _service = service;
 
     [HttpGet("status")]
-    public IActionResult Status() => Ok(_service.ObterStatus());
+    public async Task<IActionResult> Status(CancellationToken cancellationToken) =>
+        Ok(await _service.ObterStatusAsync(cancellationToken));
 
     [HttpGet("destinatarios")]
     public async Task<IActionResult> ListarDestinatarios(
@@ -29,10 +30,14 @@ public sealed class EmailController : ControllerBase
     public async Task<IActionResult> Enviar([FromBody] EnviarEmailDTO dto)
     {
         if (!_service.EstaConfigurado)
+        {
+            var status = await _service.ObterStatusAsync();
             return StatusCode(StatusCodes.Status503ServiceUnavailable, new
             {
-                message = _service.ObterStatus().Mensagem
+                message = status.Mensagem,
+                status
             });
+        }
 
         return Ok(await _service.EnviarAsync(dto));
     }
