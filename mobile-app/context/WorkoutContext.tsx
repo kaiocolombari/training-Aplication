@@ -6,6 +6,24 @@ import type { WorkoutPlan } from "@/data/workouts";
 const STORAGE_KEY = "@treino-system/active-session";
 const HISTORY_KEY = "@treino-system/session-history";
 
+function parseRestDurationSeconds(rest: string) {
+  const normalized = rest.trim().toLowerCase();
+  const clockMatch = normalized.match(/^(\d+):(\d{1,2})$/);
+  if (clockMatch) return Number(clockMatch[1]) * 60 + Number(clockMatch[2]);
+
+  const minutes = normalized.match(/(\d+(?:[.,]\d+)?)\s*(?:minutos|min|min\.?|m)\b/);
+  const seconds = normalized.match(/(\d+(?:[.,]\d+)?)\s*(?:segundos|seg|s)\b/);
+  if (minutes || seconds) {
+    return Math.round(
+      Number((minutes?.[1] ?? "0").replace(",", ".")) * 60
+      + Number((seconds?.[1] ?? "0").replace(",", ".")),
+    );
+  }
+
+  const numericValue = Number.parseFloat(normalized.replace(",", "."));
+  return Number.isFinite(numericValue) ? Math.max(0, Math.round(numericValue)) : 0;
+}
+
 export type SessionSet = {
   targetReps: string;
   targetLoad: number;
@@ -13,6 +31,7 @@ export type SessionSet = {
   reps: number;
   load: number;
   rir: number;
+  hasRecorded: boolean;
   completed: boolean;
 };
 
@@ -37,6 +56,9 @@ export type ActiveSession = {
   phase: "exercise" | "rest" | "cardio" | "completed";
   restEndsAt: string | null;
   restDurationSeconds: number;
+  restPausedRemainingSeconds: number | null;
+  restElapsedSeconds: number;
+  restStartedAt: string | null;
   cardioDurationSeconds: number;
   cardioTimerEnabled: boolean;
   cardioNotificationsEnabled: boolean;
@@ -56,10 +78,13 @@ type WorkoutContextValue = {
   updateCurrentSet: (patch: Partial<Pick<SessionSet, "reps" | "load" | "rir">>) => void;
   updateExerciseFeedback: (patch: Partial<Pick<SessionExercise, "painStatus" | "feedback">>) => void;
   beginRest: () => void;
+  pauseRestStopwatch: (elapsedSeconds: number) => void;
+  resumeRestStopwatch: () => void;
+  restartRestStopwatch: () => void;
   saveCurrentSetAndAdvance: (usePrescription?: boolean) => void;
   updateCardioTimer: (patch: Partial<Pick<ActiveSession, "cardioTimerEnabled" | "cardioNotificationsEnabled" | "cardioStartedAt" | "cardioElapsedSeconds" | "cardioNotificationIds">>) => void;
   saveAndPause: () => Promise<void>;
-  finishWorkout: () => Promise<void>;
+  finishWorkout: (cardioElapsedSeconds?: number) => Promise<void>;
 };
 
 const WorkoutContext = createContext<WorkoutContextValue | null>(null);
@@ -74,18 +99,37 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       .then((value) => {
         if (mounted && value) {
           const saved = JSON.parse(value) as Partial<ActiveSession>;
+          const restoredRestDurationSeconds = saved.restDurationSeconds && saved.restDurationSeconds > 0
+            ? saved.restDurationSeconds
+            : saved.phase === "rest"
+              ? parseRestDurationSeconds(saved.exercises?.[saved.currentExerciseIndex ?? 0]?.rest ?? "")
+              : 0;
           setActiveSession({
             ...saved,
             workoutKind: saved.workoutKind ?? "strength",
             phase: saved.phase ?? "exercise",
             restEndsAt: saved.restEndsAt ?? null,
-            restDurationSeconds: saved.restDurationSeconds ?? 0,
+            restDurationSeconds: restoredRestDurationSeconds,
+            restPausedRemainingSeconds: saved.restPausedRemainingSeconds ?? null,
+            restElapsedSeconds: Math.min(restoredRestDurationSeconds, saved.restElapsedSeconds ?? 0),
+            restStartedAt: saved.restStartedAt ?? null,
             cardioDurationSeconds: saved.cardioDurationSeconds ?? 0,
             cardioTimerEnabled: saved.cardioTimerEnabled ?? false,
             cardioNotificationsEnabled: saved.cardioNotificationsEnabled ?? true,
             cardioStartedAt: saved.cardioStartedAt ?? null,
             cardioElapsedSeconds: saved.cardioElapsedSeconds ?? 0,
             cardioNotificationIds: saved.cardioNotificationIds ?? [],
+            exercises: (saved.exercises ?? []).map((exercise) => ({
+              ...exercise,
+              sets: exercise.sets.map((set) => ({
+                ...set,
+                hasRecorded: set.hasRecorded ?? (
+                  set.load !== set.targetLoad
+                  || set.reps !== (Number.parseInt(set.targetReps, 10) || 10)
+                  || set.rir !== set.targetRir
+                ),
+              })),
+            })),
           } as ActiveSession);
         }
       })
@@ -116,6 +160,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       phase: workout.kind === "cardio" ? "cardio" : "exercise",
       restEndsAt: null,
       restDurationSeconds: 0,
+      restPausedRemainingSeconds: null,
+      restElapsedSeconds: 0,
+      restStartedAt: null,
       cardioDurationSeconds: workout.cardioDurationSeconds ?? 0,
       cardioTimerEnabled: false,
       cardioNotificationsEnabled: true,
@@ -134,9 +181,10 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
           targetReps: exercise.reps,
           targetLoad: exercise.load,
           targetRir: exercise.rir,
-          reps: Number.parseInt(exercise.reps, 10) || 10,
-          load: exercise.load,
-          rir: exercise.rir,
+          reps: 0,
+          load: 0,
+          rir: 0,
+          hasRecorded: false,
           completed: false,
         })),
       })),
@@ -158,7 +206,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         return {
           ...exercise,
           sets: exercise.sets.map((set, setIndex) =>
-            setIndex === current.currentSetIndex ? { ...set, ...patch } : set,
+            setIndex === current.currentSetIndex ? { ...set, ...patch, hasRecorded: true } : set,
           ),
         };
       });
@@ -167,20 +215,52 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const beginRest = useCallback(() => {
-    if (!activeSession || activeSession.phase !== "exercise") return;
-    const exercise = activeSession.exercises[activeSession.currentExerciseIndex];
-    if (!exercise) return;
-    const match = exercise.rest.match(/(\d+(?:[.,]\d+)?)\s*(min|m|s|seg)?/i);
-    const amount = match ? Number(match[1].replace(",", ".")) : 60;
-    const unit = match?.[2]?.toLowerCase();
-    const restDurationSeconds = unit === "min" || unit === "m" ? amount * 60 : amount;
-    setActiveSession((current) => current ? {
+    setActiveSession((current) => {
+      if (!current || current.phase !== "exercise") return current;
+      return {
+        ...current,
+        phase: "rest",
+        restDurationSeconds: parseRestDurationSeconds(current.exercises[current.currentExerciseIndex]?.rest ?? ""),
+        restPausedRemainingSeconds: null,
+        restEndsAt: null,
+        restElapsedSeconds: 0,
+        restStartedAt: null,
+      };
+    });
+  }, []);
+
+  const pauseRestStopwatch = useCallback((elapsedSeconds: number) => {
+    setActiveSession((current) => current && current.phase === "rest" ? {
       ...current,
-      phase: "rest",
-      restDurationSeconds,
-      restEndsAt: new Date(Date.now() + restDurationSeconds * 1000).toISOString(),
+      restElapsedSeconds: Math.min(current.restDurationSeconds, Math.max(0, elapsedSeconds)),
+      restStartedAt: null,
     } : current);
-  }, [activeSession]);
+  }, []);
+
+  const resumeRestStopwatch = useCallback(() => {
+    setActiveSession((current) => {
+      if (!current || current.phase !== "rest" || current.restStartedAt
+        || current.restElapsedSeconds >= current.restDurationSeconds) return current;
+      return {
+        ...current,
+        restStartedAt: new Date().toISOString(),
+      };
+    });
+  }, []);
+
+  const restartRestStopwatch = useCallback(() => {
+    setActiveSession((current) => {
+      if (!current || current.phase !== "rest") return current;
+      return {
+        ...current,
+        restDurationSeconds: current.restDurationSeconds,
+        restPausedRemainingSeconds: null,
+        restEndsAt: null,
+        restElapsedSeconds: 0,
+        restStartedAt: null,
+      };
+    });
+  }, []);
 
   const saveCurrentSetAndAdvance = useCallback((usePrescription = false) => {
     setActiveSession((current) => {
@@ -192,9 +272,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
           sets: item.sets.map((set, setIndex) => setIndex === current.currentSetIndex
             ? {
               ...set,
-              reps: usePrescription ? Number.parseInt(set.targetReps, 10) || set.reps : set.reps,
-              load: usePrescription ? set.targetLoad : set.load,
-              rir: usePrescription ? set.targetRir : set.rir,
+              reps: usePrescription || !set.hasRecorded ? Number.parseInt(set.targetReps, 10) || set.reps : set.reps,
+              load: usePrescription || !set.hasRecorded ? set.targetLoad : set.load,
+              rir: usePrescription || !set.hasRecorded ? set.targetRir : set.rir,
               completed: true,
             }
             : set),
@@ -218,6 +298,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         phase: "exercise",
         restEndsAt: null,
         restDurationSeconds: 0,
+        restPausedRemainingSeconds: null,
+        restElapsedSeconds: 0,
+        restStartedAt: null,
       };
     });
   }, []);
@@ -242,12 +325,24 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     if (activeSession) await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activeSession));
   }, [activeSession]);
 
-  const finishWorkout = useCallback(async () => {
+  const finishWorkout = useCallback(async (cardioElapsedSeconds?: number) => {
     if (activeSession) {
+      const finishedSession: ActiveSession = activeSession.workoutKind === "cardio"
+        ? {
+          ...activeSession,
+          cardioElapsedSeconds: cardioElapsedSeconds ?? activeSession.cardioElapsedSeconds,
+          cardioStartedAt: null,
+          exercises: activeSession.exercises.map((exercise) => ({
+            ...exercise,
+            sets: exercise.sets.map((set) => ({ ...set, completed: true })),
+          })),
+          phase: "completed",
+        }
+        : activeSession;
       const savedHistory = await AsyncStorage.getItem(HISTORY_KEY);
       const history = savedHistory ? JSON.parse(savedHistory) as Array<ActiveSession & { finishedAt: string }> : [];
       await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify([
-        { ...activeSession, finishedAt: new Date().toISOString() },
+        { ...finishedSession, finishedAt: new Date().toISOString() },
         ...history,
       ].slice(0, 30)));
     }
@@ -265,11 +360,14 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     updateCurrentSet,
     updateExerciseFeedback,
     beginRest,
+    pauseRestStopwatch,
+    resumeRestStopwatch,
+    restartRestStopwatch,
     saveCurrentSetAndAdvance,
     updateCardioTimer,
     saveAndPause,
     finishWorkout,
-  }), [activeSession, hydrated, completedSets, totalSets, isComplete, beginWorkout, updateCurrentSet, updateExerciseFeedback, beginRest, saveCurrentSetAndAdvance, updateCardioTimer, saveAndPause, finishWorkout]);
+  }), [activeSession, hydrated, completedSets, totalSets, isComplete, beginWorkout, updateCurrentSet, updateExerciseFeedback, beginRest, pauseRestStopwatch, resumeRestStopwatch, restartRestStopwatch, saveCurrentSetAndAdvance, updateCardioTimer, saveAndPause, finishWorkout]);
 
   return <WorkoutContext.Provider value={value}>{children}</WorkoutContext.Provider>;
 }

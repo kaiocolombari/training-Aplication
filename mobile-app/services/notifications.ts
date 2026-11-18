@@ -53,6 +53,7 @@ export async function requestAppNotificationPermission() {
 /** Envia um aviso imediato. Use este ponto único para notificações futuras do app. */
 export async function notifyNow(notification: AppNotification) {
   if (Platform.OS === "web") return null;
+  await prepareNotificationChannel();
   return Notifications.scheduleNotificationAsync({
     content: {
       title: notification.title,

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Check, ChevronRight, Clock3, Dumbbell, Repeat2 } from "lucide-react-native";
+import { Check, ChevronRight, Clock3, Dumbbell, HeartPulse, Repeat2 } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 
 import { AppScreen, Eyebrow, ProgressTrack, SectionTitle, Tag } from "@/components/ui";
@@ -20,9 +20,13 @@ export default function WorkoutsScreen() {
   const { activeSession, completedSets, totalSets } = useWorkout();
   return (
     <AppScreen>
-      <View className="pt-4"><Eyebrow>PLANEJAMENTO</Eyebrow><Text className="mt-2 text-[30px] font-black tracking-[-1px] text-ink">Seus treinos</Text><Text className="mt-1 text-[12px] text-muted">Tudo organizado para você focar na execução.</Text></View>
+      <View className="pt-4">
+        <Eyebrow>PLANEJAMENTO</Eyebrow>
+        <Text className="mt-2 text-[30px] font-black tracking-[-1px] text-ink">Seus treinos</Text>
+        <Text className="mt-1 text-[12px] text-muted">Tudo organizado para você focar na execução.</Text>
+      </View>
 
-      <SectionTitle action={<Tag tone="lime">SEMANA 04 / 08</Tag>}>Agenda semanal</SectionTitle>
+      <SectionTitle action={<Tag tone="lime">SEMANA {PERIODIZATION_PLAN.currentWeek} / {PERIODIZATION_PLAN.totalWeeks}</Tag>}>Agenda semanal</SectionTitle>
       <View className="rounded-[24px] border border-line bg-white p-4">
         {schedule.map((item, index) => {
           const isToday = index === 1;
@@ -40,14 +44,14 @@ export default function WorkoutsScreen() {
         })}
       </View>
 
-      <SectionTitle>Ficha atual <Text className="text-[11px] font-medium text-muted">· 3 sessões</Text></SectionTitle>
+      <SectionTitle>Ficha atual <Text className="text-[11px] font-medium text-muted">· {WORKOUTS.length} sessões</Text></SectionTitle>
       {WORKOUTS.map((workout, index) => {
         const isActive = activeSession?.workoutId === workout.id;
         return (
           <Pressable key={workout.id} onPress={() => router.push({ pathname: "/treino/[id]", params: { id: workout.id } })} className="mb-3 rounded-[24px] border border-line bg-white p-4 active:opacity-80">
             <View className="flex-row items-start gap-3">
-              <View className={`h-12 w-12 items-center justify-center rounded-2xl ${index === 0 ? "bg-[#E8EDDE]" : index === 1 ? "bg-[#EEE7DF]" : "bg-[#E6E9E7]"}`}><Dumbbell color="#27352A" size={21} /></View>
-              <View className="flex-1"><View className="flex-row items-center gap-2"><Text className="text-[15px] font-extrabold text-ink">{workout.name}</Text>{isActive ? <Tag tone="lime">EM ANDAMENTO</Tag> : null}</View><Text className="mt-1 text-[10px] text-muted">{workout.focus}</Text><View className="mt-3 flex-row items-center gap-4"><View className="flex-row items-center gap-1"><Dumbbell color="#8D938A" size={12} /><Text className="text-[10px] text-[#777D74]">{workout.exercises.length} exercícios</Text></View><View className="flex-row items-center gap-1"><Clock3 color="#8D938A" size={12} /><Text className="text-[10px] text-[#777D74]">{workout.duration} min</Text></View></View></View>
+              <View className={`h-12 w-12 items-center justify-center rounded-2xl ${index === 0 ? "bg-[#E8EDDE]" : index === 1 ? "bg-[#EEE7DF]" : "bg-[#E6E9E7]"}`}>{workout.kind === "cardio" ? <HeartPulse color="#27352A" size={21} /> : <Dumbbell color="#27352A" size={21} />}</View>
+              <View className="flex-1"><View className="flex-row flex-wrap items-center gap-2"><Text className="text-[15px] font-extrabold text-ink">{workout.name}</Text>{workout.kind === "cardio" ? <Tag> CARDIO </Tag> : null}{isActive ? <Tag tone="lime">EM ANDAMENTO</Tag> : null}</View><Text className="mt-1 text-[10px] text-muted">{workout.focus}</Text><View className="mt-3 flex-row items-center gap-4"><View className="flex-row items-center gap-1"><Dumbbell color="#8D938A" size={12} /><Text className="text-[10px] text-[#777D74]">{workout.exercises.length} exercícios</Text></View><View className="flex-row items-center gap-1"><Clock3 color="#8D938A" size={12} /><Text className="text-[10px] text-[#777D74]">{workout.duration} min</Text></View></View></View>
               <ChevronRight color="#A2A59D" size={19} />
             </View>
             {isActive ? <View className="mt-4"><View className="mb-2 flex-row justify-between"><Text className="text-[9px] font-bold text-muted">Progresso salvo</Text><Text className="text-[9px] font-bold text-ink">{completedSets}/{totalSets} séries</Text></View><ProgressTrack value={totalSets ? completedSets / totalSets * 100 : 0} /></View> : null}
