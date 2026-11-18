@@ -31,6 +31,7 @@ import {
 import { FaPeopleGroup, FaRegCircleQuestion } from "react-icons/fa6";
 import { VscFeedback } from "react-icons/vsc";
 import { IoChatbubblesSharp } from "react-icons/io5";
+import { FaTools } from "react-icons/fa";
 import { TbUserStar } from "react-icons/tb";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAvaliacao } from "../context/avaliacaoContext";
@@ -227,7 +228,7 @@ const secoes = [
         grupo: "Acompanhamento",
         icone: <BsClipboard2Pulse />,
     },
-    { id: "manutencao", nome: "Manutenção", grupo: "Sistema", icone: <BsGear /> },
+    { id: "manutencao", nome: "Manutenção", grupo: "Sistema", icone: <FaTools /> },
 ];
 
 const gruposNavegacao = ["Workspace", "Treinamento", "Acompanhamento", "Comunicação", "Sistema"];
@@ -312,39 +313,46 @@ export default function Painel() {
     );
 
     const [secaoAtual, setSecaoAtual] = useState("alunos");
+    
     const alunosQuery = useQuery({
         queryKey: ["alunos"],
         queryFn: cadastroService.listarAlunos,
     });
+    
     const tarefasControleQuery = useQuery({
         queryKey: ["extras", "tarefas", "controle-aluno"],
         queryFn: () => adminExtrasService.listarTarefas(),
         enabled: (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL") && secaoAtual === "controleAluno",
         refetchInterval: 30000,
     });
+
     const chatsAlunosResumoQuery = useQuery({
         queryKey: ["comunicacao", "alunos", "resumo"],
         queryFn: comunicacaoService.listarResumoChatsAlunos,
         enabled: (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL") && secaoAtual === "controleAluno",
         refetchInterval: 10000,
     });
+    
     const solicitacoesResumoQuery = useQuery({
         queryKey: ["solicitacoes-cadastro", "resumo"],
         queryFn: cadastroAlunoService.obterResumo,
         enabled: user?.tipo === "ADMIN" || user?.tipo === "PERSONAL",
         refetchInterval: 30000,
     });
+
     const personaisQuery = useQuery({
         queryKey: ["personais"],
         queryFn: cadastroService.listarPersonais,
         enabled: user?.tipo === "ADMIN",
     });
+
     const [personalSelecionadoId, setPersonalSelecionadoId] = useState("");
     const vinculosQuery = useQuery({
         queryKey: ["personal-alunos", personalSelecionadoId],
         queryFn: () => cadastroService.listarVinculos(personalSelecionadoId),
         enabled: user?.tipo === "ADMIN" && Boolean(personalSelecionadoId),
     });
+
     const [novoPersonalNome, setNovoPersonalNome] = useState("");
     const [novoPersonalEmail, setNovoPersonalEmail] = useState("");
     const [novoPersonalTelefone, setNovoPersonalTelefone] = useState("");
@@ -361,7 +369,9 @@ export default function Painel() {
         id: string;
         alunoNome: string;
         personalNome: string;
+
     } | null>(null);
+
     const [motivoExclusao, setMotivoExclusao] = useState("ENCERRAMENTO_ADMINISTRATIVO");
     const [detalheExclusao, setDetalheExclusao] = useState("");
     const [executandoExclusao, setExecutandoExclusao] = useState(false);
@@ -375,6 +385,7 @@ export default function Painel() {
         statusCadastro: aluno.statusCadastro ?? "APROVADO",
         possuiFichaTecnica: aluno.possuiFichaTecnica === true,
     }));
+
     const tarefasAbertasPorAluno = useMemo(() => {
         const resumo = new Map<string, number>();
         for (const tarefa of tarefasControleQuery.data ?? []) {
@@ -383,10 +394,12 @@ export default function Painel() {
         }
         return resumo;
     }, [tarefasControleQuery.data]);
+
     const mensagensNaoLidasPorAluno = useMemo(
         () => new Map((chatsAlunosResumoQuery.data ?? []).map(item => [item.alunoId, item.naoLidas])),
         [chatsAlunosResumoQuery.data],
     );
+
     const alunosParaMonitoramento = useMemo(
         () => alunos.map(aluno => ({
             id: aluno.id,
@@ -398,6 +411,7 @@ export default function Painel() {
         })),
         [alunos, tarefasAbertasPorAluno, mensagensNaoLidasPorAluno],
     );
+
     const [alunoParaExcluir, setAlunoParaExcluir] = useState<AlunoPainel | null>(null);
     const [busca, setBusca] = useState("");
     const [filtroFicha, setFiltroFicha] = useState<"todos" | "sem-ficha" | "com-ficha">("todos");
@@ -853,10 +867,7 @@ export default function Painel() {
     const secaoSelecionada = secoes.find(secao => secao.id === secaoAtual) ?? secoes[1];
     const acessoControleAvancado =
         user?.tipo === "ADMIN" ||
-        Boolean(
-            (user as unknown as { controleAvancadoHabilitado?: boolean } | null)
-                ?.controleAvancadoHabilitado,
-        );
+        Boolean(user?.controleAvancadoHabilitado);
     // Mantém os módulos em desenvolvimento fora da navegação principal.
     const secoesVisiveis = secoes.filter(
         secao =>
@@ -2319,7 +2330,7 @@ export default function Painel() {
                 </div>
 
                 <div
-                    className={`max-w-3xl rounded-xl border ${cores.divider} bg-[var(--surface)] p-5 sm:p-6`}
+                    className={`rounded-xl border ${cores.divider} bg-[var(--surface)] p-5 sm:p-6`}
                 >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="max-w-xl">
@@ -2473,13 +2484,15 @@ export default function Painel() {
                 );
             case "relatorios":
                 return <Relatorios />;
+
             case "configuracoes":
                 return renderConfiguracoes();
+
             case "controleAluno": {
                 const aluno = alunos.find(item => item.id === alunoSelecionadoId);
                 if (!aluno || !alunoSelecionadoId) {
                     return (
-                        <section className="w-full max-w-3xl space-y-5">
+                        <section className="w-full h-full space-y-6">
                             <header>
                                 <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
                                     Acompanhamento individual
@@ -2509,7 +2522,7 @@ export default function Painel() {
                                     </button>
                                 </div>
                             ) : alunos.length ? (
-                                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6">
+                                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
                                     <AlunoMonitoramentoPicker
                                         alunos={alunosParaMonitoramento}
                                         selectedId={alunoParaMonitorarId}
@@ -2544,7 +2557,10 @@ export default function Painel() {
                         alunosDisponiveis={alunosParaMonitoramento}
                         ficha={fichaAtual}
                         alunoCarregando={Boolean(carregandoAlunoId)}
-                        onBack={() => navegar("alunos")}
+                        onBack={() => {
+                            setAlunoSelecionadoId(null);
+                            setAlunoParaMonitorarId("");
+                        }}
                         onSelecionarAluno={alunoId => {
                             const proximoAluno = alunos.find(item => item.id === alunoId);
                             if (proximoAluno) void abrirAluno(proximoAluno, "controle");
@@ -2560,6 +2576,7 @@ export default function Painel() {
                         isAdmin={user?.tipo === "ADMIN"}
                         autorizado={acessoControleAvancado}
                         personais={personaisQuery.data ?? []}
+                        alunosDisponiveis={alunosParaMonitoramento}
                         onBack={() => navegar("alunos")}
                     />
                 );

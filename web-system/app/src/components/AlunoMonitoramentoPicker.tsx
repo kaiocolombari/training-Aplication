@@ -109,7 +109,7 @@ export default function AlunoMonitoramentoPicker({
                 <BsSliders className="shrink-0 text-[var(--text-muted)]" />
             </label>
             {filtrosUI}
-            <div className={compact ? "max-h-[min(420px,60vh)] space-y-1.5 overflow-y-auto pr-1" : "grid gap-2 sm:grid-cols-2 xl:grid-cols-3"}>
+            <div className={compact ? "max-h-[min(420px,60vh)] space-y-1.5 overflow-y-auto pr-1" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-3"}>
                 {filtrados.map(aluno => {
                     const ativo = aluno.id === selectedId;
                     return (
@@ -124,27 +124,27 @@ export default function AlunoMonitoramentoPicker({
                                 }
                                 onSelectedChange?.(aluno.id);
                             }}
-                            className={`group w-full rounded-xl border p-3 text-left transition ${
+                            className={`group w-full rounded-2xl border p-4 text-left transition ${
                                 ativo
                                     ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-sm"
                                     : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)] hover:bg-[var(--row-hover)]"
                             }`}
                         >
                             <div className="flex min-w-0 items-center gap-3">
-                                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[11px] font-bold ${ativo ? "bg-[var(--accent)] text-[var(--on-accent)]" : "bg-[var(--surface-tertiary)] text-[var(--text-secondary)]"}`}>
+                                <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl text-xs font-bold ${ativo ? "bg-[var(--accent)] text-[var(--on-accent)]" : "bg-[var(--surface-tertiary)] text-[var(--text-secondary)]"}`}>
                                     {iniciais(aluno.nomeCompleto) || <BsPersonCheck />}
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                    <span className="block truncate text-[11px] font-semibold text-[var(--text-primary)]">
+                                    <span className="block truncate text-xs font-semibold text-[var(--text-primary)]">
                                         {aluno.nomeCompleto}
                                     </span>
-                                    <span className="mt-0.5 block truncate text-[9px] text-[var(--text-muted)]">
+                                    <span className="mt-1 block truncate text-[10px] text-[var(--text-muted)]">
                                         {aluno.email || "E-mail não informado"}
                                     </span>
                                 </span>
                                 {ativo && <BsCheck2 className="shrink-0 text-[var(--accent-text)]" />}
                             </div>
-                            <span className="mt-3 flex flex-wrap items-center gap-1.5">
+                            <span className="mt-4 flex flex-wrap items-center gap-2">
                                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[8px] font-semibold ${aluno.possuiFichaTecnica ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--warning-soft)] text-[var(--warning)]"}`}>
                                     <BsActivity /> {aluno.possuiFichaTecnica ? "Ficha completa" : "Ficha pendente"}
                                 </span>

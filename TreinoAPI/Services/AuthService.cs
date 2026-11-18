@@ -157,7 +157,7 @@ public sealed class AuthService
         });
         await _context.SaveChangesAsync();
 
-        return new AuthSessionResult(result, MapearUsuario(stored.Usuario));
+        return new AuthSessionResult(result, await MapearUsuarioAsync(stored.Usuario));
     }
 
     public async Task RevogarAsync(string? refreshToken)
@@ -182,7 +182,7 @@ public sealed class AuthService
                 .ThenInclude(a => a!.SolicitacaoCadastro)
             .FirstOrDefaultAsync(u => u.Id == usuarioId && u.Ativo);
 
-        return usuario is null ? null : MapearUsuario(usuario);
+        return usuario is null ? null : await MapearUsuarioAsync(usuario);
     }
 
     private async Task<AuthSessionResult> CreateSessionAsync(Usuario usuario)
@@ -197,7 +197,20 @@ public sealed class AuthService
         });
         await _context.SaveChangesAsync();
 
-        return new AuthSessionResult(pair, MapearUsuario(usuario));
+        return new AuthSessionResult(pair, await MapearUsuarioAsync(usuario));
+    }
+
+    private async Task<UsuarioSessaoDTO> MapearUsuarioAsync(Usuario usuario)
+    {
+        var sessao = MapearUsuario(usuario);
+        if (usuario.Personal is not null)
+        {
+            sessao.ControleAvancadoHabilitado = await _context.ConfiguracoesAcompanhamento
+                .Where(config => config.PersonalId == usuario.Personal.Id)
+                .Select(config => config.ControleAvancadoHabilitado)
+                .FirstOrDefaultAsync();
+        }
+        return sessao;
     }
 
     private static UsuarioSessaoDTO MapearUsuario(Usuario usuario) => new()

@@ -522,6 +522,14 @@ export default function periodizacao() {
 
                         <input
                             type="text"
+                            value={avaliacao.periodizacao.nome}
+                            onChange={event => setAvaliacao(prev => ({
+                                ...prev,
+                                periodizacao: {
+                                    ...prev.periodizacao,
+                                    nome: event.target.value,
+                                },
+                            }))}
                             placeholder="Ex.: Hipertrofia, força, resistência..."
                             className="
                                 h-11

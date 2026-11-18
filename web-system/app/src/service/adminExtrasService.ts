@@ -38,6 +38,7 @@ export interface ConfiguracaoAcompanhamento {
     intervaloReavaliacaoDias: number;
     intervaloRevisaoTreinoDias: number;
     antecedenciaSugestaoDias: number;
+    controleAvancadoHabilitado: boolean;
     atualizadaEm?: string | null;
 }
 

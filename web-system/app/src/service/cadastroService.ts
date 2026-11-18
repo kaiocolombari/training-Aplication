@@ -216,6 +216,7 @@ function mapearExecucao(registro: ExecucaoApi): ExecucaoTreino {
                 carga: serie.carga,
                 repeticoes: serie.repeticoes,
                 rir: serie.rir ?? 0,
+                rirInformado: serie.rir !== null && serie.rir !== undefined,
                 descanso: serie.descanso ?? 0,
                 velocidade: serie.velocidade ?? undefined,
                 rpe: serie.rpe ?? undefined,
@@ -360,7 +361,7 @@ export function mapearCadastroParaAvaliacao(cadastro: CadastroCompletoApi, grupo
             .sort((a, b) => a.numero - b.numero);
         const dataInicio = periodizacao.dataInicio.slice(0, 10);
         dados.periodizacao = {
-            nome: periodizacao.nome ?? "Periodização principal",
+            nome: periodizacao.nome ?? "",
             dataInicio,
             semanas: semanas.length > 0
                 ? semanas.map(semana => {

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     BsActivity,
     BsArrowLeft,
@@ -6,21 +7,32 @@ import {
     BsBarChartLine,
     BsCalendar2Range,
     BsCheck2Circle,
+    BsClockHistory,
     BsCpu,
     BsDatabase,
     BsDiagram3,
     BsEye,
     BsFilter,
     BsGraphUpArrow,
+    BsExclamationTriangle,
     BsLock,
+    BsPlayFill,
     BsSearch,
     BsShieldLock,
     BsStars,
     BsSpeedometer2,
     BsToggleOn,
+    BsToggleOff,
     BsX,
 } from "react-icons/bs";
 import type { PersonalResumoApi } from "../service/cadastroService";
+import { cadastroService, mapearCadastroParaAvaliacao } from "../service/cadastroService";
+import type { AlunoMonitoramentoOption } from "../components/AlunoMonitoramentoPicker";
+import AlunoMonitoramentoPicker from "../components/AlunoMonitoramentoPicker";
+import { volumeAcompanhamentoService } from "../service/volumeAcompanhamentoService";
+import { analiseEstatisticaService } from "../service/analiseEstatisticaService";
+import { executarAnaliseEstatistica } from "../functions/analiseEstatistica";
+import { adminExtrasService } from "../service/adminExtrasService";
 
 type Categoria =
     | "Adesão"
@@ -65,12 +77,12 @@ const ferramentas: Ferramenta[] = [
     },
     {
         id: "volume",
-        nome: "Volume efetivo por grupo",
+        nome: "Volume planejado por grupo",
         categoria: "Treinamento",
-        resumo: "Consolida séries diretas, indiretas e estímulo por grupo muscular.",
+        resumo: "Consolida séries diretas e livres planejadas por grupo muscular.",
         analisa:
             "Séries diretas/livres, frequência, distribuição semanal e sobreposição entre exercícios.",
-        entrega: "Mapa de volume por grupo, distribuição semanal e pontos de concentração.",
+        entrega: "Mapa de volume planejado por grupo e médias por microciclo; não representa volume efetivamente executado por músculo.",
         requisito: "Catálogo de exercícios e classificação muscular consistente.",
         fase: "Estatística",
     },
@@ -90,7 +102,7 @@ const ferramentas: Ferramenta[] = [
         categoria: "Desempenho",
         resumo: "Identifica evolução de desempenho em exercícios comparáveis.",
         analisa: "Carga, repetições, estimativas de força, histórico e condições do teste.",
-        entrega: "Curvas por exercício, recordes pessoais e evolução entre blocos.",
+        entrega: "Estimativas de 1RM pela fórmula de Epley nos testes registrados, sem substituir teste máximo padronizado.",
         requisito: "Histórico de execução e testes padronizados.",
         fase: "Estatística",
     },
@@ -172,7 +184,7 @@ const ferramentas: Ferramenta[] = [
         categoria: "Desempenho",
         resumo: "Sinaliza períodos sem mudança relevante em indicadores escolhidos.",
         analisa: "Tendências de carga, repetições, medidas e consistência em janelas móveis.",
-        entrega: "Possíveis platôs com janela, indicador e evidência apresentados ao personal.",
+        entrega: "Sinalização descritiva quando há pelo menos quatro testes comparáveis por exercício (supino, terra, remada ou agachamento).",
         requisito: "Histórico suficiente e medidas comparáveis.",
         fase: "Estatística",
     },
@@ -192,7 +204,7 @@ const ferramentas: Ferramenta[] = [
         categoria: "Evolução",
         resumo: "Compara blocos de treinamento sem perder o contexto de cada fase.",
         analisa: "Objetivo do ciclo, exercícios, volume, intensidade, adesão e resultados.",
-        entrega: "Relatório lado a lado de ciclos, mudanças e indicadores selecionados.",
+        entrega: "Comparação dos registros mensais de séries e variações entre meses nos ciclos de volume.",
         requisito: "Ciclos encerrados e snapshots históricos.",
         fase: "Estatística",
     },
@@ -202,9 +214,9 @@ const ferramentas: Ferramenta[] = [
         categoria: "Desempenho",
         resumo: "Compara diferenças entre lados em medidas e exercícios unilaterais.",
         analisa:
-            "Cargas, repetições, desempenho unilateral, perímetros pareados e histórico de cada lado.",
+            "Perímetros pareados de braço, antebraço, coxa e panturrilha na avaliação mais recente.",
         entrega:
-            "Diferenças absolutas e relativas, tendência por lado e sinalização de assimetrias para avaliação profissional.",
+            "Diferenças absolutas e relativas entre lados para revisão profissional; não avalia força unilateral nem diagnostica disfunções.",
         requisito:
             "Registros identificados por lado, exercícios comparáveis e protocolos de medição consistentes.",
         fase: "Estatística",
@@ -213,7 +225,7 @@ const ferramentas: Ferramenta[] = [
         id: "densidade-sessao",
         nome: "Densidade e eficiência da sessão",
         categoria: "Treinamento",
-        resumo: "Avalia como o volume de trabalho se distribui ao longo do tempo da sessão.",
+        resumo: "Estrutura planejada para avaliar como o volume de trabalho se distribui ao longo do tempo da sessão.",
         analisa:
             "Duração, séries válidas, tonelagem, intervalos de descanso, pausas e exercícios concluídos.",
         entrega:
@@ -288,24 +300,66 @@ export default function ControleAvancado({
     isAdmin,
     autorizado,
     personais,
+    alunosDisponiveis,
     onBack,
 }: {
     isAdmin: boolean;
     autorizado: boolean;
     personais: PersonalResumoApi[];
+    alunosDisponiveis: AlunoMonitoramentoOption[];
     onBack: () => void;
 }) {
+    const queryClient = useQueryClient();
     const [modo, setModo] = useState<"estatistico" | "inteligente">("estatistico");
     const [categoria, setCategoria] = useState<(typeof categorias)[number]>("Todas");
     const [busca, setBusca] = useState("");
     const [selecionada, setSelecionada] = useState<string | null>(null);
-    const [simulacoes, setSimulacoes] = useState<string[]>([]);
+    const [atualizandoPermissaoId, setAtualizandoPermissaoId] = useState<string | null>(null);
+    const [mensagemPermissao, setMensagemPermissao] = useState("");
     const [periodo, setPeriodo] = useState("90");
     const [granularidade, setGranularidade] = useState("semanal");
     const [comparacao, setComparacao] = useState("periodo-anterior");
     const [segmentacao, setSegmentacao] = useState("grupo-muscular");
     const [excluirIncompletos, setExcluirIncompletos] = useState(true);
     const [exibirVariabilidade, setExibirVariabilidade] = useState(true);
+    const [alunoSelecionadoId, setAlunoSelecionadoId] = useState("");
+    const [salvandoAnalise, setSalvandoAnalise] = useState(false);
+    const [mensagemAnalise, setMensagemAnalise] = useState("");
+
+    const alunoSelecionado = alunosDisponiveis.find(aluno => aluno.id === alunoSelecionadoId);
+    const fichaQuery = useQuery({
+        queryKey: ["controle-avancado", "ficha", alunoSelecionadoId],
+        queryFn: async () => {
+            const [cadastro, grupos] = await Promise.all([
+                cadastroService.obterCadastro(alunoSelecionadoId),
+                cadastroService.listarGruposMusculares(),
+            ]);
+            return mapearCadastroParaAvaliacao(cadastro, grupos);
+        },
+        enabled: Boolean(alunoSelecionadoId) && (isAdmin || autorizado),
+    });
+    const ciclosQuery = useQuery({
+        queryKey: ["controle-avancado", "ciclos-volume", alunoSelecionadoId],
+        queryFn: () => volumeAcompanhamentoService.listar(alunoSelecionadoId),
+        enabled: Boolean(alunoSelecionadoId) && (isAdmin || autorizado),
+    });
+    const historicoQuery = useQuery({
+        queryKey: ["controle-avancado", "historico", alunoSelecionadoId],
+        queryFn: () => analiseEstatisticaService.listar(alunoSelecionadoId),
+        enabled: Boolean(alunoSelecionadoId) && (isAdmin || autorizado),
+    });
+    const permissoesQuery = useQuery({
+        queryKey: ["controle-avancado", "permissoes", personais.map(item => item.id).join("|")],
+        queryFn: async () => Promise.all(personais.map(async personal => ({
+            personalId: personal.id,
+            config: await adminExtrasService.obterConfiguracao(personal.id),
+        }))),
+        enabled: isAdmin && personais.length > 0,
+    });
+    const configuracoesPorPersonal = useMemo(
+        () => new Map((permissoesQuery.data ?? []).map(item => [item.personalId, item.config])),
+        [permissoesQuery.data],
+    );
 
     const lista = useMemo(
         () =>
@@ -322,6 +376,127 @@ export default function ControleAvancado({
         [modo, categoria, busca],
     );
     const detalhe = ferramentas.find(item => item.id === selecionada);
+    const ficha = fichaQuery.data;
+    const resultadoDetalhe = useMemo(
+        () => detalhe && ficha && !ciclosQuery.isLoading
+            ? executarAnaliseEstatistica(
+                detalhe.id,
+                ficha,
+                ciclosQuery.data ?? [],
+                periodo === "ciclo" ? null : Number(periodo),
+                exibirVariabilidade,
+            )
+            : null,
+        [detalhe, ficha, ciclosQuery.data, ciclosQuery.isLoading, periodo, exibirVariabilidade],
+    );
+    const resultadosFerramentas = useMemo(() => {
+        if (!ficha || ciclosQuery.isLoading) return {};
+        return Object.fromEntries(
+            ferramentas.filter(item => item.fase === "Estatística").map(item => [
+                item.id,
+                executarAnaliseEstatistica(item.id, ficha, ciclosQuery.data ?? [], periodo === "ciclo" ? null : Number(periodo), exibirVariabilidade),
+            ]),
+        );
+    }, [ficha, ciclosQuery.data, ciclosQuery.isLoading, periodo, exibirVariabilidade]);
+
+    async function salvarAnaliseAtual() {
+        if (!alunoSelecionadoId || !detalhe || !resultadoDetalhe || !resultadoDetalhe.quantidadeRegistros) return;
+        setSalvandoAnalise(true);
+        setMensagemAnalise("");
+        try {
+            const fim = new Date();
+            const inicio = periodo === "ciclo" ? null : new Date(Date.now() - Number(periodo) * 86400000);
+            const dataIso = (data: Date) => `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+            await analiseEstatisticaService.salvar(alunoSelecionadoId, {
+                ferramentaId: detalhe.id,
+                nomeFerramenta: detalhe.nome,
+                periodoInicio: inicio ? dataIso(inicio) : undefined,
+                periodoFim: dataIso(fim),
+                parametrosJson: JSON.stringify({ periodo, exibirVariabilidade }),
+                resultadoJson: JSON.stringify(resultadoDetalhe),
+                resumo: resultadoDetalhe.resumo,
+                quantidadeRegistros: resultadoDetalhe.quantidadeRegistros,
+            });
+            await queryClient.invalidateQueries({ queryKey: ["controle-avancado", "historico", alunoSelecionadoId] });
+            setMensagemAnalise("Análise salva no histórico deste aluno.");
+        } catch {
+            setMensagemAnalise("Não foi possível salvar a análise. Verifique a conexão e a permissão da API.");
+        } finally {
+            setSalvandoAnalise(false);
+        }
+    }
+
+    async function alternarAcessoPersonal(personalId: string, habilitado: boolean) {
+        const config = configuracoesPorPersonal.get(personalId);
+        if (!config) return;
+        setAtualizandoPermissaoId(personalId);
+        setMensagemPermissao("");
+        try {
+            await adminExtrasService.salvarConfiguracao({
+                ...config,
+                personalId,
+                controleAvancadoHabilitado: !habilitado,
+            });
+            await queryClient.invalidateQueries({ queryKey: ["controle-avancado", "permissoes"] });
+            setMensagemPermissao("Permissão atualizada. O profissional verá a alteração ao atualizar a sessão.");
+        } catch {
+            setMensagemPermissao("Não foi possível atualizar a permissão deste profissional.");
+        } finally {
+            setAtualizandoPermissaoId(null);
+        }
+    }
+
+    function renderPermissoesAdmin() {
+        if (!isAdmin) return null;
+        return (
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Administração</p>
+                        <h2 className="mt-1 text-[14px] font-semibold text-[var(--text-primary)]">Acesso por profissional</h2>
+                        <p className="mt-1 max-w-[650px] text-[10px] leading-5 text-[var(--text-muted)]">
+                            A autorização é persistida pelo ADMIN. O personal autorizado continua limitado aos próprios alunos vinculados, inclusive nas rotas da API.
+                        </p>
+                    </div>
+                    <span className="rounded-full bg-[var(--success-soft)] px-2.5 py-1 text-[8px] font-semibold text-[var(--success)]">Permissões persistidas</span>
+                </div>
+                {permissoesQuery.isError && <p role="alert" className="mt-3 text-[10px] text-[var(--danger)]">Não foi possível carregar as permissões dos profissionais.</p>}
+                <div className="mt-4 divide-y divide-[var(--border)]">
+                    {permissoesQuery.isLoading ? (
+                        <p className="py-4 text-[10px] text-[var(--text-muted)]">Carregando permissões...</p>
+                    ) : personais.length ? (
+                        personais.map(personal => {
+                            const ativo = configuracoesPorPersonal.get(personal.id)?.controleAvancadoHabilitado ?? false;
+                            return (
+                                <div key={personal.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                    <div className="min-w-0">
+                                        <p className="text-[11px] font-semibold text-[var(--text-primary)]">{personal.nomeCompleto}</p>
+                                        <p className="mt-0.5 truncate text-[9px] text-[var(--text-muted)]">{personal.email}</p>
+                                    </div>
+                                    <button
+                                        disabled={atualizandoPermissaoId === personal.id || !configuracoesPorPersonal.has(personal.id)}
+                                        onClick={() => void alternarAcessoPersonal(personal.id, ativo)}
+                                        className={ativo
+                                            ? "inline-flex h-8 items-center gap-2 rounded-lg bg-[var(--success-soft)] px-3 text-[9px] font-semibold text-[var(--success)] disabled:opacity-50"
+                                            : "inline-flex h-8 items-center gap-2 rounded-lg border border-[var(--border)] px-3 text-[9px] font-semibold text-[var(--text-secondary)] disabled:opacity-50"}
+                                    >
+                                        {atualizandoPermissaoId === personal.id ? "Salvando" : ativo ? <BsToggleOn className={ativo ? "text-lg" : "text-lg opacity-40"}/> : <BsToggleOff className={ativo ? "text-lg" : "text-lg opacity-40"}/>}
+                                        {atualizandoPermissaoId === personal.id ? "Salvando..." : ativo ? "Revogar acesso" : "Conceder acesso"}
+                                    </button>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <p className="py-4 text-[10px] text-[var(--text-muted)]">Nenhum profissional disponível para configurar.</p>
+                    )}
+                </div>
+                {mensagemPermissao && <p role="status" className="mt-3 text-[10px] text-[var(--text-secondary)]">{mensagemPermissao}</p>}
+                <p className="mt-3 rounded-xl bg-[var(--surface-secondary)] p-3 text-[9px] leading-5 text-[var(--text-muted)]">
+                    A alteração é gravada em ConfiguracoesAcompanhamento e refletida na sessão do profissional após atualizar a página ou autenticar novamente.
+                </p>
+            </section>
+        );
+    }
 
     if (!isAdmin && !autorizado)
         return (
@@ -367,19 +542,79 @@ export default function ControleAvancado({
             </section>
         );
 
+    if (!alunoSelecionadoId)
+        return (
+            <section className="controle-avancado w-full max-w-[1500px] space-y-5">
+                <div className="flex items-center justify-between gap-3">
+                    <button
+                        onClick={onBack}
+                        className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)]"
+                    >
+                        <BsArrowLeft /> Voltar
+                    </button>
+                    <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-[9px] font-semibold text-[var(--accent-text)]">
+                        Controle avançado · acesso autorizado
+                    </span>
+                </div>
+                <header className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
+                    <p className="text-[9px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">GGP / Advanced Intelligence</p>
+                    <h1 className="mt-2 text-[25px] font-semibold tracking-[-.04em] text-[var(--text-primary)] sm:text-[30px]">Escolha um aluno para analisar</h1>
+                    <p className="mt-2 max-w-[720px] text-[11px] leading-6 text-[var(--text-secondary)]">
+                        A análise será vinculada ao aluno selecionado. Antes de executar cada ferramenta, você verá quais dados existem na ficha, quais estão faltando e quais resultados podem ser calculados agora.
+                    </p>
+                </header>
+                {alunosDisponiveis.length ? (
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
+                        <AlunoMonitoramentoPicker
+                            alunos={alunosDisponiveis}
+                            selectedId={alunoSelecionadoId}
+                            onSelectedChange={setAlunoSelecionadoId}
+                            onOpen={setAlunoSelecionadoId}
+                        />
+                    </div>
+                ) : (
+                    <div className="rounded-2xl border border-dashed border-[var(--border-strong)] bg-[var(--surface)] p-8 text-center">
+                        <p className="text-[13px] font-semibold text-[var(--text-primary)]">Nenhum aluno disponível</p>
+                        <p className="mt-1 text-[11px] text-[var(--text-muted)]">Os alunos vinculados à sua carteira aparecerão aqui.</p>
+                    </div>
+                )}
+                {renderPermissoesAdmin()}
+            </section>
+        );
+
     return (
         <section className="controle-avancado w-full max-w-[1500px] space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
-                    onClick={onBack}
+                    onClick={() => {
+                        setAlunoSelecionadoId("");
+                        setSelecionada(null);
+                    }}
                     className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
                 >
-                    <BsArrowLeft /> Voltar
+                    <BsArrowLeft /> Trocar aluno
                 </button>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent-soft)] px-3 py-1.5 text-[9px] font-semibold text-[var(--accent-text)]">
-                    <BsShieldLock /> Área de acesso controlado
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                    <AlunoMonitoramentoPicker
+                        compact
+                        alunos={alunosDisponiveis}
+                        selectedId={alunoSelecionadoId}
+                        loading={fichaQuery.isLoading}
+                        onOpen={id => {
+                            setAlunoSelecionadoId(id);
+                            setSelecionada(null);
+                            setMensagemAnalise("");
+                        }}
+                    />
+                    <span className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent-soft)] px-3 py-1.5 text-[9px] font-semibold text-[var(--accent-text)]">
+                        <BsShieldLock /> Área de acesso controlado
+                    </span>
+                </div>
             </div>
+            {(fichaQuery.isLoading || ciclosQuery.isLoading) && <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-[11px] text-[var(--text-muted)]">Carregando ficha, ciclos de volume e histórico estatístico do aluno...</div>}
+            {fichaQuery.isError && <div role="alert" className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-soft)] p-4 text-[11px] text-[var(--danger)]">Não foi possível carregar os dados deste aluno. Confira a conexão com a API e tente novamente.</div>}
+            {ciclosQuery.isError && <div role="alert" className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-[11px] text-amber-700">Não foi possível carregar os ciclos de volume. As ferramentas que dependem desses registros poderão apresentar resultados incompletos.</div>}
+            {alunoSelecionado && <p className="px-1 text-[10px] text-[var(--text-muted)]">Análises vinculadas a <strong className="text-[var(--text-primary)]">{alunoSelecionado.nomeCompleto}</strong>. Os resultados salvos ficam no histórico individual desse aluno.</p>}
             <header className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
                 <div className="pointer-events-none absolute -right-12 -top-24 h-72 w-72 rounded-full bg-[var(--accent)] opacity-[.08] blur-3xl" />
                 <div className="relative grid gap-6 xl:grid-cols-[1.3fr_.7fr] xl:items-end">
@@ -543,7 +778,7 @@ export default function ControleAvancado({
                             </p>
                         </div>
                         <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[8px] font-semibold text-amber-700">
-                            Parâmetros locais · execução futura
+                            Período aplicado · opções avançadas em evolução
                         </span>
                     </div>
                     <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -565,11 +800,12 @@ export default function ControleAvancado({
                         </label>
                         <label className="grid gap-1.5">
                             <span className="text-[9px] font-semibold text-[var(--text-muted)]">
-                                Granularidade temporal
+                                Granularidade temporal · em breve
                             </span>
                             <select
                                 value={granularidade}
                                 onChange={e => setGranularidade(e.target.value)}
+                                disabled
                                 className="h-9 rounded-lg border border-[var(--border)] bg-[var(--input-bg)] px-2.5 text-[10px] text-[var(--text-primary)]"
                             >
                                 <option value="diaria">Diária</option>
@@ -580,11 +816,12 @@ export default function ControleAvancado({
                         </label>
                         <label className="grid gap-1.5">
                             <span className="text-[9px] font-semibold text-[var(--text-muted)]">
-                                Base de comparação
+                                Base de comparação · em breve
                             </span>
                             <select
                                 value={comparacao}
                                 onChange={e => setComparacao(e.target.value)}
+                                disabled
                                 className="h-9 rounded-lg border border-[var(--border)] bg-[var(--input-bg)] px-2.5 text-[10px] text-[var(--text-primary)]"
                             >
                                 <option value="periodo-anterior">Período anterior</option>
@@ -595,11 +832,12 @@ export default function ControleAvancado({
                         </label>
                         <label className="grid gap-1.5">
                             <span className="text-[9px] font-semibold text-[var(--text-muted)]">
-                                Agrupar resultados por
+                                Agrupar resultados por · em breve
                             </span>
                             <select
                                 value={segmentacao}
                                 onChange={e => setSegmentacao(e.target.value)}
+                                disabled
                                 className="h-9 rounded-lg border border-[var(--border)] bg-[var(--input-bg)] px-2.5 text-[10px] text-[var(--text-primary)]"
                             >
                                 <option value="grupo-muscular">Grupo muscular</option>
@@ -616,6 +854,7 @@ export default function ControleAvancado({
                                 type="checkbox"
                                 checked={excluirIncompletos}
                                 onChange={e => setExcluirIncompletos(e.target.checked)}
+                                disabled
                                 className="accent-[var(--accent)]"
                             />
                             Excluir registros incompletos
@@ -636,11 +875,9 @@ export default function ControleAvancado({
                         </p>
                         <p className="mt-1 text-[9px] leading-5 text-[var(--text-muted)]">
                             Janela: {periodo === "ciclo" ? "ciclo completo" : periodo + " dias"} ·
-                            Agrupamento: {segmentacao.replaceAll("-", " ")} · Granularidade:{" "}
-                            {granularidade} · Comparação: {comparacao.replaceAll("-", " ")} ·
-                            Incompletos: {excluirIncompletos ? "excluídos" : "incluídos"} ·
-                            Variabilidade: {exibirVariabilidade ? "exibida" : "oculta"}. Esta
-                            configuração ainda não consulta dados nem executa cálculos.
+                            Variabilidade: {exibirVariabilidade ? "exibida" : "oculta"}. Nesta versão,
+                            somente esses dois parâmetros afetam os cálculos e são salvos. Granularidade,
+                            comparação, agrupamento e exclusão de incompletos ainda não estão aplicados.
                         </p>
                     </div>
                     <div className="mt-4 grid gap-2 sm:grid-cols-5">
@@ -730,6 +967,16 @@ export default function ControleAvancado({
                                     {item.categoria}
                                 </span>
                             </div>
+                            {modo === "estatistico" && (
+                                <span className={`mt-3 inline-flex rounded-full px-2 py-1 text-[8px] font-semibold ${
+                                    !ficha ? "bg-[var(--surface-tertiary)] text-[var(--text-muted)]" :
+                                    resultadosFerramentas[item.id]?.disponibilidade === "disponivel" ? "bg-[var(--success-soft)] text-[var(--success)]" :
+                                    resultadosFerramentas[item.id]?.disponibilidade === "parcial" ? "bg-amber-500/10 text-amber-700" :
+                                    "bg-[var(--surface-tertiary)] text-[var(--text-muted)]"
+                                }`}>
+                                    {!ficha ? "Aguardando ficha" : resultadosFerramentas[item.id]?.disponibilidade === "disponivel" ? "Dados suficientes" : resultadosFerramentas[item.id]?.disponibilidade === "parcial" ? "Análise parcial" : "Dados insuficientes"}
+                                </span>
+                            )}
                             <p className="mt-3 text-[11px] font-semibold text-[var(--text-primary)]">
                                 {String(index + 1).padStart(2, "0")} · {item.nome}
                             </p>
@@ -800,88 +1047,85 @@ export default function ControleAvancado({
                             </p>
                         </div>
                     </div>
+                    {modo === "estatistico" && (
+                        <div className="mt-4 space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)] p-4 sm:p-5">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <p className="text-[9px] font-bold uppercase tracking-[.14em] text-[var(--accent-text)]">Diagnóstico da ficha selecionada</p>
+                                    <h4 className="mt-1 text-[13px] font-semibold text-[var(--text-primary)]">Resultado calculado com os dados atuais</h4>
+                                    <p className="mt-1 text-[10px] leading-5 text-[var(--text-secondary)]">{resultadoDetalhe?.resumo ?? "Carregue a ficha para avaliar a disponibilidade desta ferramenta."}</p>
+                                </div>
+                                {resultadoDetalhe && <span className={`rounded-full px-2.5 py-1 text-[8px] font-semibold ${resultadoDetalhe.disponibilidade === "disponivel" ? "bg-[var(--success-soft)] text-[var(--success)]" : resultadoDetalhe.disponibilidade === "parcial" ? "bg-amber-500/10 text-amber-700" : "bg-[var(--surface-tertiary)] text-[var(--text-muted)]"}`}>
+                                    {resultadoDetalhe.disponibilidade === "disponivel" ? "Pronta para análise" : resultadoDetalhe.disponibilidade === "parcial" ? "Parcial · exige atenção" : "Aguardando dados"}
+                                </span>}
+                            </div>
+                            {resultadoDetalhe && (
+                                <>
+                                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                                        {resultadoDetalhe.metricas.map(metrica => (
+                                            <div key={metrica.titulo} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+                                                <p className="text-[9px] text-[var(--text-muted)]">{metrica.titulo}</p>
+                                                <p className="mt-1 text-[16px] font-semibold text-[var(--text-primary)]">{metrica.valor}</p>
+                                                {metrica.detalhe && <p className="mt-1 text-[9px] text-[var(--text-muted)]">{metrica.detalhe}</p>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="grid gap-3 lg:grid-cols-2">
+                                        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+                                            <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Dados encontrados</p>
+                                            {resultadoDetalhe.fontes.length ? <ul className="mt-2 space-y-1.5">{resultadoDetalhe.fontes.map(fonte => <li key={fonte} className="flex gap-2 text-[10px] text-[var(--text-secondary)]"><BsCheck2Circle className="mt-0.5 shrink-0 text-[var(--success)]" />{fonte}</li>)}</ul> : <p className="mt-2 text-[10px] text-[var(--text-muted)]">Nenhuma fonte disponível para esta ferramenta.</p>}
+                                        </div>
+                                        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+                                            <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Dados faltantes e limitações</p>
+                                            {resultadoDetalhe.dadosFaltantes.length ? <ul className="mt-2 space-y-1.5">{resultadoDetalhe.dadosFaltantes.map(item => <li key={item} className="flex gap-2 text-[10px] text-[var(--text-secondary)]"><BsExclamationTriangle className="mt-0.5 shrink-0 text-amber-600" />{item}</li>)}</ul> : <p className="mt-2 text-[10px] text-[var(--success)]">Nenhum dado obrigatório identificado como ausente para este cálculo.</p>}
+                                        </div>
+                                    </div>
+                                    {resultadoDetalhe.linhas.length > 0 && (
+                                        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                                            <div className="border-b border-[var(--border)] px-3 py-2"><p className="text-[9px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Detalhamento dos resultados</p></div>
+                                            <div className="divide-y divide-[var(--border)]">
+                                                {resultadoDetalhe.linhas.map((linha, index) => <div key={`${linha.titulo}-${index}`} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
+                                                    <div className="min-w-0"><p className="text-[10px] font-semibold text-[var(--text-primary)]">{linha.titulo}</p>{linha.detalhe && <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">{linha.detalhe}</p>}</div>
+                                                    <span className="text-[10px] font-semibold tabular-nums text-[var(--text-primary)]">{linha.valor}</span>
+                                                </div>)}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
+                                        <p className="text-[9px] text-[var(--text-muted)]">Amostra: {resultadoDetalhe.quantidadeRegistros} registros · os resultados são descritivos e dependem da qualidade dos dados.</p>
+                                        <button type="button" onClick={() => void salvarAnaliseAtual()} disabled={salvandoAnalise || !resultadoDetalhe.quantidadeRegistros || fichaQuery.isLoading || ciclosQuery.isLoading} className="inline-flex h-9 items-center gap-2 rounded-lg bg-[var(--accent)] px-3 text-[10px] font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-45">
+                                            <BsPlayFill /> {salvandoAnalise ? "Salvando análise..." : "Executar e salvar análise"}
+                                        </button>
+                                    </div>
+                                    {mensagemAnalise && <p role="status" className="text-[10px] text-[var(--text-secondary)]">{mensagemAnalise}</p>}
+                                </>
+                            )}
+                        </div>
+                    )}
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
                         <span className="inline-flex items-center gap-2 text-[9px] text-[var(--text-muted)]">
-                            <BsDatabase /> Estrutura conceitual · integração futura
+                            <BsDatabase /> {modo === "estatistico" ? "Cálculo local com dados da ficha" : "Roadmap de modelos"}
                         </span>
-                        <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[8px] font-semibold text-amber-700">
-                            Não conectado à API
+                        <span className={`rounded-full px-2.5 py-1 text-[8px] font-semibold ${modo === "estatistico" ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-amber-500/10 text-amber-700"}`}>
+                            {modo === "estatistico" ? "Histórico persistido na API" : "ML ainda não implementado"}
                         </span>
                     </div>
                 </section>
             )}
 
-            {isAdmin && (
-                <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                            <p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">
-                                Administração
-                            </p>
-                            <h2 className="mt-1 text-[14px] font-semibold text-[var(--text-primary)]">
-                                Acesso por profissional
-                            </h2>
-                            <p className="mt-1 max-w-[650px] text-[10px] leading-5 text-[var(--text-muted)]">
-                                A autorização será individual, concedida por ADMIN. O personal
-                                autorizado continuará limitado aos próprios alunos vinculados.
-                            </p>
-                        </div>
-                        <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[8px] font-semibold text-amber-700">
-                            Prévia local · não persiste
-                        </span>
-                    </div>
-                    <div className="mt-4 divide-y divide-[var(--border)]">
-                        {personais.length ? (
-                            personais.map(personal => {
-                                const ativo = simulacoes.includes(personal.id);
-                                return (
-                                    <div
-                                        key={personal.id}
-                                        className="flex flex-wrap items-center justify-between gap-3 py-3"
-                                    >
-                                        <div className="min-w-0">
-                                            <p className="text-[11px] font-semibold text-[var(--text-primary)]">
-                                                {personal.nomeCompleto}
-                                            </p>
-                                            <p className="mt-0.5 truncate text-[9px] text-[var(--text-muted)]">
-                                                {personal.email}
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() =>
-                                                setSimulacoes(current =>
-                                                    ativo
-                                                        ? current.filter(id => id !== personal.id)
-                                                        : [...current, personal.id],
-                                                )
-                                            }
-                                            className={
-                                                ativo
-                                                    ? "inline-flex h-8 items-center gap-2 rounded-lg bg-[var(--success-soft)] px-3 text-[9px] font-semibold text-[var(--success)]"
-                                                    : "inline-flex h-8 items-center gap-2 rounded-lg border border-[var(--border)] px-3 text-[9px] font-semibold text-[var(--text-secondary)]"
-                                            }
-                                        >
-                                            <BsToggleOn
-                                                className={ativo ? "text-lg" : "text-lg opacity-40"}
-                                            />
-                                            {ativo ? "Acesso simulado" : "Simular concessão"}
-                                        </button>
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <p className="py-4 text-[10px] text-[var(--text-muted)]">
-                                Nenhum profissional disponível para configurar.
-                            </p>
-                        )}
-                    </div>
-                    <p className="mt-3 rounded-xl bg-[var(--surface-secondary)] p-3 text-[9px] leading-5 text-[var(--text-muted)]">
-                        Esta interação serve apenas para demonstrar a experiência visual. A
-                        permissão real exige persistência no backend, endpoint ADMIN-only, auditoria
-                        da concessão/revogação e validação de acesso em cada recurso.
-                    </p>
+            {modo === "estatistico" && (
+                <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+                    <div className="flex items-center gap-2"><BsClockHistory className="text-[var(--accent-text)]" /><h2 className="text-[13px] font-semibold text-[var(--text-primary)]">Histórico de análises deste aluno</h2></div>
+                    {historicoQuery.isError ? <p role="alert" className="mt-3 text-[10px] text-[var(--danger)]">Não foi possível carregar o histórico salvo deste aluno.</p> : historicoQuery.isLoading ? <p className="mt-3 text-[10px] text-[var(--text-muted)]">Carregando histórico...</p> : historicoQuery.data?.length ? (
+                        <div className="mt-3 divide-y divide-[var(--border)]">{historicoQuery.data.map(item => <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                            <div><p className="text-[10px] font-semibold text-[var(--text-primary)]">{item.nomeFerramenta}</p><p className="mt-0.5 text-[9px] text-[var(--text-muted)]">{new Date(item.geradoEm).toLocaleString("pt-BR")} · {item.quantidadeRegistros} registros</p><p className="mt-1 text-[9px] text-[var(--text-secondary)]">{item.resumo}</p></div>
+                            <span className="rounded-full bg-[var(--surface-tertiary)] px-2.5 py-1 text-[8px] font-semibold text-[var(--text-muted)]">Snapshot salvo</span>
+                        </div>)}</div>
+                    ) : <p className="mt-3 text-[10px] text-[var(--text-muted)]">Ainda não existem análises salvas para este aluno. Execute uma ferramenta para iniciar o histórico.</p>}
                 </section>
             )}
+
+            {renderPermissoesAdmin()}
             <p className="flex items-start gap-2 px-1 text-[9px] leading-5 text-[var(--text-muted)]">
                 <BsEye className="mt-0.5 shrink-0" />
                 Toda análise deverá exibir período, filtros, fonte dos dados, tamanho da amostra e

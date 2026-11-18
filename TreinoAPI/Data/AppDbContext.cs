@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<ExecucaoTreino> ExecucoesTreino { get; set; }
+    public DbSet<AnaliseEstatistica> AnalisesEstatisticas { get; set; }
     public DbSet<ExecucaoExercicio> ExecucoesExercicio { get; set; }
     public DbSet<ExecucaoSerie> ExecucoesSerie { get; set; }
     public DbSet<TreinoVolumeCiclo> TreinoVolumeCiclos { get; set; }
@@ -456,6 +457,23 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ExecucaoTreino>()
             .HasIndex(e => new { e.TreinoId, e.Data })
             .IsUnique();
+
+        modelBuilder.Entity<AnaliseEstatistica>()
+            .Property(a => a.FerramentaId).HasMaxLength(60);
+        modelBuilder.Entity<AnaliseEstatistica>()
+            .Property(a => a.NomeFerramenta).HasMaxLength(120);
+        modelBuilder.Entity<AnaliseEstatistica>()
+            .Property(a => a.Resumo).HasMaxLength(1000);
+        modelBuilder.Entity<AnaliseEstatistica>()
+            .Property(a => a.ParametrosJson).HasColumnType("jsonb");
+        modelBuilder.Entity<AnaliseEstatistica>()
+            .Property(a => a.ResultadoJson).HasColumnType("jsonb");
+        modelBuilder.Entity<AnaliseEstatistica>()
+            .HasOne<Aluno>().WithMany().HasForeignKey(a => a.AlunoId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<AnaliseEstatistica>()
+            .HasOne<Usuario>().WithMany().HasForeignKey(a => a.GeradoPorUsuarioId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<AnaliseEstatistica>()
+            .HasIndex(a => new { a.AlunoId, a.GeradoEm });
 
         modelBuilder.Entity<ExecucaoTreino>()
             .HasOne(e => e.Treino)

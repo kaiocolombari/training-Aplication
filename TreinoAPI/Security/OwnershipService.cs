@@ -67,6 +67,18 @@ public sealed class OwnershipService
             throw DomainException.NotFound("Aluno não encontrado.");
     }
 
+    public async Task EnsureControleAvancadoAccessAsync()
+    {
+        if (_current.Role == "ADMIN") return;
+        if (_current.Role != "PERSONAL") throw DomainException.Forbidden();
+
+        var personalId = await GetCurrentPersonalIdAsync();
+        var habilitado = await _db.ConfiguracoesAcompanhamento.AsNoTracking()
+            .AnyAsync(config => config.PersonalId == personalId && config.ControleAvancadoHabilitado);
+        if (!habilitado)
+            throw DomainException.Forbidden("O Controle Avançado não está habilitado para este profissional.");
+    }
+
     public async Task EnsurePersonalAccessAsync(Guid personalId)
     {
         if (_current.Role == "ADMIN")

@@ -24,12 +24,8 @@ type DefinicaoTema = {
   cores: Record<ModoTema, PaletaTema>;
 };
 
-/**
- * Para criar um tema, adicione uma nova chave neste objeto.
- * Preencha os tokens de cores em light e dark e as cinco cores de amostra.
- * Os nomes dos tokens são mantidos em português para facilitar a edição da paleta.
- */
 export const TEMAS = {
+  // ───────────────────────── TEMA 1 — MANTIDO ─────────────────────────
   indigo: {
     nome: "Índigo clássico",
     descricao: "Equilibrado, limpo e próximo da identidade atual.",
@@ -49,83 +45,288 @@ export const TEMAS = {
       },
     },
   },
+
+  // ───────────────────────── TEMAS REFORMULADOS ─────────────────────────
   oceano: {
     nome: "Oceano",
-    descricao: "Azuis frios para uma interface técnica e serena.",
-    amostras: ["#F1F6FA", "#FFFFFF", "#182B3A", "#1678A8", "#E0F1F8"],
+    descricao: "Azul oceânico profundo com detalhes em ciano luminoso.",
+    amostras: ["#EAF6FA", "#FFFFFF", "#123044", "#087EA4", "#CDEFF7"],
     cores: {
       light: {
-        COR_TEXTO: "#182B3A", COR_TEXTO_SECUNDARIO: "#4E6576", COR_TEXTO_MUTED: "#778B9A",
-        COR_FUNDO: "#F1F6FA", COR_FUNDO_SECUNDARIO: "#EAF1F7", COR_SUPERFICIE: "#FFFFFF",
-        COR_SUPERFICIE_2: "#DCE7F0", COR_BORDA: "#D6E1EA", COR_BORDA_FORTE: "#C0D0DD",
-        COR_ACENTO: "#1678A8", COR_ACENTO_HOVER: "#0E668F", COR_ACENTO_SUAVE: "#E0F1F8",
+        COR_TEXTO: "#123044", COR_TEXTO_SECUNDARIO: "#365D70", COR_TEXTO_MUTED: "#607F8D",
+        COR_FUNDO: "#EAF6FA", COR_FUNDO_SECUNDARIO: "#DCEEF4", COR_SUPERFICIE: "#FFFFFF",
+        COR_SUPERFICIE_2: "#D0E6EE", COR_BORDA: "#BFD9E3", COR_BORDA_FORTE: "#91BDCC",
+        COR_ACENTO: "#087EA4", COR_ACENTO_HOVER: "#066887", COR_ACENTO_SUAVE: "#CDEFF7",
       },
       dark: {
-        COR_TEXTO: "#EAF4F8", COR_TEXTO_SECUNDARIO: "#B5C8D2", COR_TEXTO_MUTED: "#8098A6",
-        COR_FUNDO: "#101B24", COR_FUNDO_SECUNDARIO: "#14232E", COR_SUPERFICIE: "#192A36",
-        COR_SUPERFICIE_2: "#253C4A", COR_BORDA: "#2B414F", COR_BORDA_FORTE: "#3B5666",
-        COR_ACENTO: "#62BDE5", COR_ACENTO_HOVER: "#80CFEE", COR_ACENTO_SUAVE: "#203F50",
+        COR_TEXTO: "#EAF8FC", COR_TEXTO_SECUNDARIO: "#B6D9E5", COR_TEXTO_MUTED: "#83AEBE",
+        COR_FUNDO: "#081D29", COR_FUNDO_SECUNDARIO: "#0C2938", COR_SUPERFICIE: "#103447",
+        COR_SUPERFICIE_2: "#19465B", COR_BORDA: "#24566B", COR_BORDA_FORTE: "#34748B",
+        COR_ACENTO: "#35C5E8", COR_ACENTO_HOVER: "#65D7F0", COR_ACENTO_SUAVE: "#123F50",
       },
     },
   },
+
   floresta: {
     nome: "Floresta",
-    descricao: "Verdes discretos, com contraste confortável.",
-    amostras: ["#F2F6F2", "#FFFFFF", "#1C2C22", "#2F7A54", "#E4F2E9"],
+    descricao: "Verde esmeralda e tons naturais com aparência orgânica.",
+    amostras: ["#EDF7EF", "#FFFFFF", "#173B2B", "#16834A", "#D1F2DC"],
     cores: {
       light: {
-        COR_TEXTO: "#1C2C22", COR_TEXTO_SECUNDARIO: "#53645A", COR_TEXTO_MUTED: "#849188",
-        COR_FUNDO: "#F2F6F2", COR_FUNDO_SECUNDARIO: "#E9F1EB", COR_SUPERFICIE: "#FFFFFF",
-        COR_SUPERFICIE_2: "#DCE8DF", COR_BORDA: "#DBE5DD", COR_BORDA_FORTE: "#C8D6CC",
-        COR_ACENTO: "#2F7A54", COR_ACENTO_HOVER: "#256744", COR_ACENTO_SUAVE: "#E4F2E9",
+        COR_TEXTO: "#173B2B", COR_TEXTO_SECUNDARIO: "#3D654F", COR_TEXTO_MUTED: "#668574",
+        COR_FUNDO: "#EDF7EF", COR_FUNDO_SECUNDARIO: "#DFEFE3", COR_SUPERFICIE: "#FFFFFF",
+        COR_SUPERFICIE_2: "#D2E8D8", COR_BORDA: "#C2DEC9", COR_BORDA_FORTE: "#91C5A1",
+        COR_ACENTO: "#16834A", COR_ACENTO_HOVER: "#106B3C", COR_ACENTO_SUAVE: "#D1F2DC",
       },
       dark: {
-        COR_TEXTO: "#EDF5EF", COR_TEXTO_SECUNDARIO: "#BDCFC1", COR_TEXTO_MUTED: "#8FA394",
-        COR_FUNDO: "#131C17", COR_FUNDO_SECUNDARIO: "#18251D", COR_SUPERFICIE: "#1E2C23",
-        COR_SUPERFICIE_2: "#2B3C31", COR_BORDA: "#34463A", COR_BORDA_FORTE: "#49604F",
-        COR_ACENTO: "#72C596", COR_ACENTO_HOVER: "#91D6AC", COR_ACENTO_SUAVE: "#263F31",
+        COR_TEXTO: "#EFFBF2", COR_TEXTO_SECUNDARIO: "#BBDCC5", COR_TEXTO_MUTED: "#8FB59A",
+        COR_FUNDO: "#0D2117", COR_FUNDO_SECUNDARIO: "#123020", COR_SUPERFICIE: "#193B29",
+        COR_SUPERFICIE_2: "#245238", COR_BORDA: "#2E6545", COR_BORDA_FORTE: "#43865D",
+        COR_ACENTO: "#48D17D", COR_ACENTO_HOVER: "#70E49A", COR_ACENTO_SUAVE: "#19472D",
       },
     },
   },
+
   terracota: {
     nome: "Terracota",
-    descricao: "Tons quentes inspirados na identidade original do projeto.",
-    amostras: ["#F7F3F0", "#FFFFFF", "#30231E", "#A85F60", "#F5E6E4"],
+    descricao: "Argila, cobre e tons quentes com personalidade.",
+    amostras: ["#FBF0E9", "#FFFFFF", "#42271F", "#C65D3A", "#F9D8C8"],
     cores: {
       light: {
-        COR_TEXTO: "#30231E", COR_TEXTO_SECUNDARIO: "#6C5750", COR_TEXTO_MUTED: "#9B8980",
-        COR_FUNDO: "#F7F3F0", COR_FUNDO_SECUNDARIO: "#F1E9E4", COR_SUPERFICIE: "#FFFFFF",
-        COR_SUPERFICIE_2: "#EBE0D8", COR_BORDA: "#E8DAD2", COR_BORDA_FORTE: "#D8C5BB",
-        COR_ACENTO: "#A85F60", COR_ACENTO_HOVER: "#8F4E50", COR_ACENTO_SUAVE: "#F5E6E4",
+        COR_TEXTO: "#42271F", COR_TEXTO_SECUNDARIO: "#795044", COR_TEXTO_MUTED: "#A07869",
+        COR_FUNDO: "#FBF0E9", COR_FUNDO_SECUNDARIO: "#F5E2D7", COR_SUPERFICIE: "#FFFCFA",
+        COR_SUPERFICIE_2: "#EED3C5", COR_BORDA: "#E8C6B5", COR_BORDA_FORTE: "#D8A28B",
+        COR_ACENTO: "#C65D3A", COR_ACENTO_HOVER: "#A8492C", COR_ACENTO_SUAVE: "#F9D8C8",
       },
       dark: {
-        COR_TEXTO: "#F5ECE8", COR_TEXTO_SECUNDARIO: "#D1BDB4", COR_TEXTO_MUTED: "#A68E84",
-        COR_FUNDO: "#1C1716", COR_FUNDO_SECUNDARIO: "#241D1B", COR_SUPERFICIE: "#2C2321",
-        COR_SUPERFICIE_2: "#3A2D29", COR_BORDA: "#493733", COR_BORDA_FORTE: "#604942",
-        COR_ACENTO: "#DF9995", COR_ACENTO_HOVER: "#EFB1AB", COR_ACENTO_SUAVE: "#4A302F",
+        COR_TEXTO: "#FFF1E9", COR_TEXTO_SECUNDARIO: "#E2BBAA", COR_TEXTO_MUTED: "#BD9180",
+        COR_FUNDO: "#241512", COR_FUNDO_SECUNDARIO: "#321D18", COR_SUPERFICIE: "#40251E",
+        COR_SUPERFICIE_2: "#563229", COR_BORDA: "#704337", COR_BORDA_FORTE: "#925744",
+        COR_ACENTO: "#F08A65", COR_ACENTO_HOVER: "#FFA486", COR_ACENTO_SUAVE: "#542B20",
       },
     },
   },
+
   ametista: {
     nome: "Ametista",
-    descricao: "Roxo sofisticado para destacar áreas analíticas.",
-    amostras: ["#F5F2F8", "#FFFFFF", "#2A2033", "#8055A8", "#F0E7F7"],
+    descricao: "Roxo intenso e elegante, com atmosfera criativa.",
+    amostras: ["#F5EEFC", "#FFFFFF", "#352047", "#8746C5", "#EAD8FA"],
     cores: {
       light: {
-        COR_TEXTO: "#2A2033", COR_TEXTO_SECUNDARIO: "#65566F", COR_TEXTO_MUTED: "#93859D",
-        COR_FUNDO: "#F5F2F8", COR_FUNDO_SECUNDARIO: "#EEE8F5", COR_SUPERFICIE: "#FFFFFF",
-        COR_SUPERFICIE_2: "#E5DDEC", COR_BORDA: "#E5DCE9", COR_BORDA_FORTE: "#D2C5D8",
-        COR_ACENTO: "#8055A8", COR_ACENTO_HOVER: "#6D448F", COR_ACENTO_SUAVE: "#F0E7F7",
+        COR_TEXTO: "#352047", COR_TEXTO_SECUNDARIO: "#684B7D", COR_TEXTO_MUTED: "#907AA2",
+        COR_FUNDO: "#F5EEFC", COR_FUNDO_SECUNDARIO: "#EDE1F8", COR_SUPERFICIE: "#FFFCFF",
+        COR_SUPERFICIE_2: "#E4D3F1", COR_BORDA: "#D9C4EB", COR_BORDA_FORTE: "#B995D5",
+        COR_ACENTO: "#8746C5", COR_ACENTO_HOVER: "#6E35A6", COR_ACENTO_SUAVE: "#EAD8FA",
       },
       dark: {
-        COR_TEXTO: "#F3EDF7", COR_TEXTO_SECUNDARIO: "#C9BAD4", COR_TEXTO_MUTED: "#9A8BA6",
-        COR_FUNDO: "#19151F", COR_FUNDO_SECUNDARIO: "#211B29", COR_SUPERFICIE: "#292132",
-        COR_SUPERFICIE_2: "#362A41", COR_BORDA: "#403349", COR_BORDA_FORTE: "#584563",
-        COR_ACENTO: "#C19BE0", COR_ACENTO_HOVER: "#D3B1ED", COR_ACENTO_SUAVE: "#3B2B4C",
+        COR_TEXTO: "#F7EEFF", COR_TEXTO_SECUNDARIO: "#D7BDEB", COR_TEXTO_MUTED: "#AD8BC8",
+        COR_FUNDO: "#1C1028", COR_FUNDO_SECUNDARIO: "#281638", COR_SUPERFICIE: "#352047",
+        COR_SUPERFICIE_2: "#482C60", COR_BORDA: "#5A3975", COR_BORDA_FORTE: "#79509A",
+        COR_ACENTO: "#C084FC", COR_ACENTO_HOVER: "#D3A5FF", COR_ACENTO_SUAVE: "#43245D",
+      },
+    },
+  },
+
+  grafite: {
+    nome: "Grafite",
+    descricao: "Visual industrial quase monocromático com acento verde-lima.",
+    amostras: ["#F1F3F4", "#FFFFFF", "#20272D", "#526B45", "#E1E9D8"],
+    cores: {
+      light: {
+        COR_TEXTO: "#20272D", COR_TEXTO_SECUNDARIO: "#4D5961", COR_TEXTO_MUTED: "#737F86",
+        COR_FUNDO: "#F1F3F4", COR_FUNDO_SECUNDARIO: "#E5E9EB", COR_SUPERFICIE: "#FFFFFF",
+        COR_SUPERFICIE_2: "#DCE1E4", COR_BORDA: "#CCD3D7", COR_BORDA_FORTE: "#AAB5BB",
+        COR_ACENTO: "#526B45", COR_ACENTO_HOVER: "#405638", COR_ACENTO_SUAVE: "#E1E9D8",
+      },
+      dark: {
+        COR_TEXTO: "#F1F4F5", COR_TEXTO_SECUNDARIO: "#C0C9CD", COR_TEXTO_MUTED: "#929FA5",
+        COR_FUNDO: "#111619", COR_FUNDO_SECUNDARIO: "#191F23", COR_SUPERFICIE: "#222A2F",
+        COR_SUPERFICIE_2: "#303B41", COR_BORDA: "#3B484F", COR_BORDA_FORTE: "#56656D",
+        COR_ACENTO: "#B5D889", COR_ACENTO_HOVER: "#C9E9A0", COR_ACENTO_SUAVE: "#303E29",
+      },
+    },
+  },
+
+  menta: {
+    nome: "Menta",
+    descricao: "Turquesa fresco e vibrante, com visual leve e moderno.",
+    amostras: ["#E8FAF7", "#FFFFFF", "#123D3A", "#00A896", "#C8F5EC"],
+    cores: {
+      light: {
+        COR_TEXTO: "#123D3A", COR_TEXTO_SECUNDARIO: "#356B65", COR_TEXTO_MUTED: "#65918A",
+        COR_FUNDO: "#E8FAF7", COR_FUNDO_SECUNDARIO: "#D5F3ED", COR_SUPERFICIE: "#FFFFFF",
+        COR_SUPERFICIE_2: "#C8EAE3", COR_BORDA: "#B4DED5", COR_BORDA_FORTE: "#83C8BA",
+        COR_ACENTO: "#00A896", COR_ACENTO_HOVER: "#008B7D", COR_ACENTO_SUAVE: "#C8F5EC",
+      },
+      dark: {
+        COR_TEXTO: "#E9FFFA", COR_TEXTO_SECUNDARIO: "#B3E6DC", COR_TEXTO_MUTED: "#80BDB1",
+        COR_FUNDO: "#092321", COR_FUNDO_SECUNDARIO: "#0D302D", COR_SUPERFICIE: "#12413D",
+        COR_SUPERFICIE_2: "#1B5751", COR_BORDA: "#246B63", COR_BORDA_FORTE: "#358A7F",
+        COR_ACENTO: "#42E0C5", COR_ACENTO_HOVER: "#70F0D8", COR_ACENTO_SUAVE: "#164A43",
+      },
+    },
+  },
+
+  ambar: {
+    nome: "Âmbar",
+    descricao: "Amarelo-ouro e laranja intenso, energético e acolhedor.",
+    amostras: ["#FFF7E8", "#FFFFFF", "#422B0B", "#C77700", "#FFE7B3"],
+    cores: {
+      light: {
+        COR_TEXTO: "#422B0B", COR_TEXTO_SECUNDARIO: "#765321", COR_TEXTO_MUTED: "#9A7844",
+        COR_FUNDO: "#FFF7E8", COR_FUNDO_SECUNDARIO: "#FBEBCB", COR_SUPERFICIE: "#FFFEFA",
+        COR_SUPERFICIE_2: "#F3E0B5", COR_BORDA: "#EBD39A", COR_BORDA_FORTE: "#D8B66A",
+        COR_ACENTO: "#C77700", COR_ACENTO_HOVER: "#A65F00", COR_ACENTO_SUAVE: "#FFE7B3",
+      },
+      dark: {
+        COR_TEXTO: "#FFF7E7", COR_TEXTO_SECUNDARIO: "#E8D1A5", COR_TEXTO_MUTED: "#BFA16D",
+        COR_FUNDO: "#21180A", COR_FUNDO_SECUNDARIO: "#30220D", COR_SUPERFICIE: "#402E12",
+        COR_SUPERFICIE_2: "#574019", COR_BORDA: "#705322", COR_BORDA_FORTE: "#916D2D",
+        COR_ACENTO: "#FFC15A", COR_ACENTO_HOVER: "#FFD080", COR_ACENTO_SUAVE: "#4A3513",
+      },
+    },
+  },
+
+  vinho: {
+    nome: "Vinho",
+    descricao: "Bordô profundo com detalhes em rosa e framboesa.",
+    amostras: ["#FBEFF3", "#FFFFFF", "#42172A", "#B32655", "#F8D5E2"],
+    cores: {
+      light: {
+        COR_TEXTO: "#42172A", COR_TEXTO_SECUNDARIO: "#754157", COR_TEXTO_MUTED: "#9B7183",
+        COR_FUNDO: "#FBEFF3", COR_FUNDO_SECUNDARIO: "#F5DFE7", COR_SUPERFICIE: "#FFFCFD",
+        COR_SUPERFICIE_2: "#EED1DC", COR_BORDA: "#E5BFCF", COR_BORDA_FORTE: "#D493AD",
+        COR_ACENTO: "#B32655", COR_ACENTO_HOVER: "#941D45", COR_ACENTO_SUAVE: "#F8D5E2",
+      },
+      dark: {
+        COR_TEXTO: "#FFF0F5", COR_TEXTO_SECUNDARIO: "#E5BDCC", COR_TEXTO_MUTED: "#BB8FA0",
+        COR_FUNDO: "#230F18", COR_FUNDO_SECUNDARIO: "#321522", COR_SUPERFICIE: "#421D2D",
+        COR_SUPERFICIE_2: "#58283D", COR_BORDA: "#70334D", COR_BORDA_FORTE: "#914460",
+        COR_ACENTO: "#F178A3", COR_ACENTO_HOVER: "#FF9ABB", COR_ACENTO_SUAVE: "#512238",
+      },
+    },
+  },
+
+  oliva: {
+    nome: "Oliva",
+    descricao: "Verde-musgo e tons de campo, com personalidade terrosa.",
+    amostras: ["#F4F5E8", "#FFFFFF", "#303719", "#71852B", "#E5EDB8"],
+    cores: {
+      light: {
+        COR_TEXTO: "#303719", COR_TEXTO_SECUNDARIO: "#5D6737", COR_TEXTO_MUTED: "#858D5D",
+        COR_FUNDO: "#F4F5E8", COR_FUNDO_SECUNDARIO: "#EAECCF", COR_SUPERFICIE: "#FFFFFA",
+        COR_SUPERFICIE_2: "#DFE4B9", COR_BORDA: "#D2D9A5", COR_BORDA_FORTE: "#B5C17A",
+        COR_ACENTO: "#71852B", COR_ACENTO_HOVER: "#5A6B20", COR_ACENTO_SUAVE: "#E5EDB8",
+      },
+      dark: {
+        COR_TEXTO: "#F5F6E8", COR_TEXTO_SECUNDARIO: "#D0D7A9", COR_TEXTO_MUTED: "#A5B078",
+        COR_FUNDO: "#1A1E0D", COR_FUNDO_SECUNDARIO: "#252B12", COR_SUPERFICIE: "#32391A",
+        COR_SUPERFICIE_2: "#424B23", COR_BORDA: "#535F2C", COR_BORDA_FORTE: "#71813A",
+        COR_ACENTO: "#C2DF65", COR_ACENTO_HOVER: "#D5ED85", COR_ACENTO_SUAVE: "#3A471B",
+      },
+    },
+  },
+
+  safira: {
+    nome: "Safira",
+    descricao: "Azul royal intenso, com contraste marcante e tecnológico.",
+    amostras: ["#EDF2FF", "#FFFFFF", "#172554", "#315BEA", "#D7E2FF"],
+    cores: {
+      light: {
+        COR_TEXTO: "#172554", COR_TEXTO_SECUNDARIO: "#3F5288", COR_TEXTO_MUTED: "#687BAE",
+        COR_FUNDO: "#EDF2FF", COR_FUNDO_SECUNDARIO: "#DFE7FC", COR_SUPERFICIE: "#FFFFFF",
+        COR_SUPERFICIE_2: "#D1DDF8", COR_BORDA: "#C0D0F2", COR_BORDA_FORTE: "#91A9E5",
+        COR_ACENTO: "#315BEA", COR_ACENTO_HOVER: "#2448C7", COR_ACENTO_SUAVE: "#D7E2FF",
+      },
+      dark: {
+        COR_TEXTO: "#F0F4FF", COR_TEXTO_SECUNDARIO: "#C1CFF5", COR_TEXTO_MUTED: "#91A6DD",
+        COR_FUNDO: "#0D1530", COR_FUNDO_SECUNDARIO: "#142044", COR_SUPERFICIE: "#1B2B55",
+        COR_SUPERFICIE_2: "#263B70", COR_BORDA: "#304A86", COR_BORDA_FORTE: "#4565AA",
+        COR_ACENTO: "#83A5FF", COR_ACENTO_HOVER: "#A4BCFF", COR_ACENTO_SUAVE: "#23396D",
+      },
+    },
+  },
+
+  areia: {
+    nome: "Areia (conforto visual)",
+    descricao: "Paleta de papel, argila e café, sem branco estourado.",
+    amostras: ["#F2EBDD", "#FAF5E9", "#3D3022", "#9A6B32", "#E9D5AE"],
+    cores: {
+      light: {
+        COR_TEXTO: "#3D3022", COR_TEXTO_SECUNDARIO: "#6E5A42", COR_TEXTO_MUTED: "#8D7A61",
+        COR_FUNDO: "#F2EBDD", COR_FUNDO_SECUNDARIO: "#E9DECA", COR_SUPERFICIE: "#FAF5E9",
+        COR_SUPERFICIE_2: "#DED0B6", COR_BORDA: "#D5C4A5", COR_BORDA_FORTE: "#BDA17A",
+        COR_ACENTO: "#9A6B32", COR_ACENTO_HOVER: "#7C5427", COR_ACENTO_SUAVE: "#E9D5AE",
+      },
+      dark: {
+        COR_TEXTO: "#F5EBDD", COR_TEXTO_SECUNDARIO: "#D5C2A5", COR_TEXTO_MUTED: "#B19A78",
+        COR_FUNDO: "#211B13", COR_FUNDO_SECUNDARIO: "#2D2419", COR_SUPERFICIE: "#3A2E20",
+        COR_SUPERFICIE_2: "#4B3B29", COR_BORDA: "#5E4A32", COR_BORDA_FORTE: "#7A6040",
+        COR_ACENTO: "#DDA85F", COR_ACENTO_HOVER: "#EBC080", COR_ACENTO_SUAVE: "#49351D",
+      },
+    },
+  },
+
+  altoContraste: {
+    nome: "Alto contraste",
+    descricao: "Preto e branco absolutos, com azul elétrico para ações e foco.",
+    amostras: ["#FFFFFF", "#F0F0F0", "#000000", "#0047FF", "#DCE6FF"],
+    cores: {
+      light: {
+        COR_TEXTO: "#000000", COR_TEXTO_SECUNDARIO: "#242424", COR_TEXTO_MUTED: "#505050",
+        COR_FUNDO: "#FFFFFF", COR_FUNDO_SECUNDARIO: "#F0F0F0", COR_SUPERFICIE: "#FFFFFF",
+        COR_SUPERFICIE_2: "#E2E2E2", COR_BORDA: "#777777", COR_BORDA_FORTE: "#333333",
+        COR_ACENTO: "#0047FF", COR_ACENTO_HOVER: "#0036C7", COR_ACENTO_SUAVE: "#DCE6FF",
+      },
+      dark: {
+        COR_TEXTO: "#FFFFFF", COR_TEXTO_SECUNDARIO: "#EEEEEE", COR_TEXTO_MUTED: "#C7C7C7",
+        COR_FUNDO: "#000000", COR_FUNDO_SECUNDARIO: "#101010", COR_SUPERFICIE: "#191919",
+        COR_SUPERFICIE_2: "#292929", COR_BORDA: "#777777", COR_BORDA_FORTE: "#B8B8B8",
+        COR_ACENTO: "#6F9BFF", COR_ACENTO_HOVER: "#9AB8FF", COR_ACENTO_SUAVE: "#142B60",
+      },
+    },
+  },
+  coral: {
+    nome: "Coral",
+    descricao: "Coral vivo com base azul-petróleo, criando uma identidade quente e contemporânea.",
+    amostras: ["#F8F0EC", "#FFFFFF", "#263B3D", "#E66B5B", "#F9D7CE"],
+    cores: {
+      light: {
+        COR_TEXTO: "#263B3D", COR_TEXTO_SECUNDARIO: "#52696A", COR_TEXTO_MUTED: "#7D9290",
+        COR_FUNDO: "#F8F0EC", COR_FUNDO_SECUNDARIO: "#F0E5DF", COR_SUPERFICIE: "#FFFCFA",
+        COR_SUPERFICIE_2: "#E9D9D1", COR_BORDA: "#DDC9C0", COR_BORDA_FORTE: "#C5A79B",
+        COR_ACENTO: "#E66B5B", COR_ACENTO_HOVER: "#C95447", COR_ACENTO_SUAVE: "#F9D7CE",
+      },
+      dark: {
+        COR_TEXTO: "#F8F1EC", COR_TEXTO_SECUNDARIO: "#C8D2CE", COR_TEXTO_MUTED: "#9EADA7",
+        COR_FUNDO: "#172426", COR_FUNDO_SECUNDARIO: "#203033", COR_SUPERFICIE: "#293B3D",
+        COR_SUPERFICIE_2: "#385052", COR_BORDA: "#496365", COR_BORDA_FORTE: "#638083",
+        COR_ACENTO: "#FF8978", COR_ACENTO_HOVER: "#FFA294", COR_ACENTO_SUAVE: "#50302F",
+      },
+    },
+  },
+
+  orquidea: {
+    nome: "Orquídea",
+    descricao: "Magenta e ameixa com uma composição expressiva e sofisticada.",
+    amostras: ["#F9EFF6", "#FFFCFE", "#3B2038", "#C04491", "#F4D5E9"],
+    cores: {
+      light: {
+        COR_TEXTO: "#3B2038", COR_TEXTO_SECUNDARIO: "#704B6A", COR_TEXTO_MUTED: "#967B91",
+        COR_FUNDO: "#F9EFF6", COR_FUNDO_SECUNDARIO: "#F1E1ED", COR_SUPERFICIE: "#FFFCFE",
+        COR_SUPERFICIE_2: "#EAD3E4", COR_BORDA: "#DFC1D7", COR_BORDA_FORTE: "#C894B8",
+        COR_ACENTO: "#C04491", COR_ACENTO_HOVER: "#A33278", COR_ACENTO_SUAVE: "#F4D5E9",
+      },
+      dark: {
+        COR_TEXTO: "#FFF1FA", COR_TEXTO_SECUNDARIO: "#E2C1D8", COR_TEXTO_MUTED: "#B994AE",
+        COR_FUNDO: "#241523", COR_FUNDO_SECUNDARIO: "#321D31", COR_SUPERFICIE: "#422642",
+        COR_SUPERFICIE_2: "#563354", COR_BORDA: "#6B4168", COR_BORDA_FORTE: "#895781",
+        COR_ACENTO: "#F078BD", COR_ACENTO_HOVER: "#FF9BD0", COR_ACENTO_SUAVE: "#512849",
       },
     },
   },
 } as const satisfies Record<string, DefinicaoTema>;
+
 
 export type TemaId = keyof typeof TEMAS;
 

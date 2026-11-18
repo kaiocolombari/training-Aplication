@@ -53,6 +53,7 @@ export default function TarefasPersonal() {
         intervaloReavaliacaoDias: 90,
         intervaloRevisaoTreinoDias: 60,
         antecedenciaSugestaoDias: 7,
+        controleAvancadoHabilitado: false,
     });
 
     const personais = useQuery({

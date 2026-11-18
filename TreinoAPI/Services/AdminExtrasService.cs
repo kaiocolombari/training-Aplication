@@ -231,6 +231,8 @@ public sealed class AdminExtrasService
         config.IntervaloReavaliacaoDias = dto.IntervaloReavaliacaoDias;
         config.IntervaloRevisaoTreinoDias = dto.IntervaloRevisaoTreinoDias;
         config.AntecedenciaSugestaoDias = dto.AntecedenciaSugestaoDias;
+        if (_current.Role == "ADMIN")
+            config.ControleAvancadoHabilitado = dto.ControleAvancadoHabilitado;
         config.AtualizadaEm = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return MapearConfiguracao(config);
@@ -480,7 +482,9 @@ public sealed class AdminExtrasService
     {
         PersonalId = c.PersonalId, IntervaloReavaliacaoDias = c.IntervaloReavaliacaoDias,
         IntervaloRevisaoTreinoDias = c.IntervaloRevisaoTreinoDias,
-        AntecedenciaSugestaoDias = c.AntecedenciaSugestaoDias, AtualizadaEm = c.AtualizadaEm
+        AntecedenciaSugestaoDias = c.AntecedenciaSugestaoDias,
+        AtualizadaEm = c.AtualizadaEm,
+        ControleAvancadoHabilitado = c.ControleAvancadoHabilitado
     };
 
     private static RegistroManutencaoDTO MapearManutencao(RegistroManutencao m) => new()

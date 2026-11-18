@@ -25,7 +25,7 @@ Plataforma web para personal trainers criarem e acompanharem fichas de alunos. E
 - Registro de execução diária por série, incluindo carga, repetições, RIR/RPE, descanso, velocidade, cluster, drop-set, rest-pause e falha.
 - Importação/exportação de fichas em JSON.
 
-A conta ALUNO pode ser criada, mas o portal de consulta da ficha pelo aluno ainda não faz parte desta versão. O ADMIN gerencia a equipe; o PERSONAL só visualiza e altera alunos com vínculo ativo. Os módulos de ficha são acessados depois de assumir/abrir um aluno.
+A conta ALUNO pode ser criada, mas a integração do portal de consulta do aluno com a API ainda não faz parte desta versão. O ADMIN gerencia a equipe; o PERSONAL só visualiza e altera alunos com vínculo ativo. Os módulos de ficha são acessados depois de assumir/abrir um aluno.
 
 ## Requisitos
 
@@ -115,6 +115,18 @@ npm run dev
 
 Acesse http://localhost:5173/training-Aplication/. O arquivo **web-system/.env** deve apontar **VITE_API_URL=https://localhost:7285**.
 
+### 4. App mobile (protótipo visual)
+
+Em outro terminal, a partir da raiz:
+
+~~~powershell
+Set-Location mobile-app
+npm ci
+npx expo start
+~~~
+
+Abra o QR Code no Expo Go compatível com o SDK 58. O app mobile é um protótipo navegável com dados demonstrativos; ainda não realiza login nem sincroniza execuções com a API. Consulte `mobile-app/README.md` para detalhes das telas e validações.
+
 ## Primeiro acesso
 
 1. Inicie PostgreSQL e API.
@@ -158,7 +170,8 @@ dotnet ef migrations list
 
 ## Limites desta primeira versão
 
-- O portal do aluno e o aplicativo móvel ainda não estão incluídos.
+- O portal do aluno integrado à API ainda não está incluído.
+- Existe um protótipo visual do app do aluno em `mobile-app/`, feito com Expo, React Native e NativeWind. Ele usa dados demonstrativos e ainda não autentica nem consulta a API.
 - Mensagens, feedback, relatórios administrativos e trilha geral de auditoria do sistema ainda não estão implementados. A trilha de auditoria das avaliações físicas está disponível.
 - O envio de convite/recuperação de senha por e-mail não está integrado; as credenciais iniciais devem ser entregues por canal seguro.
 - Para produção, configure HTTPS real, CORS com domínios definitivos, secrets no provedor de deploy, backups PostgreSQL e aplique migrations antes de iniciar a API. A aplicação não executa migrations automaticamente fora de Development.

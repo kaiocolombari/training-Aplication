@@ -65,7 +65,7 @@ export const initialState: Avaliacao = {
   anamneseComparacao: anamneseVazia(),
   treino: [],
   periodizacao: {
-    nome: "Periodização principal",
+    nome: "",
     dataInicio: dataInicioPadraoIso,
     semanas: Array.from({ length: 12 }, (_, semanaIndex) => ({
       numero: semanaIndex + 1,

@@ -11,6 +11,7 @@ export interface AuthUser {
     nome: string;
     statusCadastro: "PENDENTE" | "APROVADO" | null;
     formularioEnviado: boolean;
+    controleAvancadoHabilitado: boolean;
 }
 
 export interface LoginPayload {

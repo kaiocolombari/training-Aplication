@@ -6,6 +6,7 @@ export default interface Serie {
     repeticoes: number;
 
     rir: number;
+    rirInformado?: boolean;
 
     descanso: number;
 

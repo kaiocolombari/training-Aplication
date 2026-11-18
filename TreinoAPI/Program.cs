@@ -77,6 +77,7 @@ builder.Services.AddScoped<ArquivoEquipeService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<RelatoriosService>();
+builder.Services.AddScoped<AnaliseEstatisticaService>();
 builder.Services.AddScoped<AdminExtrasService>();
 builder.Services.AddScoped<AlunoService>();
 builder.Services.AddScoped<PersonalService>();

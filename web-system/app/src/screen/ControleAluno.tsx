@@ -59,7 +59,7 @@ function Vazio({ titulo, descricao }: { titulo: string; descricao: string }) {
                 <BsClipboard2Pulse className="text-lg" />
             </span>
             <h3 className="mt-3 text-[13px] font-semibold text-[var(--text-primary)]">{titulo}</h3>
-            <p className="mx-auto mt-1 max-w-[470px] text-[11px] leading-5 text-[var(--text-muted)]">
+            <p className="mx-auto mt-1 max-w-[470px] text-[12px] leading-5 text-[var(--text-muted)]">
                 {descricao}
             </p>
         </div>
@@ -80,7 +80,7 @@ function Metrica({
     return (
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex items-start justify-between gap-3">
-                <span className="text-[10px] font-medium text-[var(--text-muted)]">{titulo}</span>
+                <span className="text-[11px] font-medium text-[var(--text-muted)]">{titulo}</span>
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent-text)]">
                     {icone}
                 </span>
@@ -88,7 +88,7 @@ function Metrica({
             <p className="mt-3 text-[25px] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                 {valor}
             </p>
-            <p className="mt-1 text-[10px] text-[var(--text-muted)]">{detalhe}</p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">{detalhe}</p>
         </div>
     );
 }
@@ -166,7 +166,7 @@ export default function ControleAluno({
             </div>
             <div className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
                 <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                    <p className="text-[9px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
+                    <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
                         Contexto do atendimento
                     </p>
                     <h3 className="mt-1 text-[15px] font-semibold text-[var(--text-primary)]">
@@ -177,26 +177,26 @@ export default function ControleAluno({
                     </p>
                     <div className="mt-4 grid gap-3 border-t border-[var(--border)] pt-4 sm:grid-cols-3">
                         <div>
-                            <p className="text-[9px] uppercase tracking-wide text-[var(--text-muted)]">
+                            <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
                                 Última avaliação
                             </p>
-                            <p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">
+                            <p className="mt-1 text-[12px] font-semibold text-[var(--text-primary)]">
                                 {dataPt(ultima?.realizadaEm)}
                             </p>
                         </div>
                         <div>
-                            <p className="text-[9px] uppercase tracking-wide text-[var(--text-muted)]">
+                            <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
                                 Último treino
                             </p>
-                            <p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">
+                            <p className="mt-1 text-[12px] font-semibold text-[var(--text-primary)]">
                                 {dataPt(execucoes.at(-1)?.data)}
                             </p>
                         </div>
                         <div>
-                            <p className="text-[9px] uppercase tracking-wide text-[var(--text-muted)]">
+                            <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
                                 Periodização
                             </p>
-                            <p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">
+                            <p className="mt-1 text-[12px] font-semibold text-[var(--text-primary)]">
                                 {ficha.periodizacao.nome || "Não definida"}
                             </p>
                         </div>
@@ -205,14 +205,14 @@ export default function ControleAluno({
                 <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-[9px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
+                            <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
                                 Atenção do profissional
                             </p>
                             <h3 className="mt-1 text-[15px] font-semibold text-[var(--text-primary)]">
                                 Pontos para revisar
                             </h3>
                         </div>
-                        <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[9px] font-semibold text-amber-600">
+                        <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold text-amber-600">
                             {pendencias.length} itens
                         </span>
                     </div>
@@ -221,7 +221,7 @@ export default function ControleAluno({
                             {pendencias.map(item => (
                                 <li
                                     key={item}
-                                    className="flex gap-2.5 text-[11px] leading-5 text-[var(--text-secondary)]"
+                                    className="flex gap-2.5 text-[12px] leading-5 text-[var(--text-secondary)]"
                                 >
                                     <BsExclamationTriangle className="mt-0.5 shrink-0 text-amber-500" />
                                     {item}
@@ -229,11 +229,11 @@ export default function ControleAluno({
                             ))}
                         </ul>
                     ) : (
-                        <p className="mt-4 text-[11px] text-[var(--text-muted)]">
+                        <p className="mt-4 text-[12px] text-[var(--text-muted)]">
                             Nenhuma pendência estrutural detectada nos dados da ficha.
                         </p>
                     )}
-                    <p className="mt-4 border-t border-[var(--border)] pt-3 text-[9px] leading-4 text-[var(--text-muted)]">
+                    <p className="mt-4 border-t border-[var(--border)] pt-3 text-[10px] leading-4 text-[var(--text-muted)]">
                         Alertas de adesão, recuperação e dor dependem da integração dos registros do
                         aplicativo.
                     </p>
@@ -250,10 +250,10 @@ export default function ControleAluno({
                     <h3 className="mt-3 text-[12px] font-semibold text-[var(--text-primary)]">
                         Execução e prescrição
                     </h3>
-                    <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
+                    <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">
                         Compare o que foi planejado com os registros do treino.
                     </p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">
+                    <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--accent-text)]">
                         Abrir módulo <BsArrowUpRight />
                     </span>
                 </button>
@@ -267,10 +267,10 @@ export default function ControleAluno({
                     <h3 className="mt-3 text-[12px] font-semibold text-[var(--text-primary)]">
                         Evolução física
                     </h3>
-                    <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
+                    <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">
                         Consulte avaliações, medidas e testes preservando o histórico.
                     </p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">
+                    <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--accent-text)]">
                         Abrir módulo <BsArrowUpRight />
                     </span>
                 </button>
@@ -284,10 +284,10 @@ export default function ControleAluno({
                     <h3 className="mt-3 text-[12px] font-semibold text-[var(--text-primary)]">
                         Volume mensal
                     </h3>
-                    <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
+                    <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">
                         Inicie um ciclo e acompanhe os registros mensais deste treino.
                     </p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">
+                    <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--accent-text)]">
                         Abrir acompanhamento <BsArrowUpRight />
                     </span>
                 </button>
@@ -301,10 +301,10 @@ export default function ControleAluno({
                     <h3 className="mt-3 text-[12px] font-semibold text-[var(--text-primary)]">
                         Comunicação da equipe
                     </h3>
-                    <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
+                    <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">
                         Acesse a central existente para tratar deste atendimento.
                     </p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">
+                    <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--accent-text)]">
                         Abrir central <BsArrowUpRight />
                     </span>
                 </button>
@@ -319,14 +319,14 @@ export default function ControleAluno({
                     <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
                         Prescrição e execução
                     </h3>
-                    <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+                    <p className="mt-1 text-[11px] text-[var(--text-muted)]">
                         A prescrição é a referência; a execução deve ser guardada como histórico
                         independente.
                     </p>
                 </div>
                 <button
                     onClick={() => onNavigate("avaliacoes")}
-                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] px-3 text-[11px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
                 >
                     Abrir ficha técnica <BsArrowUpRight />
                 </button>
@@ -341,14 +341,14 @@ export default function ControleAluno({
                         >
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-[9px] uppercase tracking-[.14em] text-[var(--text-muted)]">
+                                    <p className="text-[10px] uppercase tracking-[.14em] text-[var(--text-muted)]">
                                         Treino {String.fromCharCode(65 + index)}
                                     </p>
                                     <h4 className="mt-1 text-[13px] font-semibold text-[var(--text-primary)]">
                                         {treino.nome || "Treino sem nome"}
                                     </h4>
                                 </div>
-                                <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[9px] font-semibold text-[var(--accent-text)]">
+                                <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-semibold text-[var(--accent-text)]">
                                     {itens.length} exercícios
                                 </span>
                             </div>
@@ -359,19 +359,19 @@ export default function ControleAluno({
                                         className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
                                     >
                                         <div className="flex min-w-0 items-center gap-3">
-                                            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[var(--surface-tertiary)] text-[9px] font-semibold text-[var(--text-muted)]">
+                                            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[var(--surface-tertiary)] text-[10px] font-semibold text-[var(--text-muted)]">
                                                 {String(i + 1).padStart(2, "0")}
                                             </span>
                                             <div className="min-w-0">
-                                                <p className="truncate text-[11px] font-semibold text-[var(--text-primary)]">
+                                                <p className="truncate text-[12px] font-semibold text-[var(--text-primary)]">
                                                     {e.exercicio}
                                                 </p>
-                                                <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">
+                                                <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
                                                     {e.variacoes?.length ?? 0} variações cadastradas
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3 text-[9px] text-[var(--text-secondary)]">
+                                        <div className="flex gap-3 text-[10px] text-[var(--text-secondary)]">
                                             <span>{e.series || "—"} séries</span>
                                             <span>{e.repeticoes || "—"} reps</span>
                                             <span>{e.carga || "—"} kg</span>
@@ -393,7 +393,7 @@ export default function ControleAluno({
                     <h4 className="text-[12px] font-semibold text-[var(--text-primary)]">
                         Sessões executadas
                     </h4>
-                    <span className="text-[10px] text-[var(--text-muted)]">
+                    <span className="text-[11px] text-[var(--text-muted)]">
                         {execucoes.length} registros
                     </span>
                 </div>
@@ -405,14 +405,14 @@ export default function ControleAluno({
                                 className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface-secondary)] px-3 py-3"
                             >
                                 <div>
-                                    <p className="text-[10px] font-semibold text-[var(--text-primary)]">
+                                    <p className="text-[11px] font-semibold text-[var(--text-primary)]">
                                         Sessão {index + 1}
                                     </p>
-                                    <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">
+                                    <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
                                         {e.exercicios.length} exercícios · {dataPt(e.data)}
                                     </p>
                                 </div>
-                                <span className="text-[10px] text-[var(--text-secondary)]">
+                                <span className="text-[11px] text-[var(--text-secondary)]">
                                     {e.exercicios.reduce(
                                         (sum, item) => sum + item.series.length,
                                         0,
@@ -423,7 +423,7 @@ export default function ControleAluno({
                         ))}
                     </div>
                 ) : (
-                    <p className="mt-3 text-[10px] text-[var(--text-muted)]">
+                    <p className="mt-3 text-[11px] text-[var(--text-muted)]">
                         Ainda não existem execuções sincronizadas para este aluno.
                     </p>
                 )}
@@ -437,13 +437,13 @@ export default function ControleAluno({
                 <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
                     Evolução física e desempenho
                 </h3>
-                <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+                <p className="mt-1 text-[11px] text-[var(--text-muted)]">
                     Comparações cronológicas, preservando método, data e origem da medição.
                 </p>
             </div>
             {avaliacoes.length ? (
                 <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-                    <div className="grid grid-cols-[1.2fr_repeat(3,minmax(70px,1fr))] gap-2 border-b border-[var(--border)] bg-[var(--surface-secondary)] px-4 py-3 text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    <div className="grid grid-cols-[1.2fr_repeat(3,minmax(70px,1fr))] gap-2 border-b border-[var(--border)] bg-[var(--surface-secondary)] px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                         <span>Avaliação</span>
                         <span>Peso</span>
                         <span>Altura</span>
@@ -455,20 +455,20 @@ export default function ControleAluno({
                             className="grid grid-cols-[1.2fr_repeat(3,minmax(70px,1fr))] gap-2 border-b border-[var(--border)] px-4 py-3 last:border-0"
                         >
                             <span>
-                                <strong className="block text-[10px] text-[var(--text-primary)]">
+                                <strong className="block text-[11px] text-[var(--text-primary)]">
                                     #{a.numero}
                                 </strong>
-                                <small className="text-[9px] text-[var(--text-muted)]">
+                                <small className="text-[10px] text-[var(--text-muted)]">
                                     {dataPt(a.realizadaEm)}
                                 </small>
                             </span>
-                            <span className="self-center text-[10px] text-[var(--text-secondary)]">
+                            <span className="self-center text-[11px] text-[var(--text-secondary)]">
                                 {a.peso || "—"} kg
                             </span>
-                            <span className="self-center text-[10px] text-[var(--text-secondary)]">
+                            <span className="self-center text-[11px] text-[var(--text-secondary)]">
                                 {a.altura || "—"} cm
                             </span>
-                            <span className="self-center text-[10px] text-[var(--text-secondary)]">
+                            <span className="self-center text-[11px] text-[var(--text-secondary)]">
                                 {a.percentualGordura || "—"}%
                             </span>
                         </div>
@@ -485,7 +485,7 @@ export default function ControleAluno({
                     <h4 className="text-[12px] font-semibold text-[var(--text-primary)]">
                         Antropometria
                     </h4>
-                    <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
+                    <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">
                         Peso, estatura, perímetros e dobras cutâneas com identificação da avaliação
                         e protocolo.
                     </p>
@@ -494,7 +494,7 @@ export default function ControleAluno({
                     <h4 className="text-[12px] font-semibold text-[var(--text-primary)]">
                         Força e capacidade
                     </h4>
-                    <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
+                    <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">
                         Testes de carga e desempenho comparados por exercício, carga, repetições e
                         condições do teste.
                     </p>
@@ -509,21 +509,21 @@ export default function ControleAluno({
                 <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
                     Planejamento de treinamento
                 </h3>
-                <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+                <p className="mt-1 text-[11px] text-[var(--text-muted)]">
                     Visão do ciclo, semanas estruturadas, dias planejados e volume prescrito.
                 </p>
             </div>
             <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <p className="text-[9px] uppercase tracking-wide text-[var(--text-muted)]">
+                        <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
                             Ciclo atual
                         </p>
                         <h4 className="mt-1 text-[14px] font-semibold text-[var(--text-primary)]">
                             {ficha.periodizacao.nome || "Periodização principal"}
                         </h4>
                     </div>
-                    <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[9px] font-semibold text-[var(--accent-text)]">
+                    <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-semibold text-[var(--accent-text)]">
                         {semanas.length} semanas com sessões
                     </span>
                 </div>
@@ -535,12 +535,12 @@ export default function ControleAluno({
                                 key={index}
                                 className="rounded-xl border border-[var(--border)] p-3"
                             >
-                                <p className="text-[9px] text-[var(--text-muted)]">
+                                <p className="text-[10px] text-[var(--text-muted)]">
                                     Semana {s.numero}
                                 </p>
                                 <p className="mt-1 text-[16px] font-semibold text-[var(--text-primary)]">
                                     {dias}
-                                    <span className="ml-1 text-[9px] font-normal text-[var(--text-muted)]">
+                                    <span className="ml-1 text-[10px] font-normal text-[var(--text-muted)]">
                                         dias
                                     </span>
                                 </p>
@@ -571,10 +571,10 @@ export default function ControleAluno({
                                 key={s.semana}
                                 className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-2 last:border-0"
                             >
-                                <span className="text-[10px] text-[var(--text-secondary)]">
+                                <span className="text-[11px] text-[var(--text-secondary)]">
                                     Semana {s.semana}
                                 </span>
-                                <strong className="text-[11px] text-[var(--text-primary)]">
+                                <strong className="text-[12px] text-[var(--text-primary)]">
                                     {total} séries
                                 </strong>
                             </div>
@@ -599,7 +599,7 @@ export default function ControleAluno({
                         <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
                             Central de acompanhamento
                         </h3>
-                        <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+                        <p className="mt-1 text-[11px] text-[var(--text-muted)]">
                             Pendências estruturais derivadas dos dados atuais. Alertas
                             comportamentais dependem dos registros do aplicativo.
                         </p>
@@ -614,14 +614,14 @@ export default function ControleAluno({
                                     <BsExclamationTriangle />
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-[11px] font-semibold text-[var(--text-primary)]">
+                                    <p className="text-[12px] font-semibold text-[var(--text-primary)]">
                                         {item}
                                     </p>
-                                    <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">
+                                    <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
                                         Prioridade sugerida · item {index + 1}
                                     </p>
                                 </div>
-                                <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[8px] font-semibold text-amber-700">
+                                <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-semibold text-amber-700">
                                     Pendente
                                 </span>
                             </div>
@@ -655,7 +655,7 @@ export default function ControleAluno({
                         <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
                             Linha do tempo do aluno
                         </h3>
-                        <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+                        <p className="mt-1 text-[11px] text-[var(--text-muted)]">
                             Eventos existentes na ficha, ordenados cronologicamente.
                         </p>
                     </div>
@@ -671,10 +671,10 @@ export default function ControleAluno({
                                             )}
                                         </div>
                                         <div>
-                                            <p className="text-[11px] font-semibold text-[var(--text-primary)]">
+                                            <p className="text-[12px] font-semibold text-[var(--text-primary)]">
                                                 {e.titulo}
                                             </p>
-                                            <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">
+                                            <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
                                                 {e.detalhe} · {dataPt(e.data)}
                                             </p>
                                         </div>
@@ -764,7 +764,7 @@ export default function ControleAluno({
                     <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
                         {item.titulo}
                     </h3>
-                    <p className="mt-1 text-[10px] text-[var(--text-muted)]">{item.descricao}</p>
+                    <p className="mt-1 text-[11px] text-[var(--text-muted)]">{item.descricao}</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {item.itens.map(([titulo, descricao]) => (
@@ -775,10 +775,10 @@ export default function ControleAluno({
                             <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent-text)]">
                                 <BsHeartPulse />
                             </span>
-                            <h4 className="mt-3 text-[11px] font-semibold text-[var(--text-primary)]">
+                            <h4 className="mt-3 text-[12px] font-semibold text-[var(--text-primary)]">
                                 {titulo}
                             </h4>
-                            <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
+                            <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">
                                 {descricao}
                             </p>
                         </div>
@@ -794,7 +794,7 @@ export default function ControleAluno({
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
                     onClick={onBack}
-                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)]"
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)]"
                 >
                     <BsArrowLeft /> Voltar aos alunos
                 </button>
@@ -806,7 +806,7 @@ export default function ControleAluno({
                         loading={alunoCarregando}
                         onOpen={onSelecionarAluno}
                     />
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-[9px] font-semibold text-[var(--success)]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-[10px] font-semibold text-[var(--success)]">
                         <BsCheck2Circle /> Atendimento ativo
                     </span>
                 </div>
@@ -819,13 +819,13 @@ export default function ControleAluno({
                             {aluno.nomeCompleto.slice(0, 1).toUpperCase() || "A"}
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[9px] font-bold uppercase tracking-[.17em] text-[var(--accent-text)]">
+                            <p className="text-[10px] font-bold uppercase tracking-[.17em] text-[var(--accent-text)]">
                                 Acompanhamento individual · Aluno 360°
                             </p>
                             <h1 className="mt-1 truncate text-[22px] font-semibold tracking-[-.045em] text-[var(--text-primary)] sm:text-[27px]">
                                 {aluno.nomeCompleto}
                             </h1>
-                            <p className="mt-1 truncate text-[10px] text-[var(--text-muted)]">
+                            <p className="mt-1 truncate text-[11px] text-[var(--text-muted)]">
                                 {aluno.email}
                                 {aluno.telefone ? " · " + aluno.telefone : ""}
                             </p>
@@ -833,14 +833,14 @@ export default function ControleAluno({
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:min-w-[260px]">
                         <div className="rounded-xl bg-[var(--surface-secondary)] p-3">
-                            <p className="text-[9px] text-[var(--text-muted)]">Cadastro desde</p>
-                            <p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">
+                            <p className="text-[10px] text-[var(--text-muted)]">Cadastro desde</p>
+                            <p className="mt-1 text-[12px] font-semibold text-[var(--text-primary)]">
                                 {dataPt(aluno.criadoEm)}
                             </p>
                         </div>
                         <div className="rounded-xl bg-[var(--surface-secondary)] p-3">
-                            <p className="text-[9px] text-[var(--text-muted)]">Ficha técnica</p>
-                            <p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">
+                            <p className="text-[10px] text-[var(--text-muted)]">Ficha técnica</p>
+                            <p className="mt-1 text-[12px] font-semibold text-[var(--text-primary)]">
                                 {aluno.possuiFichaTecnica ? "Disponível" : "Incompleta"}
                             </p>
                         </div>
@@ -858,14 +858,14 @@ export default function ControleAluno({
                         aria-current={aba === item.id ? "page" : undefined}
                         className={
                             aba === item.id
-                                ? "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-xl bg-[var(--accent)] px-3 text-[10px] font-medium text-white shadow-sm"
-                                : "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-xl px-3 text-[10px] font-medium text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)]"
+                                ? "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-xl bg-[var(--accent)] px-3 text-[11px] font-medium text-white shadow-sm"
+                                : "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-xl px-3 text-[11px] font-medium text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)]"
                         }
                     >
                         <span className="text-[12px]">{item.icon}</span>
                         {item.label}
                         {item.id === "mensagens" && mensagensNaoLidasAluno > 0 && (
-                            <span className="grid h-4 min-w-4 place-items-center rounded-full bg-white/20 px-1 text-[8px] font-bold">
+                            <span className="grid h-4 min-w-4 place-items-center rounded-full bg-white/20 px-1 text-[9px] font-bold">
                                 {mensagensNaoLidasAluno}
                             </span>
                         )}
@@ -873,7 +873,7 @@ export default function ControleAluno({
                 ))}
             </nav>
             <div className="min-h-[360px]">{conteudo}</div>
-            <p className="flex items-start gap-2 px-1 text-[9px] leading-4 text-[var(--text-muted)]">
+            <p className="flex items-start gap-2 px-1 text-[10px] leading-4 text-[var(--text-muted)]">
                 <BsFileEarmarkText className="mt-0.5 shrink-0" />
                 Dados exibidos nesta tela vêm da ficha carregada. Check-ins, relatos de dor, metas e
                 diário aguardam integração com a API e o aplicativo do aluno.

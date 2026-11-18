@@ -22,6 +22,62 @@ namespace TreinoAPI.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("TreinoAPI.Model.AnaliseEstatistica", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AlunoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FerramentaId")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime>("GeradoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("GeradoPorUsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NomeFerramenta")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("ParametrosJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateOnly?>("PeriodoFim")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("PeriodoInicio")
+                        .HasColumnType("date");
+
+                    b.Property<int>("QuantidadeRegistros")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ResultadoJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Resumo")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GeradoPorUsuarioId");
+
+                    b.HasIndex("AlunoId", "GeradoEm");
+
+                    b.ToTable("AnalisesEstatisticas");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.Aluno", b =>
                 {
                     b.Property<Guid>("Id")
@@ -384,6 +440,9 @@ namespace TreinoAPI.Migrations
 
                     b.Property<int>("AntecedenciaSugestaoDias")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("ControleAvancadoHabilitado")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("AtualizadaEm")
                         .HasColumnType("timestamp with time zone");
@@ -1457,6 +1516,20 @@ namespace TreinoAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("VolumesSemanais");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.AnaliseEstatistica", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.Aluno", null)
+                        .WithMany()
+                        .HasForeignKey("AlunoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TreinoAPI.Model.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("GeradoPorUsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.Aluno", b =>

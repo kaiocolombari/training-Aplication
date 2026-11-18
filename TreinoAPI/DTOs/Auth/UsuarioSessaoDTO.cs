@@ -10,4 +10,5 @@ public sealed class UsuarioSessaoDTO
     public string Nome { get; set; } = string.Empty;
     public string? StatusCadastro { get; set; }
     public bool FormularioEnviado { get; set; }
+    public bool ControleAvancadoHabilitado { get; set; }
 }
