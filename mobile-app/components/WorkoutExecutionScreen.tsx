@@ -4,14 +4,18 @@ import {
   ActivityIndicator,
   Animated,
   Alert,
+  Easing,
+  LayoutAnimation,
   Modal,
   Pressable,
   ScrollView,
   Switch,
   Text,
   TextInput,
+  UIManager,
   View,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -20,23 +24,26 @@ import {
   Bell,
   CheckCircle2,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
-  Clock3,
   CircleHelp,
   Dumbbell,
   HeartPulse,
   Info,
   Pause,
   Pencil,
+  Plus,
   Play,
   Save,
   RotateCcw,
   Video,
   X,
+  Award,
+  Clock3,
+  Sparkles,
+  Target,
 } from "lucide-react-native";
 
-import { ProgressTrack, Tag } from "@/components/ui";
+import { Tag } from "@/components/ui";
 import { useWorkout } from "@/context/WorkoutContext";
 import {
   cancelAppNotifications,
@@ -44,11 +51,27 @@ import {
 } from "@/services/notifications";
 import { BlurView } from "expo-blur";
 
+if (Platform.OS === "android") {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
+
+function animateLayoutChange() {
+  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+}
+
 function formatTime(totalSeconds: number) {
   const safe = Math.max(0, Math.floor(totalSeconds));
   const minutes = Math.floor(safe / 60).toString().padStart(2, "0");
   const seconds = (safe % 60).toString().padStart(2, "0");
   return `${minutes}:${seconds}`;
+}
+
+function formatDuration(totalSeconds: number) {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes.toString().padStart(2, "0")}min`;
+  return minutes > 0 ? `${minutes} min` : `${safe} s`;
 }
 
 function getCardioElapsedSeconds(session: { cardioElapsedSeconds: number; cardioStartedAt: string | null }) {
@@ -124,6 +147,28 @@ function ExerciseDescription({ description }: { description?: string }) {
   );
 }
 
+function AnimatedProgressTrack({ value, dark = false }: { value: number; dark?: boolean }) {
+  const [progress] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: Math.max(0, Math.min(100, value)),
+      duration: 520,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [progress, value]);
+
+  return (
+    <View className={`h-1.5 overflow-hidden rounded-full ${dark ? "bg-white/15" : "bg-[#E5E2D9]"}`}>
+      <Animated.View
+        className="h-full rounded-full bg-lime"
+        style={{ width: progress.interpolate({ inputRange: [0, 100], outputRange: ["0%", "100%"] }) }}
+      />
+    </View>
+  );
+}
+
 function ScreenHeader({
   title,
   subtitle,
@@ -168,15 +213,33 @@ function FixedAction({
   onSecondary?: () => void;
   disabled?: boolean;
 }) {
+  const [pressScale] = useState(() => new Animated.Value(1));
+
+  const animatePress = (toValue: number) => {
+    Animated.spring(pressScale, {
+      toValue,
+      useNativeDriver: true,
+      speed: 35,
+      bounciness: 4,
+    }).start();
+  };
+
   return (
     <View className="border-t border-[#E9E6DE] bg-white px-5 pb-4 pt-3">
       <Pressable
         onPress={onPress}
+        onPressIn={() => animatePress(0.975)}
+        onPressOut={() => animatePress(1)}
         disabled={disabled}
-        className={`h-[54px] flex-row items-center justify-center gap-2 rounded-2xl bg-lime ${disabled ? "opacity-50" : "active:opacity-80"}`}
+        className="w-full"
       >
-        <Text className="text-[13px] font-extrabold text-ink">{title}</Text>
-        <ArrowRight color="#17211B" size={17} />
+        <Animated.View
+          style={{ transform: [{ scale: pressScale }] }}
+          className={`h-[54px] w-full flex-row items-center justify-center gap-2 rounded-2xl bg-lime ${disabled ? "opacity-50" : ""}`}
+        >
+          <Text className="text-[13px] font-extrabold text-ink">{title}</Text>
+          <ArrowRight color="#17211B" size={17} />
+        </Animated.View>
       </Pressable>
       {secondaryTitle && onSecondary ? (
         <Pressable onPress={onSecondary} className="mt-2 h-10 items-center justify-center">
@@ -200,6 +263,7 @@ export default function WorkoutExecutionScreen() {
     resumeRestStopwatch,
     restartRestStopwatch,
     saveCurrentSetAndAdvance,
+    prepareWorkoutSummary,
     updateCardioTimer,
     saveAndPause,
     finishWorkout,
@@ -212,8 +276,14 @@ export default function WorkoutExecutionScreen() {
   const [setTransition] = useState(() => new Animated.Value(0));
   const [carouselState, setCarouselState] = useState({ key: "0-0", index: 0 });
   const [pageOffset] = useState(() => new Animated.Value(0));
+  const [restTransition] = useState(() => new Animated.Value(0));
+  const [rirPulse] = useState(() => new Animated.Value(1));
+  const [nextArrow] = useState(() => new Animated.Value(0));
+  const [tabTransition] = useState(() => new Animated.Value(0));
   const carouselKey = `${activeSession?.currentExerciseIndex ?? 0}-${activeSession?.currentSetIndex ?? 0}`;
-  const carouselIndex = carouselState.key === carouselKey ? carouselState.index : 0;
+  const carouselIndex = carouselState.key === carouselKey
+    ? carouselState.index
+    : activeSession?.phase === "rest" ? 1 : 0;
   const inactivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionRef = useRef(activeSession);
   const inactivityPauseRef = useRef({ rest: false, cardio: false });
@@ -221,6 +291,16 @@ export default function WorkoutExecutionScreen() {
   useEffect(() => {
     sessionRef.current = activeSession;
   }, [activeSession]);
+
+  useEffect(() => {
+    Animated.spring(tabTransition, {
+      toValue: carouselIndex,
+      useNativeDriver: true,
+      damping: 18,
+      stiffness: 170,
+      mass: 0.7,
+    }).start();
+  }, [carouselIndex, tabTransition]);
 
   const shouldTick = Boolean(activeSession && (
     (activeSession.phase === "rest" && Boolean(activeSession.restStartedAt))
@@ -305,6 +385,46 @@ export default function WorkoutExecutionScreen() {
     }).start();
   }, [activeSession?.currentExerciseIndex, activeSession?.currentSetIndex, setTransition]);
 
+  useEffect(() => {
+    if (activeSession?.phase !== "rest") return;
+    pageOffset.setValue(42);
+    Animated.spring(pageOffset, {
+      toValue: 0,
+      useNativeDriver: true,
+      damping: 18,
+      stiffness: 190,
+      mass: 0.7,
+    }).start();
+  }, [activeSession?.phase, pageOffset]);
+
+  useEffect(() => {
+    if (activeSession?.phase === "rest") {
+      restTransition.setValue(0);
+      Animated.spring(restTransition, {
+        toValue: 1,
+        useNativeDriver: true,
+        damping: 16,
+        stiffness: 150,
+        mass: 0.8,
+      }).start();
+    } else {
+      restTransition.setValue(0);
+    }
+  }, [activeSession?.phase, restTransition]);
+
+  useEffect(() => {
+    if (activeSession?.phase !== "rest") {
+      nextArrow.setValue(0);
+      return;
+    }
+    const movement = Animated.loop(Animated.sequence([
+      Animated.timing(nextArrow, { toValue: 5, duration: 520, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      Animated.timing(nextArrow, { toValue: 0, duration: 520, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+    ]));
+    movement.start();
+    return () => movement.stop();
+  }, [activeSession?.phase, nextArrow]);
+
   if (!hydrated) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-ink">
@@ -331,6 +451,10 @@ export default function WorkoutExecutionScreen() {
   const exercise = session.exercises[session.currentExerciseIndex];
   const set = exercise?.sets[session.currentSetIndex];
   const progress = totalSets ? completedSets / totalSets * 100 : 0;
+  const sessionElapsedSeconds = session.durationSeconds
+    ?? Math.max(0, Math.floor((Date.parse(session.finishedAt ?? new Date().toISOString()) - Date.parse(session.startedAt)) / 1000));
+  const expectedDurationSeconds = session.expectedDurationMinutes * 60;
+  const durationDifferenceSeconds = sessionElapsedSeconds - expectedDurationSeconds;
   const cardioElapsed = session.cardioElapsedSeconds
     + (session.cardioStartedAt ? Math.max(0, Math.floor((now - Date.parse(session.cardioStartedAt)) / 1000)) : 0);
   const cardioProgress = session.cardioDurationSeconds
@@ -355,9 +479,22 @@ export default function WorkoutExecutionScreen() {
   }
 
   async function finish() {
-    await cancelAppNotifications(session.cardioNotificationIds);
-    await finishWorkout(session.workoutKind === "cardio" ? getCardioElapsedSeconds(session) : undefined);
-    router.replace("/(tabs)");
+    if (session.phase !== "completed") {
+      await cancelAppNotifications(session.cardioNotificationIds);
+      prepareWorkoutSummary(session.workoutKind === "cardio" ? getCardioElapsedSeconds(session) : undefined);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await cancelAppNotifications(session.cardioNotificationIds);
+      await finishWorkout();
+      router.replace("/(tabs)");
+    } catch {
+      Alert.alert("Não foi possível salvar", "Seu resumo continua disponível nesta tela. Verifique o armazenamento do aparelho e tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function confirmFinishEarly() {
@@ -365,7 +502,7 @@ export default function WorkoutExecutionScreen() {
       ? (session.cardioTimerEnabled || session.cardioElapsedSeconds > 0 || Boolean(session.cardioStartedAt)
         ? `Tempo acompanhado: ${formatTime(getCardioElapsedSeconds(session))}.`
         : "O cronômetro ficou desativado, então a duração desta atividade não foi medida.")
-      : `Você registrou ${completedSets} de ${totalSets} séries. O que já foi registrado ficará no histórico deste aparelho.`;
+      : `Você registrou ${completedSets} de ${totalSets} séries. Ao encerrar, poderá conferir o comparativo completo do que foi prescrito e realizado.`;
     Alert.alert("Encerrar sessão?", detail, [
       { text: "Continuar", style: "cancel" },
       { text: "Encerrar", style: "destructive", onPress: () => void finish() },
@@ -373,14 +510,17 @@ export default function WorkoutExecutionScreen() {
   }
 
   function completeSet() {
+    animateLayoutChange();
     setFeedbackExpanded(false);
+    setCarouselState({ key: carouselKey, index: 1 });
     beginRest();
   }
 
   function goToCarouselPage(index: number) {
     const nextIndex = Math.max(0, Math.min(1, index));
     if (nextIndex === carouselIndex) return;
-    pageOffset.setValue(nextIndex > carouselIndex ? 24 : -24);
+    animateLayoutChange();
+    pageOffset.setValue(nextIndex > carouselIndex ? 42 : -42);
     setCarouselState({ key: carouselKey, index: nextIndex });
     Animated.spring(pageOffset, { toValue: 0, useNativeDriver: true, damping: 18, stiffness: 190, mass: 0.7 }).start();
   }
@@ -410,8 +550,17 @@ export default function WorkoutExecutionScreen() {
   );
 
   function advanceSet(usePrescription: boolean) {
+    animateLayoutChange();
     setFeedbackExpanded(false);
     saveCurrentSetAndAdvance(usePrescription);
+  }
+
+  function selectRir(value: number) {
+    Animated.sequence([
+      Animated.spring(rirPulse, { toValue: 1.12, useNativeDriver: true, speed: 35, bounciness: 5 }),
+      Animated.spring(rirPulse, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 4 }),
+    ]).start();
+    updateCurrentSet({ rir: value });
   }
 
   async function startOrResumeCardio() {
@@ -493,7 +642,7 @@ export default function WorkoutExecutionScreen() {
     <>
       <ScreenHeader
         title={session.workoutName}
-        subtitle={session.workoutKind === "cardio" ? "SESSÃO DE CARDIO" : "SESSÃO EM ANDAMENTO"}
+        subtitle={session.phase === "completed" ? "RESUMO DA SESSÃO" : session.workoutKind === "cardio" ? "SESSÃO DE CARDIO" : "SESSÃO EM ANDAMENTO"}
         onClose={confirmFinishEarly}
         onSave={() => void pauseAndExit()}
         saving={saving}
@@ -527,22 +676,123 @@ export default function WorkoutExecutionScreen() {
       <SafeAreaView onTouchStart={registerInteraction} edges={["top", "bottom"]} className="flex-1 bg-[#F3F1EB]">
         <StatusBar style="dark" />
         {screenHeader}
-        <View className="flex-1 justify-center px-6">
-          <View className="items-center rounded-[28px] bg-ink px-6 py-8">
-            <View className="h-20 w-20 items-center justify-center rounded-full bg-lime">
-              <CheckCircle2 color="#17211B" size={38} />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5 pb-8 pt-5">
+          <View className="overflow-hidden rounded-[28px] bg-ink p-5">
+            <View className="absolute -right-8 -top-10 h-36 w-36 rounded-full border-[24px] border-white/[0.04]" />
+            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-lime">
+              <Award color="#17211B" size={29} />
             </View>
-            <Text className="mt-6 text-center text-[27px] font-black tracking-[-1px] text-white">Sessão concluída.</Text>
-            <Text className="mt-2 text-center text-[12px] leading-5 text-white/55">
-              {session.workoutKind === "cardio"
-                ? `Você acompanhou ${formatTime(cardioElapsed)} de atividade.`
-                : `${completedSets} séries registradas em ${session.workoutName}.`}
+            <Text className="mt-5 text-[9px] font-extrabold uppercase tracking-[1.7px] text-lime">SESSÃO FINALIZADA</Text>
+            <Text className="mt-2 text-[27px] font-black tracking-[-1px] text-white">
+              {completedSets === totalSets ? "Parabéns! Você conseguiu." : "Boa! Você deu mais um passo."}
             </Text>
-            <Pressable onPress={() => void finish()} className="mt-7 h-14 w-full items-center justify-center rounded-2xl bg-lime">
-              <Text className="text-[13px] font-extrabold text-ink">Finalizar e voltar</Text>
-            </Pressable>
+            <Text className="mt-2 text-[11px] leading-5 text-white/60">
+              {completedSets === totalSets
+                ? `Você concluiu ${session.workoutName}. Confira abaixo como sua execução se comparou ao planejamento.`
+                : `Você encerrou ${session.workoutName} com ${completedSets} de ${totalSets} séries concluídas. Veja o que foi realizado e o que ficou pendente.`}
+            </Text>
+            <View className="mt-5 flex-row gap-2">
+              <View className="flex-1 rounded-2xl bg-white/[0.08] p-3">
+                <View className="flex-row items-center gap-1.5"><Clock3 color="#C8EF73" size={13} /><Text className="text-[9px] font-bold uppercase text-white/55">Tempo total</Text></View>
+                <Text className="mt-2 text-[19px] font-black text-white">{formatDuration(sessionElapsedSeconds)}</Text>
+              </View>
+              <View className="flex-1 rounded-2xl bg-white/[0.08] p-3">
+                <View className="flex-row items-center gap-1.5"><Target color="#C8EF73" size={13} /><Text className="text-[9px] font-bold uppercase text-white/55">Tempo esperado</Text></View>
+                <Text className="mt-2 text-[19px] font-black text-white">{expectedDurationSeconds > 0 ? formatDuration(expectedDurationSeconds) : "—"}</Text>
+              </View>
+            </View>
+            {expectedDurationSeconds > 0 ? (
+              <View className="mt-3 rounded-xl bg-white/[0.06] px-3 py-2.5">
+                <Text className="text-[10px] font-semibold text-lime">
+                  {durationDifferenceSeconds === 0
+                    ? "Você ficou exatamente no tempo esperado."
+                    : `${formatDuration(Math.abs(durationDifferenceSeconds))} ${durationDifferenceSeconds > 0 ? "acima" : "abaixo"} do tempo médio previsto.`}
+                </Text>
+              </View>
+            ) : null}
           </View>
-        </View>
+
+          <View className="mt-4 rounded-[22px] border border-[#E7E4DC] bg-white p-4">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="text-[9px] font-extrabold uppercase tracking-[1.2px] text-[#858A82]">PROGRESSO DA SESSÃO</Text>
+                <Text className="mt-1 text-[18px] font-black text-ink">{completedSets} de {totalSets} séries</Text>
+              </View>
+              <Text className="text-[20px] font-black text-ink">{Math.round(progress)}%</Text>
+            </View>
+            <View className="mt-3"><AnimatedProgressTrack value={progress} /></View>
+          </View>
+
+          {session.workoutKind === "cardio" ? (
+            <View className="mt-4 rounded-[22px] border border-[#E7E4DC] bg-white p-4">
+              <Text className="text-[10px] font-extrabold uppercase tracking-[1.2px] text-[#858A82]">PLANEJADO X REALIZADO</Text>
+              <View className="mt-3 flex-row gap-2">
+                <View className="flex-1 rounded-xl bg-[#F3F2EC] p-3">
+                  <Text className="text-[9px] font-bold text-[#858A82]">PLANEJADO</Text>
+                  <Text className="mt-1 text-[18px] font-black text-ink">{session.cardioDurationSeconds > 0 ? formatDuration(session.cardioDurationSeconds) : "—"}</Text>
+                </View>
+                <View className="flex-1 rounded-xl bg-[#E8EDDE] p-3">
+                  <Text className="text-[9px] font-bold text-[#526447]">REALIZADO</Text>
+                  <Text className="mt-1 text-[18px] font-black text-ink">{session.cardioElapsedSeconds > 0 ? formatDuration(session.cardioElapsedSeconds) : "Não medido"}</Text>
+                </View>
+              </View>
+              <Text className="mt-2 text-[9px] leading-4 text-[#858A82]">O tempo total da sessão acima é contado desde o início do treino. O tempo realizado do cardio só é apresentado quando o cronômetro foi utilizado.</Text>
+            </View>
+          ) : (
+            <View className="mt-4">
+              <View className="mb-3 flex-row items-center justify-between">
+                <Text className="text-[13px] font-black text-ink">Prescrito x realizado</Text>
+                <Tag tone="lime">COMPARATIVO</Tag>
+              </View>
+              {session.exercises.map((item) => (
+                <View key={item.id} className="mb-3 rounded-[22px] border border-[#E7E4DC] bg-white p-4">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1 pr-2">
+                      <Text className="text-[12px] font-extrabold text-ink">{item.name}</Text>
+                      <Text className="mt-0.5 text-[9px] font-semibold text-[#858A82]">{item.muscle} · {item.sets.filter((entry) => entry.completed).length}/{item.sets.length} séries</Text>
+                    </View>
+                    <CheckCircle2 color={item.sets.every((entry) => entry.completed) ? "#6F8A4F" : "#A4A69E"} size={19} />
+                  </View>
+                  {item.sets.map((entry, index) => (
+                    <View key={`${item.id}-summary-${index}`} className="mt-3 border-t border-[#F0EEE8] pt-3">
+                      <Text className="mb-2 text-[9px] font-extrabold uppercase tracking-[1px] text-[#858A82]">SÉRIE {index + 1} · {entry.completed ? "CONCLUÍDA" : entry.hasRecorded ? "REGISTRO PARCIAL" : "NÃO REALIZADA"}</Text>
+                      <View className="flex-row gap-2">
+                        <View className="flex-1 rounded-xl bg-[#F3F2EC] p-3">
+                          <Text className="text-[8px] font-extrabold uppercase tracking-[0.8px] text-[#858A82]">PRESCRITO</Text>
+                          <Text className="mt-1 text-[11px] font-black text-ink">{entry.targetReps} reps</Text>
+                          <Text className="mt-1 text-[9px] text-[#687064]">{entry.targetLoad} kg · RIR {entry.targetRir}</Text>
+                          <Text className="mt-1 text-[9px] text-[#687064]">Descanso: {item.rest}</Text>
+                        </View>
+                        <View className="flex-1 rounded-xl bg-[#E8EDDE] p-3">
+                          <Text className="text-[8px] font-extrabold uppercase tracking-[0.8px] text-[#526447]">REALIZADO</Text>
+                          <Text className="mt-1 text-[11px] font-black text-ink">{entry.completed || entry.hasRecorded ? `${entry.reps} reps` : "—"}</Text>
+                          <Text className="mt-1 text-[9px] text-[#526447]">{entry.completed || entry.hasRecorded ? `${entry.load} kg · +${entry.rir} RIR` : "Sem registro"}</Text>
+                          {entry.completed && !entry.hasRecorded ? <Text className="mt-1 text-[8px] font-semibold text-[#687064]">Valores prescritos utilizados</Text> : null}
+                          <Text className="mt-1 text-[9px] text-[#526447]">Descanso: {entry.actualRestSeconds > 0 ? formatTime(entry.actualRestSeconds) : "Não informado"}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                  {item.painStatus !== "none" || item.feedback.trim() ? (
+                    <View className="mt-3 rounded-xl bg-[#F7F3EC] p-3">
+                      <Text className="text-[9px] font-extrabold uppercase text-[#806B51]">RELATO</Text>
+                      <Text className="mt-1 text-[10px] leading-4 text-[#685B4B]">{item.painStatus === "pain" ? "Relatou dor" : item.painStatus === "discomfort" ? "Relatou desconforto" : ""}{item.feedback.trim() ? `${item.painStatus !== "none" ? " · " : ""}${item.feedback.trim()}` : ""}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          )}
+
+          <View className="mt-1 rounded-[20px] bg-[#E8EDDE] p-4">
+            <View className="flex-row items-center gap-2"><Sparkles color="#526447" size={17} /><Text className="text-[11px] font-extrabold text-ink">Seus resultados em um só registro</Text></View>
+            <Text className="mt-1 text-[10px] leading-4 text-[#526447]">Ao continuar, vamos salvar o resumo completo desta sessão junto com todas as séries. Ele ficará organizado em um único pacote, pronto para sincronização com seu personal quando a API estiver conectada.</Text>
+          </View>
+
+          <Pressable onPress={() => void finish()} disabled={saving} className={`mt-4 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-lime ${saving ? "opacity-60" : ""}`}>
+            {saving ? <ActivityIndicator color="#17211B" /> : <><Text className="text-[13px] font-extrabold text-ink">Continuar</Text><ArrowRight color="#17211B" size={17} /></>}
+          </Pressable>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -603,7 +853,7 @@ export default function WorkoutExecutionScreen() {
                 </Text>
                 {session.cardioDurationSeconds > 0 ? (
                   <>
-                    <View className="mt-4"><ProgressTrack value={cardioProgress} dark /></View>
+                    <View className="mt-4"><AnimatedProgressTrack value={cardioProgress} dark /></View>
                     <View className="mt-2 flex-row justify-between">
                       <Text className="text-[10px] font-semibold text-lime">{Math.floor(cardioProgress)}% concluídos</Text>
                       <Text className="text-[10px] font-semibold text-white/50">{formatTime(cardioRemaining)} restantes</Text>
@@ -665,7 +915,7 @@ export default function WorkoutExecutionScreen() {
             <Text className="text-[10px] font-bold text-[#777D74]">{completedSets} / {totalSets} séries concluídas</Text>
             <Text className="text-[10px] font-extrabold text-ink">{Math.round(progress)}%</Text>
           </View>
-          <ProgressTrack value={progress} />
+          <AnimatedProgressTrack value={progress} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5 pb-6 pt-5">
@@ -674,8 +924,8 @@ export default function WorkoutExecutionScreen() {
             <Text className="text-[10px] font-bold text-[#858A82]">{exercise.muscle}</Text>
           </View>
           <Text className="mt-3 text-[28px] font-black tracking-[-1px] text-ink">{exercise.name}</Text>
-          <Text className="mt-1 text-[11px] text-[#777D74]">{isResting ? "Série registrada. Use o cronômetro se quiser acompanhar seu descanso." : "Alterne entre a prescrição e a edição pelos controles do card."}</Text>
-          {session.currentSetIndex === 0 ? (
+          <Text className="mt-1 text-[11px] text-[#777D74]">Alterne entre a prescrição e a edição pelos controles do card.</Text>
+          {!isResting && session.currentSetIndex === 0 ? (
             <Pressable onPress={() => setModalVariable(true)} className="mt-4 h-11 w-full flex-row items-center justify-center rounded-[10px] bg-lime">
               <Text className="font-bold text-black">Variações disponíveis: 5</Text>
             </Pressable>
@@ -715,18 +965,23 @@ export default function WorkoutExecutionScreen() {
             }}
           >
             <View className="mt-4 flex-row rounded-2xl bg-white p-1">
-              <Pressable onPress={() => goToCarouselPage(0)} className={`flex-1 items-center rounded-xl py-3 ${carouselIndex === 0 ? "bg-ink" : "bg-transparent"}`}>
+              <Pressable onPress={() => goToCarouselPage(0)} className="relative flex-1 items-center rounded-xl py-3">
+                <Animated.View pointerEvents="none" className="absolute inset-0 rounded-xl bg-ink" style={{ opacity: tabTransition.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }} />
                 <Text className={`text-[10px] font-extrabold ${carouselIndex === 0 ? "text-lime" : "text-[#858A82]"}`}>1. Prescrição</Text>
               </Pressable>
-              <Pressable onPress={() => goToCarouselPage(1)} className={`flex-1 items-center rounded-xl py-3 ${carouselIndex === 1 ? "bg-ink" : "bg-transparent"}`}>
+              <Pressable onPress={() => goToCarouselPage(1)} className="relative flex-1 items-center rounded-xl py-3">
+                <Animated.View pointerEvents="none" className="absolute inset-0 rounded-xl bg-ink" style={{ opacity: tabTransition }} />
                 <Text className={`text-[10px] font-extrabold ${carouselIndex === 1 ? "text-lime" : "text-[#858A82]"}`}>2. Editar valores</Text>
               </Pressable>
             </View>
             <Animated.View
               key={carouselKey}
               style={{
-                opacity: pageOffset.interpolate({ inputRange: [-24, 0, 24], outputRange: [0.75, 1, 0.75] }),
-                transform: [{ translateX: pageOffset }],
+                opacity: pageOffset.interpolate({ inputRange: [-42, 0, 42], outputRange: [0.45, 1, 0.45] }),
+                transform: [
+                  { translateX: pageOffset },
+                  { scale: pageOffset.interpolate({ inputRange: [-42, 0, 42], outputRange: [0.97, 1, 0.97] }) },
+                ],
               }}
               className="mt-4"
             >
@@ -771,16 +1026,33 @@ export default function WorkoutExecutionScreen() {
                         <Text className="text-[10px] font-extrabold uppercase tracking-[1px] text-[#777D74]">RIR REALIZADO</Text>
                         <Text className="mt-1 text-[10px] text-[#858A82]">Quantas repetições ainda conseguiria fazer?</Text>
                       </View>
-                      <Text className="text-[22px] font-black text-ink">{set.rir}</Text>
+                      <View className="flex-row items-center rounded-xl bg-[#E8EDDE] px-3 py-2">
+                        <Plus color="#526447" size={16} strokeWidth={3} />
+                        <Text className="text-[22px] font-black text-ink">{set.rir}</Text>
+                      </View>
                     </View>
                     <View className="mt-3 flex-row gap-2">
                       {[0, 1, 2, 3, 4, 5].map((value) => (
-                        <Pressable key={value} onPress={() => updateCurrentSet({ rir: value })} className={`h-10 flex-1 items-center justify-center rounded-xl ${set.rir === value ? "bg-ink" : "bg-[#F1F0EB]"}`}>
-                          <Text className={`text-[12px] font-extrabold ${set.rir === value ? "text-lime" : "text-[#73796F]"}`}>{value}</Text>
+                        <Pressable key={value} onPress={() => selectRir(value)} className={`h-10 flex-1 items-center justify-center rounded-xl ${set.rir === value ? "bg-ink" : "bg-[#F1F0EB]"}`}>
+                          <Animated.View style={{ transform: [{ scale: set.rir === value ? rirPulse : 1 }] }}>
+                            <Text className={`text-[12px] font-extrabold ${set.rir === value ? "text-lime" : "text-[#73796F]"}`}>{value}</Text>
+                          </Animated.View>
                         </Pressable>
                       ))}
                     </View>
-                    <Text className="mt-2 text-[9px] text-[#858A82]">Prescrito pelo personal: RIR {set.targetRir}</Text>
+                    <View className="mt-2 flex-row items-center justify-between">
+                      <Text className="text-[9px] font-semibold text-[#526447]">Aguentaria +{set.rir} repetições</Text>
+                      <Text className="text-[9px] text-[#858A82]">Prescrito: RIR {set.targetRir}</Text>
+                    </View>
+                  </View>
+                  <View className="mt-3">
+                    <NumberField
+                      label="Tempo de descanso realizado"
+                      value={set.actualRestSeconds}
+                      unit="seg"
+                      onChange={(actualRestSeconds) => updateCurrentSet({ actualRestSeconds })}
+                    />
+                    <Text className="mt-1 text-[9px] text-[#858A82]">Informe quantos segundos você realmente descansou nesta série.</Text>
                   </View>
                   <Pressable
                     accessibilityRole="button"
@@ -801,92 +1073,101 @@ export default function WorkoutExecutionScreen() {
             {/* */}
           </Animated.View>
 
-          <ExerciseDescription description={exercise.note} />
-
-          <View className="mt-4">
-            <VideoPlaceholder />
-          </View>
-
-          <Pressable onPress={() => setFeedbackExpanded((value) => !value)} className="mt-3 flex-row items-center justify-between rounded-2xl border border-[#E9E6DE] bg-white px-4 py-4">
-            <View className="flex-row items-center gap-2">
-              <Info color="#747B70" size={16} />
-              <View>
-                <Text className="text-[11px] font-extrabold text-ink">Dor ou observação</Text>
-                <Text className="mt-0.5 text-[9px] text-[#858A82]">Opcional · compartilhar com seu personal</Text>
-              </View>
-            </View>
-            <ChevronDown color="#747B70" size={17} />
-          </Pressable>
-
-          {feedbackExpanded ? (
-            <View className="mt-2 rounded-2xl border border-[#E9E6DE] bg-white p-4">
-              <Text className="text-[10px] font-extrabold uppercase tracking-[1px] text-[#777D74]">Como se sentiu?</Text>
-              <View className="mt-3 flex-row gap-2">
-                {([{ value: "none", label: "Sem dor" }, { value: "discomfort", label: "Desconforto" }, { value: "pain", label: "Dor" }] as const).map((option) => (
-                  <Pressable key={option.value} onPress={() => updateExerciseFeedback({ painStatus: option.value })} className={`flex-1 items-center justify-center rounded-xl px-2 py-3 ${exercise.painStatus === option.value ? "bg-lime" : "bg-[#F1F0EB]"}`}>
-                    <Text className={`text-[9px] font-extrabold ${exercise.painStatus === option.value ? "text-ink" : "text-[#73796F]"}`}>{option.label}</Text>
-                  </Pressable>
-                ))}
-              </View>
-              <TextInput
-                value={exercise.feedback}
-                onChangeText={(feedback) => updateExerciseFeedback({ feedback })}
-                placeholder="Ex.: senti desconforto no ombro..."
-                placeholderTextColor="#999D94"
-                multiline
-                textAlignVertical="top"
-                className="mt-3 min-h-[72px] rounded-xl bg-[#F5F4EF] px-3 py-3 text-[11px] text-ink"
-              />
-            </View>
-          ) : null}
-          <View className="mt-4 rounded-[24px] bg-ink p-5">
-            {isResting ? (
-              <>
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1 pr-3">
-                    <Text className="text-[9px] font-bold uppercase tracking-[1.4px] text-white/45">CRONÔMETRO DE DESCANSO</Text>
-                    <Text className="mt-1 text-[11px] text-white/55">Tempo restante do intervalo prescrito</Text>
-                  </View>
-                  <Text className="text-[36px] font-black tabular-nums tracking-[-1px] text-lime">{formatTime(restRemaining)}</Text>
-                </View>
-                <View className="mt-4 flex-row gap-2">
-                  {session.restStartedAt ? (
-                    <Pressable onPress={() => pauseRestStopwatch(restElapsed)} className="h-11 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-white/15">
-                      <Pause color="#FFFFFF" size={15} />
-                      <Text className="text-[10px] font-bold text-white">Pausar</Text>
-                    </Pressable>
-                  ) : (
-                    <Pressable onPress={resumeRestStopwatch} disabled={restRemaining === 0} className={`h-11 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-lime ${restRemaining === 0 ? "opacity-50" : ""}`}>
-                      <Play color="#17211B" size={15} fill="#17211B" />
-                      <Text className="text-[10px] font-extrabold text-ink">{restRemaining === 0 ? "Concluído" : restElapsed > 0 ? "Continuar" : "Iniciar"}</Text>
-                    </Pressable>
-                  )}
-                  <Pressable onPress={restartRestStopwatch} className="h-11 w-12 items-center justify-center rounded-xl border border-white/15">
-                    <RotateCcw color="#C8EF73" size={16} />
-                  </Pressable>
-                </View>
-                <Text className="mt-2 text-[10px] leading-4 text-white/50">A contagem começa no tempo definido pelo personal e diminui até 00:00. Ao terminar, ela para sem avançar a série automaticamente. Use reiniciar para voltar ao tempo prescrito.</Text>
-              </>
-            ) : (
+          {isResting ? (
+            <Animated.View
+              className="mt-4 overflow-hidden rounded-[22px] bg-ink p-4"
+              style={{
+                opacity: restTransition,
+                transform: [
+                  { translateY: restTransition.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
+                  { scale: restTransition.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
+                ],
+              }}
+            >
               <View className="flex-row items-center justify-between">
                 <View className="flex-1 pr-3">
-                  <Text className="text-[12px] font-extrabold text-white">Descanso da série</Text>
-                  <Text className="mt-1 text-[10px] leading-4 text-white/50">Ao concluir a série, você poderá iniciar o cronômetro manualmente.</Text>
+                  <Text className="text-[9px] font-bold uppercase tracking-[1.4px] text-white/45">CRONÔMETRO DE DESCANSO</Text>
+                  <Text className="mt-1 text-[11px] text-white/55">Tempo restante do intervalo prescrito</Text>
                 </View>
-                <Clock3 color="#C8EF73" size={25} />
+                <Text className="text-[34px] font-black tabular-nums tracking-[-1px] text-lime">{formatTime(restRemaining)}</Text>
               </View>
-            )}
-          </View>
-          
+              <View className="mt-3">
+                <AnimatedProgressTrack value={session.restDurationSeconds > 0 ? restRemaining / session.restDurationSeconds * 100 : 0} dark />
+              </View>
+              <View className="mt-3 flex-row gap-2">
+                {session.restStartedAt ? (
+                  <Pressable onPress={() => pauseRestStopwatch(restElapsed)} className="h-10 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-white/15">
+                    <Pause color="#FFFFFF" size={14} />
+                    <Text className="text-[10px] font-bold text-white">Pausar</Text>
+                  </Pressable>
+                ) : (
+                  <Pressable onPress={resumeRestStopwatch} disabled={restRemaining === 0} className={`h-10 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-lime ${restRemaining === 0 ? "opacity-50" : ""}`}>
+                    <Play color="#17211B" size={14} fill="#17211B" />
+                    <Text className="text-[10px] font-extrabold text-ink">{restRemaining === 0 ? "Concluído" : restElapsed > 0 ? "Continuar" : "Iniciar descanso"}</Text>
+                  </Pressable>
+                )}
+                <Pressable onPress={restartRestStopwatch} className="h-10 w-11 items-center justify-center rounded-xl border border-white/15">
+                  <RotateCcw color="#C8EF73" size={15} />
+                </Pressable>
+              </View>
+            </Animated.View>
+          ) : null}
+
+          {!isResting ? (
+            <>
+              <ExerciseDescription description={exercise.note} />
+              <View className="mt-4"><VideoPlaceholder /></View>
+              <Pressable onPress={() => { animateLayoutChange(); setFeedbackExpanded((value) => !value); }} className="mt-3 flex-row items-center justify-between rounded-2xl border border-[#E9E6DE] bg-white px-4 py-4">
+                <View className="flex-row items-center gap-2">
+                  <Info color="#747B70" size={16} />
+                  <View>
+                    <Text className="text-[11px] font-extrabold text-ink">Dor ou observação</Text>
+                    <Text className="mt-0.5 text-[9px] text-[#858A82]">Opcional · compartilhar com seu personal</Text>
+                  </View>
+                </View>
+                <ChevronDown color="#747B70" size={17} />
+              </Pressable>
+              {feedbackExpanded ? (
+                <View className="mt-2 rounded-2xl border border-[#E9E6DE] bg-white p-4">
+                  <Text className="text-[10px] font-extrabold uppercase tracking-[1px] text-[#777D74]">Como se sentiu?</Text>
+                  <View className="mt-3 flex-row gap-2">
+                    {([{ value: "none", label: "Sem dor" }, { value: "discomfort", label: "Desconforto" }, { value: "pain", label: "Dor" }] as const).map((option) => (
+                      <Pressable key={option.value} onPress={() => updateExerciseFeedback({ painStatus: option.value })} className={`flex-1 items-center justify-center rounded-xl px-2 py-3 ${exercise.painStatus === option.value ? "bg-lime" : "bg-[#F1F0EB]"}`}>
+                        <Text className={`text-[9px] font-extrabold ${exercise.painStatus === option.value ? "text-ink" : "text-[#73796F]"}`}>{option.label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  <TextInput
+                    value={exercise.feedback}
+                    onChangeText={(feedback) => updateExerciseFeedback({ feedback })}
+                    placeholder="Ex.: senti desconforto no ombro..."
+                    placeholderTextColor="#999D94"
+                    multiline
+                    textAlignVertical="top"
+                    className="mt-3 min-h-[72px] rounded-xl bg-[#F5F4EF] px-3 py-3 text-[11px] text-ink"
+                  />
+                </View>
+              ) : null}
+            </>
+          ) : null}
+
           {nextExercise ? (
-            <View className="mt-4 flex-row items-center rounded-2xl border border-[#E7E4DC] bg-white p-3">
+            <Animated.View
+              className="mt-4 flex-row items-center rounded-2xl border border-[#E7E4DC] bg-white p-3"
+              style={{
+                opacity: isResting ? restTransition : setTransition,
+                transform: [{ translateY: (isResting ? restTransition : setTransition).interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
+              }}
+            >
               <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#F0EFE9]"><Dumbbell color="#69745F" size={17} /></View>
               <View className="ml-3 flex-1">
                 <Text className="text-[9px] font-bold uppercase tracking-[1px] text-[#858A82]">PRÓXIMA ETAPA</Text>
                 <Text className="mt-0.5 text-[11px] font-extrabold text-ink">{nextExercise.id === exercise.id ? `Série ${nextSetNumber} · ${exercise.name}` : `Novo exercício · ${nextExercise.name}`}</Text>
               </View>
-              <ChevronRight color="#A2A59D" size={17} />
-            </View>
+              <Animated.View style={{ transform: [{ translateX: isResting ? nextArrow : 0 }] }}>
+                <ChevronRight color="#A2A59D" size={17} />
+              </Animated.View>
+            </Animated.View>
           ) : null}
 
         </ScrollView>
