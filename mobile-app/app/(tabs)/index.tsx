@@ -4,6 +4,7 @@ import { Alert, Pressable, Text, View } from "react-native";
 
 import { AppScreen, Eyebrow, MetricCard, ProgressTrack, SectionTitle, Tag } from "@/components/ui";
 import { useWorkout } from "@/context/WorkoutContext";
+import { useAuth } from "@/context/AuthContext";
 import { TODAY_WORKOUT, WORKOUTS } from "@/data/workouts";
 
 const week = [
@@ -18,6 +19,7 @@ const week = [
 
 export default function HomeScreen() {
   const { activeSession, completedSets, totalSets, beginWorkout } = useWorkout();
+  const { user } = useAuth();
   const hasSession = Boolean(activeSession);
   const activePlan = WORKOUTS.find((workout) => workout.id === activeSession?.workoutId) ?? TODAY_WORKOUT;
   const workoutName = activeSession?.workoutName ?? TODAY_WORKOUT.name;
@@ -41,7 +43,7 @@ export default function HomeScreen() {
 
       <View className="mt-8">
         <Eyebrow>{dateLabel}</Eyebrow>
-        <Text className="mt-2 text-[31px] font-black leading-[36px] tracking-[-1.2px] text-ink">Vamos evoluir{"\n"}um treino de cada vez.</Text>
+        <Text className="mt-2 text-[31px] font-black leading-[36px] tracking-[-1.2px] text-ink">Vamos evoluir, {user?.nome?.split(" ")[0] ?? "aluno"}.{"\n"}Um treino de cada vez.</Text>
         <Text className="mt-2 text-[13px] leading-5 text-[#777D74]">Seu planejamento está pronto. Bora manter o ritmo?</Text>
       </View>
 

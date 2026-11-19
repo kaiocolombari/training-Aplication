@@ -6,6 +6,14 @@ public sealed class CsrfProtectionMiddleware(RequestDelegate next, ILogger<CsrfP
 {
     public async Task InvokeAsync(HttpContext context, IAntiforgery antiforgery)
     {
+        var authorization = context.Request.Headers.Authorization.ToString();
+        var isBearerRequest = authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
+        if (context.Request.Path.StartsWithSegments("/api/auth/mobile") || isBearerRequest)
+        {
+            await next(context);
+            return;
+        }
+
         var unsafeMethod = HttpMethods.IsPost(context.Request.Method)
             || HttpMethods.IsPut(context.Request.Method)
             || HttpMethods.IsPatch(context.Request.Method)

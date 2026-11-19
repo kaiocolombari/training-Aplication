@@ -186,6 +186,13 @@ builder.Services
         {
             OnMessageReceived = context =>
             {
+                var authorization = context.Request.Headers.Authorization.ToString();
+                if (authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Token = authorization["Bearer ".Length..].Trim();
+                    return Task.CompletedTask;
+                }
+
                 if (context.Request.Cookies.TryGetValue("treino_access", out var token))
                     context.Token = token;
                 return Task.CompletedTask;

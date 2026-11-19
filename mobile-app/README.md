@@ -8,6 +8,8 @@ Protótipo do aplicativo do aluno, separado do painel web e da API.
 - Expo Router para navegação por rotas.
 - NativeWind 4.2.7 + Tailwind CSS 3.4.
 - AsyncStorage para preservar localmente uma sessão de treino em andamento.
+- SecureStore para tokens de autenticação e credenciais biométricas; AsyncStorage guarda a preferência `Lembrar de mim`.
+- Expo Local Authentication para impressão digital e reconhecimento facial.
 - `expo-notifications` para notificações locais com som.
 - Lucide para ícones.
 
@@ -22,6 +24,10 @@ npx expo start
 ```
 
 Abra o QR Code com o Expo Go compatível com o SDK do projeto ou inicie um emulador Android com `npx expo start --android`.
+
+### Configurar a API
+
+Copie `.env.example` para `.env` e configure `EXPO_PUBLIC_API_URL` com a URL HTTPS acessível pelo aparelho, sem barra no final. Em um aparelho físico, `localhost` aponta para o próprio celular; use o endereço de rede da máquina que hospeda a API ou o domínio publicado. Reinicie o Expo depois de alterar o `.env`.
 
 Validação local:
 
@@ -44,9 +50,18 @@ npx expo-doctor
 - **Evolução:** indicadores e gráficos ilustrativos de medidas e força.
 - **Perfil:** dados do aluno, profissional responsável, avaliações, lembretes e suporte.
 
+### Autenticação e cadastro
+
+- **Login:** autentica na rota `POST /api/auth/mobile/login` e consulta `GET /api/auth/me`. O app aceita somente contas do tipo `ALUNO`.
+- **Lembrar de mim:** salva a preferência e o e-mail no AsyncStorage e guarda os tokens no SecureStore nativo (no web, o adaptador de armazenamento usa o AsyncStorage/localStorage). Sem essa opção, os tokens ficam apenas em memória.
+- **Biometria:** quando o aparelho possui biometria cadastrada, o aluno pode ativar o acesso por digital/rosto. A credencial fica no SecureStore com `requireAuthentication`; o próprio sistema operacional exige autenticação ao recuperá-la. O teste de Face ID exige um development build no iOS, não funciona no Expo Go.
+- **Cadastro:** `POST /api/auth/mobile/register` cria a conta de aluno pendente. Em seguida, o app abre o questionário definido separadamente em `data/cadastroPerguntas.ts`, espelhando as perguntas de `web-system/app/src/screen/cadastroPerguntas.ts`.
+- **Questionário:** envia `{ respostas }` para `POST /api/cadastro-aluno/respostas`. A tela de espera consulta `/api/auth/me` a cada 30 segundos e libera a área do aluno quando o status muda para `APROVADO`.
+- **Sessão nativa:** a API mantém os endpoints web baseados em cookies HttpOnly e oferece rotas mobile bearer separadas (`/api/auth/mobile/login`, `register`, `refresh` e `logout`). O cliente renova o access token com o refresh token rotativo e envia `Authorization: Bearer` nas rotas protegidas.
+
 ## Estado atual
 
-Este é um protótipo navegável com dados fictícios. Não há login, sincronização ou consulta à API ainda. As sessões em andamento, o histórico e a fila de payloads para futura sincronização ficam salvos apenas no dispositivo. Nenhuma requisição HTTP de execução é feita neste estágio. Os números da tela Evolução também são ilustrativos e não devem ser tratados como dados reais.
+O fluxo de autenticação, cadastro e aprovação está conectado à TreinoAPI. As telas de treino e evolução ainda usam dados de demonstração; as sessões em andamento, o histórico e a fila de payloads para futura sincronização ficam salvos no dispositivo. Nenhuma requisição HTTP de execução é feita neste estágio. Os números da tela Evolução também são ilustrativos e não devem ser tratados como dados reais.
 
 O card de periodização lê `PERIODIZATION_PLAN.objectiveGeneral`. No painel web, o campo **Objetivo geral** está vinculado ao campo `Periodizacao.nome`, que já é persistido pela API. O app mobile ainda não consulta esse valor pela API; por enquanto, seu objetivo é um dado de demonstração (`Hipertrofia`).
 
@@ -61,4 +76,4 @@ O serviço reutilizável está em `services/notifications.ts`:
 
 O app pede permissão do sistema quando o aluno inicia o cronômetro com os avisos ligados. São notificações locais do aparelho; push remoto e sincronização com o servidor não fazem parte deste protótipo.
 
-Próxima etapa de integração: autenticar como `ALUNO`, consultar os treinos/periodização autorizados e consumir a fila de sessões pendentes com uma requisição por treino concluído, preservando o vínculo com o aluno. O identificador do aluno deverá ser associado pelo contexto de autenticação quando o login/API forem implementados.
+Próxima etapa de integração: consultar os treinos/periodização autorizados e consumir a fila de sessões pendentes com uma requisição por treino concluído, preservando o vínculo com o aluno autenticado.

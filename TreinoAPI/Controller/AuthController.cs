@@ -56,6 +56,50 @@ public sealed class AuthController : ControllerBase
         return Created("/api/auth/me", session.Usuario);
     }
 
+    // Native clients keep bearer tokens in the platform secure storage instead of relying on cookies.
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("mobile/login")]
+    public async Task<IActionResult> MobileLogin([FromBody] LoginDTO dto)
+    {
+        var session = await _service.LoginAsync(dto);
+        if (session is not null) Response.Headers.CacheControl = "no-store";
+        return session is null
+            ? Unauthorized(new { message = "E-mail ou senha inválidos." })
+            : Ok(MobileAuthResponseDTO.From(session));
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("mobile/register")]
+    public async Task<IActionResult> MobileRegister([FromBody] RegistrarAlunoDTO dto)
+    {
+        var session = await _service.RegistrarAlunoAsync(dto);
+        Response.Headers.CacheControl = "no-store";
+        return Created("/api/auth/me", MobileAuthResponseDTO.From(session));
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("mobile/refresh")]
+    public async Task<IActionResult> MobileRefresh([FromBody] MobileRefreshDTO dto)
+    {
+        var session = await _service.RenovarAsync(dto.RefreshToken);
+        if (session is not null) Response.Headers.CacheControl = "no-store";
+        return session is null
+            ? Unauthorized(new { message = "Sua sessão expirou. Entre novamente." })
+            : Ok(MobileAuthResponseDTO.From(session));
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("mobile/logout")]
+    public async Task<IActionResult> MobileLogout([FromBody] MobileRefreshDTO dto)
+    {
+        await _service.RevogarAsync(dto.RefreshToken);
+        return NoContent();
+    }
+
     [AllowAnonymous]
     [EnableRateLimiting("auth")]
     [HttpPost("refresh")]
