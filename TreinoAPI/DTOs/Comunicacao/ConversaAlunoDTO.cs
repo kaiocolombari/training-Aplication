@@ -10,6 +10,8 @@ public sealed class ConversaAlunoDTO
     public string? UltimaMensagem { get; set; }
     public DateTime? UltimaMensagemEm { get; set; }
     public int NaoLidas { get; set; }
+    public DateTime? ExpiraEm { get; set; }
+    public bool EhTemporaria { get; set; }
 }
 
 public sealed class ResumoChatAlunoDTO

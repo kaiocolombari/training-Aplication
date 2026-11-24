@@ -79,6 +79,7 @@ import FeedbackAlunos from "./FeedbackAlunos";
 import IndicadoresEquipe from "./IndicadoresEquipe";
 import ManutencaoSistema from "./ManutencaoSistema";
 import { assessmentScheduleService } from "../service/assessmentScheduleService";
+import { createChatConnection, startChatConnection } from "../service/chatRealtimeService";
 
 interface AlunoPainel {
     id: string;
@@ -278,6 +279,22 @@ export default function Painel() {
     const navigate = useNavigate();
     const location = useLocation();
     const queryClient = useQueryClient();
+    useEffect(() => {
+        if (user?.tipo !== "ADMIN" && user?.tipo !== "PERSONAL") return;
+        const realtime = createChatConnection();
+        realtime.on("NovaMensagem", (event: { conversaId?: string; mensagemId?: string }) => {
+            if (event.mensagemId) void realtime.invoke("ConfirmarEntrega", event.mensagemId).catch(() => undefined);
+            void queryClient.invalidateQueries({ queryKey: ["comunicacao", "alunos", "resumo"] });
+            void queryClient.invalidateQueries({ queryKey: ["comunicacao", "alunos"] });
+            void queryClient.invalidateQueries({ queryKey: ["comunicacao", "conversas"] });
+            void queryClient.invalidateQueries({ queryKey: ["comunicacao", "notificacoes"] });
+            if (typeof document !== "undefined" && document.hidden && "Notification" in window && Notification.permission === "granted") {
+                new Notification("Nova mensagem", { body: "Você recebeu uma nova mensagem no chat.", tag: event.conversaId });
+            }
+        });
+        void startChatConnection(realtime).catch(() => undefined);
+        return () => { void realtime.stop(); };
+    }, [user?.usuarioId, user?.tipo, queryClient]);
     const notificacoesPainelQuery = useQuery({
         queryKey: ["comunicacao", "notificacoes"],
         queryFn: comunicacaoService.listarNotificacoes,
@@ -343,7 +360,6 @@ export default function Painel() {
         queryKey: ["comunicacao", "alunos", "resumo"],
         queryFn: comunicacaoService.listarResumoChatsAlunos,
         enabled: (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL") && secaoAtual === "controleAluno",
-        refetchInterval: 10000,
     });
     
     const solicitacoesResumoQuery = useQuery({

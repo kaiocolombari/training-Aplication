@@ -25,6 +25,7 @@ Plataforma web para personal trainers criarem e acompanharem fichas de alunos. E
 - Volume semanal por grupo muscular.
 - Registro de execução diária por série, incluindo carga, repetições, RIR/RPE, descanso, velocidade, cluster, drop-set, rest-pause e falha.
 - Importação/exportação de fichas em JSON.
+- Chat em tempo real via SignalR entre aluno e personal, com escolha do profissional, confirmação de entrega/leitura, presença, digitação, anexos verificados e expiração após 48 horas sem mensagens. Conversas internas da equipe permanecem permanentes.
 
 O aluno acessa a experiência mobile após aprovação do cadastro. O ADMIN gerencia a equipe; o PERSONAL só visualiza e altera alunos com vínculo ativo. Os módulos de ficha e a agenda são acessados depois de assumir/abrir um aluno.
 
@@ -166,13 +167,15 @@ dotnet ef migrations list
 - Operações mutáveis exigem token antifalsificação CSRF.
 - Login/cadastro/refresh possuem rate limit.
 - A API aplica autenticação por padrão e restringe recursos ao ADMIN ou aos Personais com vínculo ativo ao aluno. Somente ADMIN cria/gerencia contas de Personal e vínculos; o profissional pode encerrar o atendimento atual sem apagar o vínculo nem o histórico.
+- O chat valida o vínculo ativo em cada operação. Anexos ficam em armazenamento privado, são validados por assinatura e precisam passar por um antivírus configurado antes de serem publicados.
 - O ADMIN inicial é criado por seed idempotente. Alterar as variáveis de ambiente depois que a conta já existe não troca automaticamente sua senha.
 - Excluir um aluno remove seus dados relacionados; a ação é irreversível. Treinos removidos da ficha são arquivados para preservar o histórico de execução.
 
 ## Limites desta primeira versão
 
 - A integração de calendário e notificações depende da aplicação da migration `AssessmentScheduling` no PostgreSQL. Em Development, a API aplica migrations pendentes na inicialização; fora desse ambiente, aplique-as manualmente antes de publicar.
-- Notificações de solicitação são persistidas para todos os personais com vínculo ativo. A entrega é feita pela central de notificações do painel e pelo endpoint de notificações do app; push remoto não está configurado.
-- Mensagens, feedback, relatórios administrativos e trilha geral de auditoria do sistema ainda não estão implementados. A trilha de auditoria das avaliações físicas está disponível.
+- Notificações de solicitação de avaliação são persistidas para todos os personais com vínculo ativo e aparecem na central do painel/app. Push remoto de mensagens usa Expo Push e exige configuração do projeto EAS e credenciais APNs/FCM.
+- Relatórios administrativos e trilha geral de auditoria do sistema ainda não estão implementados. A trilha de auditoria das avaliações físicas está disponível.
 - O envio de convite/recuperação de senha por e-mail não está integrado; as credenciais iniciais devem ser entregues por canal seguro.
 - Para produção, configure HTTPS real, CORS com domínios definitivos, secrets no provedor de deploy, backups PostgreSQL e aplique migrations antes de iniciar a API. A aplicação não executa migrations automaticamente fora de Development.
+- Para configurar antivírus, armazenamento de anexos, push mobile e operação/escala do chat, consulte [`CHAT_SETUP.md`](CHAT_SETUP.md).

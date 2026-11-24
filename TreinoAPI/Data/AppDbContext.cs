@@ -21,7 +21,9 @@ public class AppDbContext : DbContext
     public DbSet<SolicitacaoCadastro> SolicitacoesCadastro { get; set; }
     public DbSet<ConversaEquipe> ConversasEquipe { get; set; }
     public DbSet<MensagemEquipe> MensagensEquipe { get; set; }
+    public DbSet<MensagemAnexo> MensagensAnexos { get; set; }
     public DbSet<NotificacaoUsuario> NotificacoesUsuarios { get; set; }
+    public DbSet<TokenPushUsuario> TokensPushUsuarios { get; set; }
     public DbSet<AvisoGlobal> AvisosGlobais { get; set; }
     public DbSet<ArquivoEquipe> ArquivosEquipe { get; set; }
     public DbSet<ArquivoEquipeAnexo> ArquivosEquipeAnexos { get; set; }
@@ -86,6 +88,9 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<ConversaEquipe>()
+            .HasIndex(c => c.ExpiraEm);
+
+        modelBuilder.Entity<ConversaEquipe>()
             .HasOne(c => c.UsuarioA)
             .WithMany()
             .HasForeignKey(c => c.UsuarioAId)
@@ -112,6 +117,20 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<MensagemEquipe>()
             .HasIndex(m => new { m.ConversaId, m.EnviadaEm });
 
+        modelBuilder.Entity<MensagemAnexo>()
+            .Property(a => a.NomeOriginal).HasMaxLength(255);
+        modelBuilder.Entity<MensagemAnexo>()
+            .Property(a => a.NomeArmazenado).HasMaxLength(32);
+        modelBuilder.Entity<MensagemAnexo>()
+            .Property(a => a.TipoConteudo).HasMaxLength(100);
+        modelBuilder.Entity<MensagemAnexo>()
+            .Property(a => a.VerificadoPor).HasMaxLength(100);
+        modelBuilder.Entity<MensagemAnexo>()
+            .HasOne(a => a.Mensagem).WithMany(m => m.Anexos)
+            .HasForeignKey(a => a.MensagemId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<MensagemAnexo>()
+            .HasIndex(a => a.MensagemId);
+
         modelBuilder.Entity<NotificacaoUsuario>()
             .HasOne(n => n.Usuario)
             .WithMany()
@@ -120,6 +139,15 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<NotificacaoUsuario>()
             .HasIndex(n => new { n.UsuarioId, n.LidaEm, n.CriadaEm });
+
+        modelBuilder.Entity<TokenPushUsuario>()
+            .Property(t => t.Token).HasMaxLength(255);
+        modelBuilder.Entity<TokenPushUsuario>()
+            .Property(t => t.Plataforma).HasMaxLength(20);
+        modelBuilder.Entity<TokenPushUsuario>()
+            .HasIndex(t => t.Token).IsUnique();
+        modelBuilder.Entity<TokenPushUsuario>()
+            .HasOne(t => t.Usuario).WithMany().HasForeignKey(t => t.UsuarioId).OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ArquivoEquipe>()
             .Property(a => a.Nome).HasMaxLength(120);

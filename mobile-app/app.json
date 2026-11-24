@@ -41,7 +41,8 @@
         {
           "faceIDPermission": "Permita que o Treino System use o Face ID para liberar seu acesso."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

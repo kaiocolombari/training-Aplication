@@ -29,6 +29,7 @@ type StudentDataContextValue = {
   unreadNotifications: number;
   todayWorkout: StudentDashboardData["workouts"][number] | null;
   refresh: () => Promise<void>;
+  refreshChat: () => Promise<void>;
   markNotificationRead: (id: string) => Promise<void>;
   markAllNotificationsRead: () => Promise<void>;
   registerVolumeMonth: (cycleId: string, mesCiclo: number, seriesInformadas: number, observacao: string) => Promise<void>;
@@ -65,6 +66,15 @@ export function StudentDataProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       setIsRefreshing(false);
     }
+  }, [user?.alunoId, user?.statusCadastro]);
+
+  const refreshChat = useCallback(async () => {
+    if (!user?.alunoId || user.statusCadastro !== "APROVADO") return;
+    const [personals, notifications] = await Promise.all([
+      studentService.listPersonalConversations(),
+      studentService.listChatNotifications(),
+    ]);
+    setData(current => ({ ...current, personals, notifications: [...notifications].sort((a, b) => b.criadaEm.localeCompare(a.criadaEm)) }));
   }, [user?.alunoId, user?.statusCadastro]);
 
   useEffect(() => {
@@ -126,11 +136,12 @@ export function StudentDataProvider({ children }: { children: ReactNode }) {
     unreadNotifications: data.notifications.filter((item) => !item.lidaEm).length,
     todayWorkout,
     refresh,
+    refreshChat,
     markNotificationRead,
     markAllNotificationsRead,
     registerVolumeMonth,
     submitFeedback,
-  }), [data, isLoading, isRefreshing, error, todayWorkout, refresh, markNotificationRead, markAllNotificationsRead, registerVolumeMonth, submitFeedback]);
+  }), [data, isLoading, isRefreshing, error, todayWorkout, refresh, refreshChat, markNotificationRead, markAllNotificationsRead, registerVolumeMonth, submitFeedback]);
 
   return <StudentDataContext.Provider value={value}>{children}</StudentDataContext.Provider>;
 }

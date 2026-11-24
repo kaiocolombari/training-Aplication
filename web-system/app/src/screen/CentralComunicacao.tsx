@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     BsBell,
@@ -10,11 +10,15 @@ import {
     BsArrowLeft,
     BsPinAngleFill,
     BsFolder2Open,
+    BsPaperclip,
 } from "react-icons/bs";
+import type { HubConnection } from "@microsoft/signalr";
 import { useAuth } from "../context/authContext";
 import { comunicacaoService, type Notificacao } from "../service/comunicacaoService";
 import { ApiError } from "../service/api";
 import { Skeleton } from "../components/Skeleton";
+import { createChatConnection, startChatConnection } from "../service/chatRealtimeService";
+import type { MensagemEquipe } from "../service/comunicacaoService";
 
 type Aba = "mensagens" | "mural" | "alertas";
 
@@ -45,7 +49,11 @@ export default function CentralComunicacao() {
     const [destinoAlerta, setDestinoAlerta] = useState("todos");
     const [erroAcao, setErroAcao] = useState("");
     const [sucessoAcao, setSucessoAcao] = useState("");
+    const [connection, setConnection] = useState<HubConnection | null>(null);
+    const [digitando, setDigitando] = useState(false);
+    const [online, setOnline] = useState(false);
     const fimMensagensRef = useRef<HTMLDivElement>(null);
+    const arquivoRef = useRef<HTMLInputElement>(null);
     const isAdmin = user?.tipo === "ADMIN";
 
     const equipe = useQuery({
@@ -56,7 +64,6 @@ export default function CentralComunicacao() {
     const conversas = useQuery({
         queryKey: ["comunicacao", "conversas"],
         queryFn: comunicacaoService.listarConversas,
-        refetchInterval: aba === "mensagens" ? 5000 : false,
     });
     const avisos = useQuery({
         queryKey: ["comunicacao", "avisos"],
@@ -72,7 +79,6 @@ export default function CentralComunicacao() {
         queryKey: ["comunicacao", "mensagens", conversaSelecionadaId],
         queryFn: () => comunicacaoService.listarMensagens(conversaSelecionadaId),
         enabled: aba === "mensagens" && Boolean(conversaSelecionadaId),
-        refetchInterval: aba === "mensagens" ? 3500 : false,
     });
 
     const conversasPorUsuario = useMemo(
@@ -94,8 +100,94 @@ export default function CentralComunicacao() {
         fimMensagensRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }, [mensagens.data]);
 
+    useEffect(() => {
+        const realtime = createChatConnection();
+        let active = true;
+        setConnection(realtime);
+        realtime.on("NovaMensagem", (event: { mensagemId?: string }) => {
+            if (event.mensagemId) void realtime.invoke("ConfirmarEntrega", event.mensagemId).catch(() => undefined);
+            void queryClient.invalidateQueries({ queryKey: ["comunicacao", "conversas"] });
+            void queryClient.invalidateQueries({ queryKey: ["comunicacao", "notificacoes"] });
+        });
+        realtime.on("MensagemRecebida", (message: MensagemEquipe & { conversaId: string }) => {
+            if (!active || message.conversaId !== conversaSelecionadaId) return;
+            queryClient.setQueryData<MensagemEquipe[]>(["comunicacao", "mensagens", conversaSelecionadaId], current => {
+                const next = current ?? [];
+                return next.some(item => item.id === message.id)
+                    ? next
+                    : [...next, message].sort((a, b) => new Date(a.enviadaEm).getTime() - new Date(b.enviadaEm).getTime());
+            });
+            if (message.remetenteId !== user?.usuarioId)
+                void realtime.invoke("MarcarLida", conversaSelecionadaId).catch(() => undefined);
+        });
+        realtime.on("StatusMensagemAtualizado", (status: { conversaId: string; mensagemIds: string[]; status: string; em: string }) => {
+            if (!active || status.conversaId !== conversaSelecionadaId) return;
+            queryClient.setQueryData<MensagemEquipe[]>(["comunicacao", "mensagens", conversaSelecionadaId], current =>
+                (current ?? []).map(item => !status.mensagemIds.includes(item.id) ? item : status.status === "LIDA"
+                    ? { ...item, entregueEm: item.entregueEm ?? status.em, lidaEm: status.em }
+                    : { ...item, entregueEm: status.em }),
+            );
+        });
+        realtime.on("UsuarioDigitando", (event: { usuarioId: string; digitando: boolean }) => {
+            if (event.usuarioId !== user?.usuarioId) setDigitando(event.digitando);
+        });
+        realtime.on("PresencaInicial", (event: { usuarioId: string; online: boolean }) => {
+            if (event.usuarioId === usuarioSelecionadoId) setOnline(event.online);
+        });
+        realtime.on("PresencaAtualizada", (usuarioId: string, isOnline: boolean) => {
+            if (usuarioId === usuarioSelecionadoId) setOnline(isOnline);
+        });
+        realtime.onreconnected(async () => {
+            if (conversaSelecionadaId) {
+                await realtime.invoke("EntrarConversa", conversaSelecionadaId);
+                await queryClient.invalidateQueries({ queryKey: ["comunicacao", "mensagens", conversaSelecionadaId] });
+                await realtime.invoke("MarcarLida", conversaSelecionadaId);
+            }
+        });
+        void startChatConnection(realtime).then(async () => {
+            if (active && conversaSelecionadaId) {
+                await realtime.invoke("EntrarConversa", conversaSelecionadaId);
+                await queryClient.invalidateQueries({ queryKey: ["comunicacao", "mensagens", conversaSelecionadaId] });
+                await realtime.invoke("MarcarLida", conversaSelecionadaId);
+            }
+        }).catch(error => {
+            if (active) setErroAcao(error instanceof Error ? error.message : "Chat em tempo real indisponível.");
+        });
+        return () => {
+            active = false;
+            setConnection(current => current === realtime ? null : current);
+            if (conversaSelecionadaId) void realtime.invoke("SairConversa", conversaSelecionadaId).catch(() => undefined);
+            void realtime.stop();
+        };
+    }, [queryClient, conversaSelecionadaId, usuarioSelecionadoId, user?.usuarioId]);
+
+    useEffect(() => {
+        if (!connection || connection.state !== "Connected" || !conversaSelecionadaId) return;
+        let stopTimer: number | undefined;
+        if (!mensagem.trim()) {
+            void connection.invoke("UsuarioDigitando", conversaSelecionadaId, false).catch(() => undefined);
+            return;
+        }
+        const startTimer = window.setTimeout(() => {
+            void connection.invoke("UsuarioDigitando", conversaSelecionadaId, true).catch(() => undefined);
+            stopTimer = window.setTimeout(() => {
+                void connection.invoke("UsuarioDigitando", conversaSelecionadaId, false).catch(() => undefined);
+            }, 2500);
+        }, 250);
+        return () => {
+            window.clearTimeout(startTimer);
+            if (stopTimer) window.clearTimeout(stopTimer);
+        };
+    }, [connection, conversaSelecionadaId, mensagem]);
+
     const enviarMensagem = useMutation({
-        mutationFn: () => comunicacaoService.enviarMensagem(usuarioSelecionadoId, mensagem.trim()),
+        mutationFn: async () => {
+            if (conversaSelecionadaId && connection?.state === "Connected") {
+                await connection.invoke("EnviarMensagem", conversaSelecionadaId, mensagem.trim());
+                return { conversaId: conversaSelecionadaId };
+            }
+            return comunicacaoService.enviarMensagem(usuarioSelecionadoId, mensagem.trim());
+        },
         onSuccess: async result => {
             setMensagem("");
             setConversaSelecionadaId(result.conversaId);
@@ -192,6 +284,29 @@ export default function CentralComunicacao() {
         event.preventDefault();
         if (!usuarioSelecionadoId || !mensagem.trim() || enviarMensagem.isPending) return;
         enviarMensagem.mutate();
+    }
+
+    async function enviarArquivo(event: ChangeEvent<HTMLInputElement>) {
+        const arquivo = event.target.files?.[0];
+        event.target.value = "";
+        if (!arquivo || !usuarioSelecionadoId) return;
+        if (arquivo.size > 20 * 1024 * 1024) {
+            setErroAcao("Cada anexo pode ter no máximo 20 MB.");
+            return;
+        }
+        try {
+            setErroAcao("");
+            const id = (await comunicacaoService.obterOuCriarConversa(usuarioSelecionadoId)).conversaId;
+            setConversaSelecionadaId(id);
+            if (connection?.state === "Connected") await connection.invoke("EntrarConversa", id);
+            await comunicacaoService.enviarAnexo(id, arquivo);
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["comunicacao", "conversas"] }),
+                queryClient.invalidateQueries({ queryKey: ["comunicacao", "mensagens", id] }),
+            ]);
+        } catch (error) {
+            setErroAcao(erroDa(error, "O arquivo foi rejeitado ou a verificação está indisponível."));
+        }
     }
 
     function submitAviso(event: FormEvent<HTMLFormElement>) {
@@ -382,7 +497,7 @@ export default function CentralComunicacao() {
                                             {membroSelecionado?.tipo === "ADMIN" ||
                                             conversaAtual?.outroUsuarioTipo === "ADMIN"
                                                 ? "Administrador"
-                                                : "Personal da equipe"}
+                                                : "Personal da equipe"} · {online ? "Online agora" : "Offline"}{digitando ? " · digitando..." : ""}
                                         </p>
                                     </div>
                                 </div>
@@ -429,14 +544,18 @@ export default function CentralComunicacao() {
                                                 <article
                                                     className={`max-w-[min(78%,560px)] rounded-2xl px-4 py-3 shadow-sm ${propria ? "rounded-br-md bg-[var(--accent)] text-white" : "rounded-bl-md border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)]"}`}
                                                 >
-                                                    <p className="whitespace-pre-wrap break-words text-xs leading-5">
-                                                        {item.conteudo}
-                                                    </p>
+                                                    {item.conteudo ? <p className="whitespace-pre-wrap break-words text-xs leading-5">{item.conteudo}</p> : null}
+                                                    {item.anexos?.map(anexo => (
+                                                        <button key={anexo.id} type="button" onClick={() => void comunicacaoService.baixarAnexo(anexo.id, anexo.nomeOriginal).catch(error => setErroAcao(erroDa(error, "Não foi possível baixar o anexo.")))} className="mt-2 block max-w-full rounded-lg bg-black/5 px-3 py-2 text-left">
+                                                            <span className="block break-all text-[10px] font-semibold">{anexo.nomeOriginal}</span>
+                                                            <span className="mt-0.5 block text-[8px] opacity-70">Anexo verificado · {anexo.tamanhoBytes >= 1024 * 1024 ? `${(anexo.tamanhoBytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(anexo.tamanhoBytes / 1024))} KB`} · baixar</span>
+                                                        </button>
+                                                    ))}
                                                     <p
                                                         className={`mt-2 text-right text-[9px] ${propria ? "text-white/65" : "text-[var(--text-muted)]"}`}
                                                     >
                                                         {dataHora(item.enviadaEm)}
-                                                        {propria && item.lidaEm ? " · Lida" : ""}
+                                                        {propria ? item.lidaEm ? " · Lida" : item.entregueEm ? " · Entregue" : " · Enviada" : ""}
                                                     </p>
                                                 </article>
                                             </div>
@@ -448,6 +567,8 @@ export default function CentralComunicacao() {
                                     onSubmit={submitMensagem}
                                     className="flex items-end gap-2 border-t border-[var(--border)] p-3 sm:p-4"
                                 >
+                                    <input ref={arquivoRef} type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.pdf,.txt,.docx,image/jpeg,image/png,image/webp,video/mp4,video/quicktime,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="hidden" onChange={event => void enviarArquivo(event)} />
+                                    <button type="button" onClick={() => arquivoRef.current?.click()} aria-label="Anexar arquivo" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--border)] text-[var(--text-secondary)]"><BsPaperclip /></button>
                                     <textarea
                                         value={mensagem}
                                         onChange={event => setMensagem(event.target.value)}
@@ -466,6 +587,7 @@ export default function CentralComunicacao() {
                                         <BsSend />
                                     </button>
                                 </form>
+                                <p className="border-t border-[var(--border)] px-4 py-2 text-[8px] text-[var(--text-muted)]">Anexos de até 20 MB passam por verificação de conteúdo e antivírus antes de serem disponibilizados.</p>
                             </>
                         ) : (
                             <div className="grid flex-1 place-items-center p-8 text-center">

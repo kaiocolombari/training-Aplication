@@ -7,7 +7,9 @@ public sealed class MensagemEquipe
     public Guid RemetenteId { get; set; }
     public string Conteudo { get; set; } = string.Empty;
     public DateTime EnviadaEm { get; set; }
+    public DateTime? EntregueEm { get; set; }
     public DateTime? LidaEm { get; set; }
     public ConversaEquipe Conversa { get; set; } = null!;
     public Usuario Remetente { get; set; } = null!;
+    public ICollection<MensagemAnexo> Anexos { get; set; } = new List<MensagemAnexo>();
 }

@@ -16,6 +16,7 @@ if (!rawApiUrl) {
 }
 
 const API_URL = rawApiUrl.replace(/\/$/, "");
+export const API_BASE_URL = API_URL;
 
 let csrfToken: string | null = null;
 let csrfTokenRequest: Promise<string> | null = null;
@@ -239,6 +240,27 @@ export async function api<T = unknown>(
         }
         throw new ApiError("A API retornou uma resposta inválida.", response.status, error);
     }
+}
+
+export async function apiDownload(endpoint: string, filename: string, retried = false) {
+    const endpointPath = endpoint.split("?")[0];
+    const response = await fetchWithTimeout(`${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/octet-stream" },
+    }, endpointPath, false);
+    if (response.status === 401 && !retried && await refreshSession()) return apiDownload(endpoint, filename, true);
+    if (response.status === 403) notifyForbidden(endpointPath);
+    if (!response.ok) throw await parseError(response);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export async function apiBlob(endpoint: string, retried = false): Promise<Blob> {

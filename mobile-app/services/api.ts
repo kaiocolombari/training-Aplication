@@ -84,6 +84,24 @@ function getApiUrl() {
   return API_URL;
 }
 
+export function getApiBaseUrl() {
+  return getApiUrl();
+}
+
+export async function getFreshAccessToken() {
+  if (!tokens?.accessToken) return "";
+  let expiresAt = 0;
+  try {
+    const encoded = tokens.accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=");
+    expiresAt = Number((JSON.parse(atob(payload)) as { exp?: number }).exp ?? 0);
+  } catch {
+    expiresAt = 0;
+  }
+  if (expiresAt > Date.now() / 1000 + 90) return tokens.accessToken;
+  return await refreshSession() ? tokens?.accessToken ?? "" : "";
+}
+
 async function parseError(response: Response) {
   const body = await response.json().catch(() => null) as
     | { detail?: string; message?: string; title?: string }
@@ -168,11 +186,20 @@ export const apiPost = <T>(endpoint: string, body?: unknown) =>
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
+export const apiUpload = <T>(endpoint: string, body: FormData) =>
+  apiRequest<T>(endpoint, { method: "POST", body });
+
 export const apiPut = <T>(endpoint: string, body: unknown) =>
   apiRequest<T>(endpoint, { method: "PUT", body: JSON.stringify(body) });
 
 export const apiPatch = <T>(endpoint: string, body?: unknown) =>
   apiRequest<T>(endpoint, {
     method: "PATCH",
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+
+export const apiDelete = <T>(endpoint: string, body?: unknown) =>
+  apiRequest<T>(endpoint, {
+    method: "DELETE",
     body: body === undefined ? undefined : JSON.stringify(body),
   });

@@ -589,7 +589,14 @@ export default function ControleAluno({
 
     const conteudo = (() => {
         if (aba === "resumo") return resumo;
-        if (aba === "mensagens") return <ChatAlunoConversa modo="personal" alunoId={aluno.id} />;
+        if (aba === "mensagens") return (
+            <ChatAlunoConversa
+                modo="personal"
+                alunoId={aluno.id}
+                onAbrirFicha={() => setAba("resumo")}
+                onAbrirHistorico={() => setAba("historico")}
+            />
+        );
         if (aba === "treinos") return treinosView;
         if (aba === "volume") return <ControleVolumeTreino alunoId={aluno.id} treinos={treinos} />;
         if (aba === "evolucao") return evolucaoView;
@@ -849,6 +856,20 @@ export default function ControleAluno({
                     </div>
                 </div>
             </header>
+            {canChat && mensagensNaoLidasAluno > 0 && (
+                <section className="flex flex-col gap-3 rounded-2xl border border-[var(--accent)]/25 bg-[var(--accent-soft)] p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-[11px] font-semibold text-[var(--text-primary)]">
+                            {mensagensNaoLidasAluno} {mensagensNaoLidasAluno === 1 ? "nova mensagem" : "novas mensagens"} de {aluno.nomeCompleto}
+                        </p>
+                        <p className="mt-1 text-[9px] text-[var(--text-secondary)]">Abra a conversa ou confira a ficha e o histórico antes de responder.</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => setAba("mensagens")} className="rounded-lg bg-[var(--accent)] px-3 py-2 text-[9px] font-semibold text-[var(--on-accent)]">Abrir chat</button>
+                        <button type="button" onClick={() => setAba("resumo")} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[9px] font-semibold text-[var(--text-primary)]">Ver ficha</button>
+                    </div>
+                </section>
+            )}
             <nav
                 aria-label="Módulos de acompanhamento do aluno"
                 className="sticky top-[60px] z-10 flex gap-1 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)]/95 p-1.5 shadow-sm backdrop-blur-sm"
@@ -877,8 +898,8 @@ export default function ControleAluno({
             <div className="min-h-[360px]">{conteudo}</div>
             <p className="flex items-start gap-2 px-1 text-[10px] leading-4 text-[var(--text-muted)]">
                 <BsFileEarmarkText className="mt-0.5 shrink-0" />
-                Dados exibidos nesta tela vêm da ficha carregada. Check-ins, relatos de dor, metas e
-                diário aguardam integração com a API e o aplicativo do aluno.
+                O contexto reúne a ficha, o histórico de alterações e os registros enviados pelo
+                aplicativo, como execuções de treino, feedbacks e solicitações de avaliação.
             </p>
         </section>
     );

@@ -318,6 +318,9 @@ export const studentService = {
     };
   },
 
+  listPersonalConversations: () => optionalGet<PersonalConversation[]>("/api/comunicacao/conversas/personais", []),
+  listChatNotifications: () => optionalGet<StudentNotification[]>("/api/comunicacao/notificacoes", []),
+
   markNotificationRead: (id: string) =>
     apiPatch<void>(`/api/comunicacao/notificacoes/${id}/lida`),
 

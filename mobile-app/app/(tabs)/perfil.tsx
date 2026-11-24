@@ -11,32 +11,7 @@ export default function ProfileScreen() {
   const { data, unreadNotifications } = useStudentData();
   const initials = (user?.nome ?? "Aluno").split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 
-  function openPersonalChat(personalIndex = 0) {
-    const personal = data.personals[personalIndex];
-    if (!personal) {
-      Alert.alert("Sem personal vinculado", "Quando um profissional for vinculado à sua conta, você poderá conversar com ele por aqui.");
-      return;
-    }
-    router.push({
-      pathname: "/mensagens",
-      params: {
-        destinatarioId: personal.outroUsuarioId,
-        nome: personal.outroUsuarioNome,
-        conversaId: personal.conversaId ?? "",
-      },
-    });
-  }
-
-  function choosePersonal() {
-    if (data.personals.length <= 1) {
-      openPersonalChat();
-      return;
-    }
-    Alert.alert("Com quem deseja conversar?", "Escolha um dos profissionais vinculados à sua conta.", [
-      ...data.personals.slice(0, 3).map((personal, index) => ({ text: personal.outroUsuarioNome, onPress: () => openPersonalChat(index) })),
-      { text: "Cancelar", style: "cancel" },
-    ]);
-  }
+  const choosePersonal = () => router.push("/conversas" as Href);
 
   const options = [
     { label: "Minhas avaliações", description: "Medidas e histórico corporal", icon: ClipboardList, action: () => router.push("/(tabs)/evolucao") },

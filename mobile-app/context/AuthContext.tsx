@@ -11,6 +11,7 @@ import {
   setAuthTokens,
 } from "@/services/api";
 import { ApiError } from "@/services/api";
+import { unregisterChatPushToken } from "@/services/notifications";
 import {
   authService,
   type AuthUser,
@@ -213,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function logout() {
     const currentTokens = getCurrentAuthTokens();
     try {
+      await unregisterChatPushToken();
       if (currentTokens?.refreshToken) {
         await authService.logout(currentTokens.refreshToken);
       }

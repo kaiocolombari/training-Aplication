@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using Npgsql;
 using TreinoAPI.Data;
 using TreinoAPI.DTOs.Comunicacao;
+using TreinoAPI.Hubs;
 using TreinoAPI.Model;
 using TreinoAPI.Security;
 
@@ -10,11 +13,19 @@ public sealed class ComunicacaoService
 {
     private readonly AppDbContext _db;
     private readonly CurrentUserService _current;
+    private readonly IHubContext<ChatHub> _hub;
+    private readonly ExpoPushService _push;
+    private readonly ChatAttachmentStorage _attachmentStorage;
+    private readonly ILogger<ComunicacaoService> _logger;
 
-    public ComunicacaoService(AppDbContext db, CurrentUserService current)
+    public ComunicacaoService(AppDbContext db, CurrentUserService current, IHubContext<ChatHub> hub, ExpoPushService push, ChatAttachmentStorage attachmentStorage, ILogger<ComunicacaoService> logger)
     {
         _db = db;
         _current = current;
+        _hub = hub;
+        _push = push;
+        _attachmentStorage = attachmentStorage;
+        _logger = logger;
     }
 
     // Reusable hooks for domain services to raise alerts when important events occur.
@@ -103,7 +114,7 @@ public sealed class ComunicacaoService
         var atual = _current.UsuarioId;
         var conversas = await _db.ConversasEquipe
             .AsNoTracking()
-            .Where(c => (c.UsuarioAId == atual || c.UsuarioBId == atual) &&
+            .Where(c => (c.UsuarioAId == atual || c.UsuarioBId == atual) && !c.EhTemporaria &&
                 c.UsuarioA.Ativo && c.UsuarioB.Ativo &&
                 c.UsuarioA.Tipo != TipoUsuario.ALUNO && c.UsuarioB.Tipo != TipoUsuario.ALUNO)
             .Include(c => c.UsuarioA).ThenInclude(u => u.Personal)
@@ -165,6 +176,7 @@ public sealed class ComunicacaoService
             .Where(c =>
                 (personalUsuarios.Contains(c.UsuarioAId) && alunoUsuarios.Contains(c.UsuarioBId)) ||
                 (personalUsuarios.Contains(c.UsuarioBId) && alunoUsuarios.Contains(c.UsuarioAId)))
+            .Where(c => !c.EhTemporaria || c.ExpiraEm == null || c.ExpiraEm > DateTime.UtcNow)
             .Include(c => c.Mensagens.OrderByDescending(m => m.EnviadaEm).Take(1))
             .ToListAsync();
         var porPar = conversas.ToDictionary(c => OrdenarUsuarios(c.UsuarioAId, c.UsuarioBId));
@@ -190,7 +202,9 @@ public sealed class ComunicacaoService
                 ConversaId = conversa?.Id,
                 UltimaMensagem = ultima?.Conteudo,
                 UltimaMensagemEm = ultima?.EnviadaEm,
-                NaoLidas = conversa is null ? 0 : naoLidas.GetValueOrDefault(conversa.Id)
+                NaoLidas = conversa is null ? 0 : naoLidas.GetValueOrDefault(conversa.Id),
+                ExpiraEm = conversa?.ExpiraEm,
+                EhTemporaria = conversa?.EhTemporaria ?? true
             };
         }).ToList();
     }
@@ -228,6 +242,7 @@ public sealed class ComunicacaoService
             .Where(c =>
                 (c.UsuarioAId == atual && personalUsuarios.Contains(c.UsuarioBId)) ||
                 (c.UsuarioBId == atual && personalUsuarios.Contains(c.UsuarioAId)))
+            .Where(c => !c.EhTemporaria || c.ExpiraEm == null || c.ExpiraEm > DateTime.UtcNow)
             .Include(c => c.Mensagens.OrderByDescending(m => m.EnviadaEm).Take(1))
             .ToListAsync();
         var porPersonal = conversas.ToDictionary(
@@ -254,7 +269,9 @@ public sealed class ComunicacaoService
                 ConversaId = conversa?.Id,
                 UltimaMensagem = ultima?.Conteudo,
                 UltimaMensagemEm = ultima?.EnviadaEm,
-                NaoLidas = conversa is null ? 0 : naoLidas.GetValueOrDefault(conversa.Id)
+                NaoLidas = conversa is null ? 0 : naoLidas.GetValueOrDefault(conversa.Id),
+                ExpiraEm = conversa?.ExpiraEm,
+                EhTemporaria = conversa?.EhTemporaria ?? true
             };
         }).ToList();
     }
@@ -267,7 +284,8 @@ public sealed class ComunicacaoService
         var atual = _current.UsuarioId;
         var conversa = await _db.ConversasEquipe
             .FirstOrDefaultAsync(c => c.Id == conversaId &&
-                (c.UsuarioAId == atual || c.UsuarioBId == atual) && c.UsuarioA.Ativo && c.UsuarioB.Ativo);
+                (c.UsuarioAId == atual || c.UsuarioBId == atual) && c.UsuarioA.Ativo && c.UsuarioB.Ativo &&
+                (!c.EhTemporaria || c.ExpiraEm == null || c.ExpiraEm > DateTime.UtcNow));
         if (conversa is null)
             throw DomainException.NotFound("Conversa não encontrada.");
 
@@ -286,7 +304,10 @@ public sealed class ComunicacaoService
             .ToListAsync();
         var agora = DateTime.UtcNow;
         foreach (var mensagem in pendentes)
+        {
+            mensagem.EntregueEm ??= agora;
             mensagem.LidaEm = agora;
+        }
 
         var notificacoes = await _db.NotificacoesUsuarios
             .Where(n => n.UsuarioId == atual && n.Tipo == "CHAT" && n.ReferenciaId == conversaId && n.LidaEm == null)
@@ -295,12 +316,24 @@ public sealed class ComunicacaoService
             notificacao.LidaEm = agora;
 
         if (pendentes.Count > 0 || notificacoes.Count > 0)
+        {
             await _db.SaveChangesAsync();
+            try { await _hub.Clients.Group(ChatHub.Grupo(conversaId)).SendAsync("StatusMensagemAtualizado", new
+            {
+                conversaId,
+                mensagemIds = pendentes.Select(m => m.Id),
+                status = "LIDA",
+                em = agora
+            }); }
+            catch (Exception exception) { _logger.LogDebug(exception, "Não foi possível transmitir o status de leitura da conversa {ConversaId}.", conversaId); }
+        }
 
         var mensagens = await _db.MensagensEquipe
             .AsNoTracking()
             .Where(m => m.ConversaId == conversaId)
             .Include(m => m.Remetente).ThenInclude(u => u.Personal)
+            .Include(m => m.Remetente).ThenInclude(u => u.Aluno)
+            .Include(m => m.Anexos)
             .OrderByDescending(m => m.EnviadaEm)
             .Take(100)
             .ToListAsync();
@@ -309,11 +342,19 @@ public sealed class ComunicacaoService
         {
             Id = m.Id,
             RemetenteId = m.RemetenteId,
-            RemetenteNome = m.Remetente.Personal?.Nome ?? m.Remetente.Email,
+            RemetenteNome = m.Remetente.Personal?.Nome ?? m.Remetente.Aluno?.NomeCompleto ?? m.Remetente.Email,
             RemetenteTipo = m.Remetente.Tipo.ToString(),
             Conteudo = m.Conteudo,
             EnviadaEm = m.EnviadaEm,
-            LidaEm = m.LidaEm
+            EntregueEm = m.EntregueEm,
+            LidaEm = m.LidaEm,
+            Anexos = m.Anexos.Select(a => new MensagemAnexoDTO
+            {
+                Id = a.Id,
+                NomeOriginal = a.NomeOriginal,
+                TipoConteudo = a.TipoConteudo,
+                TamanhoBytes = a.TamanhoBytes
+            }).ToList()
         }).ToList();
     }
 
@@ -346,24 +387,28 @@ public sealed class ComunicacaoService
         var usuarioA = atual.CompareTo(destinatarioId) < 0 ? atual : destinatarioId;
         var usuarioB = atual.CompareTo(destinatarioId) < 0 ? destinatarioId : atual;
         var conversa = await _db.ConversasEquipe
+            .Include(c => c.Mensagens).ThenInclude(m => m.Anexos)
             .FirstOrDefaultAsync(c => c.UsuarioAId == usuarioA && c.UsuarioBId == usuarioB);
+
+        if (conversa?.EhTemporaria == true && conversa.ExpiraEm <= DateTime.UtcNow)
+        {
+            await ExcluirConversaExpiradaAsync(conversa);
+            conversa = null;
+        }
 
         if (conversa is null)
         {
-            conversa = new ConversaEquipe
-            {
-                Id = Guid.NewGuid(),
-                UsuarioAId = usuarioA,
-                UsuarioBId = usuarioB,
-                CriadaEm = DateTime.UtcNow
-            };
-            _db.ConversasEquipe.Add(conversa);
+            conversa = await CriarConversaOuObterExistenteAsync(usuarioA, usuarioB, conversaAlunoPersonal);
         }
 
         var agora = DateTime.UtcNow;
+        conversa.UltimaAtividadeEm = agora;
+        if (conversa.EhTemporaria)
+            conversa.ExpiraEm = agora.AddHours(48);
+        var mensagemId = Guid.NewGuid();
         _db.MensagensEquipe.Add(new MensagemEquipe
         {
-            Id = Guid.NewGuid(),
+            Id = mensagemId,
             ConversaId = conversa.Id,
             RemetenteId = atual,
             Conteudo = conteudo,
@@ -381,7 +426,117 @@ public sealed class ComunicacaoService
         });
 
         await _db.SaveChangesAsync();
+        var remetenteComPerfil = await _db.Usuarios.AsNoTracking()
+            .Include(u => u.Personal)
+            .Include(u => u.Aluno)
+            .FirstAsync(u => u.Id == atual);
+        try
+        {
+            await _hub.Clients.Group(ChatHub.Grupo(conversa.Id)).SendAsync("MensagemRecebida", new
+            {
+                id = mensagemId,
+                conversaId = conversa.Id,
+                remetenteId = atual,
+                remetenteNome = remetenteComPerfil.Personal?.Nome ?? remetenteComPerfil.Aluno?.NomeCompleto ?? remetenteComPerfil.Email,
+                remetenteTipo = remetente.ToString(),
+                conteudo,
+                enviadaEm = agora,
+                entregueEm = (DateTime?)null,
+                lidaEm = (DateTime?)null
+            });
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Mensagem {MensagemId} salva, mas não foi possível transmitir ao grupo da conversa.", mensagemId);
+        }
+        try { await _hub.Clients.User(destinatarioId.ToString()).SendAsync("NovaMensagem", new { conversaId = conversa.Id, mensagemId, remetenteId = atual }); }
+        catch (Exception exception) { _logger.LogWarning(exception, "Não foi possível notificar as conexões do destinatário da mensagem {MensagemId}.", mensagemId); }
+        try { await _push.EnviarMensagemChatAsync(destinatarioId, conversa.Id, atual, "Nova mensagem", conteudo, CancellationToken.None); }
+        catch (Exception exception) { _logger.LogWarning(exception, "Mensagem {MensagemId} salva, mas o push não pôde ser enviado.", mensagemId); }
         return conversa.Id;
+    }
+
+    public async Task<Guid> ObterOuCriarConversaAsync(Guid destinatarioId)
+    {
+        var atual = _current.UsuarioId;
+        var remetente = await _db.Usuarios.AsNoTracking()
+            .Where(u => u.Id == atual && u.Ativo).Select(u => u.Tipo).FirstOrDefaultAsync();
+        var destinatario = await _db.Usuarios.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == destinatarioId && u.Ativo);
+        if (destinatario is null || destinatarioId == atual)
+            throw DomainException.NotFound("Destinatário não encontrado.");
+
+        var equipe = (remetente is TipoUsuario.ADMIN or TipoUsuario.PERSONAL) &&
+            (destinatario.Tipo is TipoUsuario.ADMIN or TipoUsuario.PERSONAL);
+        var alunoPersonal = (remetente == TipoUsuario.PERSONAL && destinatario.Tipo == TipoUsuario.ALUNO) ||
+            (remetente == TipoUsuario.ALUNO && destinatario.Tipo == TipoUsuario.PERSONAL);
+        if (!equipe && (!alunoPersonal || !await EhVinculoChatAlunoPersonalAsync(atual, destinatarioId)))
+            throw DomainException.NotFound("Destinatário não encontrado ou sem vínculo ativo para conversa.");
+
+        var usuarioA = atual.CompareTo(destinatarioId) < 0 ? atual : destinatarioId;
+        var usuarioB = atual.CompareTo(destinatarioId) < 0 ? destinatarioId : atual;
+        var conversa = await _db.ConversasEquipe
+            .Include(c => c.Mensagens).ThenInclude(m => m.Anexos)
+            .FirstOrDefaultAsync(c => c.UsuarioAId == usuarioA && c.UsuarioBId == usuarioB);
+        var agora = DateTime.UtcNow;
+        if (conversa?.EhTemporaria == true && conversa.ExpiraEm <= agora)
+        {
+            await ExcluirConversaExpiradaAsync(conversa);
+            conversa = null;
+        }
+
+        if (conversa is null)
+        {
+            conversa = await CriarConversaOuObterExistenteAsync(usuarioA, usuarioB, alunoPersonal, agora);
+        }
+
+        return conversa.Id;
+    }
+
+    private async Task ExcluirConversaExpiradaAsync(ConversaEquipe conversa)
+    {
+        foreach (var anexo in conversa.Mensagens.SelectMany(m => m.Anexos))
+            _attachmentStorage.Excluir(anexo.NomeArmazenado);
+        var notificacoes = await _db.NotificacoesUsuarios
+            .Where(n => n.Tipo == "CHAT" && n.ReferenciaId == conversa.Id)
+            .ToListAsync();
+        _db.NotificacoesUsuarios.RemoveRange(notificacoes);
+        _db.ConversasEquipe.Remove(conversa);
+        await _db.SaveChangesAsync();
+    }
+
+    private async Task<ConversaEquipe> CriarConversaOuObterExistenteAsync(
+        Guid usuarioA,
+        Guid usuarioB,
+        bool temporaria,
+        DateTime? criadaEm = null)
+    {
+        var agora = criadaEm ?? DateTime.UtcNow;
+        var nova = new ConversaEquipe
+        {
+            Id = Guid.NewGuid(),
+            UsuarioAId = usuarioA,
+            UsuarioBId = usuarioB,
+            CriadaEm = agora,
+            UltimaAtividadeEm = agora,
+            EhTemporaria = temporaria,
+            ExpiraEm = temporaria ? agora.AddHours(48) : null
+        };
+        _db.ConversasEquipe.Add(nova);
+        try
+        {
+            await _db.SaveChangesAsync();
+            return nova;
+        }
+        catch (DbUpdateException exception) when
+            (exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            _db.Entry(nova).State = EntityState.Detached;
+            var existente = await _db.ConversasEquipe.FirstOrDefaultAsync(c =>
+                c.UsuarioAId == usuarioA && c.UsuarioBId == usuarioB);
+            if (existente is null) throw;
+            return existente;
+        }
     }
 
     private Task<bool> EhVinculoChatAlunoPersonalAsync(Guid usuarioAId, Guid usuarioBId) =>

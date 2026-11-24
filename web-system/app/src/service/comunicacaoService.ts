@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPatch } from "./api";
+import { api, apiDownload, apiGet, apiPost, apiPatch } from "./api";
 
 export interface MembroEquipe {
     usuarioId: string;
@@ -15,6 +15,8 @@ export interface ConversaEquipe {
     ultimaMensagem: string | null;
     ultimaMensagemEm: string | null;
     naoLidas: number;
+    expiraEm?: string | null;
+    ehTemporaria?: boolean;
 }
 
 export interface ConversaAluno {
@@ -26,6 +28,8 @@ export interface ConversaAluno {
     ultimaMensagem: string | null;
     ultimaMensagemEm: string | null;
     naoLidas: number;
+    expiraEm?: string | null;
+    ehTemporaria?: boolean;
 }
 
 export interface ResumoChatAluno {
@@ -37,10 +41,25 @@ export interface MensagemEquipe {
     id: string;
     remetenteId: string;
     remetenteNome: string;
-    remetenteTipo: "ADMIN" | "PERSONAL";
+    remetenteTipo: "ADMIN" | "PERSONAL" | "ALUNO";
     conteudo: string;
     enviadaEm: string;
     lidaEm: string | null;
+    entregueEm?: string | null;
+    anexos?: Array<{ id: string; nomeOriginal: string; tipoConteudo: string; tamanhoBytes: number }>;
+}
+
+export interface ContextoChatAluno {
+    alunoId: string;
+    nomeCompleto: string;
+    statusCadastro: string;
+    ultimaAnamnese: { tipo?: string | null; objetivo?: string | null; observacoes?: string | null; criadoEm: string } | null;
+    avaliacoes: Array<{ id: string; numero: number; realizadaEm: string; peso?: number | null; altura?: number | null; percentualGordura?: number | null; objetivo?: string | null; criadaPorNome?: string | null; atualizadaPorNome?: string | null; atualizadaEm?: string | null }>;
+    historicoAvaliacoes: Array<{ id: string; numeroAvaliacao: number; acao: string; resumo: string; usuarioNome: string; usuarioTipo: string; criadoEm: string }>;
+    feedbacks: Array<{ categoria: string; nota: number; comentario: string; status: string; respostaEquipe?: string | null; personalNome?: string | null; criadoEm: string }>;
+    solicitacoesAvaliacao: Array<{ origem: string; dataDesejada: string; status: string; urgente: boolean; motivo?: string | null; analisadaPorNome?: string | null; criadaEm: string }>;
+    execucoesRecentes: Array<{ id: string; treinoNome: string; data: string; inicio?: string | null; fim?: string | null; duracaoSegundos?: number | null; exercicios: Array<{ nome: string; statusDor: string; feedback?: string | null; hardSets: number; tonelagem: number }> }>;
+    atividades: Array<{ acao: string; resumo: string; usuarioNome: string; resultado: string; criadoEm: string }>;
 }
 
 export interface AvisoGlobal {
@@ -80,6 +99,17 @@ export const comunicacaoService = {
         apiGet<MensagemEquipe[]>(`/api/comunicacao/conversas/${conversaId}/mensagens`),
     enviarMensagem: (destinatarioId: string, conteudo: string) =>
         apiPost<{ conversaId: string }>(`/api/comunicacao/mensagens/para/${destinatarioId}`, { conteudo }),
+    obterOuCriarConversa: (destinatarioId: string) =>
+        apiPost<{ conversaId: string }>(`/api/comunicacao/conversas/para/${destinatarioId}`),
+    enviarAnexo: (conversaId: string, arquivo: File, legenda = "") => {
+        const form = new FormData();
+        form.append("arquivo", arquivo);
+        form.append("legenda", legenda);
+        return api<{ mensagemId: string }>(`/api/comunicacao/conversas/${conversaId}/anexos`, { method: "POST", body: form });
+    },
+    baixarAnexo: (id: string, nome: string) => apiDownload(`/api/comunicacao/anexos/${id}`, nome),
+    obterContextoChatAluno: (alunoId: string) =>
+        apiGet<ContextoChatAluno>(`/api/comunicacao/alunos/${alunoId}/contexto-chat`),
     listarAvisos: () => apiGet<AvisoGlobal[]>("/api/comunicacao/avisos"),
     publicarAviso: (titulo: string, conteudo: string) =>
         apiPost<void>("/api/comunicacao/avisos", { titulo, conteudo }),

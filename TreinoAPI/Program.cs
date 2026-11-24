@@ -5,11 +5,13 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TreinoAPI.Data;
 using TreinoAPI.Configuration;
 using TreinoAPI.Middleware;
+using TreinoAPI.Hubs;
 using TreinoAPI.Security;
 using TreinoAPI.Services;
 
@@ -59,6 +61,8 @@ builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<ChatPresenceTracker>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddProblemDetails();
@@ -73,7 +77,13 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CadastroAlunoService>();
 builder.Services.AddScoped<ComunicacaoService>();
 builder.Services.AddSingleton<ArquivoEquipeStorage>();
+builder.Services.AddSingleton<ChatAttachmentStorage>();
+builder.Services.AddSingleton<ChatAttachmentSecurityScanner>();
 builder.Services.AddScoped<ArquivoEquipeService>();
+builder.Services.AddScoped<ChatAttachmentService>();
+builder.Services.AddScoped<PushTokenService>();
+builder.Services.AddScoped<ChatAlunoContextService>();
+builder.Services.AddHttpClient<ExpoPushService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<RelatoriosService>();
@@ -103,6 +113,7 @@ builder.Services.AddScoped<VolumeSemanalService>();
 builder.Services.AddScoped<GrupoMuscularService>();
 builder.Services.AddScoped<DobraCutaneaService>();
 builder.Services.AddHostedService<ArquivoEquipeRetentionWorker>();
+builder.Services.AddHostedService<ChatRetentionWorker>();
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -163,6 +174,18 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+    options.AddPolicy("chat-files-upload", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 8,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
 });
 
 builder.Services
@@ -196,6 +219,9 @@ builder.Services
 
                 if (context.Request.Cookies.TryGetValue("treino_access", out var token))
                     context.Token = token;
+                if (context.HttpContext.Request.Path.StartsWithSegments("/hubs/chat") &&
+                    context.Request.Query.TryGetValue("access_token", out var hubToken))
+                    context.Token = hubToken;
                 return Task.CompletedTask;
             },
             OnTokenValidated = async context =>
@@ -252,6 +278,22 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 
 app.UseHttpsRedirection();
+app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(30) });
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/hubs/chat") && context.WebSockets.IsWebSocketRequest)
+    {
+        var tokenExplicito = context.Request.Query.ContainsKey("access_token") ||
+            context.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
+        var origin = context.Request.Headers.Origin.ToString();
+        if (!tokenExplicito && !origins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return;
+        }
+    }
+    await next();
+});
 app.UseCors("Frontend");
 app.UseAuthentication();
 // A validação antiforgery precisa enxergar os claims do usuário autenticado,
@@ -260,6 +302,7 @@ app.UseMiddleware<CsrfProtectionMiddleware>();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat").RequireAuthorization();
 
 app.Run();
 

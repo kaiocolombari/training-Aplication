@@ -1,7 +1,13 @@
 import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiDelete, apiPost } from "@/services/api";
 
 const WORKOUT_CHANNEL_ID = "treino-progresso";
+const CHAT_CHANNEL_ID = "mensagens";
+const CHAT_PUSH_TOKEN_KEY = "@treino-system/chat-push-token";
+const CHAT_PUSH_PLATFORM_KEY = "@treino-system/chat-push-platform";
 
 export type AppNotification = {
   title: string;
@@ -39,6 +45,48 @@ export async function prepareNotificationChannel() {
     vibrationPattern: [0, 180, 120, 180],
     sound: "default",
   });
+}
+
+export async function registerChatPushToken() {
+  if (Platform.OS === "web") return false;
+  const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? process.env.EXPO_PUBLIC_EAS_PROJECT_ID;
+  if (!projectId) return false;
+
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync(CHAT_CHANNEL_ID, {
+      name: "Mensagens",
+      description: "Mensagens recebidas de seus personais",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 180, 120, 180],
+      sound: "default",
+    });
+  }
+
+  const permission = await Notifications.getPermissionsAsync();
+  const granted = permission.granted || (await Notifications.requestPermissionsAsync()).granted;
+  if (!granted) return false;
+
+  const token = await Notifications.getExpoPushTokenAsync({ projectId });
+  await apiPost<void>("/api/comunicacao/push-token", {
+    token: token.data,
+    plataforma: Platform.OS.toUpperCase(),
+  });
+  await AsyncStorage.multiSet([
+    [CHAT_PUSH_TOKEN_KEY, token.data],
+    [CHAT_PUSH_PLATFORM_KEY, Platform.OS.toUpperCase()],
+  ]);
+  return true;
+}
+
+export async function unregisterChatPushToken() {
+  const [token, plataforma] = await AsyncStorage.multiGet([CHAT_PUSH_TOKEN_KEY, CHAT_PUSH_PLATFORM_KEY]);
+  if (!token[1]) return;
+  try {
+    await apiDelete<void>("/api/comunicacao/push-token", { token: token[1], plataforma: plataforma[1] ?? "ANDROID" });
+    await AsyncStorage.multiRemove([CHAT_PUSH_TOKEN_KEY, CHAT_PUSH_PLATFORM_KEY]);
+  } catch {
+    // Se estiver offline, o próximo login registra o token novamente para a conta ativa.
+  }
 }
 
 export async function requestAppNotificationPermission() {

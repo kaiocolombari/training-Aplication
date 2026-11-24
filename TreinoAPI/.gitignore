@@ -5,6 +5,7 @@
 bin/
 obj/
 App_Data/arquivos-equipe/
+App_Data/chat-anexos/
 
 # Visual Studio
 .vs/

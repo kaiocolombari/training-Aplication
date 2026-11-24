@@ -473,6 +473,15 @@ namespace TreinoAPI.Migrations
                     b.Property<DateTime>("CriadaEm")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("EhTemporaria")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UltimaAtividadeEm")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("UsuarioAId")
                         .HasColumnType("uuid");
 
@@ -480,6 +489,8 @@ namespace TreinoAPI.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExpiraEm");
 
                     b.HasIndex("UsuarioBId");
 
@@ -798,6 +809,48 @@ namespace TreinoAPI.Migrations
                     b.ToTable("GruposMusculares");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.MensagemAnexo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MensagemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NomeArmazenado")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("NomeOriginal")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long>("TamanhoBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TipoConteudo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("VerificadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerificadoPor")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MensagemId");
+
+                    b.ToTable("MensagensAnexos");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.MensagemEquipe", b =>
                 {
                     b.Property<Guid>("Id")
@@ -810,6 +863,9 @@ namespace TreinoAPI.Migrations
 
                     b.Property<Guid>("ConversaId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("EntregueEm")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("EnviadaEm")
                         .HasColumnType("timestamp with time zone");
@@ -1381,6 +1437,38 @@ namespace TreinoAPI.Migrations
                     b.ToTable("TestesCarga");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.TokenPushUsuario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Plataforma")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("TokensPushUsuarios");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.Treino", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1884,6 +1972,17 @@ namespace TreinoAPI.Migrations
                     b.Navigation("Personal");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.MensagemAnexo", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.MensagemEquipe", "Mensagem")
+                        .WithMany("Anexos")
+                        .HasForeignKey("MensagemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Mensagem");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.MensagemEquipe", b =>
                 {
                     b.HasOne("TreinoAPI.Model.ConversaEquipe", "Conversa")
@@ -2101,6 +2200,17 @@ namespace TreinoAPI.Migrations
                     b.Navigation("Aluno");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.TokenPushUsuario", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.Treino", b =>
                 {
                     b.HasOne("TreinoAPI.Model.Aluno", "Aluno")
@@ -2246,6 +2356,11 @@ namespace TreinoAPI.Migrations
             modelBuilder.Entity("TreinoAPI.Model.GrupoMuscular", b =>
                 {
                     b.Navigation("VolumesSemanais");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.MensagemEquipe", b =>
+                {
+                    b.Navigation("Anexos");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.Periodizacao", b =>
