@@ -127,7 +127,7 @@ export default function AvaliacaoLayout() {
             <div className="flex min-h-screen w-full items-start">
                 <NavTool />
 
-                <main className="min-w-0 flex-1">
+                <main className="min-w-0 flex-1 pb-32 md:pb-0">
                     <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface-raised)]/95 px-4 py-2.5 backdrop-blur md:px-6">
                         <div className="min-w-0">
                             <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Atendimento atual</p>
@@ -140,11 +140,11 @@ export default function AvaliacaoLayout() {
                                     : "Ainda não há salvamento confirmado neste navegador"}
                             </p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                            <button type="button" onClick={trocarAluno} className="rounded-lg border border-[var(--border)] px-3 py-2 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)]">
+                        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
+                            <button type="button" onClick={trocarAluno} className="min-h-10 flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] sm:flex-none">
                                 Trocar aluno
                             </button>
-                            <button type="button" onClick={encerrarAtendimento} className="rounded-lg px-3 py-2 text-[11px] font-semibold text-[var(--danger)] transition hover:bg-[var(--danger-soft)]">
+                            <button type="button" onClick={encerrarAtendimento} className="min-h-10 flex-1 rounded-lg px-3 py-2 text-[11px] font-semibold text-[var(--danger)] transition hover:bg-[var(--danger-soft)] sm:flex-none">
                                 Encerrar atendimento
                             </button>
                         </div>

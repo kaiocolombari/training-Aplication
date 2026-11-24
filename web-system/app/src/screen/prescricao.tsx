@@ -823,7 +823,7 @@ export default function Prescricao() {
                                 {/* TABELA */}
 
                                 <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[1350px] table-fixed border-collapse">
+                                    <table className="prescricao-exercise-table w-full min-w-[1350px] table-fixed border-collapse">
                                         <colgroup>
                                             <col className="w-[24%]" /> {/* Exercício */}
                                             <col className="w-[7%]" /> {/* Séries */}

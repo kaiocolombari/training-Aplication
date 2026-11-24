@@ -9,6 +9,9 @@ public sealed class ExecucaoSerie
     public double Repeticoes { get; set; }
     public double? Rir { get; set; }
     public int? Descanso { get; set; }
+    public int? DescansoPrescrito { get; set; }
+    public bool Concluida { get; set; }
+    public bool UsouPrescricao { get; set; }
     public double? Velocidade { get; set; }
     public double? Rpe { get; set; }
     public bool ClusterAtivo { get; set; }

@@ -6,6 +6,7 @@ import {
     BsBarChart,
     BsChatDots,
     BsBell,
+    BsExclamationTriangle,
     BsQuestionCircle,
     BsGear,
     BsFileEarmarkText,
@@ -77,6 +78,7 @@ import TarefasPersonal from "./TarefasPersonal";
 import FeedbackAlunos from "./FeedbackAlunos";
 import IndicadoresEquipe from "./IndicadoresEquipe";
 import ManutencaoSistema from "./ManutencaoSistema";
+import { assessmentScheduleService } from "../service/assessmentScheduleService";
 
 interface AlunoPainel {
     id: string;
@@ -86,6 +88,8 @@ interface AlunoPainel {
     criadoEm: string;
     statusCadastro: string;
     possuiFichaTecnica: boolean;
+    avaliacaoPendente: boolean;
+    avaliacaoUrgente: boolean;
 }
 
 const MOTIVOS_OPERACAO = [
@@ -318,6 +322,15 @@ export default function Painel() {
         queryKey: ["alunos"],
         queryFn: cadastroService.listarAlunos,
     });
+
+    const solicitacoesAvaliacaoPendentesQuery = useQuery({
+        queryKey: ["avaliacoes", "solicitacoes", "pendentes"],
+        queryFn: assessmentScheduleService.listarPendentes,
+        enabled: user?.tipo === "ADMIN" || user?.tipo === "PERSONAL",
+        refetchInterval: 15000,
+    });
+    const solicitacoesAvaliacaoUrgentes = (solicitacoesAvaliacaoPendentesQuery.data ?? [])
+        .filter(solicitacao => solicitacao.urgente);
     
     const tarefasControleQuery = useQuery({
         queryKey: ["extras", "tarefas", "controle-aluno"],
@@ -384,6 +397,12 @@ export default function Painel() {
         criadoEm: aluno.criadoEm ?? "",
         statusCadastro: aluno.statusCadastro ?? "APROVADO",
         possuiFichaTecnica: aluno.possuiFichaTecnica === true,
+        avaliacaoPendente: (solicitacoesAvaliacaoPendentesQuery.data ?? []).some(
+            solicitacao => solicitacao.alunoId === aluno.id,
+        ),
+        avaliacaoUrgente: solicitacoesAvaliacaoUrgentes.some(
+            solicitacao => solicitacao.alunoId === aluno.id,
+        ),
     }));
 
     const tarefasAbertasPorAluno = useMemo(() => {
@@ -406,6 +425,8 @@ export default function Painel() {
             nomeCompleto: aluno.nome,
             email: aluno.email,
             possuiFichaTecnica: aluno.possuiFichaTecnica,
+            avaliacaoPendente: aluno.avaliacaoPendente,
+            avaliacaoUrgente: aluno.avaliacaoUrgente,
             tarefasAbertas: tarefasAbertasPorAluno.get(aluno.id) ?? 0,
             mensagensNaoLidas: mensagensNaoLidasPorAluno.get(aluno.id) ?? 0,
         })),
@@ -414,7 +435,7 @@ export default function Painel() {
 
     const [alunoParaExcluir, setAlunoParaExcluir] = useState<AlunoPainel | null>(null);
     const [busca, setBusca] = useState("");
-    const [filtroFicha, setFiltroFicha] = useState<"todos" | "sem-ficha" | "com-ficha">("todos");
+    const [filtroFicha, setFiltroFicha] = useState<"todos" | "sem-ficha" | "com-ficha" | "avaliacao-pendente" | "avaliacao-urgente">("todos");
     const [menuPerfilAberto, setMenuPerfilAberto] = useState(false);
     const [menuAlunoAberto, setMenuAlunoAberto] = useState<string | null>(null);
     const [menuMobileAberto, setMenuMobileAberto] = useState(false);
@@ -511,7 +532,9 @@ export default function Painel() {
             const correspondeFicha =
                 filtroFicha === "todos" ||
                 (filtroFicha === "sem-ficha" && !aluno.possuiFichaTecnica) ||
-                (filtroFicha === "com-ficha" && aluno.possuiFichaTecnica);
+                (filtroFicha === "com-ficha" && aluno.possuiFichaTecnica) ||
+                (filtroFicha === "avaliacao-pendente" && aluno.avaliacaoPendente) ||
+                (filtroFicha === "avaliacao-urgente" && aluno.avaliacaoUrgente);
             if (!correspondeFicha) return false;
             if (!termo) return true;
             return (
@@ -1470,7 +1493,7 @@ export default function Painel() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 border-b border-[var(--border)] px-5 py-3">
-                        {(["todos", "sem-ficha", "com-ficha"] as const).map(filtro => (
+                        {(["todos", "sem-ficha", "com-ficha", "avaliacao-pendente", "avaliacao-urgente"] as const).map(filtro => (
                             <button
                                 key={filtro}
                                 type="button"
@@ -1481,7 +1504,11 @@ export default function Painel() {
                                     ? "Todos"
                                     : filtro === "sem-ficha"
                                       ? "Sem ficha técnica"
-                                      : "Com ficha técnica"}
+                                      : filtro === "com-ficha"
+                                        ? "Com ficha técnica"
+                                      : filtro === "avaliacao-pendente"
+                                        ? `Avaliação pendente (${alunos.filter(aluno => aluno.avaliacaoPendente).length})`
+                                        : `Urgentes (${alunos.filter(aluno => aluno.avaliacaoUrgente).length})`}
                             </button>
                         ))}
                     </div>
@@ -1622,6 +1649,13 @@ export default function Painel() {
                                                 ? "Ficha técnica cadastrada"
                                                 : "Sem ficha técnica"}
                                         </span>
+
+                                        {aluno.avaliacaoPendente && (
+                                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-semibold ${aluno.avaliacaoUrgente ? "bg-red-500/10 text-red-700 ring-1 ring-red-500/20" : "bg-amber-500/10 text-amber-700"}`} title={aluno.avaliacaoUrgente ? "Solicitação urgente de nova avaliação aguardando análise" : "Solicitação de nova avaliação aguardando análise"}>
+                                                {aluno.avaliacaoUrgente ? <BsExclamationTriangle /> : <BsCalendar3 />}
+                                                {aluno.avaliacaoUrgente ? "Avaliação urgente" : "Avaliação pendente"}
+                                            </span>
+                                        )}
 
                                         <div className="flex shrink-0 items-center gap-2">
                                             <button
@@ -2718,6 +2752,21 @@ export default function Painel() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {solicitacoesAvaliacaoUrgentes.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => navegar("controleAluno")}
+                                aria-label={`${solicitacoesAvaliacaoUrgentes.length} solicitações urgentes de avaliação aguardando análise`}
+                                title="Solicitações urgentes de avaliação"
+                                className="relative inline-flex h-8 items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 text-[10px] font-bold text-red-700 transition hover:bg-red-500/15 sm:px-3"
+                            >
+                                <BsExclamationTriangle />
+                                <span className="hidden sm:inline">Avaliações urgentes</span>
+                                <span className="grid h-4 min-w-4 place-items-center rounded-full bg-red-600 px-1 text-[8px] text-white">
+                                    {solicitacoesAvaliacaoUrgentes.length}
+                                </span>
+                            </button>
+                        )}
                         <button
                             type="button"
                             onClick={() => navegar("chat")}
@@ -2892,7 +2941,7 @@ export default function Painel() {
                 )}
 
                 <main
-                    className="flex-1 px-4 py-6 transition-colors duration-200 sm:px-7 sm:py-8 xl:px-10"
+                    className="min-w-0 flex-1 px-3 py-4 pb-24 transition-colors duration-200 sm:px-7 sm:py-8 sm:pb-28 xl:px-10"
                     style={{ backgroundColor: "var(--surface-secondary)" }}
                 >
                     {avisoRecuperacao && (
@@ -2926,6 +2975,28 @@ export default function Painel() {
                     <span>Dados sincronizados com o servidor</span>
                 </footer>
             </div>
+
+            <nav aria-label="Atalhos móveis" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-[var(--border)] bg-[var(--header)]/95 px-2 pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-lg lg:hidden" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+                {[
+                    { id: "inicio", label: "Início" },
+                    { id: "alunos", label: "Alunos" },
+                    { id: "controleAluno", label: "Controle" },
+                    { id: "chat", label: "Mensagens" },
+                ].filter(item => secoesVisiveis.some(secao => secao.id === item.id)).map(item => {
+                    const secao = secoes.find(entry => entry.id === item.id);
+                    const ativo = secaoAtual === item.id;
+                    return (
+                        <button key={item.id} type="button" onClick={() => navegar(item.id)} aria-current={ativo ? "page" : undefined} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-[9px] font-semibold ${ativo ? "text-[var(--accent-text)]" : "text-[var(--text-muted)]"}`}>
+                            <span className="text-[17px]">{secao?.icone}</span>
+                            <span className="max-w-full truncate">{item.label}</span>
+                        </button>
+                    );
+                })}
+                <button type="button" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir todas as seções" className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-[9px] font-semibold text-[var(--text-muted)]">
+                    <BsThreeDots className="text-[17px]" />
+                    <span>Mais</span>
+                </button>
+            </nav>
 
             {modalNovoAluno && (
                 <div

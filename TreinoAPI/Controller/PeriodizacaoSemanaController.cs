@@ -7,7 +7,7 @@ using TreinoAPI.Services;
 namespace TreinoAPI.Controllers;
 
 [ApiController]
-[Authorize(Roles = "PERSONAL,ADMIN")]
+[Authorize(Roles = "PERSONAL,ADMIN,ALUNO")]
 [Route("api/periodizacao-semanas")]
 public class PeriodizacaoSemanaController : ControllerBase
 {
@@ -22,6 +22,7 @@ public class PeriodizacaoSemanaController : ControllerBase
         _ownership = ownership;
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPost("/api/periodizacoes/{periodizacaoId}/semanas")]
     public async Task<IActionResult> Criar(
         Guid periodizacaoId,
@@ -58,6 +59,7 @@ public class PeriodizacaoSemanaController : ControllerBase
         return Ok(resultado);
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Atualizar(
         Guid id,
@@ -72,6 +74,7 @@ public class PeriodizacaoSemanaController : ControllerBase
         return Ok(resultado);
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Deletar(Guid id)
     {

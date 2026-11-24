@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import {
     BsActivity,
+    BsCalendar3,
     BsCheck2,
     BsChevronDown,
     BsChatDots,
     BsClipboardCheck,
+    BsExclamationTriangle,
     BsPersonCheck,
     BsSearch,
     BsSliders,
@@ -15,11 +17,13 @@ export interface AlunoMonitoramentoOption {
     nomeCompleto: string;
     email?: string;
     possuiFichaTecnica: boolean;
+    avaliacaoPendente: boolean;
+    avaliacaoUrgente?: boolean;
     tarefasAbertas: number;
     mensagensNaoLidas: number;
 }
 
-type FiltroAluno = "todos" | "tarefas" | "mensagens" | "sem-ficha" | "com-ficha";
+type FiltroAluno = "todos" | "tarefas" | "mensagens" | "sem-ficha" | "com-ficha" | "avaliacao-pendente" | "avaliacao-urgente";
 
 const filtros: Array<{ id: FiltroAluno; label: string }> = [
     { id: "todos", label: "Todos" },
@@ -27,6 +31,8 @@ const filtros: Array<{ id: FiltroAluno; label: string }> = [
     { id: "mensagens", label: "Mensagens" },
     { id: "sem-ficha", label: "Sem ficha" },
     { id: "com-ficha", label: "Com ficha" },
+    { id: "avaliacao-pendente", label: "Avaliação pendente" },
+    { id: "avaliacao-urgente", label: "Avaliação urgente" },
 ];
 
 function iniciais(nome: string) {
@@ -70,6 +76,8 @@ export default function AlunoMonitoramentoPicker({
                 if (filtro === "mensagens") return aluno.mensagensNaoLidas > 0;
                 if (filtro === "sem-ficha") return !aluno.possuiFichaTecnica;
                 if (filtro === "com-ficha") return aluno.possuiFichaTecnica;
+                if (filtro === "avaliacao-pendente") return aluno.avaliacaoPendente;
+                if (filtro === "avaliacao-urgente") return aluno.avaliacaoUrgente === true;
                 return true;
             })
             .sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto, "pt-BR"));
@@ -156,6 +164,12 @@ export default function AlunoMonitoramentoPicker({
                                 {aluno.mensagensNaoLidas > 0 && (
                                     <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent-soft)] px-2 py-1 text-[8px] font-semibold text-[var(--accent-text)]" title="Mensagens não lidas deste aluno">
                                         <BsChatDots /> {aluno.mensagensNaoLidas} {aluno.mensagensNaoLidas === 1 ? "mensagem" : "mensagens"}
+                                    </span>
+                                )}
+                                {aluno.avaliacaoPendente && (
+                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[8px] font-semibold ${aluno.avaliacaoUrgente ? "bg-red-500/10 text-red-700 ring-1 ring-red-500/20" : "bg-amber-500/10 text-amber-700"}`} title={aluno.avaliacaoUrgente ? "Solicitação urgente de nova avaliação aguardando análise" : "Solicitação de nova avaliação aguardando análise"}>
+                                        {aluno.avaliacaoUrgente ? <BsExclamationTriangle /> : <BsCalendar3 />}
+                                        {aluno.avaliacaoUrgente ? "Avaliação urgente" : "Avaliação pendente"}
                                     </span>
                                 )}
                             </span>

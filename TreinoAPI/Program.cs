@@ -85,6 +85,7 @@ builder.Services.AddScoped<PersonalAlunoService>();
 builder.Services.AddScoped<AnamneseService>();
 builder.Services.AddScoped<AvaliacaoAuditService>();
 builder.Services.AddScoped<AvaliacaoService>();
+builder.Services.AddScoped<AgendaAvaliacaoService>();
 builder.Services.AddScoped<CadastroCompletoService>();
 builder.Services.AddScoped<SalvarFichaService>();
 builder.Services.AddScoped<TreinoService>();

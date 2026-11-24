@@ -26,16 +26,26 @@ public sealed class ExecucaoTreinoService
             throw DomainException.Conflict("Não é possível registrar execução em um treino arquivado.");
 
         var data = dto.Data ?? DateOnly.FromDateTime(DateTime.UtcNow);
-        var session = await _db.ExecucoesTreino
+        if (dto.Inicio.HasValue && dto.Fim.HasValue && dto.Inicio > dto.Fim)
+            throw DomainException.BadRequest("O início da sessão não pode ser posterior ao término.");
+        if (!string.IsNullOrWhiteSpace(dto.TipoTreino) && dto.TipoTreino is not ("strength" or "cardio"))
+            throw DomainException.BadRequest("O tipo de treino informado é inválido.");
+        var sessionQuery = _db.ExecucoesTreino
             .Include(e => e.Exercicios)
-                .ThenInclude(e => e.Series)
-            .FirstOrDefaultAsync(e => e.TreinoId == treinoId && e.Data == data);
+                .ThenInclude(e => e.Series);
+        var session = !string.IsNullOrWhiteSpace(dto.SessionId)
+            ? await sessionQuery.FirstOrDefaultAsync(e => e.SessionId == dto.SessionId)
+            : await sessionQuery.FirstOrDefaultAsync(e => e.TreinoId == treinoId && e.Data == data && e.SessionId == null);
+
+        if (session is not null && session.TreinoId != treinoId)
+            throw DomainException.BadRequest("O identificador da sessão já está vinculado a outro treino.");
 
         if (session is null)
         {
             session = new ExecucaoTreino
             {
                 TreinoId = treinoId,
+                SessionId = string.IsNullOrWhiteSpace(dto.SessionId) ? null : dto.SessionId.Trim(),
                 Data = data,
                 CriadoEm = DateTime.UtcNow,
                 AtualizadoEm = DateTime.UtcNow
@@ -45,7 +55,22 @@ public sealed class ExecucaoTreinoService
         else
         {
             session.AtualizadoEm = DateTime.UtcNow;
+            session.SessionId ??= string.IsNullOrWhiteSpace(dto.SessionId) ? null : dto.SessionId.Trim();
         }
+
+        session.Inicio = dto.Inicio.HasValue
+            ? DateTime.SpecifyKind(dto.Inicio.Value, DateTimeKind.Utc)
+            : session.Inicio;
+        session.Fim = dto.Fim.HasValue
+            ? DateTime.SpecifyKind(dto.Fim.Value, DateTimeKind.Utc)
+            : session.Fim;
+        session.DuracaoSegundos = dto.DuracaoSegundos ?? session.DuracaoSegundos;
+        session.DuracaoEsperadaMinutos = dto.DuracaoEsperadaMinutos ?? session.DuracaoEsperadaMinutos;
+        session.TipoTreino = string.IsNullOrWhiteSpace(dto.TipoTreino)
+            ? session.TipoTreino
+            : dto.TipoTreino.Trim().ToLowerInvariant();
+        session.DuracaoPlanejadaCardioSegundos = dto.DuracaoPlanejadaCardioSegundos ?? session.DuracaoPlanejadaCardioSegundos;
+        session.DuracaoRealCardioSegundos = dto.DuracaoRealCardioSegundos ?? session.DuracaoRealCardioSegundos;
 
         var exercisesById = treino.TreinoExercicios.ToDictionary(e => e.Id);
         var duplicateIds = dto.Exercicios
@@ -58,6 +83,11 @@ public sealed class ExecucaoTreinoService
         {
             if (!exercisesById.TryGetValue(input.TreinoExercicioId, out var prescribedExercise))
                 throw DomainException.BadRequest("Um dos exercícios informados não pertence a este treino.");
+            if (input.VariacaoId.HasValue && !await _db.TreinoExercicioVariacoes.AnyAsync(v =>
+                v.Id == input.VariacaoId.Value && v.TreinoExercicioId == prescribedExercise.Id))
+                throw DomainException.BadRequest("Uma das variações informadas não pertence ao exercício selecionado.");
+            if (input.StatusDor is not null && input.StatusDor is not ("none" or "discomfort" or "pain"))
+                throw DomainException.BadRequest("O status de dor informado é inválido.");
 
             var exercise = session.Exercicios.FirstOrDefault(e =>
                 e.TreinoExercicioId == prescribedExercise.Id);
@@ -75,6 +105,13 @@ public sealed class ExecucaoTreinoService
                 _db.ExecucoesSerie.RemoveRange(exercise.Series);
                 exercise.Series.Clear();
             }
+
+            exercise.Nome = string.IsNullOrWhiteSpace(input.Nome) ? prescribedExercise.Exercicio : input.Nome.Trim();
+            exercise.Musculo = string.IsNullOrWhiteSpace(input.Musculo) ? null : input.Musculo.Trim();
+            exercise.Ordem = input.Ordem;
+            exercise.VariacaoId = input.VariacaoId;
+            exercise.StatusDor = string.IsNullOrWhiteSpace(input.StatusDor) ? "none" : input.StatusDor.Trim().ToLowerInvariant();
+            exercise.Feedback = string.IsNullOrWhiteSpace(input.Feedback) ? null : input.Feedback.Trim();
 
             exercise.Series = input.Series
                 .OrderBy(s => s.Numero)
@@ -95,7 +132,9 @@ public sealed class ExecucaoTreinoService
             .AsNoTracking()
             .Include(e => e.Exercicios)
                 .ThenInclude(e => e.Series)
-            .FirstOrDefaultAsync(e => e.TreinoId == treinoId && e.Data == date);
+            .Where(e => e.TreinoId == treinoId && e.Data == date)
+            .OrderByDescending(e => e.AtualizadoEm)
+            .FirstOrDefaultAsync();
 
         return session is null ? null : Mapear(session);
     }
@@ -131,6 +170,9 @@ public sealed class ExecucaoTreinoService
         Repeticoes = dto.Repeticoes,
         Rir = dto.Rir,
         Descanso = dto.Descanso,
+        DescansoPrescrito = dto.DescansoPrescrito,
+        Concluida = dto.Concluida,
+        UsouPrescricao = dto.UsouPrescricao,
         Velocidade = dto.Velocidade,
         Rpe = dto.Rpe,
         ClusterAtivo = dto.ClusterAtivo,
@@ -143,7 +185,7 @@ public sealed class ExecucaoTreinoService
     private static void CalcularResultado(ExecucaoExercicio exercise)
     {
         var valid = exercise.Series
-            .Where(s => s.Repeticoes > 0 && s.Rir.HasValue)
+            .Where(s => s.Concluida && s.Repeticoes > 0 && s.Rir.HasValue)
             .ToList();
 
         exercise.HardSets = valid.Count(s => s.Rir.HasValue && s.Rir.Value <= 3);
@@ -168,15 +210,29 @@ public sealed class ExecucaoTreinoService
     private static ExecucaoTreinoDTO Mapear(ExecucaoTreino session) => new()
     {
         Id = session.Id,
+        SessionId = session.SessionId,
         TreinoId = session.TreinoId,
         Data = session.Data,
+        Inicio = session.Inicio,
+        Fim = session.Fim,
+        DuracaoSegundos = session.DuracaoSegundos,
+        DuracaoEsperadaMinutos = session.DuracaoEsperadaMinutos,
+        TipoTreino = session.TipoTreino,
+        DuracaoPlanejadaCardioSegundos = session.DuracaoPlanejadaCardioSegundos,
+        DuracaoRealCardioSegundos = session.DuracaoRealCardioSegundos,
         Exercicios = session.Exercicios
-            .OrderBy(e => e.Nome)
+            .OrderBy(e => e.Ordem)
+            .ThenBy(e => e.Nome)
             .Select(e => new ExecucaoExercicioDTO
             {
                 Id = e.Id,
                 TreinoExercicioId = e.TreinoExercicioId,
                 Nome = e.Nome,
+                Musculo = e.Musculo,
+                Ordem = e.Ordem,
+                VariacaoId = e.VariacaoId,
+                StatusDor = e.StatusDor,
+                Feedback = e.Feedback,
                 HardSets = e.HardSets,
                 Intensidade = e.Intensidade,
                 Tonelagem = e.Tonelagem,
@@ -189,6 +245,9 @@ public sealed class ExecucaoTreinoService
                     Repeticoes = s.Repeticoes,
                     Rir = s.Rir,
                     Descanso = s.Descanso,
+                    DescansoPrescrito = s.DescansoPrescrito,
+                    Concluida = s.Concluida,
+                    UsouPrescricao = s.UsouPrescricao,
                     Velocidade = s.Velocidade,
                     Rpe = s.Rpe,
                     ClusterAtivo = s.ClusterAtivo,

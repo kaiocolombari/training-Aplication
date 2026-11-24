@@ -105,6 +105,13 @@ public sealed class OwnershipService
         await EnsureAlunoAccessAsync(alunoId ?? throw DomainException.NotFound("Avaliação não encontrada."));
     }
 
+    public async Task EnsureSolicitacaoAvaliacaoAccessAsync(Guid id)
+    {
+        var alunoId = await _db.SolicitacoesAvaliacoes.Where(x => x.Id == id)
+            .Select(x => (Guid?)x.AlunoId).FirstOrDefaultAsync();
+        await EnsureAlunoAccessAsync(alunoId ?? throw DomainException.NotFound("Solicitação de avaliação não encontrada."));
+    }
+
     public async Task EnsureDobraAccessAsync(Guid id)
     {
         var alunoId = await _db.DobrasCutaneas.Where(x => x.Id == id)

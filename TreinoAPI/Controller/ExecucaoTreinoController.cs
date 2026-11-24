@@ -7,7 +7,7 @@ using TreinoAPI.Services;
 namespace TreinoAPI.Controllers;
 
 [ApiController]
-[Authorize(Roles = "PERSONAL,ADMIN")]
+[Authorize(Roles = "PERSONAL,ADMIN,ALUNO")]
 [Route("api/treinos/{treinoId:guid}/execucoes")]
 public sealed class ExecucaoTreinoController : ControllerBase
 {
@@ -42,6 +42,7 @@ public sealed class ExecucaoTreinoController : ControllerBase
         return Ok(await _service.ListarAsync(treinoId));
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpDelete("/api/execucoes-treino/{id:guid}")]
     public async Task<IActionResult> Deletar(Guid id)
     {

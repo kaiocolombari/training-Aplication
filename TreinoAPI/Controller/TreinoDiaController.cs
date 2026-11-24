@@ -7,7 +7,7 @@ using TreinoAPI.Services;
 namespace TreinoAPI.Controllers;
 
 [ApiController]
-[Authorize(Roles = "PERSONAL,ADMIN")]
+[Authorize(Roles = "PERSONAL,ADMIN,ALUNO")]
 [Route("api/treinos-dias")]
 public sealed class TreinoDiaController : ControllerBase
 {
@@ -20,6 +20,7 @@ public sealed class TreinoDiaController : ControllerBase
         _ownership = ownership;
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPost("/api/periodizacao-dias/{diaId:guid}/treinos")]
     public async Task<IActionResult> Criar(Guid diaId, [FromBody] CriarTreinoDiaDTO dto)
     {
@@ -43,6 +44,7 @@ public sealed class TreinoDiaController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Atualizar(Guid id, [FromBody] AtualizarTreinoDiaDTO dto)
     {
@@ -51,6 +53,7 @@ public sealed class TreinoDiaController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Deletar(Guid id)
     {

@@ -167,3 +167,12 @@ export const apiPost = <T>(endpoint: string, body?: unknown) =>
     method: "POST",
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
+export const apiPut = <T>(endpoint: string, body: unknown) =>
+  apiRequest<T>(endpoint, { method: "PUT", body: JSON.stringify(body) });
+
+export const apiPatch = <T>(endpoint: string, body?: unknown) =>
+  apiRequest<T>(endpoint, {
+    method: "PATCH",
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });

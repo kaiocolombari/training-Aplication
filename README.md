@@ -17,6 +17,7 @@ Plataforma web para personal trainers criarem e acompanharem fichas de alunos. E
 - Ficha do aluno com anamnese, dados antropométricos e avaliações físicas ilimitadas.
 - Cada avaliação reúne medidas, perímetros, dobras cutâneas, teste de carga e parecer/observações.
 - Comparação entre quaisquer duas avaliações, arquivamento sem exclusão física e histórico de quem criou/alterou cada avaliação.
+- Agenda de avaliações integrada ao app do aluno e ao Controle de Aluno: solicitações com data desejada, motivo opcional, prioridade urgente e timestamp de envio; personais vinculados recebem notificações e podem agendar ou recusar o pedido. Agendamentos diretos também podem ser criados pelo personal com descrição opcional.
 - Atendimento simples: o Personal assume um aluno, volta à lista para trocar de aluno ou encerra o atendimento atual.
 - Salvamento automático opcional, configurável por profissional (2, 4, 6 ou 10 segundos de inatividade), disponível em Configurações e na tela Salvar; o salvamento manual continua disponível.
 - Prescrição de treinos, exercícios e variações.
@@ -25,7 +26,7 @@ Plataforma web para personal trainers criarem e acompanharem fichas de alunos. E
 - Registro de execução diária por série, incluindo carga, repetições, RIR/RPE, descanso, velocidade, cluster, drop-set, rest-pause e falha.
 - Importação/exportação de fichas em JSON.
 
-A conta ALUNO pode ser criada, mas a integração do portal de consulta do aluno com a API ainda não faz parte desta versão. O ADMIN gerencia a equipe; o PERSONAL só visualiza e altera alunos com vínculo ativo. Os módulos de ficha são acessados depois de assumir/abrir um aluno.
+O aluno acessa a experiência mobile após aprovação do cadastro. O ADMIN gerencia a equipe; o PERSONAL só visualiza e altera alunos com vínculo ativo. Os módulos de ficha e a agenda são acessados depois de assumir/abrir um aluno.
 
 ## Requisitos
 
@@ -115,7 +116,7 @@ npm run dev
 
 Acesse http://localhost:5173/training-Aplication/. O arquivo **web-system/.env** deve apontar **VITE_API_URL=https://localhost:7285**.
 
-### 4. App mobile (protótipo visual)
+### 4. App mobile do aluno
 
 Em outro terminal, a partir da raiz:
 
@@ -125,7 +126,7 @@ npm ci
 npx expo start
 ~~~
 
-Abra o QR Code no Expo Go compatível com o SDK 58. O app mobile é um protótipo navegável com dados demonstrativos; ainda não realiza login nem sincroniza execuções com a API. Consulte `mobile-app/README.md` para detalhes das telas e validações.
+Abra o QR Code no Expo Go compatível com o SDK 58. Configure `mobile-app/.env` com `EXPO_PUBLIC_API_URL` apontando para a API HTTPS acessível pelo aparelho. O app possui login, cadastro pendente de aprovação, consulta de ficha, execução sincronizada, notificações, mensagens e calendário de avaliações. Consulte `mobile-app/README.md` para detalhes das telas e validações.
 
 ## Primeiro acesso
 
@@ -137,7 +138,7 @@ Abra o QR Code no Expo Go compatível com o SDK 58. O app mobile é um protótip
 5. Compartilhe as credenciais iniciais com cada profissional por um canal seguro. O Personal entra pela mesma tela de login, mas não terá acesso à seção Equipe nem às funções administrativas.
 6. Um Personal pode cadastrar alunos diretamente; nesse caso, o vínculo com ele é criado automaticamente.
 7. No painel, o Personal usa **Assumir atendimento** para abrir um aluno. Na barra superior pode voltar à lista para trocar de aluno ou **Encerrar atendimento** para limpar a seleção atual. Alterações não salvas são protegidas por confirmação antes de trocar/encerrar.
-8. Abra **Avaliações** para criar quantos registros forem necessários. Use **Comparação** para escolher duas avaliações e **Histórico** para consultar autoria e alterações.
+8. Abra **Avaliações** para criar quantos registros forem necessários. Use **Comparação** para escolher duas avaliações e **Histórico** para consultar autoria e alterações. Na área **Controle de Aluno → Evolução**, analise as solicitações de avaliação e marque novas datas; o aluno acompanha o calendário e recebe uma notificação no app.
 9. Se quiser, ative o **Salvamento automático** em **Configurações** ou em **Salvar** e escolha o intervalo de inatividade. A preferência é individual e fica neste navegador; apenas a configuração é local, os dados da ficha continuam sendo enviados ao PostgreSQL. O botão **Salvar agora** permanece disponível.
 
 ## Comandos de validação
@@ -170,8 +171,8 @@ dotnet ef migrations list
 
 ## Limites desta primeira versão
 
-- O portal do aluno integrado à API ainda não está incluído.
-- Existe um protótipo visual do app do aluno em `mobile-app/`, feito com Expo, React Native e NativeWind. Ele usa dados demonstrativos e ainda não autentica nem consulta a API.
+- A integração de calendário e notificações depende da aplicação da migration `AssessmentScheduling` no PostgreSQL. Em Development, a API aplica migrations pendentes na inicialização; fora desse ambiente, aplique-as manualmente antes de publicar.
+- Notificações de solicitação são persistidas para todos os personais com vínculo ativo. A entrega é feita pela central de notificações do painel e pelo endpoint de notificações do app; push remoto não está configurado.
 - Mensagens, feedback, relatórios administrativos e trilha geral de auditoria do sistema ainda não estão implementados. A trilha de auditoria das avaliações físicas está disponível.
 - O envio de convite/recuperação de senha por e-mail não está integrado; as credenciais iniciais devem ser entregues por canal seguro.
 - Para produção, configure HTTPS real, CORS com domínios definitivos, secrets no provedor de deploy, backups PostgreSQL e aplique migrations antes de iniciar a API. A aplicação não executa migrations automaticamente fora de Development.

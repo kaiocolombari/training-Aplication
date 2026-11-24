@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { WorkoutProvider } from "@/context/WorkoutContext";
+import { useWorkout, WorkoutProvider } from "@/context/WorkoutContext";
+import { StudentDataProvider } from "@/context/StudentDataContext";
 import { configureNotificationPresentation } from "@/services/notifications";
 import "../global.css";
 
@@ -16,17 +17,20 @@ export {
 
 export default function RootLayout() {
   return (
-    <WorkoutProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <WorkoutProvider>
+        <StudentDataProvider>
         <StatusBar style="dark" />
         <AppNavigator />
-      </AuthProvider>
-    </WorkoutProvider>
+        </StudentDataProvider>
+      </WorkoutProvider>
+    </AuthProvider>
   );
 }
 
 function AppNavigator() {
   const { user, isLoading } = useAuth();
+  const { syncPendingSubmissions } = useWorkout();
   const pathname = usePathname();
   const segments = useSegments();
   const firstSegment = segments[0] as string | undefined;
@@ -50,11 +54,17 @@ function AppNavigator() {
       return;
     }
 
-    const isStudentArea = firstSegment === "(tabs)" || firstSegment === "treino" || firstSegment === "execucao";
+    const isStudentArea = firstSegment === "(tabs)" || firstSegment === "treino" || firstSegment === "execucao" || firstSegment === "mensagens" || firstSegment === "notificacoes" || firstSegment === "feedback";
     if (!isStudentArea) {
       router.replace("/(tabs)");
     }
   }, [user, isLoading, pathname, firstSegment]);
+
+  useEffect(() => {
+    if (!isLoading && user?.tipo === "ALUNO" && user.statusCadastro === "APROVADO") {
+      void syncPendingSubmissions().catch(() => undefined);
+    }
+  }, [user?.alunoId, user?.statusCadastro, user?.tipo, isLoading, pathname, syncPendingSubmissions]);
 
   if (isLoading) {
     return (
@@ -73,6 +83,9 @@ function AppNavigator() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="treino/[id]" options={{ animation: "slide_from_right" }} />
       <Stack.Screen name="execucao" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+      <Stack.Screen name="mensagens" options={{ animation: "slide_from_right" }} />
+      <Stack.Screen name="notificacoes" options={{ animation: "slide_from_right" }} />
+      <Stack.Screen name="feedback" options={{ animation: "slide_from_right" }} />
     </Stack>
   );
 }

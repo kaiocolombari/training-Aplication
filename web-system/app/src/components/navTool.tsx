@@ -42,15 +42,26 @@ export default function NavTool() {
     return localStorage.getItem(CHAVE_EXPANDIDO) !== "false";
   });
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const atualizar = () => setIsMobile(media.matches);
+    atualizar();
+    media.addEventListener("change", atualizar);
+    return () => media.removeEventListener("change", atualizar);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(CHAVE_LAYOUT, layout);
   }, [layout]);
 
   useEffect(() => {
-    localStorage.setItem(CHAVE_EXPANDIDO, String(expandido));
-  }, [expandido]);
+    if (!isMobile) localStorage.setItem(CHAVE_EXPANDIDO, String(expandido));
+  }, [expandido, isMobile]);
 
-  const modoInferior = layout === "bottom";
+  const modoInferior = isMobile || layout === "bottom";
+  const navExpandido = isMobile || expandido;
 
   const etapaAtual = tabs.findIndex((tab) => {
     const destino = tab.rota === "/" ? "/" : `/${tab.rota}`;
@@ -94,17 +105,19 @@ export default function NavTool() {
         z-40 shrink-0
         ${
           modoInferior
-            ? `fixed bottom-3 left-1/2 -translate-x-1/2 ${
-                expandido ? "w-[min(96%,900px)]" : "w-auto"
-              }`
+            ? isMobile
+              ? "fixed inset-x-0 bottom-0 w-full"
+              : `fixed bottom-3 left-1/2 -translate-x-1/2 ${
+                  navExpandido ? "w-[min(96%,900px)]" : "w-auto"
+                }`
             : "sticky top-0 h-screen self-start"
         }
       `}
       style={
         !modoInferior
           ? {
-              width: expandido ? "230px" : "60px",
-              minWidth: expandido ? "230px" : "60px",
+              width: navExpandido ? "230px" : "60px",
+              minWidth: navExpandido ? "230px" : "60px",
               height: "100vh",
               transition: "width 200ms ease, min-width 200ms ease",
             }
@@ -116,8 +129,8 @@ export default function NavTool() {
           flex flex-col overflow-hidden border shadow-xl
           ${
             modoInferior
-              ? expandido
-                ? "rounded-2xl"
+              ? navExpandido
+                ? isMobile ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"
                 : "rounded-full"
               : "h-full rounded-none border-y-0 border-l-0 border-r"
           }
@@ -136,16 +149,16 @@ export default function NavTool() {
         <div
           className={`
             flex shrink-0 items-center justify-between
-            ${modoInferior ? "px-3 py-2" : "px-4 py-5"}
-            ${!expandido && !modoInferior ? "justify-center px-1" : ""}
-            ${modoInferior && !expandido ? "gap-2 px-2 py-1.5" : ""}
+            ${modoInferior ? isMobile ? "px-3 py-1.5" : "px-3 py-2" : "px-4 py-5"}
+            ${!navExpandido && !modoInferior ? "justify-center px-1" : ""}
+            ${modoInferior && !navExpandido ? "gap-2 px-2 py-1.5" : ""}
           `}
           style={{
             borderBottom:
-              expandido && !modoInferior ? `1px solid ${corBorda}` : "none",
+              navExpandido && !modoInferior ? `1px solid ${corBorda}` : "none",
           }}
         >
-          {expandido && (
+          {navExpandido && (
             <div className="flex min-w-0 items-center gap-3">
               <div
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
@@ -175,7 +188,7 @@ export default function NavTool() {
           )}
 
           {/* Identificação da etapa atual na bottom minimizada */}
-          {modoInferior && !expandido && (
+          {modoInferior && !navExpandido && (
             <div className="flex items-center gap-2 pl-1">
               <span
                 className="grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold"
@@ -197,7 +210,7 @@ export default function NavTool() {
           )}
 
           <div className="flex shrink-0 items-center gap-1">
-            <button
+            {!isMobile && <button
               type="button"
               onClick={alternarLayout}
               title={
@@ -211,37 +224,39 @@ export default function NavTool() {
               ) : (
                 <BsLayoutTextWindow size={15} />
               )}
-            </button>
+            </button>}
 
-            <button
+            {!isMobile && <button
               type="button"
               onClick={() => setExpandido((atual) => !atual)}
-              title={expandido ? "Recolher navegação" : "Expandir navegação"}
+              title={navExpandido ? "Recolher navegação" : "Expandir navegação"}
               className={botaoClasse}
               style={{ color: corSecundaria }}
             >
-              {expandido ? (
+              {navExpandido ? (
                 <BsArrowsAngleContract size={14} />
               ) : (
                 <BsArrowsAngleExpand size={14} />
               )}
-            </button>
+            </button>}
           </div>
         </div>
 
         {/* ETAPAS */}
-        {(expandido || !modoInferior) && (
+        {(navExpandido || !modoInferior) && (
           <div
             className={`
               min-h-0
               ${
                 modoInferior
-                  ? "grid grid-cols-[repeat(auto-fit,minmax(85px,1fr))] gap-1.5 px-2 pb-2"
+                  ? isMobile
+                    ? "flex gap-1 overflow-x-auto px-2 pb-2"
+                    : "grid grid-cols-[repeat(auto-fit,minmax(85px,1fr))] gap-1.5 px-2 pb-2"
                   : "flex flex-1 flex-col gap-1 overflow-y-auto px-2.5 py-4"
               }
             `}
           >
-            {!modoInferior && expandido && (
+            {!modoInferior && navExpandido && (
               <span
                 className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.16em]"
                 style={{ color: corMuted }}
@@ -265,9 +280,11 @@ export default function NavTool() {
                   transition-all duration-200
                   ${
                     modoInferior
-                      ? "min-h-[36px] justify-center gap-1.5 rounded-lg px-1.5 py-1"
+                      ? isMobile
+                        ? "min-h-[48px] min-w-[76px] shrink-0 flex-col justify-center gap-1 rounded-lg px-2 py-1"
+                        : "min-h-[36px] justify-center gap-1.5 rounded-lg px-1.5 py-1"
                       : `min-h-[48px] rounded-xl ${
-                          expandido ? "gap-3 px-3 py-2" : "justify-center px-1"
+                          navExpandido ? "gap-3 px-3 py-2" : "justify-center px-1"
                         }`
                   }
                 `}
@@ -289,7 +306,7 @@ export default function NavTool() {
                                         transition-all duration-200
                                         ${
                                           modoInferior
-                                            ? "h-6 w-6 rounded-md text-[10px]"
+                                            ? isMobile ? "h-5 w-5 rounded-md text-[9px]" : "h-6 w-6 rounded-md text-[10px]"
                                             : "h-8 w-8 rounded-lg text-[11px]"
                                         }
                                     `}
@@ -318,13 +335,13 @@ export default function NavTool() {
                         )}
                       </span>
 
-                      {expandido && (
+                      {navExpandido && (
                         <span
                           className={`
                                         min-w-0 font-medium leading-tight
                                         ${
                                           modoInferior
-                                            ? "text-center text-[10px]"
+                                            ? isMobile ? "max-w-full truncate text-center text-[9px]" : "text-center text-[10px]"
                                             : "flex-1 text-[11px]"
                                         }
                                     `}
@@ -346,21 +363,21 @@ export default function NavTool() {
                         </span>
                       )}
 
-                      {!expandido && (
+                      {!navExpandido && (
                         <span className="sr-only">
                           {tab.nome}
                           {alterado ? " - Alterações pendentes" : ""}
                         </span>
                       )}
 
-                      {isActive && !modoInferior && expandido && (
+                      {isActive && !modoInferior && navExpandido && (
                         <span
                           className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full"
                           style={{ backgroundColor: corDestaque }}
                         />
                       )}
 
-                      {isActive && !modoInferior && !expandido && (
+                      {isActive && !modoInferior && !navExpandido && (
                         <span
                           className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
                           style={{ backgroundColor: corDestaque }}
@@ -387,14 +404,14 @@ export default function NavTool() {
             className={`
               flex shrink-0 items-center border-t
               ${
-                expandido
+                navExpandido
                   ? "justify-between px-4 py-3"
                   : "justify-center px-1 py-3"
               }
             `}
             style={{ borderColor: corBorda }}
           >
-            {expandido && (
+            {navExpandido && (
               <div className="min-w-0">
                 <span
                   className="block text-[10px] font-semibold"
@@ -418,9 +435,9 @@ export default function NavTool() {
               onClick={() => setExpandido((atual) => !atual)}
               className={botaoClasse}
               style={{ color: corSecundaria }}
-              title={expandido ? "Recolher" : "Expandir"}
+              title={navExpandido ? "Recolher" : "Expandir"}
             >
-              {expandido ? (
+              {navExpandido ? (
                 <BsArrowsAngleContract size={14} />
               ) : (
                 <BsArrowsAngleExpand size={14} />
@@ -430,7 +447,7 @@ export default function NavTool() {
         )}
 
         {/* RODAPÉ DA BOTTOM EXPANDIDA */}
-        {modoInferior && expandido && (
+        {modoInferior && navExpandido && !isMobile && (
           <div
             className="flex shrink-0 items-center justify-between border-t px-3 py-1.5"
             style={{ borderColor: corBorda }}

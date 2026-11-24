@@ -258,6 +258,7 @@ export default function WorkoutExecutionScreen() {
     totalSets,
     updateCurrentSet,
     updateExerciseFeedback,
+    selectExerciseVariation,
     beginRest,
     pauseRestStopwatch,
     resumeRestStopwatch,
@@ -281,9 +282,9 @@ export default function WorkoutExecutionScreen() {
   const [nextArrow] = useState(() => new Animated.Value(0));
   const [tabTransition] = useState(() => new Animated.Value(0));
   const carouselKey = `${activeSession?.currentExerciseIndex ?? 0}-${activeSession?.currentSetIndex ?? 0}`;
-  const carouselIndex = carouselState.key === carouselKey
-    ? carouselState.index
-    : activeSession?.phase === "rest" ? 1 : 0;
+  const carouselIndex = activeSession?.phase === "rest"
+    ? 1
+    : carouselState.key === carouselKey ? carouselState.index : 0;
   const inactivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionRef = useRef(activeSession);
   const inactivityPauseRef = useRef({ rest: false, cardio: false });
@@ -488,7 +489,10 @@ export default function WorkoutExecutionScreen() {
     setSaving(true);
     try {
       await cancelAppNotifications(session.cardioNotificationIds);
-      await finishWorkout();
+      const synced = await finishWorkout();
+      if (!synced) {
+        Alert.alert("Treino salvo no aparelho", "Não foi possível enviar a sessão agora. Ela ficou na fila e será sincronizada quando houver conexão com a API.");
+      }
       router.replace("/(tabs)");
     } catch {
       Alert.alert("Não foi possível salvar", "Seu resumo continua disponível nesta tela. Verifique o armazenamento do aparelho e tente novamente.");
@@ -518,6 +522,7 @@ export default function WorkoutExecutionScreen() {
 
   function goToCarouselPage(index: number) {
     const nextIndex = Math.max(0, Math.min(1, index));
+    if (activeSession?.phase === "rest" && nextIndex === 0) return;
     if (nextIndex === carouselIndex) return;
     animateLayoutChange();
     pageOffset.setValue(nextIndex > carouselIndex ? 42 : -42);
@@ -533,17 +538,28 @@ export default function WorkoutExecutionScreen() {
       onRequestClose={() => setModalVariable(false)}
     >
       <View className="flex-1 justify-center items-center bg-black/50 px-6">
-        <View className="w-full bg-white p-5 rounded-2xl shadow-lg">
-          <Text className="text-lg font-bold text-gray-900 mb-3">
-            Editar texto
-          </Text>
-
-          <Pressable
-            className="bg-blue-600 py-3 rounded-lg items-center active:bg-blue-700"
-            onPress={() => setModalVariable(false)}
-          >
-            <Text className="text-white font-bold">Confirmar</Text>
-          </Pressable>
+        <View className="w-full max-h-[75%] bg-white p-5 rounded-2xl shadow-lg">
+          <Text className="text-[18px] font-black text-ink">Variações do exercício</Text>
+          <Text className="mt-1 text-[10px] leading-4 text-muted">Escolha uma alternativa prescrita pelo seu personal. A seleção atualiza séries, repetições, carga e descanso.</Text>
+          <ScrollView className="mt-4" showsVerticalScrollIndicator={false}>
+            {exercise?.variations.map((variation) => (
+              <Pressable
+                key={variation.id}
+                onPress={() => {
+                  selectExerciseVariation(variation.id);
+                  setModalVariable(false);
+                  setCarouselState({ key: carouselKey, index: 0 });
+                }}
+                className={`mb-2 rounded-2xl border p-4 ${exercise.selectedVariationId === variation.id ? "border-[#8BA66A] bg-[#EDF2E5]" : "border-[#E7E4DC] bg-white"}`}
+              >
+                <View className="flex-row items-center justify-between"><Text className="flex-1 pr-2 text-[12px] font-extrabold text-ink">{variation.name}</Text>{exercise.selectedVariationId === variation.id ? <Tag tone="lime">SELECIONADA</Tag> : null}</View>
+                <Text className="mt-2 text-[10px] text-[#687064]">{variation.sets} séries · {variation.reps} reps · {variation.load} kg · RIR {variation.rir} · {variation.rest}</Text>
+                {variation.note ? <Text className="mt-2 text-[9px] leading-4 text-muted">{variation.note}</Text> : null}
+              </Pressable>
+            ))}
+            {exercise?.variations.length === 0 ? <Text className="py-5 text-center text-[11px] text-muted">Este exercício não possui variações cadastradas.</Text> : null}
+          </ScrollView>
+          <Pressable className="mt-3 rounded-xl bg-ink py-3 items-center" onPress={() => setModalVariable(false)}><Text className="text-[11px] font-extrabold text-white">Fechar</Text></Pressable>
         </View>
       </View>
     </Modal>
@@ -786,7 +802,7 @@ export default function WorkoutExecutionScreen() {
 
           <View className="mt-1 rounded-[20px] bg-[#E8EDDE] p-4">
             <View className="flex-row items-center gap-2"><Sparkles color="#526447" size={17} /><Text className="text-[11px] font-extrabold text-ink">Seus resultados em um só registro</Text></View>
-            <Text className="mt-1 text-[10px] leading-4 text-[#526447]">Ao continuar, vamos salvar o resumo completo desta sessão junto com todas as séries. Ele ficará organizado em um único pacote, pronto para sincronização com seu personal quando a API estiver conectada.</Text>
+            <Text className="mt-1 text-[10px] leading-4 text-[#526447]">Ao continuar, o resumo completo será enviado em uma única requisição: duração, exercícios, séries, descansos, RIR e relatos. Se estiver sem conexão, o pacote fica salvo no aparelho para sincronização posterior.</Text>
           </View>
 
           <Pressable onPress={() => void finish()} disabled={saving} className={`mt-4 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-lime ${saving ? "opacity-60" : ""}`}>
@@ -910,44 +926,50 @@ export default function WorkoutExecutionScreen() {
       <SafeAreaView onTouchStart={registerInteraction} edges={["top", "bottom"]} className="flex-1 bg-[#F3F1EB]">
         <StatusBar style="dark" />
         {screenHeader}
-        <View className="bg-white px-5 py-3">
-          <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-[10px] font-bold text-[#777D74]">{completedSets} / {totalSets} séries concluídas</Text>
-            <Text className="text-[10px] font-extrabold text-ink">{Math.round(progress)}%</Text>
+        {!isResting ? (
+          <View className="bg-white px-5 py-3">
+            <View className="mb-2 flex-row items-center justify-between">
+              <Text className="text-[10px] font-bold text-[#777D74]">{completedSets} / {totalSets} séries concluídas</Text>
+              <Text className="text-[10px] font-extrabold text-ink">{Math.round(progress)}%</Text>
+            </View>
+            <AnimatedProgressTrack value={progress} />
           </View>
-          <AnimatedProgressTrack value={progress} />
-        </View>
+        ) : null}
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5 pb-6 pt-5">
-          <View className="flex-row items-center justify-between">
-            <Tag tone="lime">EXERCÍCIO {session.currentExerciseIndex + 1} DE {session.exercises.length}</Tag>
-            <Text className="text-[10px] font-bold text-[#858A82]">{exercise.muscle}</Text>
-          </View>
-          <Text className="mt-3 text-[28px] font-black tracking-[-1px] text-ink">{exercise.name}</Text>
-          <Text className="mt-1 text-[11px] text-[#777D74]">Alterne entre a prescrição e a edição pelos controles do card.</Text>
-          {!isResting && session.currentSetIndex === 0 ? (
-            <Pressable onPress={() => setModalVariable(true)} className="mt-4 h-11 w-full flex-row items-center justify-center rounded-[10px] bg-lime">
-              <Text className="font-bold text-black">Variações disponíveis: 5</Text>
-            </Pressable>
-          ) : null}
-          <View className="mt-4 rounded-2xl border border-[#E7E4DC] bg-white p-4">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-[9px] font-extrabold uppercase tracking-[1px] text-[#858A82]">PROGRESSO DO EXERCÍCIO</Text>
-                <Text className="mt-1 text-[13px] font-black text-ink">Série {session.currentSetIndex + 1} de {exercise.sets.length}</Text>
+          {!isResting ? (
+            <>
+              <View className="flex-row items-center justify-between">
+                <Tag tone="lime">EXERCÍCIO {session.currentExerciseIndex + 1} DE {session.exercises.length}</Tag>
+                <Text className="text-[10px] font-bold text-[#858A82]">{exercise.muscle}</Text>
               </View>
-              <Tag tone="lime">{exercise.sets.filter((item) => item.completed).length} concluídas</Tag>
-            </View>
-            <View className="mt-3 flex-row gap-2">
-              {exercise.sets.map((item, index) => (
-                <View key={`${exercise.id}-set-${index}`} className={`h-2 flex-1 rounded-full ${item.completed ? "bg-[#9DBB69]" : index === session.currentSetIndex ? "bg-ink" : "bg-[#E8E7E0]"}`} />
-              ))}
-            </View>
-            <View className="mt-2 flex-row justify-between">
-              <Text className="text-[9px] font-semibold text-[#858A82]">{completedSets} de {totalSets} séries no treino</Text>
-              <Text className="text-[9px] font-extrabold text-[#526447]">{Math.round(progress)}%</Text>
-            </View>
-          </View>
+              <Text className="mt-3 text-[28px] font-black tracking-[-1px] text-ink">{exercise.name}</Text>
+              <Text className="mt-1 text-[11px] text-[#777D74]">Alterne entre a prescrição e a edição pelos controles do card.</Text>
+              {session.currentSetIndex === 0 && exercise.variations.length > 0 ? (
+                <Pressable onPress={() => setModalVariable(true)} className="mt-4 h-11 w-full flex-row items-center justify-center rounded-[10px] bg-lime">
+                  <Text className="font-bold text-black">{exercise.selectedVariationId ? "Alterar variação" : `Variações disponíveis: ${exercise.variations.length}`}</Text>
+                </Pressable>
+              ) : null}
+              <View className="mt-4 rounded-2xl border border-[#E7E4DC] bg-white p-4">
+                <View className="flex-row items-center justify-between">
+                  <View>
+                    <Text className="text-[9px] font-extrabold uppercase tracking-[1px] text-[#858A82]">PROGRESSO DO EXERCÍCIO</Text>
+                    <Text className="mt-1 text-[13px] font-black text-ink">Série {session.currentSetIndex + 1} de {exercise.sets.length}</Text>
+                  </View>
+                  <Tag tone="lime">{exercise.sets.filter((item) => item.completed).length} concluídas</Tag>
+                </View>
+                <View className="mt-3 flex-row gap-2">
+                  {exercise.sets.map((item, index) => (
+                    <View key={`${exercise.id}-set-${index}`} className={`h-2 flex-1 rounded-full ${item.completed ? "bg-[#9DBB69]" : index === session.currentSetIndex ? "bg-ink" : "bg-[#E8E7E0]"}`} />
+                  ))}
+                </View>
+                <View className="mt-2 flex-row justify-between">
+                  <Text className="text-[9px] font-semibold text-[#858A82]">{completedSets} de {totalSets} séries no treino</Text>
+                  <Text className="text-[9px] font-extrabold text-[#526447]">{Math.round(progress)}%</Text>
+                </View>
+              </View>
+            </>
+          ) : null}
           {modalVariable && (
             <BlurView
               intensity={50}
@@ -965,7 +987,7 @@ export default function WorkoutExecutionScreen() {
             }}
           >
             <View className="mt-4 flex-row rounded-2xl bg-white p-1">
-              <Pressable onPress={() => goToCarouselPage(0)} className="relative flex-1 items-center rounded-xl py-3">
+              <Pressable onPress={() => goToCarouselPage(0)} disabled={isResting} className={`relative flex-1 items-center rounded-xl py-3 ${isResting ? "opacity-35" : ""}`}>
                 <Animated.View pointerEvents="none" className="absolute inset-0 rounded-xl bg-ink" style={{ opacity: tabTransition.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }} />
                 <Text className={`text-[10px] font-extrabold ${carouselIndex === 0 ? "text-lime" : "text-[#858A82]"}`}>1. Prescrição</Text>
               </Pressable>
@@ -1070,48 +1092,43 @@ export default function WorkoutExecutionScreen() {
                 </View>
               )}
             </Animated.View>
+            {isResting ? (
+              <Animated.View
+                className="mt-4 overflow-hidden rounded-[22px] bg-ink p-4"
+                style={{
+                  opacity: restTransition,
+                  transform: [
+                    { translateY: restTransition.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
+                    { scale: restTransition.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
+                  ],
+                }}
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1 pr-3">
+                    <Text className="text-[9px] font-bold uppercase tracking-[1.4px] text-white/45">CRONÔMETRO DE DESCANSO</Text>
+                    <Text className="mt-1 text-[11px] text-white/55">Tempo restante do intervalo prescrito</Text>
+                  </View>
+                  <Text className="text-[34px] font-black tabular-nums tracking-[-1px] text-lime">{formatTime(restRemaining)}</Text>
+                </View>
+                <View className="mt-3"><AnimatedProgressTrack value={session.restDurationSeconds > 0 ? restRemaining / session.restDurationSeconds * 100 : 0} dark /></View>
+                <View className="mt-3 flex-row gap-2">
+                  {session.restStartedAt ? (
+                    <Pressable onPress={() => pauseRestStopwatch(restElapsed)} className="h-10 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-white/15">
+                      <Pause color="#FFFFFF" size={14} />
+                      <Text className="text-[10px] font-bold text-white">Pausar</Text>
+                    </Pressable>
+                  ) : (
+                    <Pressable onPress={resumeRestStopwatch} disabled={restRemaining === 0} className={`h-10 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-lime ${restRemaining === 0 ? "opacity-50" : ""}`}>
+                      <Play color="#17211B" size={14} fill="#17211B" />
+                      <Text className="text-[10px] font-extrabold text-ink">{restRemaining === 0 ? "Concluído" : restElapsed > 0 ? "Continuar" : "Iniciar descanso"}</Text>
+                    </Pressable>
+                  )}
+                  <Pressable onPress={restartRestStopwatch} className="h-10 w-11 items-center justify-center rounded-xl border border-white/15"><RotateCcw color="#C8EF73" size={15} /></Pressable>
+                </View>
+              </Animated.View>
+            ) : null}
             {/* */}
           </Animated.View>
-
-          {isResting ? (
-            <Animated.View
-              className="mt-4 overflow-hidden rounded-[22px] bg-ink p-4"
-              style={{
-                opacity: restTransition,
-                transform: [
-                  { translateY: restTransition.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
-                  { scale: restTransition.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
-                ],
-              }}
-            >
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1 pr-3">
-                  <Text className="text-[9px] font-bold uppercase tracking-[1.4px] text-white/45">CRONÔMETRO DE DESCANSO</Text>
-                  <Text className="mt-1 text-[11px] text-white/55">Tempo restante do intervalo prescrito</Text>
-                </View>
-                <Text className="text-[34px] font-black tabular-nums tracking-[-1px] text-lime">{formatTime(restRemaining)}</Text>
-              </View>
-              <View className="mt-3">
-                <AnimatedProgressTrack value={session.restDurationSeconds > 0 ? restRemaining / session.restDurationSeconds * 100 : 0} dark />
-              </View>
-              <View className="mt-3 flex-row gap-2">
-                {session.restStartedAt ? (
-                  <Pressable onPress={() => pauseRestStopwatch(restElapsed)} className="h-10 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-white/15">
-                    <Pause color="#FFFFFF" size={14} />
-                    <Text className="text-[10px] font-bold text-white">Pausar</Text>
-                  </Pressable>
-                ) : (
-                  <Pressable onPress={resumeRestStopwatch} disabled={restRemaining === 0} className={`h-10 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-lime ${restRemaining === 0 ? "opacity-50" : ""}`}>
-                    <Play color="#17211B" size={14} fill="#17211B" />
-                    <Text className="text-[10px] font-extrabold text-ink">{restRemaining === 0 ? "Concluído" : restElapsed > 0 ? "Continuar" : "Iniciar descanso"}</Text>
-                  </Pressable>
-                )}
-                <Pressable onPress={restartRestStopwatch} className="h-10 w-11 items-center justify-center rounded-xl border border-white/15">
-                  <RotateCcw color="#C8EF73" size={15} />
-                </Pressable>
-              </View>
-            </Animated.View>
-          ) : null}
 
           {!isResting ? (
             <>
@@ -1140,6 +1157,7 @@ export default function WorkoutExecutionScreen() {
                   <TextInput
                     value={exercise.feedback}
                     onChangeText={(feedback) => updateExerciseFeedback({ feedback })}
+                    maxLength={2000}
                     placeholder="Ex.: senti desconforto no ombro..."
                     placeholderTextColor="#999D94"
                     multiline

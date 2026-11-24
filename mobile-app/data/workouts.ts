@@ -8,6 +8,18 @@ export type ExercisePlan = {
   rir: number;
   rest: string;
   note?: string;
+  variations?: ExerciseVariationPlan[];
+};
+
+export type ExerciseVariationPlan = {
+  id: string;
+  name: string;
+  sets: number;
+  reps: string;
+  load: number;
+  rir: number;
+  rest: string;
+  note?: string;
 };
 
 export type WorkoutPlan = {

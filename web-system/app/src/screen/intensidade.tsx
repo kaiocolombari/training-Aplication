@@ -602,7 +602,7 @@ export default function Intensidade() {
                                                             "
                                                 >
                                                     <table
-                                                        className="
+                                                        className="intensidade-series-table
                                                                     w-full
                                                                     min-w-[900px]
                                                                     border-separate

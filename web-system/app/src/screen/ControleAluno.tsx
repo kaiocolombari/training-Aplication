@@ -23,6 +23,7 @@ import type { AlunoResumoApi } from "../service/cadastroService";
 import AlunoMonitoramentoPicker, { type AlunoMonitoramentoOption } from "../components/AlunoMonitoramentoPicker";
 import ControleVolumeTreino from "./ControleVolumeTreino";
 import ChatAlunoConversa from "../components/ChatAlunoConversa";
+import AssessmentScheduleCalendar from "../components/AssessmentScheduleCalendar";
 
 type AlunoControle = Pick<
     AlunoResumoApi,
@@ -441,6 +442,7 @@ export default function ControleAluno({
                     Comparações cronológicas, preservando método, data e origem da medição.
                 </p>
             </div>
+            <AssessmentScheduleCalendar alunoId={aluno.id} avaliacoes={avaliacoes} />
             {avaliacoes.length ? (
                 <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
                     <div className="grid grid-cols-[1.2fr_repeat(3,minmax(70px,1fr))] gap-2 border-b border-[var(--border)] bg-[var(--surface-secondary)] px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
@@ -791,14 +793,14 @@ export default function ControleAluno({
 
     return (
         <section className="w-full max-w-[1500px] space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <button
                     onClick={onBack}
                     className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--row-hover)]"
                 >
                     <BsArrowLeft /> Voltar aos alunos
                 </button>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <AlunoMonitoramentoPicker
                         compact
                         alunos={alunosDisponiveis}
@@ -849,7 +851,7 @@ export default function ControleAluno({
             </header>
             <nav
                 aria-label="Módulos de acompanhamento do aluno"
-                className="flex gap-1 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1.5"
+                className="sticky top-[60px] z-10 flex gap-1 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)]/95 p-1.5 shadow-sm backdrop-blur-sm"
             >
                 {abas.filter(item => item.id !== "mensagens" || canChat).map(item => (
                     <button

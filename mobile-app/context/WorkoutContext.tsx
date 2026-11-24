@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-import { WORKOUTS, type WorkoutPlan } from "@/data/workouts";
+import { WORKOUTS, type ExerciseVariationPlan, type WorkoutPlan } from "@/data/workouts";
+import { submitWorkoutSession } from "@/services/executionService";
 
 const STORAGE_KEY = "@treino-system/active-session";
 const HISTORY_KEY = "@treino-system/session-history";
@@ -33,6 +34,7 @@ export type SessionSet = {
   load: number;
   rir: number;
   actualRestSeconds: number;
+  hasActualRestRecorded: boolean;
   hasRecorded: boolean;
   completed: boolean;
 };
@@ -43,6 +45,8 @@ export type SessionExercise = {
   muscle: string;
   rest: string;
   note?: string;
+  variations: ExerciseVariationPlan[];
+  selectedVariationId: string | null;
   painStatus: "none" | "discomfort" | "pain";
   feedback: string;
   sets: SessionSet[];
@@ -86,6 +90,7 @@ export type WorkoutSubmissionPayload = {
   totalSets: number;
   exercises: Array<{
     exerciseId: string;
+    variationId: string | null;
     name: string;
     muscle: string;
     prescribedRest: string;
@@ -110,6 +115,7 @@ type WorkoutContextValue = {
   beginWorkout: (workout: WorkoutPlan) => void;
   updateCurrentSet: (patch: Partial<Pick<SessionSet, "reps" | "load" | "rir" | "actualRestSeconds">>) => void;
   updateExerciseFeedback: (patch: Partial<Pick<SessionExercise, "painStatus" | "feedback">>) => void;
+  selectExerciseVariation: (variationId: string) => void;
   beginRest: () => void;
   pauseRestStopwatch: (elapsedSeconds: number) => void;
   resumeRestStopwatch: () => void;
@@ -118,7 +124,8 @@ type WorkoutContextValue = {
   prepareWorkoutSummary: (cardioElapsedSeconds?: number) => void;
   updateCardioTimer: (patch: Partial<Pick<ActiveSession, "cardioTimerEnabled" | "cardioNotificationsEnabled" | "cardioStartedAt" | "cardioElapsedSeconds" | "cardioNotificationIds">>) => void;
   saveAndPause: () => Promise<void>;
-  finishWorkout: (cardioElapsedSeconds?: number) => Promise<void>;
+  finishWorkout: (cardioElapsedSeconds?: number) => Promise<boolean>;
+  syncPendingSubmissions: () => Promise<number>;
 };
 
 function getSessionDurationSeconds(startedAt: string, finishedAt: string) {
@@ -143,6 +150,7 @@ export function buildWorkoutSubmissionPayload(session: ActiveSession): WorkoutSu
     totalSets: allSets.length,
     exercises: session.exercises.map((exercise) => ({
       exerciseId: exercise.id,
+      variationId: exercise.selectedVariationId,
       name: exercise.name,
       muscle: exercise.muscle,
       prescribedRest: exercise.rest,
@@ -161,7 +169,7 @@ export function buildWorkoutSubmissionPayload(session: ActiveSession): WorkoutSu
           reps: session.workoutKind === "strength" && (set.completed || set.hasRecorded) ? set.reps : null,
           load: session.workoutKind === "strength" && (set.completed || set.hasRecorded) ? set.load : null,
           rir: session.workoutKind === "strength" && (set.completed || set.hasRecorded) ? set.rir : null,
-          restSeconds: set.actualRestSeconds > 0 ? set.actualRestSeconds : null,
+          restSeconds: set.hasActualRestRecorded ? set.actualRestSeconds : null,
           usedPrescription: session.workoutKind === "strength" && set.completed && !set.hasRecorded,
         },
       })),
@@ -199,6 +207,16 @@ export async function flushPendingWorkoutSubmissions(
   }
 
   return sentCount;
+}
+
+let pendingFlush: Promise<number> | null = null;
+
+function syncPendingWorkoutSubmissions() {
+  if (!pendingFlush) {
+    pendingFlush = flushPendingWorkoutSubmissions(submitWorkoutSession)
+      .finally(() => { pendingFlush = null; });
+  }
+  return pendingFlush;
 }
 
 const WorkoutContext = createContext<WorkoutContextValue | null>(null);
@@ -240,9 +258,12 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             cardioNotificationIds: saved.cardioNotificationIds ?? [],
             exercises: (saved.exercises ?? []).map((exercise) => ({
               ...exercise,
+              variations: exercise.variations ?? [],
+              selectedVariationId: exercise.selectedVariationId ?? null,
               sets: exercise.sets.map((set) => ({
                 ...set,
                 actualRestSeconds: set.actualRestSeconds ?? 0,
+                hasActualRestRecorded: set.hasActualRestRecorded ?? false,
                 hasRecorded: set.hasRecorded ?? (
                   set.load !== set.targetLoad
                   || set.reps !== (Number.parseInt(set.targetReps, 10) || 10)
@@ -298,6 +319,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         muscle: exercise.muscle,
         rest: exercise.rest,
         note: exercise.note,
+        variations: exercise.variations ?? [],
+        selectedVariationId: null,
         painStatus: "none",
         feedback: "",
         sets: Array.from({ length: exercise.sets }, () => ({
@@ -308,6 +331,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
           load: 0,
           rir: 0,
           actualRestSeconds: 0,
+          hasActualRestRecorded: false,
           hasRecorded: false,
           completed: false,
         })),
@@ -325,13 +349,20 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const updateCurrentSet = useCallback((patch: Partial<Pick<SessionSet, "reps" | "load" | "rir" | "actualRestSeconds">>) => {
     setActiveSession((current) => {
       if (!current) return current;
+      const safePatch = {
+        ...patch,
+        ...(patch.load !== undefined ? { load: Math.min(2000, Math.max(0, patch.load)) } : {}),
+        ...(patch.reps !== undefined ? { reps: Math.min(1000, Math.max(0, Math.floor(patch.reps))) } : {}),
+        ...(patch.rir !== undefined ? { rir: Math.min(5, Math.max(0, patch.rir)) } : {}),
+        ...(patch.actualRestSeconds !== undefined ? { actualRestSeconds: Math.min(3600, Math.max(0, Math.floor(patch.actualRestSeconds))) } : {}),
+      };
       const exercises = current.exercises.map((exercise, exerciseIndex) => {
         if (exerciseIndex !== current.currentExerciseIndex) return exercise;
         return {
           ...exercise,
           sets: exercise.sets.map((set, setIndex) => {
             if (setIndex !== current.currentSetIndex) return set;
-            const recordsPerformance = "load" in patch || "reps" in patch || "rir" in patch;
+            const recordsPerformance = "load" in safePatch || "reps" in safePatch || "rir" in safePatch;
             const firstPerformanceEdit = recordsPerformance && !set.hasRecorded;
             return {
               ...set,
@@ -340,7 +371,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
                 load: set.targetLoad,
                 rir: set.targetRir,
               } : {}),
-              ...patch,
+              ...safePatch,
+              ...(patch.actualRestSeconds !== undefined ? { hasActualRestRecorded: true } : {}),
               hasRecorded: set.hasRecorded || recordsPerformance,
             };
           }),
@@ -493,11 +525,43 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const selectExerciseVariation = useCallback((variationId: string) => {
+    setActiveSession((current) => {
+      if (!current || current.phase !== "exercise" || current.currentSetIndex !== 0) return current;
+      const exercises = current.exercises.map((exercise, index) => {
+        if (index !== current.currentExerciseIndex) return exercise;
+        const variation = exercise.variations.find((item) => item.id === variationId);
+        if (!variation) return exercise;
+        return {
+          ...exercise,
+          name: variation.name,
+          rest: variation.rest,
+          note: variation.note,
+          selectedVariationId: variation.id,
+          sets: Array.from({ length: variation.sets }, () => ({
+            targetReps: variation.reps,
+            targetLoad: variation.load,
+            targetRir: variation.rir,
+            reps: 0,
+            load: 0,
+            rir: 0,
+            actualRestSeconds: 0,
+            hasActualRestRecorded: false,
+            hasRecorded: false,
+            completed: false,
+          })),
+        };
+      });
+      return { ...current, exercises };
+    });
+  }, []);
+
   const saveAndPause = useCallback(async () => {
     if (activeSession) await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activeSession));
   }, [activeSession]);
 
   const finishWorkout = useCallback(async (cardioElapsedSeconds?: number) => {
+    let synced = true;
     if (activeSession) {
       const finishedAt = activeSession.finishedAt ?? new Date().toISOString();
       const finishedSession: ActiveSession = {
@@ -527,9 +591,16 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         [HISTORY_KEY, JSON.stringify(nextHistory)],
         [PENDING_SUBMISSIONS_KEY, JSON.stringify(nextSubmissions)],
       ]);
+      try {
+        await syncPendingWorkoutSubmissions();
+        synced = !(await getPendingWorkoutSubmissions()).some((item) => item.sessionId === payload.sessionId);
+      } catch {
+        synced = false;
+      }
     }
     await AsyncStorage.removeItem(STORAGE_KEY);
     setActiveSession(null);
+    return synced;
   }, [activeSession]);
 
   const value = useMemo(() => ({
@@ -541,6 +612,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     beginWorkout,
     updateCurrentSet,
     updateExerciseFeedback,
+    selectExerciseVariation,
     beginRest,
     pauseRestStopwatch,
     resumeRestStopwatch,
@@ -550,7 +622,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     updateCardioTimer,
     saveAndPause,
     finishWorkout,
-  }), [activeSession, hydrated, completedSets, totalSets, isComplete, beginWorkout, updateCurrentSet, updateExerciseFeedback, beginRest, pauseRestStopwatch, resumeRestStopwatch, restartRestStopwatch, saveCurrentSetAndAdvance, prepareWorkoutSummary, updateCardioTimer, saveAndPause, finishWorkout]);
+    syncPendingSubmissions: syncPendingWorkoutSubmissions,
+  }), [activeSession, hydrated, completedSets, totalSets, isComplete, beginWorkout, updateCurrentSet, updateExerciseFeedback, selectExerciseVariation, beginRest, pauseRestStopwatch, resumeRestStopwatch, restartRestStopwatch, saveCurrentSetAndAdvance, prepareWorkoutSummary, updateCardioTimer, saveAndPause, finishWorkout]);
 
   return <WorkoutContext.Provider value={value}>{children}</WorkoutContext.Provider>;
 }

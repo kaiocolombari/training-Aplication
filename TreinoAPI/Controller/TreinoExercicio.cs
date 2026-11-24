@@ -7,7 +7,7 @@ using TreinoAPI.Services;
 namespace TreinoAPI.Controllers;
 
 [ApiController]
-[Authorize(Roles = "PERSONAL,ADMIN")]
+[Authorize(Roles = "PERSONAL,ADMIN,ALUNO")]
 [Route("api/treinos/{treinoId:guid}/exercicios")]
 public sealed class TreinoExercicioController : ControllerBase
 {
@@ -20,6 +20,7 @@ public sealed class TreinoExercicioController : ControllerBase
         _ownership = ownership;
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPost]
     public async Task<IActionResult> Criar(Guid treinoId, [FromBody] CriarTreinoExercicioDTO dto)
     {
@@ -43,6 +44,7 @@ public sealed class TreinoExercicioController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Atualizar(Guid treinoId, Guid id, [FromBody] AtualizarTreinoExercicioDTO dto)
     {
@@ -51,6 +53,7 @@ public sealed class TreinoExercicioController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Deletar(Guid treinoId, Guid id)
     {

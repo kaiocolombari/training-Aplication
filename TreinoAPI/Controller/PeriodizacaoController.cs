@@ -9,7 +9,7 @@ namespace TreinoAPI.Controllers;
 
 
 [ApiController]
-[Authorize(Roles = "PERSONAL,ADMIN")]
+[Authorize(Roles = "PERSONAL,ADMIN,ALUNO")]
 [Route("api/periodizacoes")]
 public class PeriodizacaoController : ControllerBase
 {
@@ -22,6 +22,7 @@ public class PeriodizacaoController : ControllerBase
         _ownership = ownership;
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPost("/api/alunos/{alunoId}/periodizacoes")]
     public async Task<IActionResult> Criar(
         Guid alunoId,
@@ -54,6 +55,7 @@ public class PeriodizacaoController : ControllerBase
         return Ok(resultado);
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Atualizar(
         Guid id,
@@ -68,6 +70,7 @@ public class PeriodizacaoController : ControllerBase
         return Ok(resultado);
     }
 
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Deletar(Guid id)
     {

@@ -35,6 +35,7 @@ public class AppDbContext : DbContext
     public DbSet<Anamnese> Anamnese { get; set; }
     public DbSet<Avaliacao> Avaliacoes { get; set; }
     public DbSet<AvaliacaoHistorico> AvaliacoesHistorico { get; set; }
+    public DbSet<SolicitacaoAvaliacao> SolicitacoesAvaliacoes { get; set; }
     public DbSet<Perimetro> Perimetros { get; set; }
     public DbSet<DobraCutanea> DobrasCutaneas { get; set; }
     public DbSet<TesteCarga> TestesCarga { get; set; }
@@ -334,6 +335,28 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AvaliacaoHistorico>()
             .HasIndex(h => new { h.AvaliacaoId, h.CriadoEm });
 
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .Property(s => s.Origem).HasMaxLength(20);
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .Property(s => s.Status).HasMaxLength(20);
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .Property(s => s.Motivo).HasMaxLength(1000);
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .Property(s => s.DescricaoAgendamento).HasMaxLength(1000);
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .HasOne(s => s.Aluno).WithMany().HasForeignKey(s => s.AlunoId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .HasOne(s => s.Solicitante).WithMany().HasForeignKey(s => s.SolicitanteUsuarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .HasOne(s => s.AnalisadaPor).WithMany().HasForeignKey(s => s.AnalisadaPorUsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .HasIndex(s => new { s.AlunoId, s.DataAgendada });
+        modelBuilder.Entity<SolicitacaoAvaliacao>()
+            .HasIndex(s => new { s.AlunoId, s.Status, s.Urgente, s.DataDesejada });
+
         modelBuilder.Entity<DobraCutanea>()
             .HasOne(d => d.Avaliacao)
             .WithMany(a => a.DobrasCutaneas)
@@ -455,8 +478,7 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ExecucaoTreino>()
-            .HasIndex(e => new { e.TreinoId, e.Data })
-            .IsUnique();
+            .HasIndex(e => new { e.TreinoId, e.Data });
 
         modelBuilder.Entity<AnaliseEstatistica>()
             .Property(a => a.FerramentaId).HasMaxLength(60);
@@ -481,6 +503,13 @@ public class AppDbContext : DbContext
             .HasForeignKey(e => e.TreinoId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<ExecucaoTreino>()
+            .Property(e => e.TipoTreino).HasMaxLength(20).HasDefaultValue("strength");
+        modelBuilder.Entity<ExecucaoTreino>()
+            .Property(e => e.SessionId).HasMaxLength(100);
+        modelBuilder.Entity<ExecucaoTreino>()
+            .HasIndex(e => e.SessionId).IsUnique();
+
         modelBuilder.Entity<ExecucaoExercicio>()
             .HasOne(e => e.ExecucaoTreino)
             .WithMany(e => e.Exercicios)
@@ -492,6 +521,13 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(e => e.TreinoExercicioId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ExecucaoExercicio>()
+            .Property(e => e.Musculo).HasMaxLength(100);
+        modelBuilder.Entity<ExecucaoExercicio>()
+            .Property(e => e.StatusDor).HasMaxLength(20).HasDefaultValue("none");
+        modelBuilder.Entity<ExecucaoExercicio>()
+            .Property(e => e.Feedback).HasMaxLength(2000);
 
         modelBuilder.Entity<ExecucaoSerie>()
             .HasOne(s => s.ExecucaoExercicio)
