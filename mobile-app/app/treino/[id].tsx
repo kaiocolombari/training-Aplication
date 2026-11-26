@@ -18,6 +18,10 @@ export default function WorkoutDetailScreen() {
       Alert.alert("Treino sem exercícios", "Seu personal ainda não adicionou exercícios a esta ficha.");
       return;
     }
+    if (workout.exercises.some((exercise) => exercise.prescriptionMissingFields?.includes("series"))) {
+      Alert.alert("Prescrição incompleta", "Há exercícios sem quantidade de séries cadastrada. Peça ao seu personal para completar a ficha antes de iniciar este treino.");
+      return;
+    }
     if (activeSession && activeSession.workoutId !== workout.id) {
       Alert.alert("Trocar de treino?", "Existe uma sessão salva. Ao iniciar este treino, a sessão anterior será substituída.", [
         { text: "Continuar sessão salva", style: "cancel" },
@@ -63,7 +67,7 @@ export default function WorkoutDetailScreen() {
         <Text className="mt-1 text-[12px] text-white/60">{workout.subtitle}</Text>
         <Text className="mt-5 text-[11px] font-semibold text-lime">{workout.focus}</Text>
         <View className="mt-5 flex-row gap-5 border-t border-white/10 pt-4">
-          <View className="flex-row items-center gap-2"><Clock3 color="#C8EF73" size={15} /><Text className="text-[11px] font-semibold text-white">~{workout.duration} min</Text></View>
+          <View className="flex-row items-center gap-2"><Clock3 color="#C8EF73" size={15} /><Text className="text-[11px] font-semibold text-white">{workout.duration > 0 ? `~${workout.duration} min` : "Duração não estimada"}</Text></View>
           <View className="flex-row items-center gap-2"><Dumbbell color="#C8EF73" size={15} /><Text className="text-[11px] font-semibold text-white">{workout.exercises.length} exercícios</Text></View>
           <View className="flex-row items-center gap-2"><Repeat2 color="#C8EF73" size={15} /><Text className="text-[11px] font-semibold text-white">{totalSets} séries</Text></View>
         </View>
@@ -75,9 +79,10 @@ export default function WorkoutDetailScreen() {
         <View key={exercise.id} className="mb-2 rounded-[20px] border border-line bg-white p-4">
           <View className="flex-row items-center gap-3">
             <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#F0F1E9]"><Text className="text-[12px] font-black text-[#66745C]">{String(index + 1).padStart(2, "0")}</Text></View>
-            <View className="flex-1"><Text className="text-[12px] font-bold text-ink">{exercise.name}</Text><Text className="mt-1 text-[10px] text-muted">{exercise.sets} séries · {exercise.reps} reps · {exercise.rest}</Text></View>
-            <Text className="text-[10px] font-bold text-[#6C765F]">{exercise.load} kg</Text>
+            <View className="flex-1"><Text className="text-[12px] font-bold text-ink">{exercise.name}</Text><Text className="mt-1 text-[10px] text-muted">{exercise.prescriptionMissingFields?.includes("series") ? "Séries não informadas" : `${exercise.sets} séries`} · {exercise.prescriptionMissingFields?.includes("reps") ? "Repetições não informadas" : `${exercise.reps} reps`} · {exercise.prescriptionMissingFields?.includes("rest") ? "Descanso não informado" : exercise.rest}</Text></View>
+            <Text className="text-[10px] font-bold text-[#6C765F]">{exercise.prescriptionMissingFields?.includes("load") ? "Carga —" : `${exercise.load} kg`}</Text>
           </View>
+          {exercise.prescriptionMissingFields?.some((field) => field !== "series") ? <Text className="ml-12 mt-2 text-[9px] leading-4 text-[#8D6254]">Alguns parâmetros desta prescrição não foram informados. Confirme com seu personal antes de executar.</Text> : null}
           {exercise.note ? <Text className="ml-12 mt-2 text-[10px] leading-4 text-muted">{exercise.note}</Text> : null}
           {exercise.variations?.length ? (
             <View className="ml-12 mt-3 rounded-xl bg-[#F4F3ED] p-3">

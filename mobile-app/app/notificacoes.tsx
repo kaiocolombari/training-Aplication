@@ -4,9 +4,11 @@ import { ArrowLeft, Bell, CheckCheck, RefreshCw } from "lucide-react-native";
 
 import { AppScreen, Eyebrow, IconButton, SectionTitle, Tag } from "@/components/ui";
 import { useStudentData } from "@/context/StudentDataContext";
+import { DataUnavailableNotice } from "@/components/DataUnavailableNotice";
 
 export default function NotificationsScreen() {
   const { data, isLoading, isRefreshing, error, unreadNotifications, refresh, markNotificationRead, markAllNotificationsRead } = useStudentData();
+  const notificacoesIndisponiveis = data.unavailableSections.includes("notificacoes");
 
   async function readNotification(id: string) {
     try {
@@ -32,7 +34,8 @@ export default function NotificationsScreen() {
 
       {isLoading ? <View className="mt-8 items-center"><ActivityIndicator color="#526447" /><Text className="mt-3 text-[10px] text-muted">Carregando notificações...</Text></View> : null}
       {error ? <Pressable onPress={() => void refresh().catch(() => undefined)} className="mt-5 rounded-2xl border border-[#E8D8CE] bg-[#FBF1EA] p-4"><Text className="text-[10px] text-[#8D4F3E]">{error} · Toque para tentar novamente.</Text></Pressable> : null}
-      {!isLoading && data.notifications.length === 0 ? <View className="mt-6 items-center rounded-[24px] border border-dashed border-line bg-white p-7"><Bell color="#899183" size={23} /><Text className="mt-3 text-[12px] font-extrabold text-ink">Tudo tranquilo por aqui</Text><Text className="mt-1 text-center text-[10px] leading-4 text-muted">Quando houver uma atualização do seu personal, ela aparecerá nesta tela.</Text></View> : null}
+      {notificacoesIndisponiveis ? <View className="mt-5"><DataUnavailableNotice title="Notificações indisponíveis" detail="Não foi possível consultar suas notificações. Isso não significa que sua caixa esteja vazia." onRetry={() => void refresh().catch(() => undefined)} retrying={isRefreshing} /></View> : null}
+      {!isLoading && !error && !notificacoesIndisponiveis && data.notifications.length === 0 ? <View className="mt-6 items-center rounded-[24px] border border-dashed border-line bg-white p-7"><Bell color="#899183" size={23} /><Text className="mt-3 text-[12px] font-extrabold text-ink">Tudo tranquilo por aqui</Text><Text className="mt-1 text-center text-[10px] leading-4 text-muted">Quando houver uma atualização do seu personal, ela aparecerá nesta tela.</Text></View> : null}
 
       <SectionTitle>Recentes</SectionTitle>
       {data.notifications.map((notification) => (

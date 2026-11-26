@@ -17,6 +17,8 @@ export class ApiError extends Error {
 }
 
 const TOKEN_STORAGE_KEY = "@treino-system/auth-tokens";
+// SecureStore aceita apenas letras, números, ponto, hífen e underscore.
+const SECURE_TOKEN_STORAGE_KEY = "treino-system-auth-tokens";
 const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
 
 let tokens: AuthTokens | null = null;
@@ -29,17 +31,17 @@ export function getCurrentAuthTokens() {
 
 async function readStoredValue() {
   if (Platform.OS === "web") return AsyncStorage.getItem(TOKEN_STORAGE_KEY);
-  return SecureStore.getItemAsync(TOKEN_STORAGE_KEY);
+  return SecureStore.getItemAsync(SECURE_TOKEN_STORAGE_KEY);
 }
 
 async function writeStoredValue(value: string) {
   if (Platform.OS === "web") return AsyncStorage.setItem(TOKEN_STORAGE_KEY, value);
-  return SecureStore.setItemAsync(TOKEN_STORAGE_KEY, value);
+  return SecureStore.setItemAsync(SECURE_TOKEN_STORAGE_KEY, value);
 }
 
 async function deleteStoredValue() {
   if (Platform.OS === "web") return AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
-  return SecureStore.deleteItemAsync(TOKEN_STORAGE_KEY);
+  return SecureStore.deleteItemAsync(SECURE_TOKEN_STORAGE_KEY);
 }
 
 export async function setAuthTokens(next: AuthTokens, rememberMe: boolean) {
@@ -102,14 +104,40 @@ export async function getFreshAccessToken() {
   return await refreshSession() ? tokens?.accessToken ?? "" : "";
 }
 
+type ApiErrorBody = {
+  detail?: string;
+  message?: string;
+  title?: string;
+  errors?: Record<string, string[]>;
+};
+
 async function parseError(response: Response) {
-  const body = await response.json().catch(() => null) as
-    | { detail?: string; message?: string; title?: string }
-    | null;
-  return new ApiError(
-    body?.detail ?? body?.message ?? body?.title ?? "Não foi possível concluir a operação.",
-    response.status,
-  );
+  const rawBody = await response.text().catch(() => "");
+  let body: ApiErrorBody | null = null;
+  if (rawBody) {
+    try {
+      body = JSON.parse(rawBody) as ApiErrorBody;
+    } catch {
+      body = null;
+    }
+  }
+  const validationMessage = body?.errors
+    ? Object.values(body.errors).flat().filter(Boolean).join(" ")
+    : undefined;
+  const plainTextMessage = !body && rawBody && !rawBody.trimStart().startsWith("<")
+    ? rawBody.trim().slice(0, 240)
+    : undefined;
+  const message = body?.detail ?? body?.message ?? validationMessage ?? body?.title ?? plainTextMessage ??
+    (response.status === 429
+      ? "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente."
+      : `A API retornou HTTP ${response.status} (${response.statusText || "erro na requisição"}).`);
+  console.warn("[API] response error", {
+    status: response.status,
+    contentType: response.headers.get("content-type"),
+    message: message.slice(0, 300),
+    validationFields: body?.errors ? Object.keys(body.errors) : [],
+  });
+  return new ApiError(message, response.status);
 }
 
 async function refreshSession() {
@@ -142,8 +170,10 @@ export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
   retried = false,
+  timeoutMs = 30000,
 ): Promise<T> {
   const method = (options.method ?? "GET").toUpperCase();
+  const requestUrl = `${getApiUrl()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
 
@@ -153,25 +183,44 @@ export async function apiRequest<T>(
   if (tokens?.accessToken) headers.set("Authorization", `Bearer ${tokens.accessToken}`);
 
   let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const startedAt = Date.now();
   try {
-    response = await fetch(`${getApiUrl()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, {
+    response = await fetch(requestUrl, {
       ...options,
       method,
       headers,
+      signal: controller.signal,
     });
   } catch (error) {
+    console.warn("[API] network failure", {
+      endpoint,
+      elapsedMs: Date.now() - startedAt,
+      aborted: controller.signal.aborted,
+      errorType: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+    if (controller.signal.aborted) {
+      throw new ApiError("A API não respondeu dentro do tempo esperado. Verifique se o servidor está ativo e se o endereço configurado no .env está correto.");
+    }
     if (error instanceof ApiError) throw error;
     throw new ApiError("Não foi possível conectar à API. Verifique o endereço e se o servidor está ativo.");
+  } finally {
+    clearTimeout(timeout);
   }
 
   const isAuthRoute = endpoint.startsWith("/api/auth/mobile/");
   if (response.status === 401 && !retried && !isAuthRoute && await refreshSession()) {
-    return apiRequest<T>(endpoint, options, true);
+    return apiRequest<T>(endpoint, options, true, timeoutMs);
   }
   if (response.status === 401 && !isAuthRoute) {
     await clearAuthTokens();
   }
-  if (!response.ok) throw await parseError(response);
+  if (!response.ok) {
+    console.warn(`[API] ${method} ${endpoint} -> HTTP ${response.status}`);
+    throw await parseError(response);
+  }
   if (response.status === 204) return null as T;
 
   const contentType = response.headers.get("content-type") ?? "";
@@ -180,11 +229,11 @@ export async function apiRequest<T>(
 
 export const apiGet = <T>(endpoint: string) => apiRequest<T>(endpoint);
 
-export const apiPost = <T>(endpoint: string, body?: unknown) =>
+export const apiPost = <T>(endpoint: string, body?: unknown, timeoutMs?: number) =>
   apiRequest<T>(endpoint, {
     method: "POST",
     body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  }, false, timeoutMs);
 
 export const apiUpload = <T>(endpoint: string, body: FormData) =>
   apiRequest<T>(endpoint, { method: "POST", body });

@@ -19,6 +19,7 @@ const EMPTY_DATA: StudentDashboardData = {
   personals: [],
   feedbacks: [],
   feedbackPersonals: [],
+  unavailableSections: [],
 };
 
 type StudentDataContextValue = {
@@ -85,6 +86,8 @@ export function StudentDataProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       return;
     }
+    setData(EMPTY_DATA);
+    setError(null);
     setIsLoading(true);
     void refresh().catch(() => undefined);
   }, [authLoading, user?.alunoId, user?.statusCadastro, refresh]);

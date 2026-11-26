@@ -101,29 +101,46 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let message = "Não foi possível carregar esta página";
+  let details = "Ocorreu uma falha inesperada. Tente novamente ou volte ao painel.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+    if (error.status === 404) {
+      message = "Página não encontrada";
+      details = "O endereço pode ter mudado ou a página não existe mais.";
+    } else if (error.status === 403) {
+      message = "Acesso não autorizado";
+      details = "Sua conta não possui permissão para acessar este conteúdo.";
+    } else if (error.status === 401) {
+      message = "Sessão não autorizada";
+      details = "Entre novamente para continuar.";
+    } else if (error.status >= 500) {
+      message = "Serviço temporariamente indisponível";
+      details = "Não foi possível concluir o carregamento. Aguarde um instante e tente novamente.";
+    }
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="grid min-h-[70vh] place-items-center px-5 py-12">
+      <section role="alert" className="w-full max-w-lg rounded-3xl border border-zinc-200 bg-white p-8 text-center shadow-xl shadow-zinc-900/5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a85f60]">Treino System</p>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-800">{message}</h1>
+        <p className="mt-3 text-sm leading-6 text-zinc-500">{details}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <button type="button" onClick={() => window.location.reload()} className="rounded-xl bg-[#a85f60] px-5 py-3 text-xs font-semibold text-white transition hover:bg-[#914f50]">
+            Tentar novamente
+          </button>
+          <a href="/" className="rounded-xl border border-zinc-200 px-5 py-3 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50">
+            Voltar ao início
+          </a>
+        </div>
+      </section>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
+        <pre className="mx-auto mt-6 w-full max-w-4xl overflow-x-auto rounded-xl bg-zinc-950 p-4 text-left text-xs text-zinc-100"><code>{stack}</code></pre>
       )}
     </main>
   );

@@ -20,7 +20,7 @@ export interface ConversaEquipe {
 }
 
 export interface ConversaAluno {
-    alunoId: string;
+    alunoId: string | null;
     outroUsuarioId: string;
     outroUsuarioNome: string;
     outroUsuarioTipo: "PERSONAL" | "ALUNO";
@@ -54,12 +54,14 @@ export interface ContextoChatAluno {
     nomeCompleto: string;
     statusCadastro: string;
     ultimaAnamnese: { tipo?: string | null; objetivo?: string | null; observacoes?: string | null; criadoEm: string } | null;
-    avaliacoes: Array<{ id: string; numero: number; realizadaEm: string; peso?: number | null; altura?: number | null; percentualGordura?: number | null; objetivo?: string | null; criadaPorNome?: string | null; atualizadaPorNome?: string | null; atualizadaEm?: string | null }>;
-    historicoAvaliacoes: Array<{ id: string; numeroAvaliacao: number; acao: string; resumo: string; usuarioNome: string; usuarioTipo: string; criadoEm: string }>;
+    avaliacoes: Array<{ id: string; numero: number; idade?: number | null; realizadaEm: string; peso?: number | null; altura?: number | null; percentualGordura?: number | null; objetivo?: string | null; observacoes?: string | null; criadaPorNome?: string | null; atualizadaPorNome?: string | null; atualizadaEm?: string | null; perimetros: Array<{ nome: string; valor: number | null }>; dobrasCutaneas: Array<{ nome: string; valor: number | null }> }>;
+    historicoAvaliacoes: Array<{ id: string; numeroAvaliacao: number; acao: string; resumo: string; usuarioNome: string; usuarioTipo: string; criadoEm: string; dadosJson?: string | null }>;
     feedbacks: Array<{ categoria: string; nota: number; comentario: string; status: string; respostaEquipe?: string | null; personalNome?: string | null; criadoEm: string }>;
     solicitacoesAvaliacao: Array<{ origem: string; dataDesejada: string; status: string; urgente: boolean; motivo?: string | null; analisadaPorNome?: string | null; criadaEm: string }>;
     execucoesRecentes: Array<{ id: string; treinoNome: string; data: string; inicio?: string | null; fim?: string | null; duracaoSegundos?: number | null; exercicios: Array<{ nome: string; statusDor: string; feedback?: string | null; hardSets: number; tonelagem: number }> }>;
-    atividades: Array<{ acao: string; resumo: string; usuarioNome: string; resultado: string; criadoEm: string }>;
+    treinosAtuais: Array<{ id: string; nome: string; criadoEm: string; exercicios: Array<{ nome: string; series?: number | null; repeticoes?: number | null; carga?: number | null; descansoSegundos?: number | null; rir?: number | null; observacoes?: string | null }> }>;
+    periodizacoes: Array<{ id: string; nome: string; dataInicio: string; totalSemanas: number }>;
+    atividades: Array<{ acao: string; resumo: string; usuarioNome: string; usuarioTipo: string; resultado: string; metodoHttp: string; rota: string; statusCode: number; criadoEm: string }>;
 }
 
 export interface AvisoGlobal {

@@ -1,12 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import { useAuth } from "@/context/AuthContext";
 import { WORKOUTS, type ExerciseVariationPlan, type WorkoutPlan } from "@/data/workouts";
 import { submitWorkoutSession } from "@/services/executionService";
 
 const STORAGE_KEY = "@treino-system/active-session";
 const HISTORY_KEY = "@treino-system/session-history";
 const PENDING_SUBMISSIONS_KEY = "@treino-system/pending-workout-submissions";
+
+const storageKeyFor = (prefix: string, studentId: string) => `${prefix}:${studentId}`;
 
 function parseRestDurationSeconds(rest: string) {
   const normalized = rest.trim().toLowerCase();
@@ -45,6 +48,7 @@ export type SessionExercise = {
   muscle: string;
   rest: string;
   note?: string;
+  prescriptionMissingFields?: Array<"series" | "reps" | "load" | "rir" | "rest">;
   variations: ExerciseVariationPlan[];
   selectedVariationId: string | null;
   painStatus: "none" | "discomfort" | "pain";
@@ -166,11 +170,12 @@ export function buildWorkoutSubmissionPayload(session: ActiveSession): WorkoutSu
           restSeconds: parseRestDurationSeconds(exercise.rest),
         },
         performed: {
-          reps: session.workoutKind === "strength" && (set.completed || set.hasRecorded) ? set.reps : null,
-          load: session.workoutKind === "strength" && (set.completed || set.hasRecorded) ? set.load : null,
-          rir: session.workoutKind === "strength" && (set.completed || set.hasRecorded) ? set.rir : null,
+          reps: session.workoutKind === "strength" && (set.hasRecorded ? set.reps > 0 : set.completed && !exercise.prescriptionMissingFields?.includes("reps")) ? set.reps : null,
+          load: session.workoutKind === "strength" && (set.hasRecorded ? set.load > 0 || !exercise.prescriptionMissingFields?.includes("load") : set.completed && !exercise.prescriptionMissingFields?.includes("load")) ? set.load : null,
+          rir: session.workoutKind === "strength" && (set.hasRecorded ? set.rir > 0 || !exercise.prescriptionMissingFields?.includes("rir") : set.completed && !exercise.prescriptionMissingFields?.includes("rir")) ? set.rir : null,
           restSeconds: set.hasActualRestRecorded ? set.actualRestSeconds : null,
-          usedPrescription: session.workoutKind === "strength" && set.completed && !set.hasRecorded,
+          usedPrescription: session.workoutKind === "strength" && set.completed && !set.hasRecorded
+            && !exercise.prescriptionMissingFields?.some((field) => field === "reps" || field === "load" || field === "rir"),
         },
       })),
     })),
@@ -181,53 +186,79 @@ export function buildWorkoutSubmissionPayload(session: ActiveSession): WorkoutSu
   };
 }
 
-export async function getPendingWorkoutSubmissions(): Promise<WorkoutSubmissionPayload[]> {
-  const saved = await AsyncStorage.getItem(PENDING_SUBMISSIONS_KEY);
+export async function getPendingWorkoutSubmissions(studentId: string): Promise<WorkoutSubmissionPayload[]> {
+  const saved = await AsyncStorage.getItem(storageKeyFor(PENDING_SUBMISSIONS_KEY, studentId));
   return saved ? JSON.parse(saved) as WorkoutSubmissionPayload[] : [];
 }
 
-export async function removePendingWorkoutSubmission(sessionId: string) {
-  const pending = await getPendingWorkoutSubmissions();
+export async function removePendingWorkoutSubmission(studentId: string, sessionId: string) {
+  const pending = await getPendingWorkoutSubmissions(studentId);
   await AsyncStorage.setItem(
-    PENDING_SUBMISSIONS_KEY,
+    storageKeyFor(PENDING_SUBMISSIONS_KEY, studentId),
     JSON.stringify(pending.filter((item) => item.sessionId !== sessionId)),
   );
 }
 
 export async function flushPendingWorkoutSubmissions(
+  studentId: string,
   sendBatch: (payload: WorkoutSubmissionPayload) => Promise<unknown>,
+  isCurrentUser: () => boolean = () => true,
 ) {
-  const pending = await getPendingWorkoutSubmissions();
+  const pending = await getPendingWorkoutSubmissions(studentId);
   let sentCount = 0;
 
   for (const payload of pending) {
+    if (!isCurrentUser()) break;
     await sendBatch(payload);
-    await removePendingWorkoutSubmission(payload.sessionId);
+    await removePendingWorkoutSubmission(studentId, payload.sessionId);
     sentCount += 1;
   }
 
   return sentCount;
 }
 
-let pendingFlush: Promise<number> | null = null;
+const pendingFlushes = new Map<string, Promise<number>>();
 
-function syncPendingWorkoutSubmissions() {
-  if (!pendingFlush) {
-    pendingFlush = flushPendingWorkoutSubmissions(submitWorkoutSession)
-      .finally(() => { pendingFlush = null; });
-  }
-  return pendingFlush;
+function syncPendingWorkoutSubmissions(studentId: string, isCurrentUser: () => boolean) {
+  const existing = pendingFlushes.get(studentId);
+  if (existing) return existing;
+
+  const task = flushPendingWorkoutSubmissions(studentId, submitWorkoutSession, isCurrentUser)
+    .finally(() => {
+      if (pendingFlushes.get(studentId) === task) pendingFlushes.delete(studentId);
+    });
+  pendingFlushes.set(studentId, task);
+  return task;
 }
 
 const WorkoutContext = createContext<WorkoutContextValue | null>(null);
 
 export function WorkoutProvider({ children }: { children: React.ReactNode }) {
+  const { user, isLoading: authLoading } = useAuth();
+  const studentId = user?.tipo === "ALUNO" && user.statusCadastro === "APROVADO" ? user.alunoId : null;
+  const studentIdRef = useRef<string | null>(studentId);
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
+  const [activeSessionOwnerId, setActiveSessionOwnerId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const activeSessionForUser = activeSessionOwnerId === studentId ? activeSession : null;
+
+  useLayoutEffect(() => {
+    studentIdRef.current = studentId;
+  }, [studentId]);
 
   useEffect(() => {
+    if (authLoading) return;
     let mounted = true;
-    AsyncStorage.getItem(STORAGE_KEY)
+    setHydrated(false);
+    setActiveSession(null);
+    setActiveSessionOwnerId(null);
+
+    if (!studentId) {
+      setHydrated(true);
+      return () => { mounted = false; };
+    }
+
+    AsyncStorage.getItem(storageKeyFor(STORAGE_KEY, studentId))
       .then((value) => {
         if (mounted && value) {
           const saved = JSON.parse(value) as Partial<ActiveSession>;
@@ -272,6 +303,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
               })),
             })),
           } as ActiveSession);
+          setActiveSessionOwnerId(studentId);
         }
       })
       .catch(() => undefined)
@@ -279,18 +311,21 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         if (mounted) setHydrated(true);
       });
     return () => { mounted = false; };
-  }, []);
+  }, [authLoading, studentId]);
 
   useEffect(() => {
-    if (!hydrated) return;
-    if (activeSession) {
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activeSession)).catch(() => undefined);
+    if (!hydrated || !studentId || activeSessionOwnerId !== studentId) return;
+    const key = storageKeyFor(STORAGE_KEY, studentId);
+    if (activeSessionForUser) {
+      AsyncStorage.setItem(key, JSON.stringify(activeSessionForUser)).catch(() => undefined);
     } else {
-      AsyncStorage.removeItem(STORAGE_KEY).catch(() => undefined);
+      AsyncStorage.removeItem(key).catch(() => undefined);
     }
-  }, [activeSession, hydrated]);
+  }, [activeSessionForUser, activeSessionOwnerId, hydrated, studentId]);
 
   const beginWorkout = useCallback((workout: WorkoutPlan) => {
+    if (!studentId) return;
+    setActiveSessionOwnerId(studentId);
     setActiveSession({
       workoutId: workout.id,
       workoutName: workout.name,
@@ -319,6 +354,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         muscle: exercise.muscle,
         rest: exercise.rest,
         note: exercise.note,
+        prescriptionMissingFields: exercise.prescriptionMissingFields ?? [],
         variations: exercise.variations ?? [],
         selectedVariationId: null,
         painStatus: "none",
@@ -337,13 +373,13 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         })),
       })),
     });
-  }, []);
+  }, [studentId]);
 
-  const completedSets = activeSession?.exercises.reduce(
+  const completedSets = activeSessionForUser?.exercises.reduce(
     (sum, exercise) => sum + exercise.sets.filter((set) => set.completed).length,
     0,
   ) ?? 0;
-  const totalSets = activeSession?.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0) ?? 0;
+  const totalSets = activeSessionForUser?.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0) ?? 0;
   const isComplete = totalSets > 0 && completedSets === totalSets;
 
   const updateCurrentSet = useCallback((patch: Partial<Pick<SessionSet, "reps" | "load" | "rir" | "actualRestSeconds">>) => {
@@ -557,25 +593,30 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const saveAndPause = useCallback(async () => {
-    if (activeSession) await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activeSession));
-  }, [activeSession]);
+    if (studentId && activeSessionForUser) {
+      await AsyncStorage.setItem(storageKeyFor(STORAGE_KEY, studentId), JSON.stringify(activeSessionForUser));
+    }
+  }, [activeSessionForUser, studentId]);
 
   const finishWorkout = useCallback(async (cardioElapsedSeconds?: number) => {
     let synced = true;
-    if (activeSession) {
-      const finishedAt = activeSession.finishedAt ?? new Date().toISOString();
+    const session = activeSessionForUser;
+    if (studentId && session) {
+      const historyKey = storageKeyFor(HISTORY_KEY, studentId);
+      const pendingKey = storageKeyFor(PENDING_SUBMISSIONS_KEY, studentId);
+      const finishedAt = session.finishedAt ?? new Date().toISOString();
       const finishedSession: ActiveSession = {
-        ...activeSession,
-        cardioElapsedSeconds: cardioElapsedSeconds ?? activeSession.cardioElapsedSeconds,
+        ...session,
+        cardioElapsedSeconds: cardioElapsedSeconds ?? session.cardioElapsedSeconds,
         cardioStartedAt: null,
         cardioNotificationIds: [],
         phase: "completed",
         finishedAt,
-        durationSeconds: activeSession.durationSeconds ?? getSessionDurationSeconds(activeSession.startedAt, finishedAt),
+        durationSeconds: session.durationSeconds ?? getSessionDurationSeconds(session.startedAt, finishedAt),
       };
       const [savedHistory, savedSubmissions] = await Promise.all([
-        AsyncStorage.getItem(HISTORY_KEY),
-        AsyncStorage.getItem(PENDING_SUBMISSIONS_KEY),
+        AsyncStorage.getItem(historyKey),
+        AsyncStorage.getItem(pendingKey),
       ]);
       const history = savedHistory ? JSON.parse(savedHistory) as ActiveSession[] : [];
       const submissions = savedSubmissions ? JSON.parse(savedSubmissions) as WorkoutSubmissionPayload[] : [];
@@ -588,23 +629,31 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         ...history.filter((item) => `${item.workoutId}-${Date.parse(item.startedAt)}` !== payload.sessionId),
       ].slice(0, 30);
       await AsyncStorage.multiSet([
-        [HISTORY_KEY, JSON.stringify(nextHistory)],
-        [PENDING_SUBMISSIONS_KEY, JSON.stringify(nextSubmissions)],
+        [historyKey, JSON.stringify(nextHistory)],
+        [pendingKey, JSON.stringify(nextSubmissions)],
       ]);
       try {
-        await syncPendingWorkoutSubmissions();
-        synced = !(await getPendingWorkoutSubmissions()).some((item) => item.sessionId === payload.sessionId);
+        await syncPendingWorkoutSubmissions(studentId, () => studentIdRef.current === studentId);
+        synced = !(await getPendingWorkoutSubmissions(studentId)).some((item) => item.sessionId === payload.sessionId);
       } catch {
         synced = false;
       }
     }
-    await AsyncStorage.removeItem(STORAGE_KEY);
-    setActiveSession(null);
+    if (studentId) await AsyncStorage.removeItem(storageKeyFor(STORAGE_KEY, studentId));
+    if (studentIdRef.current === studentId) {
+      setActiveSession(null);
+      setActiveSessionOwnerId(null);
+    }
     return synced;
-  }, [activeSession]);
+  }, [activeSessionForUser, studentId]);
+
+  const syncPendingSubmissions = useCallback(() => {
+    if (!studentId) return Promise.resolve(0);
+    return syncPendingWorkoutSubmissions(studentId, () => studentIdRef.current === studentId);
+  }, [studentId]);
 
   const value = useMemo(() => ({
-    activeSession,
+    activeSession: activeSessionForUser,
     hydrated,
     completedSets,
     totalSets,
@@ -622,8 +671,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     updateCardioTimer,
     saveAndPause,
     finishWorkout,
-    syncPendingSubmissions: syncPendingWorkoutSubmissions,
-  }), [activeSession, hydrated, completedSets, totalSets, isComplete, beginWorkout, updateCurrentSet, updateExerciseFeedback, selectExerciseVariation, beginRest, pauseRestStopwatch, resumeRestStopwatch, restartRestStopwatch, saveCurrentSetAndAdvance, prepareWorkoutSummary, updateCardioTimer, saveAndPause, finishWorkout]);
+    syncPendingSubmissions,
+  }), [activeSessionForUser, hydrated, completedSets, totalSets, isComplete, beginWorkout, updateCurrentSet, updateExerciseFeedback, selectExerciseVariation, beginRest, pauseRestStopwatch, resumeRestStopwatch, restartRestStopwatch, saveCurrentSetAndAdvance, prepareWorkoutSummary, updateCardioTimer, saveAndPause, finishWorkout, syncPendingSubmissions]);
 
   return <WorkoutContext.Provider value={value}>{children}</WorkoutContext.Provider>;
 }

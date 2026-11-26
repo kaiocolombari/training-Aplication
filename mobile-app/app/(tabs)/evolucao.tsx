@@ -4,6 +4,7 @@ import { ArrowUpRight, CalendarDays, ChartNoAxesCombined, Scale, Target, Trendin
 
 import { AppScreen, Eyebrow, MetricCard, SectionTitle, Tag } from "@/components/ui";
 import AssessmentCalendar from "@/components/AssessmentCalendar";
+import { DataUnavailableNotice } from "@/components/DataUnavailableNotice";
 import { useStudentData } from "@/context/StudentDataContext";
 
 function formatWeight(value: number) {
@@ -12,6 +13,9 @@ function formatWeight(value: number) {
 
 export default function EvolutionScreen() {
   const { data, isLoading, error, refresh, registerVolumeMonth } = useStudentData();
+  const avaliacoesIndisponiveis = data.unavailableSections.includes("avaliacoes");
+  const execucoesIndisponiveis = data.unavailableSections.includes("execucoes") || data.workouts.length === 0;
+  const volumeIndisponivel = data.unavailableSections.includes("volume");
   const [volumeModalOpen, setVolumeModalOpen] = useState(false);
   const [volumeSeries, setVolumeSeries] = useState("");
   const [volumeObservation, setVolumeObservation] = useState("");
@@ -20,11 +24,11 @@ export default function EvolutionScreen() {
   const latestWeight = weightHistory.at(-1);
   const firstWeight = weightHistory[0];
   const weightDifference = weightHistory.length > 1 && latestWeight && firstWeight
-    ? (latestWeight.peso ?? 0) - (firstWeight.peso ?? 0)
+    ? latestWeight.peso! - firstWeight.peso!
     : null;
   const completedSessions = data.executions.filter((item) => item.fim).length;
   const recentWeights = weightHistory.slice(-6);
-  const weightValues = recentWeights.map((item) => item.peso ?? 0);
+  const weightValues = recentWeights.map((item) => item.peso!);
   const minWeight = weightValues.length ? Math.min(...weightValues) : 0;
   const maxWeight = weightValues.length ? Math.max(...weightValues) : 0;
   const weightRange = Math.max(0.5, maxWeight - minWeight);
@@ -78,17 +82,21 @@ export default function EvolutionScreen() {
 
       {error ? <Pressable onPress={() => void refresh().catch(() => undefined)} className="mt-5 rounded-2xl border border-[#E8D8CE] bg-[#FBF1EA] p-4"><Text className="text-[11px] font-bold text-[#8D4F3E]">Falha ao atualizar seus dados</Text><Text className="mt-1 text-[10px] text-[#8D6254]">{error} · Toque para tentar novamente.</Text></Pressable> : null}
 
+      {!isLoading && error && data.evaluations.length === 0 && data.executions.length === 0 && data.volumeCycles.length === 0 ? (
+        <View className="mt-5"><DataUnavailableNotice title="Sua evolução está indisponível" detail="Não há dados anteriores para exibir e a consulta atual falhou. Nenhum resultado foi substituído por zero." onRetry={() => void refresh().catch(() => undefined)} /></View>
+      ) : null}
+
       {isLoading ? (
         <View className="mt-8 items-center rounded-[24px] border border-line bg-white p-8"><ActivityIndicator color="#526447" /><Text className="mt-3 text-[10px] text-muted">Carregando sua evolução...</Text></View>
-      ) : (
+      ) : error && data.evaluations.length === 0 && data.executions.length === 0 && data.volumeCycles.length === 0 ? null : (
         <>
-          <View className="mt-6 flex-row items-center justify-between"><Tag tone="lime">{weightHistory.length} AVALIAÇÕES</Tag><View className="flex-row items-center gap-1"><CalendarDays color="#858A82" size={13} /><Text className="text-[10px] font-semibold text-muted">{latestWeight ? new Date(latestWeight.realizadaEm).toLocaleDateString("pt-BR") : "Sem registros"}</Text></View></View>
+          <View className="mt-6 flex-row items-center justify-between"><Tag tone="lime">{avaliacoesIndisponiveis ? "AVALIAÇÕES INDISPONÍVEIS" : `${weightHistory.length} AVALIAÇÕES`}</Tag><View className="flex-row items-center gap-1"><CalendarDays color="#858A82" size={13} /><Text className="text-[10px] font-semibold text-muted">{latestWeight ? new Date(latestWeight.realizadaEm).toLocaleDateString("pt-BR") : avaliacoesIndisponiveis ? "Data indisponível" : "Sem registros"}</Text></View></View>
           <View className="mt-3 flex-row gap-3">
             <MetricCard label="Peso atual" value={latestWeight?.peso != null ? formatWeight(latestWeight.peso) : "—"} unit={latestWeight?.peso != null ? "kg" : undefined} caption={weightDifference === null ? "Sem comparação" : `${weightDifference > 0 ? "+" : ""}${formatWeight(weightDifference)} kg no período`} />
-            <MetricCard label="Treinos concluídos" value={String(completedSessions)} caption="Sessões sincronizadas" />
+            <MetricCard label="Treinos concluídos" value={execucoesIndisponiveis ? "—" : String(completedSessions)} caption={execucoesIndisponiveis ? "Histórico indisponível" : "Sessões sincronizadas"} />
           </View>
 
-          <AssessmentCalendar evaluations={data.evaluations} />
+          {avaliacoesIndisponiveis ? <DataUnavailableNotice title="Calendário de avaliações indisponível" detail="Não foi possível consultar o histórico de avaliações." /> : <AssessmentCalendar evaluations={data.evaluations} />}
 
           <SectionTitle action={weightDifference !== null ? <View className="flex-row items-center gap-1">{weightDifference <= 0 ? <TrendingDown color="#6B8154" size={14} /> : <TrendingUp color="#A85F45" size={14} />}<Text className={`text-[10px] font-bold ${weightDifference <= 0 ? "text-[#6B8154]" : "text-[#A85F45]"}`}>{weightDifference > 0 ? "+" : ""}{formatWeight(weightDifference)} kg</Text></View> : undefined}>Peso corporal</SectionTitle>
           <View className="rounded-[24px] border border-line bg-white p-5">
@@ -96,18 +104,19 @@ export default function EvolutionScreen() {
             {recentWeights.length > 0 ? (
               <View className="mt-6 h-36 flex-row items-end justify-between gap-2 border-b border-[#EAE8E1] pb-2">
                 {recentWeights.map((item, index) => {
-                  const value = item.peso ?? 0;
+                  const value = item.peso!;
                   const height = 28 + ((value - minWeight) / weightRange) * 82;
                   return <View key={item.id} className="flex-1 items-center justify-end gap-2"><Text className={`text-[9px] font-bold ${index === recentWeights.length - 1 ? "text-ink" : "text-[#A1A49D]"}`}>{formatWeight(value)}</Text><View className={`w-full rounded-t-lg ${index === recentWeights.length - 1 ? "bg-lime" : "bg-[#E5E9DF]"}`} style={{ height }} /><Text className="text-[8px] font-bold text-muted">{new Date(item.realizadaEm).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "").toUpperCase()}</Text></View>;
                 })}
               </View>
-            ) : <View className="mt-5 rounded-xl bg-[#F5F4EF] p-4"><Text className="text-[10px] leading-4 text-muted">Ainda não existem avaliações com peso registrado. Seus dados aparecerão aqui quando o personal cadastrar a avaliação.</Text></View>}
+            ) : <View className="mt-5 rounded-xl bg-[#F5F4EF] p-4"><Text className="text-[10px] leading-4 text-muted">{avaliacoesIndisponiveis ? "O histórico de peso está indisponível no momento." : "Ainda não existem avaliações com peso registrado. Seus dados aparecerão aqui quando o personal cadastrar a avaliação."}</Text></View>}
+            {avaliacoesIndisponiveis ? <View className="mt-4"><DataUnavailableNotice compact title="Avaliações indisponíveis" detail="Não foi possível consultar suas medidas. O peso não será estimado." /></View> : null}
             {latestWeight?.percentualGordura != null ? <Text className="mt-3 text-[10px] text-muted">Percentual de gordura na última avaliação: {latestWeight.percentualGordura.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</Text> : null}
           </View>
 
           <SectionTitle>Força nos exercícios</SectionTitle>
           <View className="rounded-[24px] border border-line bg-white px-4">
-            {strength.length > 0 ? strength.map((item, index) => (
+            {execucoesIndisponiveis ? <View className="py-5"><DataUnavailableNotice compact title="Histórico de treinos indisponível" detail="Não foi possível calcular a evolução de carga. Tente atualizar os dados." onRetry={() => void refresh().catch(() => undefined)} /></View> : strength.length > 0 ? strength.map((item, index) => (
               <View key={item.name} className={`flex-row items-center py-4 ${index < strength.length - 1 ? "border-b border-[#F0EEE8]" : ""}`}>
                 <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#EDF2E5]"><Target color="#6A8053" size={17} /></View>
                 <View className="ml-3 flex-1"><Text className="text-[12px] font-bold text-ink">{item.name}</Text><Text className="mt-1 text-[10px] text-muted">Maior carga registrada: {item.latest.toLocaleString("pt-BR")} kg</Text></View>
@@ -116,7 +125,7 @@ export default function EvolutionScreen() {
             )) : <View className="py-5"><Text className="text-[11px] font-bold text-ink">Sem registros de força</Text><Text className="mt-1 text-[10px] leading-4 text-muted">Quando você concluir e sincronizar sessões, a evolução de carga aparecerá aqui.</Text></View>}
           </View>
 
-          {activeVolumeCycle ? (
+          {volumeIndisponivel ? <View className="mt-4"><DataUnavailableNotice title="Acompanhamento de volume indisponível" detail="Os ciclos de volume não puderam ser consultados. Seus outros indicadores continuam disponíveis." onRetry={() => void refresh().catch(() => undefined)} /></View> : activeVolumeCycle ? (
             <>
               <SectionTitle>Acompanhamento de volume</SectionTitle>
               <View className="rounded-[22px] border border-line bg-white p-4">
@@ -129,7 +138,7 @@ export default function EvolutionScreen() {
             </>
           ) : null}
 
-          <View className="mt-4 rounded-[22px] bg-[#E9E6DD] p-4"><View className="flex-row items-center gap-2"><ChartNoAxesCombined color="#56634F" size={16} /><Text className="text-[11px] font-extrabold text-ink">Acompanhamento atualizado</Text></View><Text className="mt-1 text-[10px] leading-4 text-[#777D74]">Os indicadores são construídos com as avaliações e execuções registradas na sua conta. Converse com seu personal sobre os próximos ajustes.</Text></View>
+          <View className="mt-4 rounded-[22px] bg-[#E9E6DD] p-4"><View className="flex-row items-center gap-2"><ChartNoAxesCombined color="#56634F" size={16} /><Text className="text-[11px] font-extrabold text-ink">{error ? "Últimos dados disponíveis" : "Acompanhamento atualizado"}</Text></View><Text className="mt-1 text-[10px] leading-4 text-[#777D74]">Os indicadores são construídos com as avaliações e execuções registradas na sua conta. Converse com seu personal sobre os próximos ajustes.</Text></View>
         </>
       )}
 

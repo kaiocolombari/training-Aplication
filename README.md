@@ -32,7 +32,7 @@ O aluno acessa a experiência mobile após aprovação do cadastro. O ADMIN gere
 ## Requisitos
 
 - .NET SDK 10.
-- Node.js compatível com Vite 8 (Node 20.19+ ou 22.12+).
+- Node.js 22.13+ (mínimo do Expo SDK 58; também atende ao Vite 8).
 - PostgreSQL 16 ou superior.
 - Ferramenta dotnet-ef disponível para aplicar migrations manualmente, quando necessário.
 
@@ -132,8 +132,7 @@ Abra o QR Code no Expo Go compatível com o SDK 58. Configure `mobile-app/.env` 
 ## Primeiro acesso
 
 1. Inicie PostgreSQL e API.
-2. A primeira inicialização cria os grupos musculares padrão e cria o ADMIN indicado em **ADMIN_EMAIL** / **ADMIN_PASSWORD**, caso ainda não exista uma conta com aquele e-mail.
-   - Neste ambiente local, o e-mail inicial configurado é **admin@treinosystem.local**. A senha aleatória foi gravada somente em **TreinoAPI/.env**; consulte esse arquivo no seu computador para copiá-la. Você pode trocar as duas variáveis antes do primeiro login.
+2. A primeira inicialização cria os grupos musculares padrão e cria o ADMIN indicado em **ADMIN_EMAIL** / **ADMIN_PASSWORD**, caso ainda não exista uma conta ADMIN. Defina essas credenciais localmente antes de iniciar a API pela primeira vez; em produção, injete-as pelo gerenciador de segredos do provedor. Não registre senhas na documentação nem as compartilhe em mensagens.
 3. Inicie o frontend e entre com as credenciais ADMIN.
 4. Na seção **Equipe**, o ADMIN cria os Personais com e-mail e senha inicial e vincula alunos já cadastrados.
 5. Compartilhe as credenciais iniciais com cada profissional por um canal seguro. O Personal entra pela mesma tela de login, mas não terá acesso à seção Equipe nem às funções administrativas.
@@ -166,16 +165,31 @@ dotnet ef migrations list
 - Access token e refresh token são enviados em cookies HttpOnly; o refresh token é rotacionado.
 - Operações mutáveis exigem token antifalsificação CSRF.
 - Login/cadastro/refresh possuem rate limit.
-- A API aplica autenticação por padrão e restringe recursos ao ADMIN ou aos Personais com vínculo ativo ao aluno. Somente ADMIN cria/gerencia contas de Personal e vínculos; o profissional pode encerrar o atendimento atual sem apagar o vínculo nem o histórico.
-- O chat valida o vínculo ativo em cada operação. Anexos ficam em armazenamento privado, são validados por assinatura e precisam passar por um antivírus configurado antes de serem publicados.
+- A API aplica autenticação por padrão e restringe os dados do aluno ao ADMIN ou aos Personais com vínculo ativo. A exceção controlada é o contexto de atendimento no chat: o aluno pode iniciar conversa com qualquer Personal ativo, e o contexto só fica disponível durante a conversa ativa quando não há vínculo. Somente ADMIN cria/gerencia contas de Personal e vínculos; o profissional pode encerrar o atendimento atual sem apagar o vínculo nem o histórico.
+- O chat valida os participantes ativos em cada operação. O aluno pode iniciar uma conversa com qualquer Personal ativo; sem vínculo formal, o contexto do aluno fica disponível somente enquanto a conversa estiver ativa. Anexos ficam em armazenamento privado, são validados por assinatura e precisam passar por um antivírus configurado antes de serem publicados.
 - O ADMIN inicial é criado por seed idempotente. Alterar as variáveis de ambiente depois que a conta já existe não troca automaticamente sua senha.
 - Excluir um aluno remove seus dados relacionados; a ação é irreversível. Treinos removidos da ficha são arquivados para preservar o histórico de execução.
 
 ## Limites desta primeira versão
 
-- A integração de calendário e notificações depende da aplicação da migration `AssessmentScheduling` no PostgreSQL. Em Development, a API aplica migrations pendentes na inicialização; fora desse ambiente, aplique-as manualmente antes de publicar.
+- O banco deve estar com todas as migrations aplicadas. Em Development, a API aplica migrations pendentes na inicialização; fora desse ambiente, aplique-as manualmente antes de publicar e faça backup antes de qualquer atualização de schema.
 - Notificações de solicitação de avaliação são persistidas para todos os personais com vínculo ativo e aparecem na central do painel/app. Push remoto de mensagens usa Expo Push e exige configuração do projeto EAS e credenciais APNs/FCM.
 - Relatórios administrativos e trilha geral de auditoria do sistema ainda não estão implementados. A trilha de auditoria das avaliações físicas está disponível.
 - O envio de convite/recuperação de senha por e-mail não está integrado; as credenciais iniciais devem ser entregues por canal seguro.
 - Para produção, configure HTTPS real, CORS com domínios definitivos, secrets no provedor de deploy, backups PostgreSQL e aplique migrations antes de iniciar a API. A aplicação não executa migrations automaticamente fora de Development.
 - Para configurar antivírus, armazenamento de anexos, push mobile e operação/escala do chat, consulte [`CHAT_SETUP.md`](CHAT_SETUP.md).
+
+## Publicação para o cliente
+
+Antes de liberar o primeiro acesso, siga [`RELEASE_READINESS.md`](RELEASE_READINESS.md). O documento reúne configuração por ambiente, build de produção, migrations, backups, health checks, smoke tests, rollback e limitações conhecidas. Não use os valores dos arquivos `.env.example` como credenciais reais.
+
+### Imagens Docker
+
+Execute os builds a partir da raiz do repositório. A imagem da API usa o contexto raiz para copiar somente o projeto .NET; a imagem web recebe a URL pública da API no momento do build.
+
+~~~powershell
+docker build -f TreinoAPI/Dockerfile -t treino-system-api:release .
+docker build -f web-system/Dockerfile --build-arg VITE_API_URL=https://api.seu-dominio.com -t treino-system-web:release web-system
+~~~
+
+Configure as variáveis de produção no provedor, mantenha `/data` da API em armazenamento persistente e exponha os containers somente por um proxy HTTPS configurado. Não publique a API diretamente sem ajustar `AllowedHosts`, `FRONTEND_ORIGINS` e, quando aplicável, `FORWARDED_HEADERS_ENABLED`/`FORWARDED_TRUSTED_PROXIES`.

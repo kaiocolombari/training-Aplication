@@ -42,11 +42,11 @@ namespace TreinoAPI.Migrations
                         SELECT MAX(mensagem.""EnviadaEm"") FROM ""MensagensEquipe"" AS mensagem
                         WHERE mensagem.""ConversaId"" = conversa.""Id""
                     ), conversa.""CriadaEm""),
-                    ""EhTemporaria"" = (usuario_a.""Tipo"" = 2 AND usuario_b.""Tipo"" = 1)
-                        OR (usuario_a.""Tipo"" = 1 AND usuario_b.""Tipo"" = 2),
+                    ""EhTemporaria"" = (usuario_a.""Tipo"" = 'ALUNO' AND usuario_b.""Tipo"" = 'PERSONAL')
+                        OR (usuario_a.""Tipo"" = 'PERSONAL' AND usuario_b.""Tipo"" = 'ALUNO'),
                     ""ExpiraEm"" = CASE
-                        WHEN (usuario_a.""Tipo"" = 2 AND usuario_b.""Tipo"" = 1)
-                          OR (usuario_a.""Tipo"" = 1 AND usuario_b.""Tipo"" = 2)
+                        WHEN (usuario_a.""Tipo"" = 'ALUNO' AND usuario_b.""Tipo"" = 'PERSONAL')
+                          OR (usuario_a.""Tipo"" = 'PERSONAL' AND usuario_b.""Tipo"" = 'ALUNO')
                         THEN COALESCE((
                             SELECT MAX(mensagem.""EnviadaEm"") FROM ""MensagensEquipe"" AS mensagem
                             WHERE mensagem.""ConversaId"" = conversa.""Id""

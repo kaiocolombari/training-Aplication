@@ -4,12 +4,13 @@
 
 - ASP.NET Core SignalR em `/hubs/chat`, autenticado pelo JWT existente.
 - Envio instantâneo por WebSocket, confirmação de entrega e leitura, presença online e evento de digitação.
-- Conversa privada aluno–personal: o aluno escolhe qual profissional quer chamar; o vínculo ativo é validado no servidor.
+- Conversa privada aluno–personal: o aluno pode escolher qualquer personal ativo cadastrado, mesmo sem vínculo em `PersonalAluno`. O personal recebe no painel conversas iniciadas por alunos e também os alunos já vinculados.
 - Conversas aluno–personal expiram 48 horas após a última mensagem de qualquer participante. Cada nova mensagem reinicia a janela. A limpeza roda a cada minuto e apaga mensagens, notificações relacionadas e arquivos anexados. Conversas internas ADMIN–PERSONAL continuam permanentes.
 - Anexos por REST, guardados fora de `wwwroot`, com download restrito aos participantes.
 - Push mobile via Expo Push, inclusive quando o aplicativo está em segundo plano, se o projeto EAS/APNs/FCM estiver configurado.
 - Presença online reflete uma conexão SignalR ativa do app mobile ou do painel web; no mobile a conexão fica ativa enquanto o app está em primeiro plano.
-- Contexto do aluno no painel do personal: avaliações, quem criou/alterou, histórico de ficha, anamnese, feedbacks, solicitações de avaliação, execuções recentes e eventos de auditoria disponíveis.
+- Contexto do aluno no painel do personal: ficha e anamnese, avaliações com medidas, perímetros e dobras, autor da criação/última alteração, snapshots do histórico da avaliação, prescrições e exercícios ativos, periodizações, execuções com indicadores de dor/feedback, feedbacks do aluno, solicitações e eventos de auditoria com usuário, rota, método e status.
+- Para um personal sem vínculo formal, o contexto do prontuário só fica disponível enquanto houver conversa aluno–personal ativa entre os participantes (ou seja, iniciada pelo aluno ou já estabelecida). O chat não concede acesso geral aos endpoints de ficha/treino nem cria vínculo em `PersonalAluno`.
 
 ## Configuração obrigatória para anexos
 

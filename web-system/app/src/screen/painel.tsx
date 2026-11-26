@@ -60,6 +60,7 @@ import AtividadesAdmin from "./AtividadesAdmin";
 import Relatorios from "./Relatorios";
 import ControleAluno from "./ControleAluno";
 import ControleAvancado from "./ControleAvancado";
+import CentralAcompanhamentoPersonal from "../components/CentralAcompanhamentoPersonal";
 import {
     ESCALAS_TEXTO,
     FONTES_UI,
@@ -2542,56 +2543,13 @@ export default function Painel() {
                 const aluno = alunos.find(item => item.id === alunoSelecionadoId);
                 if (!aluno || !alunoSelecionadoId) {
                     return (
-                        <section className="w-full h-full space-y-6">
-                            <header>
-                                <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
-                                    Acompanhamento individual
-                                </p>
-                                <h1
-                                    className={`mt-1 text-2xl font-semibold tracking-tight ${cores.heading}`}
-                                >
-                                    Escolha um aluno para monitorar
-                                </h1>
-                                <p className={`mt-2 text-xs leading-5 ${cores.bodyText}`}>
-                                    Selecione um aluno da sua carteira para abrir o painel 360°,
-                                    consultar os ciclos de volume e acompanhar os próximos
-                                    registros.
-                                </p>
-                            </header>
-                            {alunosQuery.isLoading ? (
-                                <LoadingState label="Carregando alunos disponíveis..." />
-                            ) : alunosQuery.isError ? (
-                                <div className="rounded-2xl border border-[var(--danger)]/20 bg-[var(--danger-soft)] p-5 text-xs text-[var(--danger)]">
-                                    Não foi possível carregar a lista de alunos.
-                                    <button
-                                        type="button"
-                                        onClick={() => void alunosQuery.refetch()}
-                                        className="ml-2 font-semibold underline"
-                                    >
-                                        Tentar novamente
-                                    </button>
-                                </div>
-                            ) : alunos.length ? (
-                                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
-                                    <AlunoMonitoramentoPicker
-                                        alunos={alunosParaMonitoramento}
-                                        selectedId={alunoParaMonitorarId}
-                                        onSelectedChange={setAlunoParaMonitorarId}
-                                        loading={Boolean(carregandoAlunoId)}
-                                        onOpen={alunoId => {
-                                            const selecionado = alunos.find(item => item.id === alunoId);
-                                            if (selecionado) void abrirAluno(selecionado, "controle");
-                                        }}
-                                    />
-                                </div>
-                            ) : (
-                                renderSecaoVazia(
-                                    "Nenhum aluno disponível",
-                                    "Quando houver alunos ativos vinculados à sua carteira, eles aparecerão aqui.",
-                                    <BsActivity />,
-                                )
-                            )}
-                        </section>
+                        <CentralAcompanhamentoPersonal
+                            onAbrirAluno={(alunoId, destino) => {
+                                const selecionado = alunos.find(item => item.id === alunoId);
+                                if (selecionado) void abrirAluno(selecionado, destino);
+                            }}
+                            onNavigate={navegar}
+                        />
                     );
                 }
                 return (

@@ -474,6 +474,8 @@ export default function WorkoutExecutionScreen() {
     try {
       await saveAndPause();
       router.replace("/(tabs)");
+    } catch {
+      Alert.alert("Não foi possível salvar a sessão", "O estado da execução não foi alterado. Verifique o armazenamento do aparelho e tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -528,6 +530,20 @@ export default function WorkoutExecutionScreen() {
     pageOffset.setValue(nextIndex > carouselIndex ? 42 : -42);
     setCarouselState({ key: carouselKey, index: nextIndex });
     Animated.spring(pageOffset, { toValue: 0, useNativeDriver: true, damping: 18, stiffness: 190, mass: 0.7 }).start();
+  }
+
+  if (session.workoutKind === "strength" && session.phase !== "completed" && (!exercise || !set)) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-ink px-7">
+        <StatusBar style="light" />
+        <Info color="#C8EF73" size={28} />
+        <Text className="mt-4 text-center text-[18px] font-extrabold text-white">Sessão com dados incompletos</Text>
+        <Text className="mt-2 text-center text-[11px] leading-5 text-white/60">Não encontramos o exercício ou a série esperada nesta sessão salva. Para evitar registrar valores incorretos, a execução foi pausada.</Text>
+        <Pressable onPress={() => void pauseAndExit()} disabled={saving} className="mt-6 h-12 w-full items-center justify-center rounded-xl bg-lime">
+          {saving ? <ActivityIndicator color="#17211B" /> : <Text className="text-[11px] font-extrabold text-ink">Salvar estado e sair</Text>}
+        </Pressable>
+      </SafeAreaView>
+    );
   }
 
   const meuModal = (
@@ -775,9 +791,9 @@ export default function WorkoutExecutionScreen() {
                       <View className="flex-row gap-2">
                         <View className="flex-1 rounded-xl bg-[#F3F2EC] p-3">
                           <Text className="text-[8px] font-extrabold uppercase tracking-[0.8px] text-[#858A82]">PRESCRITO</Text>
-                          <Text className="mt-1 text-[11px] font-black text-ink">{entry.targetReps} reps</Text>
-                          <Text className="mt-1 text-[9px] text-[#687064]">{entry.targetLoad} kg · RIR {entry.targetRir}</Text>
-                          <Text className="mt-1 text-[9px] text-[#687064]">Descanso: {item.rest}</Text>
+                          <Text className="mt-1 text-[11px] font-black text-ink">{item.prescriptionMissingFields?.includes("reps") ? "Repetições não informadas" : `${entry.targetReps} reps`}</Text>
+                          <Text className="mt-1 text-[9px] text-[#687064]">{item.prescriptionMissingFields?.includes("load") ? "Carga não informada" : `${entry.targetLoad} kg`} · {item.prescriptionMissingFields?.includes("rir") ? "RIR não informado" : `RIR ${entry.targetRir}`}</Text>
+                          <Text className="mt-1 text-[9px] text-[#687064]">Descanso: {item.prescriptionMissingFields?.includes("rest") ? "Não informado" : item.rest}</Text>
                         </View>
                         <View className="flex-1 rounded-xl bg-[#E8EDDE] p-3">
                           <Text className="text-[8px] font-extrabold uppercase tracking-[0.8px] text-[#526447]">REALIZADO</Text>
@@ -1013,20 +1029,20 @@ export default function WorkoutExecutionScreen() {
                     <Text className="text-[9px] font-extrabold uppercase tracking-[1.4px] text-[#858A82]">O QUE FAZER</Text>
                     <Tag tone="lime">PRESCRIÇÃO</Tag>
                   </View>
-                  <Text className="mt-3 text-[42px] font-black tracking-[-1.5px] text-ink">{set.targetReps}</Text>
-                  <Text className="text-[10px] font-semibold text-[#858A82]">repetições planejadas · somente leitura</Text>
+                  <Text className="mt-3 text-[42px] font-black tracking-[-1.5px] text-ink">{exercise.prescriptionMissingFields?.includes("reps") ? "—" : set.targetReps}</Text>
+                  <Text className="text-[10px] font-semibold text-[#858A82]">{exercise.prescriptionMissingFields?.includes("reps") ? "Repetições não informadas pelo personal" : "repetições planejadas · somente leitura"}</Text>
                   <View className="mt-4 flex-row gap-2">
                     <View className="flex-1 rounded-2xl bg-[#F3F2EC] p-3">
                       <Text className="text-[9px] font-bold uppercase tracking-[0.8px] text-[#858A82]">CARGA</Text>
-                      <Text className="mt-1 text-[20px] font-black text-ink">{set.targetLoad}<Text className="text-[10px] font-bold text-[#777D74]"> kg</Text></Text>
+                      <Text className="mt-1 text-[20px] font-black text-ink">{exercise.prescriptionMissingFields?.includes("load") ? "—" : set.targetLoad}<Text className="text-[10px] font-bold text-[#777D74]">{exercise.prescriptionMissingFields?.includes("load") ? " não informada" : " kg"}</Text></Text>
                     </View>
                     <View className="flex-1 rounded-2xl bg-[#F3F2EC] p-3">
                       <Text className="text-[9px] font-bold uppercase tracking-[0.8px] text-[#858A82]">RIR</Text>
-                      <Text className="mt-1 text-[20px] font-black text-ink">{set.targetRir}</Text>
+                      <Text className="mt-1 text-[20px] font-black text-ink">{exercise.prescriptionMissingFields?.includes("rir") ? "—" : set.targetRir}</Text>
                     </View>
                     <View className="flex-1 rounded-2xl bg-[#F3F2EC] p-3">
                       <Text className="text-[9px] font-bold uppercase tracking-[0.8px] text-[#858A82]">DESCANSO</Text>
-                      <Text className="mt-1 text-[20px] font-black text-ink">{exercise.rest}</Text>
+                      <Text className="mt-1 text-[20px] font-black text-ink">{exercise.prescriptionMissingFields?.includes("rest") ? "—" : exercise.rest}</Text>
                     </View>
                   </View>
                   <Text className="mt-4 text-[10px] leading-4 text-[#858A82]">Siga os valores definidos pelo personal. Toque em “Editar valores” para registrar o que realmente executou.</Text>
@@ -1064,7 +1080,7 @@ export default function WorkoutExecutionScreen() {
                     </View>
                     <View className="mt-2 flex-row items-center justify-between">
                       <Text className="text-[9px] font-semibold text-[#526447]">Aguentaria +{set.rir} repetições</Text>
-                      <Text className="text-[9px] text-[#858A82]">Prescrito: RIR {set.targetRir}</Text>
+                      <Text className="text-[9px] text-[#858A82]">Prescrito: {exercise.prescriptionMissingFields?.includes("rir") ? "não informado" : `RIR ${set.targetRir}`}</Text>
                     </View>
                   </View>
                   <View className="mt-3">

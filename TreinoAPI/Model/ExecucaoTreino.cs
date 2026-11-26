@@ -13,6 +13,8 @@ public sealed class ExecucaoTreino
     public string TipoTreino { get; set; } = "strength";
     public int? DuracaoPlanejadaCardioSegundos { get; set; }
     public int? DuracaoRealCardioSegundos { get; set; }
+    public DateTime? RevisadaEm { get; set; }
+    public Guid? RevisadaPorUsuarioId { get; set; }
     public DateTime CriadoEm { get; set; }
     public DateTime AtualizadoEm { get; set; }
     public Treino Treino { get; set; } = null!;

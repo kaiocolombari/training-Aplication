@@ -189,7 +189,9 @@ public sealed class ExecucaoTreinoService
             .ToList();
 
         exercise.HardSets = valid.Count(s => s.Rir.HasValue && s.Rir.Value <= 3);
-        exercise.Tonelagem = exercise.Series.Sum(s => s.Carga * s.Repeticoes);
+        exercise.Tonelagem = exercise.Series
+            .Where(s => s.Concluida && s.Carga > 0 && s.Repeticoes > 0)
+            .Sum(s => s.Carga * s.Repeticoes);
 
         var stimuli = valid.Select(s =>
         {

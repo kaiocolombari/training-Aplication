@@ -232,13 +232,9 @@ public sealed class ChatHub : Hub
 
         if (conversa.UsuarioA.Tipo == TipoUsuario.ALUNO || conversa.UsuarioB.Tipo == TipoUsuario.ALUNO)
         {
-            var vinculoAtivo = await _db.PersonalAlunos.AnyAsync(v => v.Ativo &&
-                ((v.Personal.UsuarioId == conversa.UsuarioAId && v.Aluno.UsuarioId == conversa.UsuarioBId) ||
-                 (v.Personal.UsuarioId == conversa.UsuarioBId && v.Aluno.UsuarioId == conversa.UsuarioAId)));
-            if (!vinculoAtivo ||
-                (conversa.UsuarioA.Tipo != TipoUsuario.ALUNO && conversa.UsuarioB.Tipo != TipoUsuario.ALUNO) ||
+            if (
                 (conversa.UsuarioA.Tipo != TipoUsuario.PERSONAL && conversa.UsuarioB.Tipo != TipoUsuario.PERSONAL))
-                throw new HubException("Você não possui vínculo ativo para acessar esta conversa.");
+                throw new HubException("A conversa deve ocorrer entre um aluno e um personal.");
         }
 
         return conversa;
@@ -253,10 +249,7 @@ public sealed class ChatHub : Hub
         var conversas = await _db.ConversasEquipe.AsNoTracking()
             .Where(c => (c.UsuarioAId == usuarioId || c.UsuarioBId == usuarioId) &&
                 c.UsuarioA.Ativo && c.UsuarioB.Ativo &&
-                (!c.EhTemporaria || c.ExpiraEm == null || c.ExpiraEm > agora) &&
-                (!c.EhTemporaria || _db.PersonalAlunos.Any(v => v.Ativo &&
-                    ((v.Personal.UsuarioId == c.UsuarioAId && v.Aluno.UsuarioId == c.UsuarioBId) ||
-                     (v.Personal.UsuarioId == c.UsuarioBId && v.Aluno.UsuarioId == c.UsuarioAId)))))
+                (!c.EhTemporaria || c.ExpiraEm == null || c.ExpiraEm > agora))
             .Select(c => c.Id)
             .Take(200)
             .ToListAsync();

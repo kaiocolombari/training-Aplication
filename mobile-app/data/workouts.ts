@@ -8,6 +8,7 @@ export type ExercisePlan = {
   rir: number;
   rest: string;
   note?: string;
+  prescriptionMissingFields?: Array<"series" | "reps" | "load" | "rir" | "rest">;
   variations?: ExerciseVariationPlan[];
 };
 

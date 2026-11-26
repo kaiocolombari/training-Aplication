@@ -719,6 +719,12 @@ namespace TreinoAPI.Migrations
                     b.Property<DateTime?>("Inicio")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("RevisadaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RevisadaPorUsuarioId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("SessionId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");

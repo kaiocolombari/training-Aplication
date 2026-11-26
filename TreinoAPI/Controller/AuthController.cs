@@ -9,6 +9,7 @@ using TreinoAPI.Services;
 namespace TreinoAPI.Controllers;
 
 [ApiController]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
 {
@@ -18,7 +19,10 @@ public sealed class AuthController : ControllerBase
     private readonly IAntiforgery _antiforgery;
     private readonly CurrentUserService _currentUser;
 
-    public AuthController(AuthService service, IAntiforgery antiforgery, CurrentUserService currentUser)
+    public AuthController(
+        AuthService service,
+        IAntiforgery antiforgery,
+        CurrentUserService currentUser)
     {
         _service = service;
         _antiforgery = antiforgery;

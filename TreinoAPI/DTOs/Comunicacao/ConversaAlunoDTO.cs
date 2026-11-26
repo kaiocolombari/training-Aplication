@@ -2,7 +2,7 @@ namespace TreinoAPI.DTOs.Comunicacao;
 
 public sealed class ConversaAlunoDTO
 {
-    public Guid AlunoId { get; set; }
+    public Guid? AlunoId { get; set; }
     public Guid OutroUsuarioId { get; set; }
     public string OutroUsuarioNome { get; set; } = string.Empty;
     public string OutroUsuarioTipo { get; set; } = string.Empty;

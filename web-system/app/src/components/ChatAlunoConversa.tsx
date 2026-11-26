@@ -32,8 +32,6 @@ function ContextoAluno({
 }) {
     const avaliacao = contexto?.avaliacoes[0];
     const execucao = contexto?.execucoesRecentes[0];
-    const feedback = contexto?.feedbacks[0];
-    const solicitacao = contexto?.solicitacoesAvaliacao[0];
 
     return (
         <aside className="space-y-3">
@@ -53,7 +51,10 @@ function ContextoAluno({
                             <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Última avaliação</p>
                             {avaliacao ? <>
                                 <p className="mt-1 text-[12px] font-semibold text-[var(--text-primary)]">#{avaliacao.numero} · {new Date(avaliacao.realizadaEm).toLocaleDateString("pt-BR")}</p>
-                                <p className="mt-1 text-[10px] text-[var(--text-secondary)]">{avaliacao.peso != null ? `${avaliacao.peso} kg` : "Peso não informado"} · {avaliacao.percentualGordura != null ? `${avaliacao.percentualGordura}% gordura` : "Sem percentual"}</p>
+                                <p className="mt-1 text-[10px] text-[var(--text-secondary)]">{avaliacao.peso != null ? `${avaliacao.peso} kg` : "Peso não informado"} · {avaliacao.altura != null ? `${avaliacao.altura} cm` : "Altura não informada"} · {avaliacao.percentualGordura != null ? `${avaliacao.percentualGordura}% gordura` : "Sem percentual"}</p>
+                                {avaliacao.idade != null ? <p className="mt-1 text-[9px] text-[var(--text-muted)]">Idade registrada na avaliação: {avaliacao.idade} anos</p> : null}
+                                {avaliacao.objetivo ? <p className="mt-1 text-[9px] text-[var(--text-muted)]">Objetivo: {avaliacao.objetivo}</p> : null}
+                                {avaliacao.observacoes ? <p className="mt-1 text-[9px] leading-4 text-[var(--text-muted)]">{avaliacao.observacoes}</p> : null}
                                 <p className="mt-1 text-[9px] text-[var(--text-muted)]">Criada por {avaliacao.criadaPorNome ?? "não identificado"}</p>
                                 {avaliacao.atualizadaEm ? <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">Última alteração por {avaliacao.atualizadaPorNome ?? "não identificado"} · {horario(avaliacao.atualizadaEm)}</p> : null}
                             </> : <p className="mt-1 text-[10px] text-[var(--text-muted)]">Nenhuma avaliação ativa registrada.</p>}
@@ -63,10 +64,26 @@ function ContextoAluno({
                             <p className="mt-1 text-[10px] leading-5 text-[var(--text-secondary)]">{contexto.ultimaAnamnese?.objetivo ?? "Objetivo ainda não informado."}</p>
                             {contexto.ultimaAnamnese?.observacoes ? <p className="mt-1 text-[9px] leading-4 text-[var(--text-muted)]">{contexto.ultimaAnamnese.observacoes}</p> : null}
                         </div>
-                        {solicitacao ? <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
-                            <p className="text-[9px] font-semibold uppercase tracking-wide text-amber-700">Solicitação de avaliação {solicitacao.urgente ? "· urgente" : ""}</p>
-                            <p className="mt-1 text-[10px] text-[var(--text-primary)]">{solicitacao.status} · {new Date(`${solicitacao.dataDesejada}T12:00:00`).toLocaleDateString("pt-BR")}</p>
-                            {solicitacao.motivo ? <p className="mt-1 text-[9px] text-[var(--text-muted)]">{solicitacao.motivo}</p> : null}
+                        {avaliacao?.perimetros?.length ? <div className="rounded-xl bg-[var(--surface-secondary)] p-3">
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Perímetros · última avaliação</p>
+                            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
+                                {avaliacao.perimetros.map(item => <p key={item.nome} className="text-[9px] text-[var(--text-secondary)]">{item.nome}: <strong className="text-[var(--text-primary)]">{item.valor} cm</strong></p>)}
+                            </div>
+                        </div> : null}
+                        {avaliacao?.dobrasCutaneas?.length ? <div className="rounded-xl bg-[var(--surface-secondary)] p-3">
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Dobras cutâneas</p>
+                            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
+                                {avaliacao.dobrasCutaneas.map((item, index) => <p key={`${item.nome}-${index}`} className="text-[9px] text-[var(--text-secondary)]">{item.nome}: <strong className="text-[var(--text-primary)]">{item.valor} mm</strong></p>)}
+                            </div>
+                        </div> : null}
+                        {contexto.solicitacoesAvaliacao.length ? <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-amber-700">Solicitações de avaliação</p>
+                            <div className="mt-2 space-y-2">
+                                {contexto.solicitacoesAvaliacao.slice(0, 5).map((solicitacao, index) => <div key={`${solicitacao.criadaEm}-${index}`}>
+                                    <p className="text-[10px] text-[var(--text-primary)]">{solicitacao.status} · {new Date(`${solicitacao.dataDesejada}T12:00:00`).toLocaleDateString("pt-BR")}{solicitacao.urgente ? " · urgente" : ""}</p>
+                                    {solicitacao.motivo ? <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">{solicitacao.motivo}</p> : null}
+                                </div>)}
+                            </div>
                         </div> : null}
                         {execucao ? <div>
                             <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Último treino enviado</p>
@@ -75,10 +92,44 @@ function ContextoAluno({
                                 <p key={index} className="mt-1 text-[9px] leading-4 text-[var(--text-muted)]">{item.nome}: {item.statusDor !== "none" ? `dor (${item.statusDor})` : item.feedback}</p>
                             ))}
                         </div> : null}
-                        {feedback ? <div>
-                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Último feedback do aluno</p>
-                            <p className="mt-1 text-[10px] leading-4 text-[var(--text-secondary)]">Nota {feedback.nota}/5 · {feedback.categoria}</p>
-                            <p className="mt-1 text-[9px] leading-4 text-[var(--text-muted)]">{feedback.comentario}</p>
+                        {contexto.feedbacks.length ? <div>
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Feedbacks do aluno</p>
+                            <div className="mt-2 space-y-2">
+                                {contexto.feedbacks.slice(0, 5).map((feedback, index) => <div key={`${feedback.criadoEm}-${index}`}>
+                                    <p className="text-[10px] leading-4 text-[var(--text-secondary)]">Nota {feedback.nota}/5 · {feedback.categoria} · {feedback.status}</p>
+                                    <p className="mt-0.5 text-[9px] leading-4 text-[var(--text-muted)]">{feedback.comentario}</p>
+                                    {feedback.respostaEquipe ? <p className="mt-0.5 text-[9px] leading-4 text-[var(--accent-text)]">Resposta: {feedback.respostaEquipe}</p> : null}
+                                </div>)}
+                            </div>
+                        </div> : null}
+                        {contexto.treinosAtuais.length ? <div className="border-t border-[var(--border)] pt-3">
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Prescrições ativas</p>
+                            <div className="mt-2 space-y-2">
+                                {contexto.treinosAtuais.map(treino => <div key={treino.id} className="rounded-xl bg-[var(--surface-secondary)] p-3">
+                                    <p className="text-[10px] font-semibold text-[var(--text-primary)]">{treino.nome}</p>
+                                    <p className="mt-0.5 text-[8px] text-[var(--text-muted)]">{treino.exercicios.length} exercícios · criado em {new Date(treino.criadoEm).toLocaleDateString("pt-BR")}</p>
+                                    <div className="mt-2 space-y-1.5">
+                                        {treino.exercicios.slice(0, 8).map((exercicio, index) => <p key={`${treino.id}-${index}`} className="text-[9px] leading-4 text-[var(--text-secondary)]">
+                                            <strong className="text-[var(--text-primary)]">{exercicio.nome}</strong> · {exercicio.series ?? "—"}×{exercicio.repeticoes ?? "—"} · {exercicio.carga != null ? `${exercicio.carga} kg` : "carga livre"} · {exercicio.descansoSegundos ?? "—"}s descanso{exercicio.rir != null ? ` · RIR ${exercicio.rir}` : ""}
+                                            {exercicio.observacoes ? ` · ${exercicio.observacoes}` : ""}
+                                        </p>)}
+                                        {treino.exercicios.length > 8 ? <p className="text-[8px] text-[var(--text-muted)]">+ {treino.exercicios.length - 8} exercícios</p> : null}
+                                    </div>
+                                </div>)}
+                            </div>
+                        </div> : <p className="text-[9px] text-[var(--text-muted)]">Nenhuma prescrição ativa cadastrada.</p>}
+                        {contexto.periodizacoes.length ? <div>
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Periodização</p>
+                            {contexto.periodizacoes.map(item => <p key={item.id} className="mt-1 text-[9px] text-[var(--text-secondary)]">{item.nome} · início {new Date(item.dataInicio).toLocaleDateString("pt-BR")} · {item.totalSemanas} semanas</p>)}
+                        </div> : null}
+                        {contexto.execucoesRecentes.length ? <div>
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Execuções recentes</p>
+                            <div className="mt-2 space-y-2">
+                                {contexto.execucoesRecentes.slice(0, 5).map(execucaoItem => <div key={execucaoItem.id} className="rounded-lg border border-[var(--border)] p-2">
+                                    <p className="text-[9px] font-semibold text-[var(--text-primary)]">{execucaoItem.treinoNome} · {new Date(`${execucaoItem.data}T12:00:00`).toLocaleDateString("pt-BR")}</p>
+                                    {execucaoItem.exercicios.filter(item => item.statusDor !== "none" || item.feedback).slice(0, 4).map((item, index) => <p key={index} className="mt-1 text-[8px] leading-4 text-[var(--text-muted)]">{item.nome}: {item.statusDor !== "none" ? `dor (${item.statusDor})` : item.feedback}</p>)}
+                                </div>)}
+                            </div>
                         </div> : null}
                         <div className="grid grid-cols-2 gap-2 border-t border-[var(--border)] pt-3">
                             <button type="button" onClick={onAbrirFicha} className="rounded-lg bg-[var(--accent)] px-2 py-2 text-[9px] font-semibold text-[var(--on-accent)]">Abrir ficha</button>
@@ -94,7 +145,11 @@ function ContextoAluno({
                         <div key={item.id} className="border-l-2 border-[var(--accent)] pl-3">
                             <p className="text-[9px] font-semibold text-[var(--text-primary)]">Avaliação #{item.numeroAvaliacao} · {item.acao}</p>
                             <p className="mt-0.5 text-[9px] leading-4 text-[var(--text-muted)]">{item.resumo}</p>
-                            <p className="mt-0.5 text-[8px] text-[var(--text-muted)]">{item.usuarioNome} · {horario(item.criadoEm)}</p>
+                            <p className="mt-0.5 text-[8px] text-[var(--text-muted)]">{item.usuarioNome} ({item.usuarioTipo}) · {horario(item.criadoEm)}</p>
+                            {item.dadosJson ? <details className="mt-1">
+                                <summary className="cursor-pointer text-[8px] font-semibold text-[var(--accent-text)]">Ver dados registrados na alteração</summary>
+                                <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-[var(--surface-secondary)] p-2 text-[8px] text-[var(--text-secondary)]">{(() => { try { return JSON.stringify(JSON.parse(item.dadosJson), null, 2); } catch { return item.dadosJson; } })()}</pre>
+                            </details> : null}
                         </div>
                     ))}
                 </div>
@@ -104,7 +159,8 @@ function ContextoAluno({
                 <div className="mt-3 space-y-2">
                     {contexto.atividades.slice(0, 5).map((item, index) => <div key={index}>
                         <p className="text-[9px] text-[var(--text-secondary)]">{item.resumo || item.acao}</p>
-                        <p className="text-[8px] text-[var(--text-muted)]">{item.usuarioNome} · {horario(item.criadoEm)}</p>
+                        <p className="text-[8px] text-[var(--text-muted)]">{item.usuarioNome} ({item.usuarioTipo}) · {item.metodoHttp} · HTTP {item.statusCode} · {horario(item.criadoEm)}</p>
+                        {item.rota ? <p className="mt-0.5 break-all text-[8px] text-[var(--text-muted)]">{item.rota}</p> : null}
                     </div>)}
                 </div>
             </section> : null}
@@ -167,6 +223,8 @@ export default function ChatAlunoConversa({
         queryKey: ["comunicacao", "contexto-chat", alunoId],
         queryFn: () => comunicacaoService.obterContextoChatAluno(alunoId!),
         enabled: modo === "personal" && Boolean(alunoId),
+        refetchInterval: 60_000,
+        refetchOnWindowFocus: true,
     });
 
     useEffect(() => {
@@ -370,7 +428,7 @@ export default function ChatAlunoConversa({
                         <div className="m-auto max-w-xs py-8 text-center">
                             <BsChatDots className="mx-auto text-2xl text-[var(--text-muted)]" />
                             <p className="mt-3 text-[11px] font-semibold text-[var(--text-primary)]">Nenhum contato disponível</p>
-                            <p className="mt-1 text-[9px] leading-5 text-[var(--text-muted)]">{modo === "personal" ? "Este aluno precisa ter um vínculo ativo com você para iniciar uma conversa." : "Quando um personal estiver vinculado à sua conta, você poderá conversar por aqui."}</p>
+                            <p className="mt-1 text-[9px] leading-5 text-[var(--text-muted)]">{modo === "personal" ? "As conversas iniciadas por alunos e seus alunos vinculados aparecerão aqui." : "Não há profissionais cadastrados disponíveis para conversar no momento."}</p>
                         </div>
                     )}
                     {modo === "aluno" && contatos.length > 0 && !contato && <p className="m-auto py-8 text-center text-[10px] text-[var(--text-muted)]">Selecione um personal para visualizar ou iniciar a conversa.</p>}

@@ -11,6 +11,8 @@ public sealed class AlunoChatContextoDTO
     public List<FeedbackChatDTO> Feedbacks { get; set; } = [];
     public List<SolicitacaoAvaliacaoChatDTO> SolicitacoesAvaliacao { get; set; } = [];
     public List<ExecucaoChatDTO> ExecucoesRecentes { get; set; } = [];
+    public List<TreinoChatDTO> TreinosAtuais { get; set; } = [];
+    public List<PeriodizacaoChatDTO> Periodizacoes { get; set; } = [];
     public List<AtividadeChatDTO> Atividades { get; set; } = [];
 }
 
@@ -26,6 +28,7 @@ public sealed class AvaliacaoChatDTO
 {
     public Guid Id { get; set; }
     public int Numero { get; set; }
+    public int? Idade { get; set; }
     public DateTime RealizadaEm { get; set; }
     public double? Peso { get; set; }
     public double? Altura { get; set; }
@@ -34,6 +37,15 @@ public sealed class AvaliacaoChatDTO
     public string? CriadaPorNome { get; set; }
     public string? AtualizadaPorNome { get; set; }
     public DateTime? AtualizadaEm { get; set; }
+    public string? Observacoes { get; set; }
+    public List<MedidaChatDTO> Perimetros { get; set; } = [];
+    public List<MedidaChatDTO> DobrasCutaneas { get; set; } = [];
+}
+
+public sealed class MedidaChatDTO
+{
+    public string Nome { get; set; } = string.Empty;
+    public double? Valor { get; set; }
 }
 
 public sealed class HistoricoAvaliacaoChatDTO
@@ -45,6 +57,7 @@ public sealed class HistoricoAvaliacaoChatDTO
     public string UsuarioNome { get; set; } = string.Empty;
     public string UsuarioTipo { get; set; } = string.Empty;
     public DateTime CriadoEm { get; set; }
+    public string? DadosJson { get; set; }
 }
 
 public sealed class FeedbackChatDTO
@@ -80,6 +93,33 @@ public sealed class ExecucaoChatDTO
     public List<ExercicioExecucaoChatDTO> Exercicios { get; set; } = [];
 }
 
+public sealed class TreinoChatDTO
+{
+    public Guid Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public DateTime CriadoEm { get; set; }
+    public List<ExercicioPrescritoChatDTO> Exercicios { get; set; } = [];
+}
+
+public sealed class ExercicioPrescritoChatDTO
+{
+    public string Nome { get; set; } = string.Empty;
+    public int? Series { get; set; }
+    public int? Repeticoes { get; set; }
+    public double? Carga { get; set; }
+    public int? DescansoSegundos { get; set; }
+    public int? Rir { get; set; }
+    public string? Observacoes { get; set; }
+}
+
+public sealed class PeriodizacaoChatDTO
+{
+    public Guid Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public DateTime DataInicio { get; set; }
+    public int TotalSemanas { get; set; }
+}
+
 public sealed class ExercicioExecucaoChatDTO
 {
     public string Nome { get; set; } = string.Empty;
@@ -94,6 +134,10 @@ public sealed class AtividadeChatDTO
     public string Acao { get; set; } = string.Empty;
     public string Resumo { get; set; } = string.Empty;
     public string UsuarioNome { get; set; } = string.Empty;
+    public string UsuarioTipo { get; set; } = string.Empty;
     public string Resultado { get; set; } = string.Empty;
+    public string MetodoHttp { get; set; } = string.Empty;
+    public string Rota { get; set; } = string.Empty;
+    public int StatusCode { get; set; }
     public DateTime CriadoEm { get; set; }
 }

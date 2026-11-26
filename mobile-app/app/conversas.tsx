@@ -32,7 +32,7 @@ export default function ConversationsScreen() {
           <ChevronRight color="#A3A69F" size={18} />
         </Pressable>
       )) : (
-        <View className="items-center rounded-[24px] bg-ink p-7"><MessageCircle color="#C8EF73" size={24} /><Text className="mt-3 text-[13px] font-extrabold text-white">Nenhum personal vinculado</Text><Text className="mt-2 text-center text-[10px] leading-5 text-white/60">Quando um profissional for vinculado à sua conta, você poderá iniciar uma conversa privada.</Text></View>
+        <View className="items-center rounded-[24px] bg-ink p-7"><MessageCircle color="#C8EF73" size={24} /><Text className="mt-3 text-[13px] font-extrabold text-white">Nenhum profissional disponível</Text><Text className="mt-2 text-center text-[10px] leading-5 text-white/60">Não há personais cadastrados ativos para iniciar uma conversa no momento.</Text></View>
       )}
     </AppScreen>
   );

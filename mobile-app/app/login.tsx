@@ -27,16 +27,33 @@ export default function LoginScreen() {
   async function handleLogin() {
     setError("");
     if (!email.trim() || !password) {
+      console.warn("[AUTH][screen] login blocked: missing email or password", {
+        emailPresent: Boolean(email.trim()),
+        passwordPresent: Boolean(password),
+      });
       setError("Informe seu e-mail e senha para continuar.");
       return;
     }
+    console.info("[AUTH][screen] login started", {
+      emailLength: email.trim().length,
+      passwordLength: password.length,
+      rememberMe,
+      enableBiometric,
+    });
     setLoading(true);
     try {
       await login({ email: email.trim(), senha: password }, rememberMe, enableBiometric);
+      console.info("[AUTH][screen] login flow completed");
     } catch (cause) {
+      console.warn("[AUTH][screen] login failed", {
+        errorType: cause instanceof Error ? cause.name : typeof cause,
+        status: cause instanceof ApiError ? cause.status : undefined,
+        message: cause instanceof Error ? cause.message : "Unknown error",
+      });
       setError(cause instanceof ApiError ? cause.message : "Não foi possível entrar. Tente novamente.");
     } finally {
       setLoading(false);
+      console.info("[AUTH][screen] login loading released");
     }
   }
 

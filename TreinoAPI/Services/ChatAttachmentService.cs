@@ -212,13 +212,10 @@ public sealed class ChatAttachmentService
     private async Task ValidarVinculoSeConversaAlunoAsync(Guid usuarioAId, Guid usuarioBId, CancellationToken cancellationToken)
     {
         var tipos = await _db.Usuarios.AsNoTracking()
-            .Where(u => u.Id == usuarioAId || u.Id == usuarioBId)
+            .Where(u => (u.Id == usuarioAId || u.Id == usuarioBId) && u.Ativo)
             .Select(u => u.Tipo).ToListAsync(cancellationToken);
         if (!tipos.Contains(TipoUsuario.ALUNO)) return;
-        var vinculo = await _db.PersonalAlunos.AnyAsync(v => v.Ativo &&
-            ((v.Personal.UsuarioId == usuarioAId && v.Aluno.UsuarioId == usuarioBId) ||
-             (v.Personal.UsuarioId == usuarioBId && v.Aluno.UsuarioId == usuarioAId)), cancellationToken);
-        if (!vinculo || !tipos.Contains(TipoUsuario.PERSONAL) || tipos.Count != 2)
+        if (!tipos.Contains(TipoUsuario.PERSONAL) || tipos.Count != 2)
             throw DomainException.NotFound("Conversa não encontrada.");
     }
 

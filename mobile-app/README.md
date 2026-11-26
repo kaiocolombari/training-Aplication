@@ -37,6 +37,17 @@ npm run lint
 npx expo-doctor
 ```
 
+### Builds para distribuicao
+
+O projeto possui perfis `preview` (APK Android para instalacao interna) e `production` (artefatos para lojas) em `eas.json`. Configure `EXPO_PUBLIC_API_URL` e `EXPO_PUBLIC_EAS_PROJECT_ID` nos ambientes `preview` e `production` do Expo antes de compilar. O ID do projeto e inserido no app config dinamico; nao coloque tokens privados em variaveis `EXPO_PUBLIC_*`.
+
+```powershell
+npx eas-cli@latest build --platform android --profile preview
+npx eas-cli@latest build --platform all --profile production
+```
+
+O primeiro build ainda exige vincular o projeto Expo e configurar as credenciais de assinatura Android/iOS. A configuracao do repositorio nao cria nem envia builds automaticamente.
+
 ## Telas do protótipo
 
 - **Hoje:** carrega o treino do dia e a agenda da periodização, calcula sessões sincronizadas na semana e sequência de dias concluídos, mostra notificações reais e permite retomar uma sessão local.
@@ -55,8 +66,9 @@ npx expo-doctor
 ### Autenticação e cadastro
 
 - **Login:** autentica na rota `POST /api/auth/mobile/login` e consulta `GET /api/auth/me`. O app aceita somente contas do tipo `ALUNO`.
-- **Lembrar de mim:** salva a preferência e o e-mail no AsyncStorage e guarda os tokens no SecureStore nativo (no web, o adaptador de armazenamento usa o AsyncStorage/localStorage). Sem essa opção, os tokens ficam apenas em memória.
-- **Biometria:** quando o aparelho possui biometria cadastrada, o aluno pode ativar o acesso por digital/rosto. A credencial fica no SecureStore com `requireAuthentication`; o próprio sistema operacional exige autenticação ao recuperá-la. O teste de Face ID exige um development build no iOS, não funciona no Expo Go.
+- **Lembrar de mim:** salva a preferência e o e-mail no AsyncStorage e guarda os tokens no SecureStore nativo (no web, o adaptador de armazenamento usa o AsyncStorage/localStorage). Sem essa opção, os tokens da sessão ficam apenas em memória.
+- **Biometria:** quando o aparelho possui biometria cadastrada, o aluno pode ativar o acesso por digital/rosto. O app guarda somente um refresh token rotativo no SecureStore com `requireAuthentication`; a senha não é armazenada para esse recurso. Quando a biometria está ativa, a sessão não é restaurada automaticamente antes da verificação do sistema operacional. O teste de Face ID exige um development build no iOS, não funciona no Expo Go.
+- **Dados locais de treino:** sessão em andamento, histórico e fila de envios pendentes são separados pela identificação do aluno autenticado. Trocar de conta não exibe nem envia a sessão/fila de outra pessoa. Dados gravados por versões antigas sem identificação do aluno não são importados automaticamente, para evitar associação indevida; conclua e sincronize uma sessão antiga antes de atualizar o app.
 - **Cadastro:** `POST /api/auth/mobile/register` cria a conta de aluno pendente. Em seguida, o app abre o questionário definido separadamente em `data/cadastroPerguntas.ts`, espelhando as perguntas de `web-system/app/src/screen/cadastroPerguntas.ts`.
 - **Questionário:** envia `{ respostas }` para `POST /api/cadastro-aluno/respostas`. A tela de espera consulta `/api/auth/me` a cada 30 segundos e libera a área do aluno quando o status muda para `APROVADO`.
 - **Sessão nativa:** a API mantém os endpoints web baseados em cookies HttpOnly e oferece rotas mobile bearer separadas (`/api/auth/mobile/login`, `register`, `refresh` e `logout`). O cliente renova o access token com o refresh token rotativo e envia `Authorization: Bearer` nas rotas protegidas.

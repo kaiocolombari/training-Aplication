@@ -1,0 +1,11 @@
+.git
+.gitignore
+**/node_modules
+**/bin
+**/obj
+**/.expo
+**/build
+**/dist
+**/.env
+**/.env.*
+**/App_Data

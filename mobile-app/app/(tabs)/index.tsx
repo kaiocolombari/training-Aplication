@@ -6,6 +6,7 @@ import { AppScreen, Eyebrow, MetricCard, ProgressTrack, SectionTitle, Tag } from
 import { useAuth } from "@/context/AuthContext";
 import { useStudentData } from "@/context/StudentDataContext";
 import { useWorkout } from "@/context/WorkoutContext";
+import { DataUnavailableNotice } from "@/components/DataUnavailableNotice";
 
 function dateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -15,6 +16,9 @@ export default function HomeScreen() {
   const { activeSession, completedSets, totalSets, beginWorkout } = useWorkout();
   const { user } = useAuth();
   const { data, isLoading, isRefreshing, error, unreadNotifications, todayWorkout, refresh } = useStudentData();
+  const agendaIndisponivel = data.unavailableSections.includes("periodizacao");
+  const execucoesIndisponiveis = data.unavailableSections.includes("execucoes");
+  const dashboardIndisponivel = Boolean(error) && data.workouts.length === 0 && data.schedule.length === 0 && data.evaluations.length === 0 && data.executions.length === 0;
   const hasSession = Boolean(activeSession);
   const activePlan = data.workouts.find((workout) => workout.id === activeSession?.workoutId) ?? todayWorkout;
   const workoutName = activeSession?.workoutName ?? todayWorkout?.name ?? "Dia de recuperação";
@@ -35,8 +39,16 @@ export default function HomeScreen() {
   }
 
   function openWorkout() {
+    if (!activeSession && (agendaIndisponivel || dashboardIndisponivel)) {
+      Alert.alert("Agenda indisponível", "Não foi possível consultar a periodização agora. Atualize os dados antes de iniciar um treino programado.");
+      return;
+    }
     if (!activeSession && todayWorkout && todayWorkout.exercises.length === 0) {
       Alert.alert("Treino sem exercícios", "Seu personal ainda não adicionou exercícios a esta ficha.");
+      return;
+    }
+    if (!activeSession && todayWorkout?.exercises.some((exercise) => exercise.prescriptionMissingFields?.includes("series"))) {
+      Alert.alert("Prescrição incompleta", "Há exercícios sem quantidade de séries cadastrada. Peça ao seu personal para completar a ficha antes de iniciar.");
       return;
     }
     if (!activeSession && todayWorkout) beginWorkout(todayWorkout);
@@ -70,33 +82,28 @@ export default function HomeScreen() {
         <Text className="mt-2 text-[13px] leading-5 text-[#777D74]">Seu planejamento e seus resultados, atualizados com seu personal.</Text>
       </View>
 
-      {error ? (
-        <Pressable onPress={() => void refresh().catch(() => undefined)} className="mt-5 rounded-2xl border border-[#E8D8CE] bg-[#FBF1EA] p-4">
-          <Text className="text-[11px] font-extrabold text-[#8D4F3E]">Não foi possível sincronizar seus dados</Text>
-          <Text className="mt-1 text-[10px] leading-4 text-[#8D6254]">{error} · Toque para tentar novamente.</Text>
-        </Pressable>
-      ) : null}
+      {error ? <DataUnavailableNotice title="Não foi possível sincronizar seus dados" detail={`${error}${data.workouts.length ? " Seus últimos dados carregados continuam disponíveis." : " Os dados que dependem da API estão ocultos para evitar indicadores incorretos."}`} onRetry={() => void refresh().catch(() => undefined)} retrying={isRefreshing} /> : null}
 
       <View className="mt-7 overflow-hidden rounded-[28px] bg-ink p-6">
         <View className="absolute -right-10 -top-12 h-44 w-44 rounded-full border-[28px] border-white/[0.04]" />
         <View className="flex-row items-center justify-between">
-          <Tag tone="lime">{hasSession ? "TREINO EM ANDAMENTO" : todayWorkout ? "TREINO DE HOJE" : "AGENDA DE HOJE"}</Tag>
+          <Tag tone="lime">{hasSession ? "TREINO EM ANDAMENTO" : agendaIndisponivel || dashboardIndisponivel ? "AGENDA INDISPONÍVEL" : todayWorkout ? "TREINO DE HOJE" : "AGENDA DE HOJE"}</Tag>
           <Sparkles color="#C8EF73" size={17} />
         </View>
         <Text className="mt-5 text-[29px] font-black tracking-[-1px] text-white">{workoutName}</Text>
-        <Text className="mt-1 text-[12px] text-white/60">{hasSession ? "Continue de onde você parou" : todayWorkout?.focus ?? "Hoje também faz parte da sua evolução."}</Text>
+        <Text className="mt-1 text-[12px] text-white/60">{hasSession ? "Continue de onde você parou" : agendaIndisponivel || dashboardIndisponivel ? "Não foi possível consultar o treino programado." : todayWorkout?.focus ?? "Hoje também faz parte da sua evolução."}</Text>
         <View className="mt-5 flex-row items-center gap-5">
-          <View className="flex-row items-center gap-1.5"><Clock3 color="#C8EF73" size={14} /><Text className="text-[11px] font-semibold text-white/80">{activePlan ? `~${activePlan.duration} min` : "Sem duração"}</Text></View>
-          <View className="flex-row items-center gap-1.5"><Dumbbell color="#C8EF73" size={14} /><Text className="text-[11px] font-semibold text-white/80">{hasSession ? `${completedSets}/${totalSets} séries` : todayWorkout ? `${todayWorkout.exercises.length} exercícios` : "Descanso"}</Text></View>
+          <View className="flex-row items-center gap-1.5"><Clock3 color="#C8EF73" size={14} /><Text className="text-[11px] font-semibold text-white/80">{activePlan ? activePlan.duration > 0 ? `~${activePlan.duration} min` : "Duração não estimada" : "Sem duração"}</Text></View>
+          <View className="flex-row items-center gap-1.5"><Dumbbell color="#C8EF73" size={14} /><Text className="text-[11px] font-semibold text-white/80">{hasSession ? `${completedSets}/${totalSets} séries` : agendaIndisponivel || dashboardIndisponivel ? "Dados indisponíveis" : todayWorkout ? `${todayWorkout.exercises.length} exercícios` : "Descanso"}</Text></View>
         </View>
         {hasSession ? <View className="mt-5"><View className="mb-2 flex-row justify-between"><Text className="text-[10px] font-semibold text-white/60">Progresso da sessão</Text><Text className="text-[10px] font-bold text-lime">{Math.round(progress)}%</Text></View><ProgressTrack value={progress} dark /></View> : null}
-        <Pressable onPress={openWorkout} disabled={isLoading && !hasSession} className={`mt-6 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-lime active:opacity-80 ${isLoading && !hasSession ? "opacity-60" : ""}`}>
-          {isLoading && !hasSession ? <ActivityIndicator color="#17211B" /> : <><Play color="#17211B" size={17} fill="#17211B" /><Text className="text-[13px] font-extrabold text-ink">{hasSession ? "Continuar treino" : todayWorkout ? "Começar treino" : "Ver planejamento"}</Text><ArrowRight color="#17211B" size={17} /></>}
+        <Pressable onPress={openWorkout} disabled={(isLoading || agendaIndisponivel || dashboardIndisponivel) && !hasSession} className={`mt-6 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-lime active:opacity-80 ${(isLoading || agendaIndisponivel || dashboardIndisponivel) && !hasSession ? "opacity-60" : ""}`}>
+          {isLoading && !hasSession ? <ActivityIndicator color="#17211B" /> : <><Play color="#17211B" size={17} fill="#17211B" /><Text className="text-[13px] font-extrabold text-ink">{hasSession ? "Continuar treino" : agendaIndisponivel || dashboardIndisponivel ? "Agenda indisponível" : todayWorkout ? "Começar treino" : "Ver planejamento"}</Text><ArrowRight color="#17211B" size={17} /></>}
         </Pressable>
       </View>
 
       <SectionTitle action={<Pressable onPress={() => router.push("/(tabs)/treinos")} className="flex-row items-center gap-1"><Text className="text-[11px] font-bold text-[#66715F]">Ver planejamento</Text><ChevronRight color="#66715F" size={15} /></Pressable>}>Sua semana</SectionTitle>
-      {data.schedule.length > 0 ? (
+      {agendaIndisponivel || dashboardIndisponivel ? <DataUnavailableNotice title="Agenda temporariamente indisponível" detail="A periodização não pôde ser consultada. Seus treinos já carregados continuam preservados; tente atualizar para recuperar os dias programados." onRetry={() => void refresh().catch(() => undefined)} retrying={isRefreshing} /> : data.schedule.length > 0 ? (
         <View className="rounded-[22px] border border-line bg-white px-3 py-3">
           {data.schedule.map((item) => {
             const date = new Date(`${item.date}T00:00:00`);
@@ -125,13 +132,13 @@ export default function HomeScreen() {
 
       <SectionTitle>Seu ritmo</SectionTitle>
       <View className="flex-row gap-3">
-        <MetricCard label="Sessões na semana" value={String(sessionsThisWeek)} caption="Treinos sincronizados" />
-        <MetricCard label="Sequência atual" value={String(streak)} unit="dias" caption="Dias consecutivos" />
+        <MetricCard label="Sessões na semana" value={execucoesIndisponiveis || dashboardIndisponivel ? "—" : String(sessionsThisWeek)} caption={execucoesIndisponiveis || dashboardIndisponivel ? "Histórico indisponível" : "Treinos sincronizados"} />
+        <MetricCard label="Sequência atual" value={execucoesIndisponiveis || dashboardIndisponivel ? "—" : String(streak)} unit={execucoesIndisponiveis || dashboardIndisponivel ? undefined : "dias"} caption={execucoesIndisponiveis || dashboardIndisponivel ? "Histórico indisponível" : "Dias consecutivos"} />
       </View>
 
       <View className="mt-4 flex-row items-center gap-3 rounded-[22px] border border-line bg-white p-4">
         <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#F0E9DF]"><Flame color="#A85F45" size={19} /></View>
-        <View className="flex-1"><Text className="text-[12px] font-bold text-ink">Seu acompanhamento</Text><Text className="mt-1 text-[10px] leading-4 text-[#858A82]">{data.personals.length > 0 ? `Seu plano está vinculado a ${data.personals.map((item) => item.outroUsuarioNome).join(", ")}.` : "Seu personal aparecerá aqui quando o vínculo estiver ativo."}</Text></View>
+        <View className="flex-1"><Text className="text-[12px] font-bold text-ink">Seu acompanhamento</Text><Text className="mt-1 text-[10px] leading-4 text-[#858A82]">{data.unavailableSections.includes("personais") ? "Não foi possível consultar seus profissionais vinculados." : data.personals.length > 0 ? `Seu plano está vinculado a ${data.personals.map((item) => item.outroUsuarioNome).join(", ")}.` : "Seu personal aparecerá aqui quando o vínculo estiver ativo."}</Text></View>
         <CalendarDays color="#9A9E95" size={17} />
       </View>
       <View className="mb-5 mt-6 flex-row items-center justify-center gap-1"><Text className="text-[9px] font-medium text-[#A1A39D]">Dados sincronizados com</Text><Text className="text-[9px] font-extrabold tracking-wide text-[#626B5E]">TREINO SYSTEM</Text>{isRefreshing ? <ActivityIndicator size="small" color="#6B8154" /> : null}</View>

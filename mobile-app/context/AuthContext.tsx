@@ -22,7 +22,9 @@ import {
 const REMEMBER_KEY = "@treino-system/remember-me";
 const REMEMBERED_EMAIL_KEY = "@treino-system/remembered-email";
 const BIOMETRIC_ENABLED_KEY = "@treino-system/biometric-enabled";
-const BIOMETRIC_CREDENTIALS_KEY = "treino-system-biometric-login";
+const BIOMETRIC_VERSION_KEY = "@treino-system/biometric-version";
+const BIOMETRIC_REFRESH_TOKEN_KEY = "treino-system-biometric-refresh-token";
+const LEGACY_BIOMETRIC_CREDENTIALS_KEY = "treino-system-biometric-login";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -54,6 +56,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function initialize() {
       try {
+        const biometricVersion = await AsyncStorage.getItem(BIOMETRIC_VERSION_KEY);
+        if (biometricVersion !== "2") {
+          // Version 1 stored the user's password; require a fresh opt-in with a refresh token.
+          await Promise.all([
+            SecureStore.deleteItemAsync(LEGACY_BIOMETRIC_CREDENTIALS_KEY).catch(() => undefined),
+            SecureStore.deleteItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY).catch(() => undefined),
+            AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY),
+          ]);
+          await AsyncStorage.setItem(BIOMETRIC_VERSION_KEY, "2");
+        }
         if (Platform.OS !== "web") {
           const [hasHardware, enrolled] = await Promise.all([
             LocalAuthentication.hasHardwareAsync(),
@@ -74,7 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRememberedEmail(email ?? "");
         setBiometricEnabled(biometric === "true");
 
-        if (shouldRemember) {
+        // When biometrics are enabled, do not restore a usable session before user verification.
+        if (shouldRemember && biometric !== "true") {
           const stored = await restoreAuthTokens();
           if (stored) {
             const currentUser = await authService.me();
@@ -133,23 +146,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (enableBiometric && biometricAvailable && Platform.OS !== "web") {
       try {
         await SecureStore.setItemAsync(
-          BIOMETRIC_CREDENTIALS_KEY,
-          JSON.stringify(payload),
+          BIOMETRIC_REFRESH_TOKEN_KEY,
+          session.refreshToken,
           {
             requireAuthentication: true,
             authenticationPrompt: "Confirme sua identidade para ativar o acesso biométrico",
           },
         );
         await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, "true");
+        await AsyncStorage.setItem(BIOMETRIC_VERSION_KEY, "2");
         setBiometricEnabled(true);
       } catch {
-        await SecureStore.deleteItemAsync(BIOMETRIC_CREDENTIALS_KEY).catch(() => undefined);
+        await SecureStore.deleteItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY).catch(() => undefined);
         await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
         setBiometricEnabled(false);
         Alert.alert("Biometria não ativada", "Sua conta foi conectada, mas o acesso biométrico não pôde ser configurado neste aparelho.");
       }
     } else {
-      await SecureStore.deleteItemAsync(BIOMETRIC_CREDENTIALS_KEY).catch(() => undefined);
+      await SecureStore.deleteItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY).catch(() => undefined);
+      await SecureStore.deleteItemAsync(LEGACY_BIOMETRIC_CREDENTIALS_KEY).catch(() => undefined);
       await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
       setBiometricEnabled(false);
     }
@@ -162,31 +177,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new ApiError("Este dispositivo não possui biometria configurada.");
     }
 
-    let raw: string | null;
+    let refreshToken: string | null;
     try {
-      raw = await SecureStore.getItemAsync(BIOMETRIC_CREDENTIALS_KEY, {
+      refreshToken = await SecureStore.getItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY, {
         requireAuthentication: true,
         authenticationPrompt: "Entre no Treino System",
       });
     } catch {
       throw new ApiError("A autenticação biométrica foi cancelada ou não pôde ser concluída.");
     }
-    if (!raw) {
+    if (!refreshToken) {
       setBiometricEnabled(false);
       await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
       throw new ApiError("A credencial biométrica não está mais disponível. Entre com sua senha.");
     }
 
-    const credentials = JSON.parse(raw) as LoginPayload;
-    const session = await authService.login(credentials);
+    let session;
+    try {
+      session = await authService.refresh(refreshToken);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        await SecureStore.deleteItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY).catch(() => undefined);
+        await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
+        setBiometricEnabled(false);
+        throw new ApiError("Seu acesso biométrico expirou. Entre com sua senha para ativá-lo novamente.", 401);
+      }
+      throw error;
+    }
     if (session.usuario.tipo !== "ALUNO") {
       await authService.logout(session.refreshToken).catch(() => undefined);
+      await SecureStore.deleteItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY).catch(() => undefined);
+      await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
+      setBiometricEnabled(false);
       throw new ApiError("Este aplicativo é destinado aos alunos.");
     }
 
     const remember = (await AsyncStorage.getItem(REMEMBER_KEY)) === "true";
     const { usuario, ...sessionTokens } = session;
     await setAuthTokens(sessionTokens, remember);
+    try {
+      await SecureStore.setItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY, session.refreshToken, {
+        requireAuthentication: true,
+        authenticationPrompt: "Atualize sua credencial biométrica do Treino System",
+      });
+    } catch {
+      await SecureStore.deleteItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY).catch(() => undefined);
+      await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
+      setBiometricEnabled(false);
+      Alert.alert("Biometria desativada", "Sua sessão foi iniciada, mas não foi possível atualizar a credencial protegida deste aparelho.");
+    }
     setUser(usuario);
   }
 
@@ -194,7 +233,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const session = await authService.registerStudent(payload);
     const { usuario, ...sessionTokens } = session;
     await setAuthTokens(sessionTokens, false);
-    await SecureStore.deleteItemAsync(BIOMETRIC_CREDENTIALS_KEY).catch(() => undefined);
+    await SecureStore.deleteItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY).catch(() => undefined);
+    await SecureStore.deleteItemAsync(LEGACY_BIOMETRIC_CREDENTIALS_KEY).catch(() => undefined);
     await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
     setBiometricEnabled(false);
     await persistPreferences(payload.email, false);

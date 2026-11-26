@@ -1,10 +1,13 @@
 using System.Security.Claims;
+using System.Net;
 using System.Text;
 using System.Threading.RateLimiting;
 using DotNetEnv;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -48,6 +51,11 @@ var audience = builder.Configuration["Auth:Audience"] ?? "TreinoWeb";
 var accessMinutes = builder.Configuration.GetValue("Auth:AccessTokenMinutes", 15);
 var refreshDays = builder.Configuration.GetValue("Auth:RefreshTokenDays", 7);
 
+if (accessMinutes is < 1 or > 60)
+    throw new InvalidOperationException("Auth:AccessTokenMinutes deve estar entre 1 e 60 minutos.");
+if (refreshDays is < 1 or > 90)
+    throw new InvalidOperationException("Auth:RefreshTokenDays deve estar entre 1 e 90 dias.");
+
 builder.Services.Configure<AuthOptions>(options =>
 {
     options.Secret = jwtSecret;
@@ -61,6 +69,32 @@ builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    var defaultResponseFactory = options.InvalidModelStateResponseFactory;
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        if (context.HttpContext.Request.Path.StartsWithSegments("/api/auth/mobile/login"))
+        {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger("MobileLoginValidation");
+            var errors = context.ModelState
+                .Where(entry => entry.Value?.Errors.Count > 0)
+                .SelectMany(entry => entry.Value!.Errors.Select(error =>
+                    string.IsNullOrWhiteSpace(error.ErrorMessage) ? "Invalid value" : error.ErrorMessage));
+
+            logger.LogWarning(
+                "Mobile login model validation failed. ContentType={ContentType}; ContentLength={ContentLength}; Fields={Fields}; Errors={Errors}",
+                context.HttpContext.Request.ContentType,
+                context.HttpContext.Request.ContentLength,
+                context.ModelState.Where(entry => entry.Value?.Errors.Count > 0).Select(entry => entry.Key),
+                errors);
+        }
+
+        return defaultResponseFactory(context);
+    };
+});
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ChatPresenceTracker>();
 builder.Services.AddEndpointsApiExplorer();
@@ -108,6 +142,7 @@ builder.Services.AddScoped<PerimetroService>();
 builder.Services.AddScoped<TreinoDiaService>();
 builder.Services.AddScoped<TreinoExercicioService>();
 builder.Services.AddScoped<ExecucaoTreinoService>();
+builder.Services.AddScoped<AcompanhamentoPersonalService>();
 builder.Services.AddScoped<VolumeAcompanhamentoService>();
 builder.Services.AddScoped<VolumeSemanalService>();
 builder.Services.AddScoped<GrupoMuscularService>();
@@ -125,8 +160,56 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.Path = "/";
 });
 
-var origins = (builder.Configuration["FRONTEND_ORIGINS"] ?? "http://localhost:5173")
+var configuredOrigins = builder.Configuration["FRONTEND_ORIGINS"];
+if (string.IsNullOrWhiteSpace(configuredOrigins))
+{
+    if (!builder.Environment.IsDevelopment())
+        throw new InvalidOperationException("Configure FRONTEND_ORIGINS com as origens HTTPS autorizadas do frontend.");
+
+    configuredOrigins = "http://localhost:5173";
+}
+
+var allowedHosts = builder.Configuration["AllowedHosts"];
+if (!builder.Environment.IsDevelopment() &&
+    (string.IsNullOrWhiteSpace(allowedHosts) || allowedHosts.Split(';', StringSplitOptions.TrimEntries).Contains("*")))
+{
+    throw new InvalidOperationException("Configure AllowedHosts com os hosts publicos da API; wildcard nao e permitido em producao.");
+}
+
+var forwardedHeadersEnabled = builder.Configuration.GetValue<bool>("FORWARDED_HEADERS_ENABLED");
+var trustedProxyValues = (builder.Configuration["FORWARDED_TRUSTED_PROXIES"] ?? string.Empty)
     .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+var trustedProxyAddresses = forwardedHeadersEnabled
+    ? trustedProxyValues.Select(value =>
+    {
+        if (!IPAddress.TryParse(value, out var address))
+            throw new InvalidOperationException("FORWARDED_TRUSTED_PROXIES deve conter enderecos IP validos separados por ponto e virgula.");
+        return address;
+    }).ToArray()
+    : [];
+if (forwardedHeadersEnabled && trustedProxyAddresses.Length == 0)
+    throw new InvalidOperationException("Informe FORWARDED_TRUSTED_PROXIES antes de habilitar os cabecalhos encaminhados.");
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    foreach (var address in trustedProxyAddresses)
+        options.KnownProxies.Add(address);
+});
+
+var origins = configuredOrigins
+    .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+if (origins.Length == 0 || origins.Any(origin =>
+    !Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
+    !string.IsNullOrEmpty(uri.UserInfo) || uri.AbsolutePath != "/" ||
+    !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment) ||
+    (!builder.Environment.IsDevelopment() && uri.Scheme != Uri.UriSchemeHttps)))
+{
+    throw new InvalidOperationException(
+        builder.Environment.IsDevelopment()
+            ? "FRONTEND_ORIGINS deve conter origens válidas separadas por ponto e vírgula."
+            : "FRONTEND_ORIGINS deve conter apenas origens HTTPS válidas, sem caminhos ou parâmetros.");
+}
 
 builder.Services.AddCors(options =>
 {
@@ -140,6 +223,17 @@ builder.Services.AddCors(options =>
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/problem+json";
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            type = "about:blank",
+            title = "Limite de tentativas atingido",
+            status = StatusCodes.Status429TooManyRequests,
+            detail = "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente."
+        }, cancellationToken);
+    };
     options.AddPolicy("auth", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -252,6 +346,9 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+if (forwardedHeadersEnabled)
+    app.UseForwardedHeaders();
+
 app.UseMiddleware<AuditoriaMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -277,7 +374,11 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsDevelopment())
     app.UseHsts();
 
-app.UseHttpsRedirection();
+// O app mobile em desenvolvimento acessa a API pela rede local via HTTP.
+// Redirecionar para HTTPS com certificado de desenvolvimento não confiável
+// no dispositivo físico impede o fetch de concluir a requisição.
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(30) });
 app.Use(async (context, next) =>
 {
@@ -286,7 +387,10 @@ app.Use(async (context, next) =>
         var tokenExplicito = context.Request.Query.ContainsKey("access_token") ||
             context.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
         var origin = context.Request.Headers.Origin.ToString();
-        if (!tokenExplicito && !origins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+        var origemInvalida = !string.IsNullOrWhiteSpace(origin) &&
+            !origins.Contains(origin, StringComparer.OrdinalIgnoreCase);
+        var clienteSemOrigemNemToken = string.IsNullOrWhiteSpace(origin) && !tokenExplicito;
+        if (origemInvalida || clienteSemOrigemNemToken)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return;
@@ -303,6 +407,27 @@ app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat").RequireAuthorization();
+app.MapGet("/health/live", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
+app.MapGet("/health/ready", async (
+    AppDbContext db,
+    ILogger<Program> logger,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        if (await db.Database.CanConnectAsync(cancellationToken))
+            return Results.Ok(new { status = "ready" });
+    }
+    catch (Exception exception)
+    {
+        logger.LogWarning(exception, "A verificação de prontidão não conseguiu acessar o PostgreSQL.");
+    }
+
+    return Results.Problem(
+        statusCode: StatusCodes.Status503ServiceUnavailable,
+        title: "Serviço indisponível",
+        detail: "Uma dependência necessária não está disponível.");
+}).AllowAnonymous();
 
 app.Run();
 

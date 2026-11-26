@@ -113,7 +113,7 @@ export type StudentNotification = {
 };
 
 export type PersonalConversation = {
-  alunoId: string;
+  alunoId: string | null;
   outroUsuarioId: string;
   outroUsuarioNome: string;
   outroUsuarioTipo: string;
@@ -157,6 +157,7 @@ export type StudentDashboardData = {
   personals: PersonalConversation[];
   feedbacks: StudentFeedback[];
   feedbackPersonals: FeedbackPersonal[];
+  unavailableSections: string[];
 };
 
 type ApiPeriodization = { id: string; nome?: string | null; dataInicio: string };
@@ -202,16 +203,25 @@ function mapExercise(item: ApiExercise): ExercisePlan {
     rir: item.rirMax ?? 0,
     rest: item.intervalo === null || item.intervalo === undefined ? "—" : `${item.intervalo} s`,
     note: item.observacoes ?? undefined,
+    prescriptionMissingFields: [
+      ...(item.series == null ? ["series" as const] : []),
+      ...(item.repeticoes == null ? ["reps" as const] : []),
+      ...(item.carga == null ? ["load" as const] : []),
+      ...(item.rirMax == null ? ["rir" as const] : []),
+      ...(item.intervalo == null ? ["rest" as const] : []),
+    ],
     variations: (item.variacoes ?? []).map((variation) => mapVariation(variation, item)),
   };
 }
 
 function estimateWorkoutMinutes(exercises: ExercisePlan[]) {
+  if (!exercises.length || exercises.some((exercise) =>
+    exercise.prescriptionMissingFields?.includes("series") || exercise.prescriptionMissingFields?.includes("rest"))) return 0;
   const seconds = exercises.reduce((total, exercise) => {
     const restSeconds = Number.parseInt(exercise.rest, 10) || 0;
     return total + exercise.sets * 45 + Math.max(0, exercise.sets - 1) * restSeconds;
   }, 0);
-  return Math.max(1, Math.ceil(seconds / 60));
+  return seconds > 0 ? Math.ceil(seconds / 60) : 0;
 }
 
 function mapWorkout(record: ApiWorkout, exercises: ExercisePlan[], day = "") : WorkoutPlan {
@@ -237,26 +247,42 @@ async function optionalGet<T>(endpoint: string, fallback: T): Promise<T> {
   }
 }
 
+async function dashboardSectionGet<T>(
+  endpoint: string,
+  fallback: T,
+  section: string,
+  unavailableSections: Set<string>,
+): Promise<T> {
+  try {
+    return await apiGet<T>(endpoint);
+  } catch (cause) {
+    if (cause instanceof ApiError && (cause.status === 401 || cause.status === 403)) throw cause;
+    unavailableSections.add(section);
+    return fallback;
+  }
+}
+
 export const studentService = {
   async getDashboard(alunoId: string): Promise<StudentDashboardData> {
+    const unavailableSections = new Set<string>();
     const workoutRecords = await apiGet<ApiWorkout[]>("/api/treinos");
     const workoutDetails = await Promise.all(workoutRecords.map(async (record) => {
       const [exerciseRecords, executions] = await Promise.all([
         apiGet<ApiExercise[]>(`/api/treinos/${record.id}/exercicios`),
-        optionalGet<WorkoutExecution[]>(`/api/treinos/${record.id}/execucoes`, []),
+        dashboardSectionGet<WorkoutExecution[]>(`/api/treinos/${record.id}/execucoes`, [], "execucoes", unavailableSections),
       ]);
       const exercises = [...exerciseRecords].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)).map(mapExercise);
       return { record, plan: mapWorkout(record, exercises), executions };
     }));
 
     const [periodizations, evaluations, volumeCycles, notifications, personals, feedbacks, feedbackPersonals] = await Promise.all([
-      optionalGet<ApiPeriodization[]>(`/api/alunos/${alunoId}/periodizacoes`, []),
-      optionalGet<StudentEvaluation[]>(`/api/alunos/${alunoId}/avaliacoes`, []),
-      optionalGet<VolumeCycle[]>(`/api/alunos/${alunoId}/volume-ciclos`, []),
-      optionalGet<StudentNotification[]>("/api/comunicacao/notificacoes", []),
-      optionalGet<PersonalConversation[]>("/api/comunicacao/conversas/personais", []),
-      optionalGet<StudentFeedback[]>("/api/feedback/meus", []),
-      optionalGet<FeedbackPersonal[]>("/api/feedback/personais", []),
+      dashboardSectionGet<ApiPeriodization[]>(`/api/alunos/${alunoId}/periodizacoes`, [], "periodizacao", unavailableSections),
+      dashboardSectionGet<StudentEvaluation[]>(`/api/alunos/${alunoId}/avaliacoes`, [], "avaliacoes", unavailableSections),
+      dashboardSectionGet<VolumeCycle[]>(`/api/alunos/${alunoId}/volume-ciclos`, [], "volume", unavailableSections),
+      dashboardSectionGet<StudentNotification[]>("/api/comunicacao/notificacoes", [], "notificacoes", unavailableSections),
+      dashboardSectionGet<PersonalConversation[]>("/api/comunicacao/conversas/personais", [], "personais", unavailableSections),
+      dashboardSectionGet<StudentFeedback[]>("/api/feedback/meus", [], "feedbacks", unavailableSections),
+      dashboardSectionGet<FeedbackPersonal[]>("/api/feedback/personais", [], "feedback-personais", unavailableSections),
     ]);
 
     const selectedPeriodization = [...periodizations].sort((a, b) =>
@@ -266,7 +292,7 @@ export const studentService = {
     let schedule: StudentScheduleDay[] = [];
 
     if (selectedPeriodization) {
-      const weeks = await optionalGet<ApiWeek[]>(`/api/periodizacoes/${selectedPeriodization.id}/semanas`, []);
+      const weeks = await dashboardSectionGet<ApiWeek[]>(`/api/periodizacoes/${selectedPeriodization.id}/semanas`, [], "periodizacao", unavailableSections);
       const start = dateFromKey(selectedPeriodization.dataInicio);
       const currentWeekNumber = Math.max(1, Math.floor((dateFromKey(localDateKey(new Date())).getTime() - start.getTime()) / (7 * 86400000)) + 1);
       const selectedWeek = weeks.find((week) => week.numero === currentWeekNumber)
@@ -279,10 +305,10 @@ export const studentService = {
       };
 
       if (selectedWeek) {
-        const days = await optionalGet<ApiDay[]>(`/api/periodizacao-semanas/${selectedWeek.id}/dias`, []);
+        const days = await dashboardSectionGet<ApiDay[]>(`/api/periodizacao-semanas/${selectedWeek.id}/dias`, [], "periodizacao", unavailableSections);
         const planById = new Map(workoutDetails.map(({ record, plan }) => [record.id, plan]));
         schedule = await Promise.all(days.map(async (day) => {
-          const links = await optionalGet<ApiDayWorkout[]>(`/api/periodizacao-dias/${day.id}/treinos`, []);
+          const links = await dashboardSectionGet<ApiDayWorkout[]>(`/api/periodizacao-dias/${day.id}/treinos`, [], "periodizacao", unavailableSections);
           const workouts = [...links]
             .sort((a, b) => a.ordem - b.ordem)
             .map((link) => planById.get(link.treinoId))
@@ -315,6 +341,7 @@ export const studentService = {
       personals,
       feedbacks: [...feedbacks].sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)),
       feedbackPersonals,
+      unavailableSections: [...unavailableSections],
     };
   },
 

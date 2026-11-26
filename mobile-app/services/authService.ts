@@ -31,11 +31,15 @@ export interface AuthSessionResponse extends AuthTokens {
   usuario: AuthUser;
 }
 
+
+
 export const authService = {
   me: () => apiGet<AuthUser>("/api/auth/me"),
+
   login: (payload: LoginPayload) =>
-    apiPost<AuthSessionResponse>("/api/auth/mobile/login", payload),
+    apiPost<AuthSessionResponse>("/api/auth/mobile/login", payload, 20000),
   registerStudent: (payload: RegisterStudentPayload) =>
+
     apiPost<AuthSessionResponse>("/api/auth/mobile/register", payload),
   refresh: (refreshToken: string) =>
     apiPost<AuthSessionResponse>("/api/auth/mobile/refresh", { refreshToken }),
