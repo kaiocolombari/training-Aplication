@@ -12,13 +12,17 @@
 
 ### Convites
 - Cada personal cria quantos links precisar, identificados por um apelido/campanha.
+- ADMIN também pode criar, listar e revogar os próprios convites, além de consultar o resumo de toda a equipe. Se a conta ADMIN ainda não tiver perfil Personal, o primeiro convite solicita o nome profissional e cria esse perfil 1:1; o papel da conta continua ADMIN e não há cadastro público de administradores.
+- A origem do convite é o perfil profissional vinculado ao usuário que criou o link. `CriadoPorUsuarioId` mantém a autoria da conta e `PersonalId` registra a identidade profissional exibida ao aluno.
 - Cada link recebe 256 bits aleatórios; somente o SHA-256 do token é armazenado.
 - O token bruto é exibido uma única vez ao criar o link. A tela não consegue recuperar o token depois; gere outro se perder.
 - Links expiram após 30 dias por padrão, podem ser revogados e têm limite padrão de 30 registros por hora por convite.
 - O aluno só consegue criar conta usando um convite válido.
 - O endpoint antigo de cadastro aberto (POST /api/auth/register) e o endpoint de cadastro mobile (POST /api/auth/mobile/register) retornam HTTP 410.
 - A rota pública do site é /convite/:token. Sem convite, a landing page direciona para o WhatsApp configurado.
+- A landing pública identifica o nome do profissional que enviou o convite antes do cadastro.
 - Depois de criar a conta, o aluno preenche o formulário no site. O aplicativo mobile oferece somente login; contas pendentes recebem uma tela de status e link para o site.
+- A sessão autenticada do próprio aluno contém o nome e o telefone do profissional de origem. O mobile mostra esses dados no Perfil e oferece ação para ligar; esse telefone não é incluído em respostas de outros alunos.
 
 ### Análise de cadastro
 - O formulário não é apagado quando o cadastro é aprovado ou devolvido para ajustes.
@@ -123,6 +127,8 @@ Não execute rollback de migrations depois de já existirem convites/cadastros n
 - Personal A e Personal B conseguem abrir e modificar o mesmo aluno, mesmo que apenas A o tenha convidado.
 - O detalhe do aluno mostra a origem, checklist e eventos de auditoria.
 - ADMIN vê por personal a quantidade e a lista de alunos convidados, com status de análise.
+- ADMIN cria seu primeiro convite informando nome profissional (quando ainda não possui perfil Personal), vê seus links em "Links gerados" e continua com acesso à visão consolidada da equipe.
+- O link de convite identifica o profissional na landing pública e, após login, o aluno vê nome/telefone do convidante em Perfil > Informações do convite.
 - Mobile não oferece cadastro; login pendente abre a tela de análise e link para o site.
 - Link de download do APK e contato do WhatsApp abrem os destinos configurados.
 

@@ -12,4 +12,6 @@ public sealed class UsuarioSessaoDTO
     public bool FormularioEnviado { get; set; }
     public string? ObservacaoAnalise { get; set; }
     public bool ControleAvancadoHabilitado { get; set; }
+    public string? ConvidadoPorPersonalNome { get; set; }
+    public string? ConvidadoPorPersonalTelefone { get; set; }
 }

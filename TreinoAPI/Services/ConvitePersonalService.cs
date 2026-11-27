@@ -13,9 +13,7 @@ public sealed class ConvitePersonalService(AppDbContext db, CurrentUserService c
 {
     public async Task<ConviteCriadoDTO> CriarAsync(CriarConviteDTO dto)
     {
-        if (current.Role != "PERSONAL") throw DomainException.Forbidden();
-        var personal = await db.Personais.FirstOrDefaultAsync(p => p.UsuarioId == current.UsuarioId && p.Usuario!.Ativo)
-            ?? throw DomainException.Forbidden();
+        var personal = await ObterPerfilPersonalAtualAsync(dto.NomePersonal, criarParaAdmin: true);
         var apelido = string.IsNullOrWhiteSpace(dto.Apelido) ? "Convite" : dto.Apelido.Trim();
         if (apelido.Length > 80) throw DomainException.BadRequest("O nome do convite deve ter até 80 caracteres.");
 
@@ -38,9 +36,14 @@ public sealed class ConvitePersonalService(AppDbContext db, CurrentUserService c
 
     public async Task<List<ConviteResumoDTO>> ListarMeusAsync()
     {
-        if (current.Role != "PERSONAL") throw DomainException.Forbidden();
+        if (current.Role is not ("PERSONAL" or "ADMIN")) throw DomainException.Forbidden();
         var personalId = await db.Personais.Where(p => p.UsuarioId == current.UsuarioId && p.Usuario!.Ativo)
-            .Select(p => (Guid?)p.Id).FirstOrDefaultAsync() ?? throw DomainException.Forbidden();
+            .Select(p => (Guid?)p.Id).FirstOrDefaultAsync();
+        if (personalId is null)
+        {
+            if (current.Role == "ADMIN") return [];
+            throw DomainException.Forbidden();
+        }
         return await db.ConvitesPersonais.AsNoTracking().Where(c => c.PersonalId == personalId)
             .OrderByDescending(c => c.CriadoEm)
             .Select(c => new ConviteResumoDTO
@@ -53,9 +56,10 @@ public sealed class ConvitePersonalService(AppDbContext db, CurrentUserService c
 
     public async Task RevogarAsync(Guid id)
     {
-        if (current.Role != "PERSONAL") throw DomainException.Forbidden();
+        if (current.Role is not ("PERSONAL" or "ADMIN")) throw DomainException.Forbidden();
         var personalId = await db.Personais.Where(p => p.UsuarioId == current.UsuarioId && p.Usuario!.Ativo)
-            .Select(p => (Guid?)p.Id).FirstOrDefaultAsync() ?? throw DomainException.Forbidden();
+            .Select(p => (Guid?)p.Id).FirstOrDefaultAsync();
+        if (personalId is null) throw DomainException.NotFound("Convite não encontrado.");
         var convite = await db.ConvitesPersonais.FirstOrDefaultAsync(c => c.Id == id && c.PersonalId == personalId)
             ?? throw DomainException.NotFound("Convite não encontrado.");
         convite.RevogadoEm ??= DateTime.UtcNow;
@@ -106,6 +110,33 @@ public sealed class ConvitePersonalService(AppDbContext db, CurrentUserService c
             });
         }
         return resultado;
+    }
+
+    private async Task<Personal> ObterPerfilPersonalAtualAsync(string? nomePersonal, bool criarParaAdmin)
+    {
+        if (current.Role is not ("PERSONAL" or "ADMIN")) throw DomainException.Forbidden();
+        var usuario = await db.Usuarios.Include(u => u.Personal)
+            .FirstOrDefaultAsync(u => u.Id == current.UsuarioId && u.Ativo)
+            ?? throw DomainException.Forbidden();
+        if (usuario.Personal is not null) return usuario.Personal;
+        if (!criarParaAdmin || current.Role != "ADMIN" || usuario.Tipo != TipoUsuario.ADMIN)
+            throw DomainException.Forbidden();
+
+        var nome = nomePersonal?.Trim();
+        if (string.IsNullOrWhiteSpace(nome))
+            throw DomainException.BadRequest("Informe seu nome profissional para criar seu primeiro convite.");
+        if (nome.Length > 160)
+            throw DomainException.BadRequest("O nome profissional deve ter até 160 caracteres.");
+
+        var perfil = new Personal
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = usuario.Id,
+            Nome = nome
+        };
+        db.Personais.Add(perfil);
+        await db.SaveChangesAsync();
+        return perfil;
     }
 
     public static string HashToken(string token) =>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsChatSquareText, BsStarFill } from "react-icons/bs";
 import { adminExtrasService } from "../service/adminExtrasService";
+import { exercicioCatalogoService, type ExercicioCatalogo } from "../service/exercicioCatalogoService";
 import { LoadingState } from "../components/LoadingState";
 
 const statusNome: Record<string, string> = {
@@ -16,6 +17,7 @@ export default function FeedbackAlunos() {
     const [respostas, setRespostas] = useState<Record<string, string>>({});
     const [status, setStatus] = useState<Record<string, string>>({});
     const [erro, setErro] = useState("");
+    const [verificacoes, setVerificacoes] = useState<Record<string, { loading: boolean; results?: Array<ExercicioCatalogo & { pontuacao: number; tipoCorrespondencia: string }>; error?: string }>>({});
     const feedbacks = useQuery({
         queryKey: ["extras", "feedback", "equipe"],
         queryFn: adminExtrasService.listarFeedback,
@@ -41,6 +43,21 @@ export default function FeedbackAlunos() {
         },
         onError: (error: Error) => setErro(error.message),
     });
+
+    async function verificarVideoAusente(id: string, comentario: string) {
+        const nome = comentario.match(/referente a \"([^\"]+)\"/i)?.[1]?.trim();
+        if (!nome) {
+            setVerificacoes(current => ({ ...current, [id]: { loading: false, results: [], error: "Não foi possível identificar o nome do exercício neste diagnóstico." } }));
+            return;
+        }
+        setVerificacoes(current => ({ ...current, [id]: { loading: true } }));
+        try {
+            const results = await exercicioCatalogoService.buscar(nome);
+            setVerificacoes(current => ({ ...current, [id]: { loading: false, results } }));
+        } catch (error) {
+            setVerificacoes(current => ({ ...current, [id]: { loading: false, error: error instanceof Error ? error.message : "Falha ao consultar o catálogo." } }));
+        }
+    }
 
     return (
         <section className="mx-auto w-full max-w-[1280px] space-y-6">
@@ -143,20 +160,42 @@ export default function FeedbackAlunos() {
                                 {statusNome[item.status] ?? item.status}
                             </span>
                         </div>
-                        <div
-                            className="mt-3 flex items-center gap-1 text-amber-500"
-                            aria-label={`Nota ${item.nota} de 5`}
-                        >
-                            {Array.from({ length: 5 }, (_, i) => (
-                                <BsStarFill
-                                    key={i}
-                                    className={i < item.nota ? "opacity-100" : "opacity-20"}
-                                />
-                            ))}
-                        </div>
+                        {item.categoria !== "VIDEO_NAO_ENCONTRADO" ? (
+                            <div className="mt-3 flex items-center gap-1 text-amber-500" aria-label={`Nota ${item.nota} de 5`}>
+                                {Array.from({ length: 5 }, (_, i) => <BsStarFill key={i} className={i < item.nota ? "opacity-100" : "opacity-20"} />)}
+                            </div>
+                        ) : null}
                         <p className="mt-3 whitespace-pre-wrap text-[12px] leading-6 text-[var(--text-secondary)]">
                             {item.comentario}
                         </p>
+                        {item.categoria === "VIDEO_NAO_ENCONTRADO" && (
+                            <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Diagnóstico de vídeo ausente</p>
+                                        <p className="mt-1 text-[10px] text-[var(--text-secondary)]">Verifique novamente após cadastrar um sinônimo ou adicionar uma demonstração na Biblioteca.</p>
+                                    </div>
+                                    <button type="button" disabled={verificacoes[item.id]?.loading} onClick={() => void verificarVideoAusente(item.id, item.comentario)} className="h-9 rounded-lg bg-[var(--accent)] px-3 text-[10px] font-bold text-white disabled:opacity-50">
+                                        {verificacoes[item.id]?.loading ? "Verificando..." : "Verificar novamente"}
+                                    </button>
+                                </div>
+                                {verificacoes[item.id]?.error ? <p role="alert" className="mt-3 text-[10px] text-red-600">{verificacoes[item.id]?.error}</p> : null}
+                                {verificacoes[item.id]?.results ? (
+                                    <div className="mt-3 space-y-2">
+                                        {verificacoes[item.id]!.results!.length ? verificacoes[item.id]!.results!.map(candidate => (
+                                            <div key={candidate.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-[var(--text-primary)]">{candidate.nome}</p>
+                                                    <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">{candidate.grupoMuscular || "Grupo não definido"} · {candidate.sinonimos.length} sinônimo(s)</p>
+                                                </div>
+                                                <span className="rounded-md bg-[var(--surface-tertiary)] px-2 py-1 text-[9px] font-semibold text-[var(--text-secondary)]">{candidate.videos.length ? `${candidate.videos.length} vídeo(s)` : "Sem vídeo"} · {Math.round(candidate.pontuacao * 100)}%</span>
+                                            </div>
+                                        )) : <p className="rounded-lg bg-[var(--surface)] p-3 text-[10px] text-[var(--text-secondary)]">Nenhuma correspondência encontrada. Abra a Biblioteca, filtre pela região muscular e cadastre o exercício ou um sinônimo.</p>}
+                                        <p className="text-[9px] leading-4 text-[var(--text-muted)]">Os resultados são sugestões para conferência manual; nenhuma associação é feita automaticamente por esta verificação.</p>
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
                         {item.respostaEquipe && (
                             <div className="mt-4 rounded-lg border border-[var(--accent)]/15 bg-[var(--accent-soft)] p-3">
                                 <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--accent-text)]">

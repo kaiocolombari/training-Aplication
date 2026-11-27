@@ -112,8 +112,29 @@ export type WorkoutSubmissionPayload = {
   cardio: { plannedDurationSeconds: number; activityDurationSeconds: number | null } | null;
 };
 
+export type CompletedWorkoutSummary = {
+  sessionId: string;
+  workoutId: string;
+  workoutName: string;
+  workoutKind: ActiveSession["workoutKind"];
+  startedAt: string;
+  finishedAt: string;
+  durationSeconds: number;
+  completedSets: number;
+  totalSets: number;
+  exercises: Array<{
+    name: string;
+    muscle: string;
+    completedSets: number;
+    totalReps: number;
+    bestLoad: number;
+  }>;
+};
+
 type WorkoutContextValue = {
   activeSession: ActiveSession | null;
+  completedHistory: CompletedWorkoutSummary[];
+  syncSessionVideos: (workouts: WorkoutPlan[]) => void;
   hydrated: boolean;
   completedSets: number;
   totalSets: number;
@@ -188,6 +209,62 @@ export function buildWorkoutSubmissionPayload(session: ActiveSession): WorkoutSu
   };
 }
 
+function buildCompletedSummary(session: ActiveSession): CompletedWorkoutSummary {
+  const finishedAt = session.finishedAt ?? new Date().toISOString();
+  const payload = buildWorkoutSubmissionPayload(session);
+  return {
+    sessionId: payload.sessionId,
+    workoutId: session.workoutId,
+    workoutName: session.workoutName,
+    workoutKind: session.workoutKind,
+    startedAt: session.startedAt,
+    finishedAt,
+    durationSeconds: session.durationSeconds ?? getSessionDurationSeconds(session.startedAt, finishedAt),
+    completedSets: payload.completedSets,
+    totalSets: payload.totalSets,
+    exercises: session.exercises.map(exercise => ({
+      name: exercise.name,
+      muscle: exercise.muscle,
+      completedSets: exercise.sets.filter(set => set.completed).length,
+      totalReps: exercise.sets.filter(set => set.completed).reduce((sum, set) => sum + Math.max(0, set.reps), 0),
+      bestLoad: exercise.sets.filter(set => set.completed).reduce((best, set) => Math.max(best, set.load), 0),
+    })),
+  };
+}
+
+function normalizeCompletedHistory(value: unknown): CompletedWorkoutSummary[] {
+  if (!Array.isArray(value)) return [];
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  return value.flatMap(item => {
+    if (!item || typeof item !== "object" || typeof item.finishedAt !== "string") return [];
+    const finishedAt = Date.parse(item.finishedAt);
+    if (!Number.isFinite(finishedAt) || finishedAt < cutoff) return [];
+    if (Array.isArray(item.exercises) && typeof item.sessionId === "string" && typeof item.completedSets === "number") {
+      return [item as CompletedWorkoutSummary];
+    }
+    if (typeof item.workoutId === "string" && Array.isArray(item.exercises)) {
+      return [buildCompletedSummary(item as ActiveSession)];
+    }
+    return [];
+  }).sort((a, b) => b.finishedAt.localeCompare(a.finishedAt)).slice(0, 60);
+}
+
+function mergeSessionVideoMetadata(session: ActiveSession | null, workouts: WorkoutPlan[]) {
+  if (!session) return session;
+  const workout = workouts.find(item => item.id === session.workoutId);
+  if (!workout) return session;
+  const latestByExercise = new Map(workout.exercises.map(item => [item.id, item]));
+  let changed = false;
+  const exercises = session.exercises.map(exercise => {
+    const latest = latestByExercise.get(exercise.id);
+    if (!latest || ((latest.videoUrl ?? null) === (exercise.videoUrl ?? null)
+      && (latest.videoTitle ?? null) === (exercise.videoTitle ?? null))) return exercise;
+    changed = true;
+    return { ...exercise, videoUrl: latest.videoUrl ?? null, videoTitle: latest.videoTitle ?? null };
+  });
+  return changed ? { ...session, exercises } : session;
+}
+
 export async function getPendingWorkoutSubmissions(studentId: string): Promise<WorkoutSubmissionPayload[]> {
   const saved = await AsyncStorage.getItem(storageKeyFor(PENDING_SUBMISSIONS_KEY, studentId));
   return saved ? JSON.parse(saved) as WorkoutSubmissionPayload[] : [];
@@ -241,6 +318,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const studentIdRef = useRef<string | null>(studentId);
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [activeSessionOwnerId, setActiveSessionOwnerId] = useState<string | null>(null);
+  const [completedHistory, setCompletedHistory] = useState<CompletedWorkoutSummary[]>([]);
+  const [historyOwnerId, setHistoryOwnerId] = useState<string | null>(null);
+  const latestWorkoutPlansRef = useRef<WorkoutPlan[] | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const activeSessionForUser = activeSessionOwnerId === studentId ? activeSession : null;
 
@@ -254,14 +334,20 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     setHydrated(false);
     setActiveSession(null);
     setActiveSessionOwnerId(null);
+    setCompletedHistory([]);
+    setHistoryOwnerId(null);
+    latestWorkoutPlansRef.current = null;
 
     if (!studentId) {
       setHydrated(true);
       return () => { mounted = false; };
     }
 
-    AsyncStorage.getItem(storageKeyFor(STORAGE_KEY, studentId))
-      .then((value) => {
+    Promise.all([
+      AsyncStorage.getItem(storageKeyFor(STORAGE_KEY, studentId)),
+      AsyncStorage.getItem(storageKeyFor(HISTORY_KEY, studentId)),
+    ])
+      .then(([value, historyValue]) => {
         if (mounted && value) {
           const saved = JSON.parse(value) as Partial<ActiveSession>;
           const restoredRestDurationSeconds = saved.restDurationSeconds && saved.restDurationSeconds > 0
@@ -307,6 +393,14 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
           } as ActiveSession);
           setActiveSessionOwnerId(studentId);
         }
+        if (mounted) {
+          const history = normalizeCompletedHistory(historyValue ? JSON.parse(historyValue) as unknown : []);
+          setCompletedHistory(history);
+          setHistoryOwnerId(studentId);
+          if (historyValue && JSON.stringify(history) !== historyValue) {
+            void AsyncStorage.setItem(storageKeyFor(HISTORY_KEY, studentId), JSON.stringify(history)).catch(() => undefined);
+          }
+        }
       })
       .catch(() => undefined)
       .finally(() => {
@@ -314,6 +408,12 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       });
     return () => { mounted = false; };
   }, [authLoading, studentId]);
+
+  useEffect(() => {
+    const latestPlans = latestWorkoutPlansRef.current;
+    if (!hydrated || !latestPlans || !studentId || activeSessionOwnerId !== studentId) return;
+    setActiveSession(current => mergeSessionVideoMetadata(current, latestPlans));
+  }, [hydrated, activeSessionOwnerId, studentId]);
 
   useEffect(() => {
     if (!hydrated || !studentId || activeSessionOwnerId !== studentId) return;
@@ -378,6 +478,11 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       })),
     });
   }, [studentId]);
+
+  const syncSessionVideos = useCallback((workouts: WorkoutPlan[]) => {
+    latestWorkoutPlansRef.current = workouts;
+    setActiveSession(current => mergeSessionVideoMetadata(current, workouts));
+  }, []);
 
   const completedSets = activeSessionForUser?.exercises.reduce(
     (sum, exercise) => sum + exercise.sets.filter((set) => set.completed).length,
@@ -622,20 +727,22 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         AsyncStorage.getItem(historyKey),
         AsyncStorage.getItem(pendingKey),
       ]);
-      const history = savedHistory ? JSON.parse(savedHistory) as ActiveSession[] : [];
+      const history = normalizeCompletedHistory(savedHistory ? JSON.parse(savedHistory) as unknown : []);
       const submissions = savedSubmissions ? JSON.parse(savedSubmissions) as WorkoutSubmissionPayload[] : [];
       const payload = buildWorkoutSubmissionPayload(finishedSession);
       const nextSubmissions = submissions.some((item) => item.sessionId === payload.sessionId)
         ? submissions
         : [payload, ...submissions];
-      const nextHistory = [
-        finishedSession,
-        ...history.filter((item) => `${item.workoutId}-${Date.parse(item.startedAt)}` !== payload.sessionId),
-      ].slice(0, 30);
+      const summary = buildCompletedSummary(finishedSession);
+      const nextHistory = [summary, ...history.filter(item => item.sessionId !== payload.sessionId)].slice(0, 60);
       await AsyncStorage.multiSet([
         [historyKey, JSON.stringify(nextHistory)],
         [pendingKey, JSON.stringify(nextSubmissions)],
       ]);
+      if (studentIdRef.current === studentId) {
+        setCompletedHistory(nextHistory);
+        setHistoryOwnerId(studentId);
+      }
       try {
         await syncPendingWorkoutSubmissions(studentId, () => studentIdRef.current === studentId);
         synced = !(await getPendingWorkoutSubmissions(studentId)).some((item) => item.sessionId === payload.sessionId);
@@ -658,6 +765,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(() => ({
     activeSession: activeSessionForUser,
+    completedHistory: historyOwnerId === studentId ? completedHistory : [],
+    syncSessionVideos,
     hydrated,
     completedSets,
     totalSets,
@@ -676,7 +785,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     saveAndPause,
     finishWorkout,
     syncPendingSubmissions,
-  }), [activeSessionForUser, hydrated, completedSets, totalSets, isComplete, beginWorkout, updateCurrentSet, updateExerciseFeedback, selectExerciseVariation, beginRest, pauseRestStopwatch, resumeRestStopwatch, restartRestStopwatch, saveCurrentSetAndAdvance, prepareWorkoutSummary, updateCardioTimer, saveAndPause, finishWorkout, syncPendingSubmissions]);
+  }), [activeSessionForUser, completedHistory, historyOwnerId, studentId, hydrated, completedSets, totalSets, isComplete, beginWorkout, syncSessionVideos, updateCurrentSet, updateExerciseFeedback, selectExerciseVariation, beginRest, pauseRestStopwatch, resumeRestStopwatch, restartRestStopwatch, saveCurrentSetAndAdvance, prepareWorkoutSummary, updateCardioTimer, saveAndPause, finishWorkout, syncPendingSubmissions]);
 
   return <WorkoutContext.Provider value={value}>{children}</WorkoutContext.Provider>;
 }

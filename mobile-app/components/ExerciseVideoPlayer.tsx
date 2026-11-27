@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { VideoView, useVideoPlayer } from "expo-video";
 
+import { SkeletonBlock, SkeletonPulse } from "@/components/Skeletons";
 import { getApiBaseUrl, getFreshAccessToken } from "@/services/api";
 
 export function ExerciseVideoPlayer({ url, title }: { url: string; title?: string | null }) {
@@ -70,14 +71,17 @@ export function ExerciseVideoPlayer({ url, title }: { url: string; title?: strin
       />
       {loading ? (
         <View pointerEvents="none" className="absolute inset-0 items-center justify-center bg-[#17211B]/80">
-          <ActivityIndicator color="#C8EF73" />
-          <Text className="mt-2 text-[10px] font-semibold text-white/70">Carregando demonstração...</Text>
+          <SkeletonPulse className="w-[72%] items-center">
+            <SkeletonBlock width="78%" height={9} radius={6} className="bg-white/20" />
+            <SkeletonBlock width="48%" height={7} radius={6} className="mt-3 bg-white/10" />
+            <Text className="mt-4 text-[9px] font-semibold text-white/65">Preparando demonstração...</Text>
+          </SkeletonPulse>
         </View>
       ) : null}
       {error ? (
         <View className="absolute inset-0 items-center justify-center bg-[#17211B] px-5">
-          <Text className="text-[11px] font-bold text-white">Não foi possível carregar o vídeo</Text>
-          <Text className="mt-1 text-center text-[9px] text-white/60">Confira sua conexão e tente novamente mais tarde.</Text>
+          <Text className="text-[11px] font-bold text-white">Sentimos muito, não foi possível carregar esta demonstração.</Text>
+          <Text className="mt-1 text-center text-[9px] text-white/60">Confira sua conexão. Se o vídeo continuar indisponível, avise a equipe.</Text>
         </View>
       ) : null}
       <View className="flex-row items-center justify-between px-3 py-2">

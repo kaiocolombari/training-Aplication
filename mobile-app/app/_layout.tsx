@@ -1,6 +1,5 @@
 import { router, Stack, usePathname, useSegments } from "expo-router";
 import { useEffect, useRef } from "react";
-import { ActivityIndicator, View } from "react-native";
 import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -8,6 +7,7 @@ import { useWorkout, WorkoutProvider } from "@/context/WorkoutContext";
 import { StudentDataProvider, useStudentData } from "@/context/StudentDataContext";
 import { ChatRealtimeProvider } from "@/context/ChatRealtimeContext";
 import { configureNotificationPresentation, registerChatPushToken } from "@/services/notifications";
+import { AppBootSkeleton } from "@/components/Skeletons";
 import "../global.css";
 
 configureNotificationPresentation();
@@ -116,15 +116,11 @@ function AppNavigator() {
   }, [user?.alunoId, user?.statusCadastro, user?.tipo, isLoading, pathname, syncPendingSubmissions]);
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-[#F3F1EB]">
-        <ActivityIndicator color="#526447" size="large" />
-      </View>
-    );
+    return <AppBootSkeleton />;
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#F3F1EB" } }}>
+    <Stack screenOptions={{ headerShown: false, animation: "fade", animationDuration: 240, contentStyle: { backgroundColor: "#F3F1EB" } }}>
       <Stack.Screen name="login" />
       <Stack.Screen name="cadastro-pendente" options={{ gestureEnabled: false }} />
       <Stack.Screen name="(tabs)" />

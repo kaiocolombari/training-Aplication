@@ -370,7 +370,7 @@ export default function Painel() {
     );
 
     const [secaoAtual, setSecaoAtual] = useState("inicio");
-    
+
     const alunosQuery = useQuery({
         queryKey: ["alunos"],
         queryFn: cadastroService.listarAlunos,
@@ -384,7 +384,7 @@ export default function Painel() {
     });
     const solicitacoesAvaliacaoUrgentes = (solicitacoesAvaliacaoPendentesQuery.data ?? [])
         .filter(solicitacao => solicitacao.urgente);
-    
+
     const tarefasControleQuery = useQuery({
         queryKey: ["extras", "tarefas", "controle-aluno"],
         queryFn: () => adminExtrasService.listarTarefas(),
@@ -397,7 +397,7 @@ export default function Painel() {
         queryFn: comunicacaoService.listarResumoChatsAlunos,
         enabled: (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL") && secaoAtual === "controleAluno",
     });
-    
+
     const solicitacoesResumoQuery = useQuery({
         queryKey: ["solicitacoes-cadastro", "resumo"],
         queryFn: cadastroAlunoService.obterResumo,
@@ -1074,42 +1074,42 @@ export default function Painel() {
                         ) : (
                             <div className="ui-stagger divide-y divide-[var(--border)]">
                                 {personais.map(personal => (
-                                        <div
-                                            key={personal.id}
-                                            className="flex items-center gap-2 px-3 py-2"
-                                        >
-                                            <div className="min-w-0 flex-1 px-1 py-2">
-                                                <span
-                                                    className={
-                                                        "block truncate text-[12px] font-semibold " + cores.heading
-                                                    }
-                                                >
-                                                    {personal.nomeCompleto}
-                                                </span>
-                                                <span
-                                                    className={
-                                                        "mt-1 block truncate text-[10px] " +
-                                                        cores.subtleText
-                                                    }
-                                                >
-                                                    {personal.email}
-                                                </span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    void abrirConfirmacaoExclusaoPersonal(personal)
+                                    <div
+                                        key={personal.id}
+                                        className="flex items-center gap-2 px-3 py-2"
+                                    >
+                                        <div className="min-w-0 flex-1 px-1 py-2">
+                                            <span
+                                                className={
+                                                    "block truncate text-[12px] font-semibold " + cores.heading
                                                 }
-                                                disabled={
-                                                    executandoExclusao || carregandoResumoExclusao
-                                                }
-                                                aria-label={`Desativar ${personal.nomeCompleto}`}
-                                                title="Desativar Personal"
-                                                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[var(--danger)] transition hover:bg-[var(--danger-soft)] disabled:opacity-40"
                                             >
-                                                <BsTrash3 />
-                                            </button>
+                                                {personal.nomeCompleto}
+                                            </span>
+                                            <span
+                                                className={
+                                                    "mt-1 block truncate text-[10px] " +
+                                                    cores.subtleText
+                                                }
+                                            >
+                                                {personal.email}
+                                            </span>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                void abrirConfirmacaoExclusaoPersonal(personal)
+                                            }
+                                            disabled={
+                                                executandoExclusao || carregandoResumoExclusao
+                                            }
+                                            aria-label={`Desativar ${personal.nomeCompleto}`}
+                                            title="Desativar Personal"
+                                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[var(--danger)] transition hover:bg-[var(--danger-soft)] disabled:opacity-40"
+                                        >
+                                            <BsTrash3 />
+                                        </button>
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -1325,12 +1325,12 @@ export default function Painel() {
                                 {filtro === "todos"
                                     ? "Todos"
                                     : filtro === "sem-ficha"
-                                      ? "Sem ficha técnica"
-                                      : filtro === "com-ficha"
-                                        ? "Com ficha técnica"
-                                      : filtro === "avaliacao-pendente"
-                                        ? `Avaliação pendente (${alunos.filter(aluno => aluno.avaliacaoPendente).length})`
-                                        : `Urgentes (${alunos.filter(aluno => aluno.avaliacaoUrgente).length})`}
+                                        ? "Sem ficha técnica"
+                                        : filtro === "com-ficha"
+                                            ? "Com ficha técnica"
+                                            : filtro === "avaliacao-pendente"
+                                                ? `Avaliação pendente (${alunos.filter(aluno => aluno.avaliacaoPendente).length})`
+                                                : `Urgentes (${alunos.filter(aluno => aluno.avaliacaoUrgente).length})`}
                             </button>
                         ))}
                     </div>
@@ -1499,8 +1499,8 @@ export default function Painel() {
                                                 {carregandoAlunoId === aluno.id
                                                     ? "Abrindo..."
                                                     : user?.tipo === "PERSONAL"
-                                                      ? "Assumir"
-                                                      : "Abrir ficha"}
+                                                        ? "Assumir"
+                                                        : "Abrir ficha"}
                                                 <BsArrowUpRight />
                                             </button>
 
@@ -1573,6 +1573,72 @@ export default function Painel() {
         );
     }
 
+    function renderInicioAdmin() {
+        const primeiroNome = user?.nome?.trim().split(/\s+/)[0] || "por aqui";
+        const hora = new Date().getHours();
+        const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+        const personais = personaisQuery.data ?? [];
+        const alunosRecentes = [...alunos]
+            .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
+            .slice(0, 5);
+        const verificacoes = [
+            { nome: "Base de alunos", destino: "alunos", carregando: alunosQuery.isLoading, falhou: alunosQuery.isError },
+            { nome: "Cadastro da equipe", destino: "equipe", carregando: personaisQuery.isLoading, falhou: personaisQuery.isError },
+            { nome: "Fila de novos cadastros", destino: "solicitacoes", carregando: solicitacoesResumoQuery.isLoading, falhou: solicitacoesResumoQuery.isError },
+            { nome: "Central de comunicação", destino: "chat", carregando: notificacoesPainelQuery.isLoading, falhou: notificacoesPainelQuery.isError },
+        ];
+        const atalhos = [
+            { id: "equipe", nome: "Gerenciar equipe", detalhe: "Acessos e profissionais", icone: <FaPeopleGroup /> },
+            { id: "alunos", nome: "Base de alunos", detalhe: "Cadastros e fichas", icone: <BsPeople /> },
+            { id: "solicitacoes", nome: "Revisar cadastros", detalhe: "Aprovações e pendências", icone: <BsClipboard2Pulse /> },
+            { id: "convites", nome: "Convites e origens", detalhe: "Links pessoais e rastreabilidade", icone: <BsArrowUpRight /> },
+            { id: "indicadores", nome: "Indicadores da equipe", detalhe: "Atividade e resultados", icone: <BsBarChart /> },
+            { id: "log", nome: "Auditoria do sistema", detalhe: "Histórico de ações", icone: <BsFileEarmarkText /> },
+            { id: "manutencao", nome: "Integridade e manutenção", detalhe: "Diagnóstico e ferramentas", icone: <FaTools /> },
+        ];
+
+        return (
+            <section className="w-full max-w-[1480px] space-y-8">
+                <header className="painel-hero relative isolate overflow-hidden rounded-[28px] p-6 text-white shadow-[0_28px_70px_-38px_rgba(10,20,30,.7)] sm:p-9 xl:p-11">
+                    <div className="relative z-10 max-w-3xl">
+                        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-white/80 backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,.9)]" /> Centro de administração</div>
+                        <p className="text-sm font-medium text-white/70">{saudacao}, {primeiroNome}.</p>
+                        <h1 className="mt-2 max-w-2xl text-[clamp(2rem,4vw,3.5rem)] font-semibold leading-[1.04] tracking-[-.055em]">Visão completa da equipe. <span className="text-white/55">Sistema sob controle.</span></h1>
+                        <p className="mt-4 max-w-xl text-[13px] leading-6 text-white/75 sm:text-sm">Acompanhe a operação, cuide da integridade do sistema e mantenha equipe e alunos em movimento. Você também pode atuar como personal e convidar seus próprios alunos.</p>
+                        <div className="mt-7 flex flex-wrap gap-3">
+                            <button type="button" onClick={() => navegar("convites")} className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-[11px] font-bold text-[var(--text-muted)] shadow-lg transition hover:-translate-y-0.5 hover:bg-white/90"><BsPlusLg /> Criar meu convite <BsArrowUpRight className="ml-1" /></button>
+                            <button type="button" onClick={() => navegar("manutencao")} className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 text-[11px] font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15"><FaTools /> Ferramentas do sistema</button>
+                        </div>
+                    </div>
+                    <div className="painel-hero-orbit pointer-events-none absolute -right-20 -top-28 hidden h-[440px] w-[440px] rounded-full border border-white/10 lg:block" />
+                    <div className="pointer-events-none absolute -right-10 bottom-[-150px] hidden h-[360px] w-[360px] rounded-full border border-white/10 lg:block" />
+                    <div className="pointer-events-none absolute right-[8%] top-[18%] hidden h-32 w-32 rounded-full border border-white/15 bg-white/[.04] shadow-[inset_0_0_60px_rgba(255,255,255,.08)] backdrop-blur-sm lg:block" />
+                </header>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <button type="button" onClick={() => navegar("equipe")} className="painel-metric group text-left"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]"><FaPeopleGroup size={18} /></span><span className="mt-5 block text-[10px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Profissionais cadastrados</span><span className="mt-1 block text-3xl font-semibold tracking-[-.06em] text-[var(--text-primary)]">{personaisQuery.isLoading || personaisQuery.isError ? "—" : personais.length}</span><span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">Gerenciar equipe <BsArrowUpRight /></span></button>
+                    <button type="button" onClick={() => navegar("alunos")} className="painel-metric group text-left"><span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-500/10 text-sky-600"><BsPeople size={18} /></span><span className="mt-5 block text-[10px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Alunos na plataforma</span><span className="mt-1 block text-3xl font-semibold tracking-[-.06em] text-[var(--text-primary)]">{alunosQuery.isLoading || alunosQuery.isError ? "—" : alunos.length}</span><span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">Abrir base de alunos <BsArrowUpRight /></span></button>
+                    <button type="button" onClick={() => navegar("solicitacoes")} className="painel-metric group text-left"><span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600"><BsClipboard2Pulse size={18} /></span><span className="mt-5 block text-[10px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Cadastros aguardando análise</span><span className="mt-1 block text-3xl font-semibold tracking-[-.06em] text-[var(--text-primary)]">{solicitacoesResumoQuery.isLoading || solicitacoesResumoQuery.isError ? "—" : solicitacoesResumoQuery.data?.total ?? 0}</span><span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">Revisar fila <BsArrowUpRight /></span></button>
+                    <button type="button" onClick={() => navegar("chat")} className="painel-metric group text-left"><span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-500/10 text-rose-600"><BsBell size={18} /></span><span className="mt-5 block text-[10px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Notificações não lidas</span><span className="mt-1 block text-3xl font-semibold tracking-[-.06em] text-[var(--text-primary)]">{notificacoesPainelQuery.isLoading || notificacoesPainelQuery.isError ? "—" : alertasNaoLidos}</span><span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">Abrir comunicação <BsArrowUpRight /></span></button>
+                </div>
+
+                <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,.8fr)]">
+                    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
+                        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Integridade operacional</p><h2 className="mt-1 text-[17px] font-semibold text-[var(--text-primary)]">Conexões administrativas</h2><p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">Verificação das consultas principais utilizadas neste painel.</p></div><button type="button" onClick={() => { void queryClient.invalidateQueries({ queryKey: ["alunos"] }); void queryClient.invalidateQueries({ queryKey: ["personais"] }); void queryClient.invalidateQueries({ queryKey: ["solicitacoes-cadastro", "resumo"] }); void queryClient.invalidateQueries({ queryKey: ["comunicacao", "notificacoes"] }); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-[10px] font-semibold text-[var(--text-secondary)]">Atualizar verificações</button></div>
+                        <div className="mt-5 divide-y divide-[var(--border)]">{verificacoes.map(item => { const falhou = item.falhou; const carregando = item.carregando; return <button key={item.nome} type="button" onClick={() => navegar(item.destino)} className="flex w-full items-center justify-between gap-3 py-3 text-left"><span className="flex min-w-0 items-center gap-3"><span className={`h-2 w-2 shrink-0 rounded-full ${carregando ? "bg-amber-400" : falhou ? "bg-rose-500" : "bg-emerald-500"}`} /><span className="text-[11px] font-semibold text-[var(--text-primary)]">{item.nome}</span></span><span className={`rounded-full px-2.5 py-1 text-[9px] font-bold ${carregando ? "bg-amber-500/10 text-amber-600" : falhou ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600"}`}>{carregando ? "Verificando" : falhou ? "Falha na consulta" : "Conectado"}</span></button>; })}</div>
+                        <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => navegar("manutencao")} className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-soft)] px-3 py-2 text-[10px] font-semibold text-[var(--accent-text)]"><FaTools /> Ferramentas de manutenção</button><button type="button" onClick={() => navegar("log")} className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-[10px] font-semibold text-[var(--text-secondary)]"><BsFileEarmarkText /> Histórico de auditoria</button></div>
+                    </section>
+                    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"><p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Acesso rápido</p><h2 className="mt-1 text-[17px] font-semibold text-[var(--text-primary)]">Administração da operação</h2><div className="mt-4 space-y-1">{atalhos.map(item => <button key={item.id} type="button" onClick={() => navegar(item.id)} className="group flex w-full items-center gap-3 rounded-xl px-2 py-3 text-left transition hover:bg-[var(--row-hover)]"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--surface-tertiary)] text-[var(--accent-text)]">{item.icone}</span><span className="min-w-0 flex-1"><strong className="block text-[10px] font-semibold text-[var(--text-primary)]">{item.nome}</strong><span className="mt-0.5 block text-[9px] text-[var(--text-muted)]">{item.detalhe}</span></span><BsArrowUpRight className="text-[11px] text-[var(--text-muted)] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></button>)}</div></section>
+                </div>
+
+                <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+                    <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4 sm:px-6"><div><p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Movimento recente</p><h2 className="mt-1 text-[15px] font-semibold text-[var(--text-primary)]">Últimos alunos recebidos</h2></div><button type="button" onClick={() => navegar("alunos")} className="inline-flex shrink-0 items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)] hover:underline">Ver base <BsArrowUpRight /></button></div>
+                    {alunosQuery.isLoading ? <p className="px-5 py-8 text-center text-xs text-[var(--text-muted)]">Carregando alunos...</p> : alunosQuery.isError ? <p className="px-5 py-8 text-center text-xs text-[var(--danger)]">Não foi possível consultar os alunos.</p> : alunosRecentes.length === 0 ? <p className="px-5 py-8 text-center text-xs text-[var(--text-muted)]">Ainda não há alunos cadastrados.</p> : <div className="divide-y divide-[var(--border)]">{alunosRecentes.map(aluno => <button key={aluno.id} type="button" onClick={() => abrirAluno(aluno)} className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition hover:bg-[var(--row-hover)] sm:px-6"><span className="flex min-w-0 items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--surface-tertiary)] text-[12px] font-bold text-[var(--text-secondary)]">{aluno.nome?.charAt(0)?.toUpperCase() || "A"}</span><span className="min-w-0"><strong className="block truncate text-[11px] font-semibold text-[var(--text-primary)]">{aluno.nome}</strong><span className="mt-0.5 block truncate text-[9px] text-[var(--text-muted)]">{aluno.convidadoPorPersonalNome ? `Convidado por ${aluno.convidadoPorPersonalNome}` : "Origem do convite não registrada"} · {formatarData(aluno.criadoEm)}</span></span></span><BsArrowUpRight className="shrink-0 text-[12px] text-[var(--text-muted)]" /></button>)}</div>}
+                </section>
+            </section>
+        );
+    }
+
     function renderInicio() {
         const alunosRecentes = [...alunos]
             .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
@@ -1583,6 +1649,9 @@ export default function Painel() {
         const semFicha = alunos.filter(aluno => !aluno.possuiFichaTecnica).length;
         const solicitacoesPendentes = solicitacoesResumoQuery.data?.total ?? 0;
         const ferramentas = secoesVisiveis.filter(secao => secao.id !== "inicio");
+        const gruposComFerramentas = gruposNavegacao
+            .map(grupo => ({ grupo, itens: ferramentas.filter(secao => secao.grupo === grupo) }))
+            .filter(item => item.itens.length > 0);
 
         return (
             <section className="w-full max-w-[1480px] space-y-8">
@@ -1600,7 +1669,7 @@ export default function Painel() {
                             Convide, avalie, prescreva e acompanhe. Tudo começa por aqui — escolha uma tarefa ou explore as ferramentas da equipe.
                         </p>
                         <div className="mt-7 flex flex-wrap gap-3">
-                            <button type="button" onClick={criarAluno} className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-[11px] font-bold text-slate-900 shadow-lg transition hover:-translate-y-0.5 hover:bg-white/90">
+                            <button type="button" onClick={criarAluno} className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-[11px] font-bold text-[var(--text-muted)] shadow-lg transition hover:-translate-y-0.5 hover:bg-white/90">
                                 <BsPlusLg /> Criar convite <BsArrowUpRight className="ml-1" />
                             </button>
                             <button type="button" onClick={() => navegar("alunos")} className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 text-[11px] font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15">
@@ -1656,13 +1725,15 @@ export default function Painel() {
                             <BsSearch /> Encontrar ferramenta <kbd className="rounded-md bg-[var(--surface-tertiary)] px-1.5 py-0.5 font-mono text-[9px]">Ctrl / ⌘ K</kbd>
                         </button>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                        {gruposNavegacao.map((grupo, index) => {
-                            const itens = ferramentas.filter(secao => secao.grupo === grupo);
-                            if (!itens.length) return null;
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-6">
+                        {gruposComFerramentas.map(({ grupo, itens }, index) => {
+                            const totalGrupos = gruposComFerramentas.length;
+                            const ultimoGrupo = index === totalGrupos - 1;
+                            const penultimosGrupos = index >= totalGrupos - 2;
+                            const spanResponsivo = `col-span-1 ${totalGrupos % 2 === 1 && ultimoGrupo ? "md:col-span-2" : "md:col-span-1"} ${totalGrupos % 3 === 1 && ultimoGrupo ? "2xl:col-span-6" : totalGrupos % 3 === 2 && penultimosGrupos ? "2xl:col-span-3" : "2xl:col-span-2"}`;
                             const numero = String(index + 1).padStart(2, "0");
                             return (
-                                <article key={grupo} className="painel-tool-group">
+                                <article key={grupo} className={`painel-tool-group ${spanResponsivo}`}>
                                     <div className="mb-4 flex items-center justify-between">
                                         <div>
                                             <p className="text-[9px] font-bold uppercase tracking-[.16em] text-[var(--text-muted)]">Área {numero}</p>
@@ -1827,12 +1898,7 @@ export default function Painel() {
                                 className={`mt-1.5 max-w-2xl text-[11px] leading-5 ${cores.bodyText}`}
                             >
                                 Escolha uma paleta pronta. Cada tema possui cores próprias para o
-                                modo claro e escuro; para criar outro, adicione uma nova chave no
-                                arquivo{" "}
-                                <code className="rounded bg-[var(--surface-tertiary)] px-1.5 py-0.5">
-                                    src/types/temas.ts
-                                </code>
-                                .
+                                modo claro e escuro.
                             </p>
                         </div>
                         <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[9px] font-semibold text-[var(--accent-text)]">
@@ -2165,7 +2231,7 @@ export default function Painel() {
     function renderConteudo() {
         switch (secaoAtual) {
             case "inicio":
-                return renderInicio();
+                return user?.tipo === "ADMIN" ? renderInicioAdmin() : renderInicio();
             case "alunos":
                 return renderAlunos();
             case "solicitacoes":
@@ -2275,7 +2341,7 @@ export default function Painel() {
                             if (proximoAluno) void abrirAluno(proximoAluno, "controle");
                         }}
                         onNavigate={navegar}
-                        canChat={user?.tipo === "PERSONAL"}
+                        canChat={user?.tipo === "ADMIN" || user?.tipo === "PERSONAL"}
                         isAdmin={user?.tipo === "ADMIN"}
                         personais={personaisQuery.data ?? []}
                     />
@@ -2353,11 +2419,10 @@ export default function Painel() {
                                                     key={secao.id}
                                                     onClick={() => navegar(secao.id)}
                                                     aria-current={ativo ? "page" : undefined}
-                                                    className={`group relative flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-[11px] font-medium transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)] ${
-                                                        ativo
+                                                    className={`group relative flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-[11px] font-medium transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)] ${ativo
                                                             ? "bg-[var(--accent-soft)] font-semibold text-[var(--accent-text)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_16%,transparent)]"
                                                             : "text-[var(--text-secondary)] hover:bg-[var(--row-hover)] hover:text-[var(--text-primary)]"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {ativo && (
                                                         <span className="absolute inset-y-1 left-0 w-[2px] rounded-full bg-[var(--accent)]" />
@@ -2375,7 +2440,7 @@ export default function Painel() {
                                                     )}
                                                     {secao.id === "solicitacoes" &&
                                                         (solicitacoesResumoQuery.data?.total ?? 0) >
-                                                            0 && (
+                                                        0 && (
                                                             <span className="ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
                                                                 {
                                                                     solicitacoesResumoQuery.data
@@ -2623,11 +2688,10 @@ export default function Painel() {
                                                         key={secao.id}
                                                         onClick={() => navegar(secao.id)}
                                                         aria-current={ativo ? "page" : undefined}
-                                                        className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2.5 text-left text-[12px] ${
-                                                            ativo
+                                                        className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2.5 text-left text-[12px] ${ativo
                                                                 ? "bg-[var(--accent-soft)] font-semibold text-[var(--accent-text)]"
                                                                 : "text-[var(--text-secondary)] hover:bg-[var(--row-hover)]"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <span
                                                             className={`text-[15px] ${ativo ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}

@@ -23,6 +23,10 @@ public sealed class ExercicioCatalogoController : ControllerBase
         CancellationToken cancellationToken = default) =>
         Ok(await _service.ListarAsync(q, limite, cancellationToken));
 
+    [HttpGet("version")]
+    public async Task<IActionResult> Versao(CancellationToken cancellationToken) =>
+        Ok(new { version = await _service.ObterVersaoAsync(cancellationToken) });
+
     [HttpGet("buscar")]
     public async Task<IActionResult> Buscar([FromQuery] string q, CancellationToken cancellationToken)
     {

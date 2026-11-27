@@ -8,7 +8,7 @@ namespace TreinoAPI.Services;
 
 public sealed class AdminExtrasService
 {
-    private static readonly string[] FeedbackCategorias = ["ACOMPANHAMENTO", "TREINAMENTO", "SISTEMA", "SUGESTAO"];
+    private static readonly string[] FeedbackCategorias = ["ACOMPANHAMENTO", "TREINAMENTO", "SISTEMA", "SUGESTAO", "VIDEO_NAO_ENCONTRADO"];
     private static readonly string[] FeedbackStatus = ["NOVO", "EM_ANALISE", "RESPONDIDO", "ARQUIVADO"];
     private static readonly string[] TarefaCategorias = ["GERAL", "TREINO", "AVALIACAO", "ALUNO", "ADMINISTRATIVO"];
     private static readonly string[] Prioridades = ["BAIXA", "NORMAL", "ALTA", "URGENTE"];

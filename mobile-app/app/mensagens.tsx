@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { useChatRealtime } from "@/context/ChatRealtimeContext";
 import { communicationService, type ChatMessage } from "@/services/communicationService";
+import { ChatMessagesSkeleton } from "@/components/Skeletons";
 
 const ALLOWED_FILE_TYPES = [
   "image/jpeg",
@@ -249,7 +250,7 @@ export default function MessagesScreen() {
 
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={8}>
         <ScrollView className="flex-1" contentContainerClassName="px-4 py-5" keyboardShouldPersistTaps="handled">
-          {isLoading ? <View className="items-center py-10"><ActivityIndicator color="#526447" /><Text className="mt-3 text-[10px] text-muted">Carregando conversa...</Text></View> : null}
+          {isLoading && messages.length === 0 ? <ChatMessagesSkeleton /> : null}
           {error ? <Pressable onPress={() => void loadMessages()} className="rounded-2xl border border-[#E8D8CE] bg-[#FBF1EA] p-4"><Text className="text-[10px] text-[#8D4F3E]">{error} · Toque para tentar novamente.</Text></Pressable> : null}
           {!isLoading && !error && messages.length === 0 ? (
             <View className="mt-16 items-center px-8"><View className="h-14 w-14 items-center justify-center rounded-2xl bg-[#E8EDDE]"><Send color="#526447" size={22} /></View><Text className="mt-4 text-[15px] font-extrabold text-ink">Comece a conversa</Text><Text className="mt-2 text-center text-[10px] leading-5 text-muted">Envie uma dúvida sobre seu treino, execução ou planejamento. Somente o personal escolhido e você terão acesso.</Text></View>

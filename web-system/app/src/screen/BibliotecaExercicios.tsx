@@ -39,6 +39,7 @@ function mensagemErro(error: unknown) {
 export default function BibliotecaExercicios() {
     const [exercicios, setExercicios] = useState<ExercicioCatalogo[]>([]);
     const [consulta, setConsulta] = useState("");
+    const [grupoSelecionado, setGrupoSelecionado] = useState("TODOS");
     const [selecionadoId, setSelecionadoId] = useState("");
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
@@ -55,11 +56,11 @@ export default function BibliotecaExercicios() {
     const [duracao, setDuracao] = useState("");
     const [enviando, setEnviando] = useState(false);
 
-    const carregar = useCallback(async (filtro = consulta) => {
+    const carregar = useCallback(async () => {
         setCarregando(true);
         setErro("");
         try {
-            const resultado = await exercicioCatalogoService.listar(filtro);
+            const resultado = await exercicioCatalogoService.listar("");
             setExercicios(resultado);
             setSelecionadoId((atual) => resultado.some(item => item.id === atual) ? atual : resultado[0]?.id ?? "");
         } catch (error) {
@@ -67,12 +68,22 @@ export default function BibliotecaExercicios() {
         } finally {
             setCarregando(false);
         }
-    }, [consulta]);
+    }, []);
 
     useEffect(() => {
-        const timeout = window.setTimeout(() => void carregar(consulta), 220);
-        return () => window.clearTimeout(timeout);
-    }, [carregar, consulta]);
+        void carregar();
+    }, [carregar]);
+
+    const gruposMusculares = useMemo(() => [...new Set(exercicios.map(item => item.grupoMuscular?.trim()).filter((item): item is string => Boolean(item)))].sort((a, b) => a.localeCompare(b, "pt-BR")), [exercicios]);
+    const exerciciosVisiveis = useMemo(() => {
+        const termo = consulta.trim().toLocaleLowerCase("pt-BR");
+        return exercicios.filter(item => {
+            const correspondeGrupo = grupoSelecionado === "TODOS"
+                || (grupoSelecionado === "SEM_GRUPO" ? !item.grupoMuscular?.trim() : item.grupoMuscular?.trim() === grupoSelecionado);
+            const texto = [item.nome, item.grupoMuscular, item.equipamento, ...item.sinonimos].filter(Boolean).join(" ").toLocaleLowerCase("pt-BR");
+            return correspondeGrupo && (!termo || texto.includes(termo));
+        });
+    }, [consulta, exercicios, grupoSelecionado]);
 
     const selecionado = useMemo(
         () => exercicios.find(item => item.id === selecionadoId) ?? null,
@@ -119,7 +130,7 @@ export default function BibliotecaExercicios() {
             setEditorAberto(false);
             setSelecionadoId(salvo.id);
             setSucesso(editandoId ? "Exercício atualizado." : "Exercício cadastrado.");
-            await carregar(consulta);
+            await carregar();
         } catch (error) {
             setErro(mensagemErro(error));
         } finally {
@@ -167,7 +178,7 @@ export default function BibliotecaExercicios() {
             setConfirmouDireitos(false);
             setDuracao("");
             setSucesso("Vídeo adicionado à biblioteca.");
-            await carregar(consulta);
+            await carregar();
         } catch (error) {
             setErro(mensagemErro(error));
         } finally {
@@ -181,7 +192,7 @@ export default function BibliotecaExercicios() {
         try {
             await exercicioCatalogoService.definirPrincipal(selecionado.id, videoId);
             setSucesso("Vídeo principal atualizado.");
-            await carregar(consulta);
+            await carregar();
         } catch (error) {
             setErro(mensagemErro(error));
         }
@@ -193,7 +204,7 @@ export default function BibliotecaExercicios() {
         try {
             await exercicioCatalogoService.excluirVideo(selecionado.id, videoId);
             setSucesso("Vídeo removido.");
-            await carregar(consulta);
+            await carregar();
         } catch (error) {
             setErro(mensagemErro(error));
         }
@@ -254,15 +265,23 @@ export default function BibliotecaExercicios() {
                             />
                             {consulta ? <button type="button" onClick={() => setConsulta("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"><BsX /></button> : null}
                         </label>
+                        <label className="mt-3 block">
+                            <span className={labelClass}>Filtrar por região muscular</span>
+                            <select value={grupoSelecionado} onChange={event => setGrupoSelecionado(event.target.value)} className={inputClass}>
+                                <option value="TODOS">Todas as regiões</option>
+                                <option value="SEM_GRUPO">Sem grupo definido</option>
+                                {gruposMusculares.map(grupo => <option key={grupo} value={grupo}>{grupo}</option>)}
+                            </select>
+                        </label>
                         <div className="mt-3 flex items-center justify-between">
-                            <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">Catálogo compartilhado</span>
-                            <button type="button" onClick={() => void carregar(consulta)} className="inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]"><BsArrowClockwise /> Atualizar</button>
+                            <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">{exerciciosVisiveis.length} de {exercicios.length} exercícios</span>
+                            <button type="button" onClick={() => void carregar()} className="inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]"><BsArrowClockwise /> Atualizar</button>
                         </div>
                     </div>
                     <div className="max-h-[720px] overflow-y-auto p-2">
                         {carregando ? (
                             <div className="space-y-2 p-2">{Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-[76px] animate-pulse rounded-xl bg-[var(--row-hover)]" />)}</div>
-                        ) : exercicios.length ? exercicios.map(item => (
+                        ) : exerciciosVisiveis.length ? exerciciosVisiveis.map(item => (
                             <button
                                 key={item.id}
                                 type="button"
@@ -282,7 +301,7 @@ export default function BibliotecaExercicios() {
                             <div className="px-5 py-12 text-center">
                                 <BsCollectionPlay className="mx-auto text-2xl text-[var(--text-muted)]" />
                                 <p className="mt-3 text-[12px] font-bold text-[var(--text-primary)]">Nenhum exercício encontrado</p>
-                                <p className="mt-1 text-[10px] text-[var(--text-muted)]">Tente outro nome ou cadastre um novo movimento.</p>
+                                <p className="mt-1 text-[10px] text-[var(--text-muted)]">Tente outro nome, selecione outra região muscular ou cadastre um novo movimento.</p>
                                 <button type="button" onClick={abrirNovo} className="mt-4 text-[10px] font-bold text-[var(--accent-text)]">Cadastrar exercício</button>
                             </div>
                         )}

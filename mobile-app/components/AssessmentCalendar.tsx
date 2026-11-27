@@ -22,6 +22,7 @@ import {
 } from "lucide-react-native";
 
 import type { StudentEvaluation } from "@/services/studentService";
+import { CalendarEventsSkeleton } from "@/components/Skeletons";
 import {
   assessmentScheduleService,
   type AssessmentScheduleItem,
@@ -241,7 +242,7 @@ export default function AssessmentCalendar({ evaluations }: Props) {
 
           <View className="mt-4 rounded-2xl bg-[#F7F6F1] p-3">
             <View className="flex-row items-center justify-between"><Text className="text-[10px] font-extrabold text-ink">{formatDate(selectedDate)}</Text><Text className="text-[9px] font-semibold text-muted">{selectedEvents.length} registro(s)</Text></View>
-            {loading ? <View className="py-4"><ActivityIndicator color="#627B4A" /></View> : null}
+            {loading ? <CalendarEventsSkeleton /> : null}
             {!loading && selectedEvents.length === 0 ? <Text className="py-3 text-[10px] text-muted">Nenhuma avaliação ou solicitação nesta data.</Text> : null}
             {selectedEvents.map((event) => (
               <View key={event.id} className="mt-3 border-t border-[#EAE8E0] pt-3">

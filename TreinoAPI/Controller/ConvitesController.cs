@@ -17,17 +17,17 @@ public sealed class ConvitesController(ConvitePersonalService service) : Control
     public async Task<IActionResult> Validar([FromBody] ValidarConviteDTO dto) =>
         Ok(await service.ValidarPublicoAsync(dto.Token));
 
-    [Authorize(Roles = "PERSONAL")]
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [EnableRateLimiting("invites")]
     [HttpPost]
     public async Task<IActionResult> Criar([FromBody] CriarConviteDTO dto) =>
         Ok(await service.CriarAsync(dto));
 
-    [Authorize(Roles = "PERSONAL")]
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpGet("meus")]
     public async Task<IActionResult> Meus() => Ok(await service.ListarMeusAsync());
 
-    [Authorize(Roles = "PERSONAL")]
+    [Authorize(Roles = "PERSONAL,ADMIN")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Revogar(Guid id)
     {

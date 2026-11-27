@@ -1,10 +1,11 @@
 import { ActivityIndicator, Alert, Modal, Pressable, Text, TextInput, View } from "react-native";
 import { useState } from "react";
-import { ArrowUpRight, CalendarDays, ChartNoAxesCombined, Scale, Target, TrendingDown, TrendingUp } from "lucide-react-native";
+import { ArrowUpRight, CalendarDays, ChartNoAxesCombined, Scale, Sparkles, Target, TrendingDown, TrendingUp } from "lucide-react-native";
 
-import { AppScreen, Eyebrow, MetricCard, SectionTitle, Tag } from "@/components/ui";
+import { AppScreen, EnteringView, Eyebrow, MetricCard, MotionPressable, SectionTitle, Tag } from "@/components/ui";
 import AssessmentCalendar from "@/components/AssessmentCalendar";
 import { DataUnavailableNotice } from "@/components/DataUnavailableNotice";
+import { EvolutionSkeleton } from "@/components/Skeletons";
 import { useStudentData } from "@/context/StudentDataContext";
 
 function formatWeight(value: number) {
@@ -80,14 +81,14 @@ export default function EvolutionScreen() {
     <AppScreen>
       <View className="pt-4"><Eyebrow>ACOMPANHAMENTO</Eyebrow><Text className="mt-2 text-[30px] font-black tracking-[-1px] text-ink">Sua evolução</Text><Text className="mt-1 text-[12px] text-muted">Resultados registrados nas suas avaliações e sessões.</Text></View>
 
-      {error ? <Pressable onPress={() => void refresh().catch(() => undefined)} className="mt-5 rounded-2xl border border-[#E8D8CE] bg-[#FBF1EA] p-4"><Text className="text-[11px] font-bold text-[#8D4F3E]">Falha ao atualizar seus dados</Text><Text className="mt-1 text-[10px] text-[#8D6254]">{error} · Toque para tentar novamente.</Text></Pressable> : null}
+      {error ? <MotionPressable onPress={() => void refresh().catch(() => undefined)} className="mt-5 rounded-2xl border border-[#E8D8CE] bg-[#FBF1EA] p-4"><Text className="text-[11px] font-bold text-[#8D4F3E]">Falha ao atualizar seus dados</Text><Text className="mt-1 text-[10px] text-[#8D6254]">{error} · Toque para tentar novamente.</Text></MotionPressable> : null}
 
       {!isLoading && error && data.evaluations.length === 0 && data.executions.length === 0 && data.volumeCycles.length === 0 ? (
         <View className="mt-5"><DataUnavailableNotice title="Sua evolução está indisponível" detail="Não há dados anteriores para exibir e a consulta atual falhou. Nenhum resultado foi substituído por zero." onRetry={() => void refresh().catch(() => undefined)} /></View>
       ) : null}
 
       {isLoading ? (
-        <View className="mt-8 items-center rounded-[24px] border border-line bg-white p-8"><ActivityIndicator color="#526447" /><Text className="mt-3 text-[10px] text-muted">Carregando sua evolução...</Text></View>
+        <EvolutionSkeleton />
       ) : error && data.evaluations.length === 0 && data.executions.length === 0 && data.volumeCycles.length === 0 ? null : (
         <>
           <View className="mt-6 flex-row items-center justify-between"><Tag tone="lime">{avaliacoesIndisponiveis ? "AVALIAÇÕES INDISPONÍVEIS" : `${weightHistory.length} AVALIAÇÕES`}</Tag><View className="flex-row items-center gap-1"><CalendarDays color="#858A82" size={13} /><Text className="text-[10px] font-semibold text-muted">{latestWeight ? new Date(latestWeight.realizadaEm).toLocaleDateString("pt-BR") : avaliacoesIndisponiveis ? "Data indisponível" : "Sem registros"}</Text></View></View>
@@ -117,11 +118,13 @@ export default function EvolutionScreen() {
           <SectionTitle>Força nos exercícios</SectionTitle>
           <View className="rounded-[24px] border border-line bg-white px-4">
             {execucoesIndisponiveis ? <View className="py-5"><DataUnavailableNotice compact title="Histórico de treinos indisponível" detail="Não foi possível calcular a evolução de carga. Tente atualizar os dados." onRetry={() => void refresh().catch(() => undefined)} /></View> : strength.length > 0 ? strength.map((item, index) => (
-              <View key={item.name} className={`flex-row items-center py-4 ${index < strength.length - 1 ? "border-b border-[#F0EEE8]" : ""}`}>
+              <EnteringView key={item.name} delay={index * 45}>
+              <View className={`flex-row items-center py-4 ${index < strength.length - 1 ? "border-b border-[#F0EEE8]" : ""}`}>
                 <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#EDF2E5]"><Target color="#6A8053" size={17} /></View>
                 <View className="ml-3 flex-1"><Text className="text-[12px] font-bold text-ink">{item.name}</Text><Text className="mt-1 text-[10px] text-muted">Maior carga registrada: {item.latest.toLocaleString("pt-BR")} kg</Text></View>
                 <View className={`flex-row items-center gap-1 rounded-full px-2.5 py-1.5 ${item.change >= 0 ? "bg-[#EDF2E5]" : "bg-[#F7EFEB]"}`}><ArrowUpRight color={item.change >= 0 ? "#627B4A" : "#A45F4D"} size={12} /><Text className={`text-[10px] font-extrabold ${item.change >= 0 ? "text-[#627B4A]" : "text-[#A45F4D]"}`}>{item.change > 0 ? "+" : ""}{item.change.toFixed(0)}%</Text></View>
               </View>
+              </EnteringView>
             )) : <View className="py-5"><Text className="text-[11px] font-bold text-ink">Sem registros de força</Text><Text className="mt-1 text-[10px] leading-4 text-muted">Quando você concluir e sincronizar sessões, a evolução de carga aparecerá aqui.</Text></View>}
           </View>
 
@@ -133,10 +136,22 @@ export default function EvolutionScreen() {
                 <Text className="mt-1 text-[10px] text-muted">Referência inicial: {activeVolumeCycle.referenciaSeries} séries · Início {new Date(`${activeVolumeCycle.dataInicio}T00:00:00`).toLocaleDateString("pt-BR")}</Text>
                 <View className="mt-3 flex-row items-center justify-between rounded-xl bg-[#F3F2EC] p-3"><Text className="text-[9px] font-bold text-[#858A82]">ÚLTIMO REGISTRO</Text><Text className="text-[15px] font-black text-ink">{latestVolumeMonth?.series ?? activeVolumeCycle.referenciaSeries} séries</Text></View>
                 {latestVolumeMonth?.observacao ? <Text className="mt-2 text-[10px] leading-4 text-muted">{latestVolumeMonth.observacao}</Text> : null}
-                {nextVolumeMonth ? <Pressable onPress={() => { setVolumeSeries(String(activeVolumeCycle.referenciaSeries)); setVolumeModalOpen(true); }} className="mt-4 h-11 items-center justify-center rounded-xl bg-lime"><Text className="text-[10px] font-extrabold text-ink">Registrar mês {nextVolumeMonth.mesCiclo}</Text></Pressable> : null}
+                {nextVolumeMonth ? <MotionPressable onPress={() => { setVolumeSeries(String(activeVolumeCycle.referenciaSeries)); setVolumeModalOpen(true); }} className="mt-4 h-11 items-center justify-center rounded-xl bg-lime"><Text className="text-[10px] font-extrabold text-ink">Registrar mês {nextVolumeMonth.mesCiclo}</Text></MotionPressable> : null}
               </View>
             </>
           ) : null}
+
+          <SectionTitle action={<Tag tone="lime">EM BREVE</Tag>}>Projeção inteligente</SectionTitle>
+          <View className="overflow-hidden rounded-[24px] bg-ink p-5">
+            <View className="absolute -right-8 -top-10 h-36 w-36 rounded-full border-[24px] border-white/[0.04]" />
+            <View className="h-10 w-10 items-center justify-center rounded-xl bg-lime"><Sparkles color="#17211B" size={19} /></View>
+            <Text className="mt-4 text-[17px] font-black tracking-[-0.4px] text-white">Uma visão do que vem pela frente.</Text>
+            <Text className="mt-2 text-[10px] leading-5 text-white/60">Estamos preparando modelos de Machine Learning para estimar tendências de evolução a partir do seu histórico de avaliações e treinos.</Text>
+            <View className="mt-4 rounded-xl border border-white/10 bg-white/[0.06] p-3">
+              <Text className="text-[8px] font-extrabold uppercase tracking-[1.2px] text-lime">Preparação dos dados</Text>
+              <Text className="mt-1 text-[9px] leading-4 text-white/50">Nenhuma previsão é exibida antes de o modelo ser implementado, validado e aprovado.</Text>
+            </View>
+          </View>
 
           <View className="mt-4 rounded-[22px] bg-[#E9E6DD] p-4"><View className="flex-row items-center gap-2"><ChartNoAxesCombined color="#56634F" size={16} /><Text className="text-[11px] font-extrabold text-ink">{error ? "Últimos dados disponíveis" : "Acompanhamento atualizado"}</Text></View><Text className="mt-1 text-[10px] leading-4 text-[#777D74]">Os indicadores são construídos com as avaliações e execuções registradas na sua conta. Converse com seu personal sobre os próximos ajustes.</Text></View>
         </>

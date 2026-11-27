@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Clock3, Dumbbell, Info, Play, Repeat2 } from "lucide-react-native";
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
-import { AppScreen, Eyebrow, IconButton, PrimaryButton, SectionTitle, Tag } from "@/components/ui";
+import { AppScreen, EnteringView, Eyebrow, IconButton, MotionPressable, PrimaryButton, SectionTitle, Tag } from "@/components/ui";
 import { useStudentData } from "@/context/StudentDataContext";
 import { useWorkout } from "@/context/WorkoutContext";
+import { WorkoutDetailSkeleton } from "@/components/Skeletons";
 
 export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,7 +35,7 @@ export default function WorkoutDetailScreen() {
   }
 
   if (isLoading) {
-    return <AppScreen><View className="flex-1 items-center justify-center py-20"><ActivityIndicator color="#526447" /><Text className="mt-3 text-[11px] text-muted">Carregando prescrição...</Text></View></AppScreen>;
+    return <AppScreen><WorkoutDetailSkeleton /></AppScreen>;
   }
 
   if (error || !workout) {
@@ -44,7 +45,7 @@ export default function WorkoutDetailScreen() {
         <View className="mt-10 rounded-[24px] border border-dashed border-line bg-white p-5">
           <Text className="text-[13px] font-extrabold text-ink">Não foi possível abrir esta ficha</Text>
           <Text className="mt-2 text-[11px] leading-5 text-muted">{error ?? "O treino não está mais disponível ou não pertence à sua conta."}</Text>
-          <Pressable onPress={() => void refresh().catch(() => undefined)} className="mt-4 rounded-xl bg-lime p-3"><Text className="text-center text-[11px] font-extrabold text-ink">Tentar novamente</Text></Pressable>
+          <MotionPressable onPress={() => void refresh().catch(() => undefined)} className="mt-4 rounded-xl bg-lime p-3"><Text className="text-center text-[11px] font-extrabold text-ink">Tentar novamente</Text></MotionPressable>
         </View>
       </AppScreen>
     );
@@ -76,7 +77,8 @@ export default function WorkoutDetailScreen() {
 
       <SectionTitle>Sequência do treino</SectionTitle>
       {workout.exercises.map((exercise, index) => (
-        <View key={exercise.id} className="mb-2 rounded-[20px] border border-line bg-white p-4">
+        <EnteringView key={exercise.id} delay={index * 35}>
+        <View className="mb-2 rounded-[20px] border border-line bg-white p-4">
           <View className="flex-row items-center gap-3">
             <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#F0F1E9]"><Text className="text-[12px] font-black text-[#66745C]">{String(index + 1).padStart(2, "0")}</Text></View>
             <View className="flex-1"><Text className="text-[12px] font-bold text-ink">{exercise.name}</Text><Text className="mt-1 text-[10px] text-muted">{exercise.prescriptionMissingFields?.includes("series") ? "Séries não informadas" : `${exercise.sets} séries`} · {exercise.prescriptionMissingFields?.includes("reps") ? "Repetições não informadas" : `${exercise.reps} reps`} · {exercise.prescriptionMissingFields?.includes("rest") ? "Descanso não informado" : exercise.rest}</Text></View>
@@ -91,6 +93,7 @@ export default function WorkoutDetailScreen() {
             </View>
           ) : null}
         </View>
+        </EnteringView>
       ))}
 
       <View className="mt-4 rounded-[20px] bg-[#E9E6DD] p-4">

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { BsActivity, BsArrowLeft, BsArrowRight, BsCheckCircle, BsShieldCheck } from "react-icons/bs";
+import { BsActivity, BsArrowLeft, BsArrowRight, BsCheckCircle, BsPersonBadge, BsShieldCheck } from "react-icons/bs";
 import { useAuth } from "../context/authContext";
 import { ApiError } from "../service/api";
 import { conviteService, type ConvitePublico } from "../service/conviteService";
@@ -81,7 +81,11 @@ export default function RegistroConvite() {
                     <div className="px-6 py-8 sm:px-9 sm:py-9">
                         <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#c8ef73]">Convite de acesso</p>
                         <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">Vamos começar.</h1>
-                        <p className="mt-3 text-xs leading-6 text-white/55">Você foi convidado por <strong className="text-white">{convite.personalNome}</strong>. Crie sua conta e preencha o formulário para análise da equipe.</p>
+                        <p className="mt-3 text-xs leading-6 text-white/55">Seu acesso foi enviado por um profissional da equipe. Crie sua conta e preencha o formulário para análise.</p>
+                        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.055] p-4">
+                            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#c8ef73]/10 text-[#c8ef73]"><BsPersonBadge size={20}/></span>
+                            <span className="min-w-0"><span className="block text-[9px] font-bold uppercase tracking-[.15em] text-white/45">Seu contato na equipe</span><strong className="mt-1 block truncate text-sm font-bold text-white">{convite.personalNome}</strong><span className="mt-1 block text-[9px] text-white/45">Você pode citar este profissional ao falar com a equipe.</span></span>
+                        </div>
                         <div className="mt-5 flex items-center gap-2 rounded-xl border border-[#c8ef73]/15 bg-[#c8ef73]/5 px-4 py-3 text-[10px] text-[#d9f5a6]"><BsCheckCircle size={15}/> Convite válido · {convite.apelido}</div>
                         <form onSubmit={cadastrar} className="mt-7 space-y-4">
                             <label className="block"><span className="mb-2 block text-[9px] font-bold uppercase tracking-[.15em] text-white/55">Nome completo</span><input required minLength={2} maxLength={160} autoComplete="name" value={nome} onChange={e => setNome(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3.5 text-sm outline-none focus:border-[#c8ef73]/60" placeholder="Seu nome"/></label>

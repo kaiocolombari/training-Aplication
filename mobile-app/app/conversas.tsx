@@ -1,24 +1,25 @@
 import { router } from "expo-router";
 import { ArrowLeft, ChevronRight, MessageCircle, UserRound } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
-import { AppScreen, Eyebrow } from "@/components/ui";
+import { AppScreen, EnteringView, Eyebrow, MotionPressable } from "@/components/ui";
 import { useStudentData } from "@/context/StudentDataContext";
+import { TeamSkeleton } from "@/components/Skeletons";
 
 export default function ConversationsScreen() {
-  const { data } = useStudentData();
+  const { data, isLoading } = useStudentData();
 
   return (
     <AppScreen>
       <View className="flex-row items-center gap-3 pt-4">
-        <Pressable onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white"><ArrowLeft color="#17211B" size={18} /></Pressable>
+        <MotionPressable onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white"><ArrowLeft color="#17211B" size={18} /></MotionPressable>
         <View className="flex-1"><Eyebrow>COMUNICAÇÃO</Eyebrow><Text className="mt-1 text-[25px] font-black tracking-[-1px] text-ink">Conversar com</Text></View>
       </View>
       <Text className="mb-5 mt-2 text-[11px] leading-5 text-muted">Escolha o profissional específico. Cada conversa é privada e será encerrada após 48 horas sem novas mensagens.</Text>
 
-      {data.personals.length ? data.personals.map((personal) => (
-        <Pressable
-          key={personal.outroUsuarioId}
+      {isLoading && data.personals.length === 0 ? <TeamSkeleton /> : data.personals.length ? data.personals.map((personal, index) => (
+        <EnteringView key={personal.outroUsuarioId} delay={index * 45}>
+        <MotionPressable
           onPress={() => router.push({ pathname: "/mensagens", params: {
             destinatarioId: personal.outroUsuarioId,
             nome: personal.outroUsuarioNome,
@@ -30,7 +31,8 @@ export default function ConversationsScreen() {
           <View className="flex-1"><Text className="text-[12px] font-extrabold text-ink">{personal.outroUsuarioNome}</Text><Text numberOfLines={1} className="mt-1 text-[9px] text-muted">{personal.ultimaMensagem ?? "Inicie uma conversa com este profissional"}</Text></View>
           {personal.naoLidas > 0 ? <View className="h-6 min-w-6 items-center justify-center rounded-full bg-lime px-1.5"><Text className="text-[9px] font-black text-ink">{personal.naoLidas}</Text></View> : null}
           <ChevronRight color="#A3A69F" size={18} />
-        </Pressable>
+        </MotionPressable>
+        </EnteringView>
       )) : (
         <View className="items-center rounded-[24px] bg-ink p-7"><MessageCircle color="#C8EF73" size={24} /><Text className="mt-3 text-[13px] font-extrabold text-white">Nenhum profissional disponível</Text><Text className="mt-2 text-center text-[10px] leading-5 text-white/60">Não há personais cadastrados ativos para iniciar uma conversa no momento.</Text></View>
       )}

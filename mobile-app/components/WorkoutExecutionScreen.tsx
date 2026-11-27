@@ -44,8 +44,10 @@ import {
 } from "lucide-react-native";
 
 import { Tag } from "@/components/ui";
+import { SkeletonBlock, SkeletonPulse } from "@/components/Skeletons";
 import { ExerciseVideoPlayer } from "@/components/ExerciseVideoPlayer";
 import { useWorkout } from "@/context/WorkoutContext";
+import { useStudentData } from "@/context/StudentDataContext";
 import {
   cancelAppNotifications,
   scheduleCardioMilestones,
@@ -81,14 +83,19 @@ function getCardioElapsedSeconds(session: { cardioElapsedSeconds: number; cardio
     : 0);
 }
 
-function VideoPlaceholder({ dark = false }: { dark?: boolean }) {
+function VideoPlaceholder({ dark = false, exerciseName, onReport, reporting = false, reported = false }: { dark?: boolean; exerciseName?: string; onReport?: () => void; reporting?: boolean; reported?: boolean }) {
   return (
     <View className={`aspect-video items-center justify-center overflow-hidden rounded-[24px] border border-dashed ${dark ? "border-white/15 bg-white/[0.06]" : "border-[#D8D5CA] bg-[#EAE8E0]"}`}>
       <View className={`h-12 w-12 items-center justify-center rounded-full ${dark ? "bg-lime" : "bg-ink"}`}>
         <Video color={dark ? "#17211B" : "#C8EF73"} size={21} />
       </View>
       <Text className={`mt-3 text-[12px] font-extrabold ${dark ? "text-white" : "text-ink"}`}>Demonstração do movimento</Text>
-      <Text className={`mt-1 text-[10px] ${dark ? "text-white/45" : "text-[#858A82]"}`}>O vídeo do exercício aparecerá aqui</Text>
+      <Text className={`mt-1 px-4 text-center text-[10px] ${dark ? "text-white/55" : "text-[#858A82]"}`}>{onReport ? `Sentimos muito, o vídeo de ${exerciseName || "este exercício"} ainda não foi identificado.` : "O vídeo do exercício aparecerá aqui"}</Text>
+      {onReport ? (
+        <Pressable onPress={onReport} disabled={reporting || reported} className={`mt-3 rounded-full px-4 py-2 ${dark ? "bg-lime" : "bg-ink"} ${(reporting || reported) ? "opacity-60" : ""}`}>
+          <Text className={`text-[9px] font-extrabold ${dark ? "text-ink" : "text-white"}`}>{reporting ? "Enviando diagnóstico..." : reported ? "Problema reportado" : "Reportar problema"}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -252,6 +259,7 @@ function FixedAction({
 }
 
 export default function WorkoutExecutionScreen() {
+  const { reportMissingVideo } = useStudentData();
   const {
     activeSession,
     hydrated,
@@ -290,6 +298,8 @@ export default function WorkoutExecutionScreen() {
   const sessionRef = useRef(activeSession);
   const inactivityPauseRef = useRef({ rest: false, cardio: false });
   const [modalVariable, setModalVariable] = useState(false);
+  const [reportingVideo, setReportingVideo] = useState(false);
+  const [reportedVideoIds, setReportedVideoIds] = useState<string[]>([]);
   useEffect(() => {
     sessionRef.current = activeSession;
   }, [activeSession]);
@@ -429,9 +439,20 @@ export default function WorkoutExecutionScreen() {
 
   if (!hydrated) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-ink">
+      <SafeAreaView className="flex-1 items-center justify-center bg-ink px-5">
         <StatusBar style="light" />
-        <ActivityIndicator color="#C8EF73" />
+        <SkeletonPulse className="w-full">
+          <View className="flex-row items-center justify-between"><SkeletonBlock width={96} height={9} className="bg-white/15" /><SkeletonBlock width={38} height={28} radius={10} className="bg-white/15" /></View>
+          <SkeletonBlock width="68%" height={24} radius={8} className="mt-8 bg-white/15" />
+          <SkeletonBlock width="42%" height={9} className="mt-3 bg-white/10" />
+          <View className="mt-8 rounded-[26px] border border-white/10 bg-white/[0.05] p-5">
+            <SkeletonBlock width="44%" height={9} className="bg-white/15" />
+            <SkeletonBlock width="76%" height={34} radius={10} className="mt-5 bg-white/15" />
+            <SkeletonBlock width="56%" height={9} className="mt-3 bg-white/10" />
+            <View className="mt-7 flex-row gap-3"><SkeletonBlock width="48%" height={52} radius={14} className="bg-white/10" /><SkeletonBlock width="48%" height={52} radius={14} className="bg-white/10" /></View>
+          </View>
+          <SkeletonBlock height={54} radius={16} className="mt-5 bg-lime/30" />
+        </SkeletonPulse>
       </SafeAreaView>
     );
   }
@@ -469,6 +490,35 @@ export default function WorkoutExecutionScreen() {
   const nextSetNumber = exercise && session.currentSetIndex < exercise.sets.length - 1
     ? session.currentSetIndex + 2
     : 1;
+
+  async function reportMissingExerciseVideo() {
+    if (!exercise || reportingVideo || reportedVideoIds.includes(exercise.id)) return;
+    Alert.alert(
+      "Reportar vídeo ausente",
+      `Vamos enviar um diagnóstico para a equipe sobre o exercício ${exercise.name}.`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Enviar relatório",
+          onPress: () => {
+            setReportingVideo(true);
+            void reportMissingVideo({
+              exerciseName: exercise.name,
+              workoutName: session.workoutName,
+              workoutId: session.workoutId,
+              exerciseId: exercise.id,
+              platform: Platform.OS,
+            }).then(() => {
+              setReportedVideoIds(current => [...current, exercise.id]);
+              Alert.alert("Diagnóstico enviado", "A equipe recebeu o nome do exercício e os dados necessários para verificar o catálogo.");
+            }).catch(cause => {
+              Alert.alert("Não foi possível reportar", cause instanceof Error ? cause.message : "Tente novamente mais tarde.");
+            }).finally(() => setReportingVideo(false));
+          },
+        },
+      ],
+    );
+  }
 
   async function pauseAndExit() {
     setSaving(true);
@@ -848,7 +898,7 @@ export default function WorkoutExecutionScreen() {
           </Text>
 
           <View className="mt-5">
-            <VideoPlaceholder />
+            <VideoPlaceholder exerciseName={exercise?.name} onReport={exercise ? () => void reportMissingExerciseVideo() : undefined} reporting={reportingVideo} reported={Boolean(exercise && reportedVideoIds.includes(exercise.id))} />
           </View>
           <ExerciseDescription description={exercise?.note} />
 
@@ -1153,7 +1203,7 @@ export default function WorkoutExecutionScreen() {
               <View className="mt-4">
                 {exercise.videoUrl
                   ? <ExerciseVideoPlayer url={exercise.videoUrl} title={exercise.videoTitle} />
-                  : <VideoPlaceholder />}
+                  : <VideoPlaceholder exerciseName={exercise.name} onReport={() => void reportMissingExerciseVideo()} reporting={reportingVideo} reported={reportedVideoIds.includes(exercise.id)} />}
               </View>
               <Pressable onPress={() => { animateLayoutChange(); setFeedbackExpanded((value) => !value); }} className="mt-3 flex-row items-center justify-between rounded-2xl border border-[#E9E6DE] bg-white px-4 py-4">
                 <View className="flex-row items-center gap-2">

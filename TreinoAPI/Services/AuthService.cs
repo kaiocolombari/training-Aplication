@@ -254,6 +254,23 @@ public sealed class AuthService
     private async Task<UsuarioSessaoDTO> MapearUsuarioAsync(Usuario usuario)
     {
         var sessao = MapearUsuario(usuario);
+        if (usuario.Tipo == TipoUsuario.ALUNO)
+        {
+            var origemConvite = await _context.Alunos.AsNoTracking()
+                .Where(aluno => aluno.UsuarioId == usuario.Id)
+                .Select(aluno => new
+                {
+                    Nome = aluno.ConvidadoPorPersonal != null ? aluno.ConvidadoPorPersonal.Nome : null,
+                    Telefone = aluno.ConvidadoPorPersonal != null && aluno.ConvidadoPorPersonal.Usuario != null
+                        ? aluno.ConvidadoPorPersonal.Usuario.Telefone
+                        : null
+                })
+                .FirstOrDefaultAsync();
+            sessao.ConvidadoPorPersonalNome = string.IsNullOrWhiteSpace(origemConvite?.Nome)
+                ? null
+                : origemConvite.Nome;
+            sessao.ConvidadoPorPersonalTelefone = origemConvite?.Telefone;
+        }
         if (usuario.Personal is not null)
         {
             sessao.ControleAvancadoHabilitado = await _context.ConfiguracoesAcompanhamento

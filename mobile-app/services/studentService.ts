@@ -140,6 +140,14 @@ export type StudentFeedback = {
   criadoEm: string;
 };
 
+export type MissingVideoReport = {
+  exerciseName: string;
+  workoutName: string;
+  workoutId: string;
+  exerciseId: string;
+  platform?: string;
+};
+
 export type FeedbackPersonal = { personalId: string; nome: string };
 
 export type StudentScheduleDay = {
@@ -273,6 +281,11 @@ async function dashboardSectionGet<T>(
 }
 
 export const studentService = {
+  async getCatalogVersion(): Promise<string> {
+    const result = await apiGet<{ version: string }>("/api/exercicios/catalogo/version");
+    return result.version;
+  },
+
   async getDashboard(alunoId: string): Promise<StudentDashboardData> {
     const unavailableSections = new Set<string>();
     const workoutRecords = await apiGet<ApiWorkout[]>("/api/treinos");
@@ -369,6 +382,18 @@ export const studentService = {
 
   createFeedback: (payload: { personalId: string | null; categoria: StudentFeedback["categoria"]; nota: number; comentario: string }) =>
     apiPost<StudentFeedback>("/api/feedback", payload),
+
+  reportMissingVideo: (report: MissingVideoReport) =>
+    apiPost<StudentFeedback>("/api/feedback", {
+      personalId: null,
+      categoria: "VIDEO_NAO_ENCONTRADO",
+      nota: 1,
+      comentario: [
+        `Falha em encontrar vídeo de treino referente a "${report.exerciseName}".`,
+        `Treino: "${report.workoutName}".`,
+        `Diagnóstico automático: exercícioId=${report.exerciseId}; treinoId=${report.workoutId}; plataforma=${report.platform ?? "não informada"}; horário=${new Date().toISOString()}.`,
+      ].join("\n"),
+    }),
 };
 
 function dayLabel(date: string) {

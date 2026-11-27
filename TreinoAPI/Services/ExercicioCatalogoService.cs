@@ -34,6 +34,14 @@ public sealed class ExercicioCatalogoService
         return resultado.Take(Math.Clamp(limite, 1, 500)).Select(MapearDTO).ToList();
     }
 
+    public async Task<string> ObterVersaoAsync(CancellationToken cancellationToken)
+    {
+        var ativos = _context.ExerciciosCatalogo.Where(exercicio => exercicio.Ativo);
+        var quantidade = await ativos.CountAsync(cancellationToken);
+        var atualizadoEm = await ativos.MaxAsync(exercicio => (DateTime?)exercicio.AtualizadoEmUtc, cancellationToken);
+        return $"{quantidade}:{atualizadoEm?.Ticks ?? 0}";
+    }
+
     public async Task<List<ExercicioBuscaDTO>> BuscarAsync(string consulta, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(consulta))
@@ -227,6 +235,7 @@ public sealed class ExercicioCatalogoService
         };
 
         _context.VideosExercicios.Add(video);
+        exercicio.AtualizadoEmUtc = DateTime.UtcNow;
         try
         {
             await _context.SaveChangesAsync(cancellationToken);
@@ -242,6 +251,9 @@ public sealed class ExercicioCatalogoService
 
     public async Task<bool> DefinirVideoPrincipalAsync(Guid exercicioId, Guid videoId, CancellationToken cancellationToken)
     {
+        var exercicio = await _context.ExerciciosCatalogo.FirstOrDefaultAsync(item => item.Id == exercicioId && item.Ativo, cancellationToken);
+        if (exercicio is null)
+            return false;
         var videos = await _context.VideosExercicios
             .Where(video => video.ExercicioCatalogoId == exercicioId && video.Ativo)
             .ToListAsync(cancellationToken);
@@ -250,6 +262,7 @@ public sealed class ExercicioCatalogoService
 
         foreach (var video in videos)
             video.Principal = video.Id == videoId;
+        exercicio.AtualizadoEmUtc = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -263,6 +276,9 @@ public sealed class ExercicioCatalogoService
 
         video.Ativo = false;
         video.Principal = false;
+        var exercicio = await _context.ExerciciosCatalogo.FirstOrDefaultAsync(item => item.Id == exercicioId, cancellationToken);
+        if (exercicio is not null)
+            exercicio.AtualizadoEmUtc = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
         if (!string.IsNullOrWhiteSpace(video.ChaveArmazenamento))
         {
@@ -276,6 +292,8 @@ public sealed class ExercicioCatalogoService
         if (outro is not null)
         {
             outro.Principal = true;
+            if (exercicio is not null)
+                exercicio.AtualizadoEmUtc = DateTime.UtcNow;
             await _context.SaveChangesAsync(cancellationToken);
         }
         return true;

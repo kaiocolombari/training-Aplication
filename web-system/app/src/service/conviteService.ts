@@ -40,7 +40,7 @@ export interface ConvitesPersonalResumo {
 
 export const conviteService = {
     validar: (token: string) => apiPost<ConvitePublico>("/api/convites/validar", { token }),
-    criar: (apelido: string) => apiPost<ConviteCriado>("/api/convites", { apelido }),
+    criar: (apelido: string, nomePersonal?: string) => apiPost<ConviteCriado>("/api/convites", { apelido, nomePersonal }),
     meus: () => apiGet<ConviteResumo[]>("/api/convites/meus"),
     revogar: (id: string) => apiDelete<void>(`/api/convites/${id}`),
     equipe: () => apiGet<ConvitesPersonalResumo[]>("/api/convites/equipe"),

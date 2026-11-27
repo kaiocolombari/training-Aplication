@@ -1,13 +1,89 @@
-import type { ReactNode } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, type ComponentProps, type ReactNode } from "react";
+import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "expo-router";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  FadeInDown,
+  ReduceMotion,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { useStudentData } from "@/context/StudentDataContext";
 
-export function AppScreen({ children, className = "", scroll = true }: { children: ReactNode; className?: string; scroll?: boolean }) {
+export function AppScreen({ children, className = "", scroll = true, refreshing = false, onRefresh }: { children: ReactNode; className?: string; scroll?: boolean; refreshing?: boolean; onRefresh?: () => void }) {
+  const { refresh, isRefreshing } = useStudentData();
+  const handleRefresh = onRefresh ?? (() => { void refresh().catch(() => undefined); });
+  const isPullRefreshing = onRefresh ? refreshing : isRefreshing;
+  const reduceMotion = useReducedMotion();
+  const opacity = useSharedValue(reduceMotion ? 1 : 0.88);
+  const translateY = useSharedValue(reduceMotion ? 0 : 8);
+  const screenStyle = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ translateY: translateY.value }] }));
+
+  useFocusEffect(useCallback(() => {
+    // Screen focus drives a short UI-thread entrance without changing layout measurements.
+    // eslint-disable-next-line react-hooks/immutability
+    opacity.value = withSequence(
+      withTiming(0.88, { duration: 1, reduceMotion: ReduceMotion.System }),
+      withTiming(1, { duration: 230, easing: Easing.out(Easing.quad), reduceMotion: ReduceMotion.System }),
+    );
+    // eslint-disable-next-line react-hooks/immutability
+    translateY.value = withSequence(
+      withTiming(8, { duration: 1, reduceMotion: ReduceMotion.System }),
+      withTiming(0, { duration: 260, easing: Easing.out(Easing.quad), reduceMotion: ReduceMotion.System }),
+    );
+    return () => {
+      cancelAnimation(opacity);
+      cancelAnimation(translateY);
+    };
+  }, [opacity, translateY]));
+
   return (
     <SafeAreaView edges={["top"]} className={`flex-1 bg-canvas ${className}`}>
-      {scroll ? <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5 pb-10">{children}</ScrollView> : children}
+      <Animated.View style={[{ flex: 1 }, screenStyle]}>
+        {scroll ? <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isPullRefreshing} onRefresh={handleRefresh} tintColor="#526447" colors={["#526447"]} progressBackgroundColor="#FFFFFF" />} contentContainerClassName="px-5 pb-10">{children}</ScrollView> : children}
+      </Animated.View>
     </SafeAreaView>
   );
+}
+
+type MotionPressableProps = ComponentProps<typeof Pressable> & { className?: string };
+
+export function MotionPressable({ children, onPressIn, onPressOut, disabled = false, ...props }: MotionPressableProps) {
+  const scale = useSharedValue(1);
+  const reduceMotion = useReducedMotion();
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <Pressable
+        {...props}
+        disabled={disabled}
+        onPressIn={(event) => {
+          // Reanimated shared values are intentionally updated by the press interaction.
+          // eslint-disable-next-line react-hooks/immutability
+          if (!disabled && !reduceMotion) scale.value = withSpring(0.975, { damping: 18, stiffness: 280, reduceMotion: ReduceMotion.System });
+          onPressIn?.(event);
+        }}
+        onPressOut={(event) => {
+          // eslint-disable-next-line react-hooks/immutability
+          scale.value = withSpring(1, { damping: 18, stiffness: 280, reduceMotion: ReduceMotion.System });
+          onPressOut?.(event);
+        }}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+export function EnteringView({ children, delay = 0, className = "" }: { children: ReactNode; delay?: number; className?: string }) {
+  return <Animated.View entering={FadeInDown.delay(Math.min(360, Math.max(0, delay))).duration(280).reduceMotion(ReduceMotion.System)} className={className}>{children}</Animated.View>;
 }
 
 export function Eyebrow({ children, light = false }: { children: ReactNode; light?: boolean }) {
@@ -20,10 +96,10 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
 
 export function PrimaryButton({ title, onPress, icon, disabled = false }: { title: string; onPress: () => void; icon?: ReactNode; disabled?: boolean }) {
   return (
-    <Pressable onPress={onPress} disabled={disabled} className={`h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-lime px-5 active:opacity-80 ${disabled ? "opacity-40" : ""}`}>
+    <MotionPressable onPress={onPress} disabled={disabled} className={`h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-lime px-5 active:opacity-80 ${disabled ? "opacity-40" : ""}`}>
       {icon}
       <Text className="text-[14px] font-extrabold text-ink">{title}</Text>
-    </Pressable>
+    </MotionPressable>
   );
 }
 
@@ -47,5 +123,5 @@ export function Tag({ children, tone = "light" }: { children: ReactNode; tone?: 
 }
 
 export function IconButton({ children, onPress, dark = false }: { children: ReactNode; onPress: () => void; dark?: boolean }) {
-  return <Pressable onPress={onPress} className={`h-11 w-11 items-center justify-center rounded-full ${dark ? "bg-white/10" : "border border-line bg-white"}`}>{children}</Pressable>;
+  return <MotionPressable onPress={onPress} className={`h-11 w-11 items-center justify-center rounded-full ${dark ? "bg-white/10" : "border border-line bg-white"}`}>{children}</MotionPressable>;
 }

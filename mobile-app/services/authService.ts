@@ -14,6 +14,8 @@ export interface AuthUser {
   formularioEnviado: boolean;
   observacaoAnalise?: string | null;
   controleAvancadoHabilitado: boolean;
+  convidadoPorPersonalNome?: string | null;
+  convidadoPorPersonalTelefone?: string | null;
 }
 
 export interface LoginPayload {

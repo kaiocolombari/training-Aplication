@@ -3,6 +3,7 @@ namespace TreinoAPI.DTOs.Convite;
 public sealed class CriarConviteDTO
 {
     public string? Apelido { get; set; }
+    public string? NomePersonal { get; set; }
 }
 
 public sealed class ValidarConviteDTO
