@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuth } from "../context/authContext";
 import { ApiError } from "../service/api";
 import { Skeleton } from "./Skeleton";
+import LandingPublica from "../screen/LandingPublica";
 
 export default function ProtectedLayout() {
     const { user, isLoading, isError, error, retrySession } = useAuth();
@@ -62,6 +63,7 @@ export default function ProtectedLayout() {
     }
 
     if (!user) {
+        if (location.pathname === "/") return <LandingPublica />;
         return <Navigate to="/register" replace state={{ from: location.pathname }} />;
     }
 
@@ -77,6 +79,8 @@ export default function ProtectedLayout() {
         const destino =
             user.statusCadastro === "APROVADO"
                 ? "/cadastro/app"
+                : user.statusCadastro === "REPROVADO"
+                  ? "/cadastro/formulario"
                 : user.formularioEnviado
                   ? "/cadastro/aguardando"
                   : "/cadastro/formulario";

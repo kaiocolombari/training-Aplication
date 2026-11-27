@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { router } from "expo-router";
-import { Fingerprint, LockKeyhole, Mail, UserRound, Eye, EyeOff, Dumbbell, ArrowRight } from "lucide-react-native";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Fingerprint, LockKeyhole, Mail, Eye, EyeOff, Dumbbell, ArrowRight, MessageCircle } from "lucide-react-native";
+import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+
+const whatsappUrl = process.env.EXPO_PUBLIC_WHATSAPP_CONTACT_URL;
 
 export default function LoginScreen() {
   const {
@@ -145,10 +146,7 @@ export default function LoginScreen() {
             </Pressable>
           ) : null}
 
-          <Pressable onPress={() => router.push("/register")} className="mt-7 flex-row items-center justify-center gap-2 py-2">
-            <UserRound color="#687263" size={15} />
-            <Text className="text-[11px] font-bold text-[#687263]">Ainda não tem conta? <Text className="font-extrabold text-ink">Criar conta de aluno</Text></Text>
-          </Pressable>
+          {whatsappUrl ? <Pressable onPress={() => void Linking.openURL(whatsappUrl).catch(() => setError("Não foi possível abrir o WhatsApp neste aparelho."))} className="mt-7 flex-row items-center justify-center gap-2 py-2"><MessageCircle color="#687263" size={15}/><Text className="text-[11px] font-bold text-[#687263]">Ainda não tem convite? <Text className="font-extrabold text-ink">Falar com a equipe</Text></Text></Pressable> : <Text className="mt-7 text-center text-[10px] leading-5 text-[#858A82]">O acesso é criado por convite. Solicite seu link diretamente a um profissional da equipe.</Text>}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

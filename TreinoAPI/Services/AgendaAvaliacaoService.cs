@@ -35,14 +35,6 @@ public sealed class AgendaAvaliacaoService
             .AsNoTracking()
             .Where(s => s.Status == "PENDENTE" && s.Origem == "ALUNO");
 
-        if (_current.Role != "ADMIN")
-        {
-            consulta = consulta.Where(s => _db.PersonalAlunos.Any(v =>
-                v.AlunoId == s.AlunoId && v.Ativo &&
-                v.Personal.UsuarioId == _current.UsuarioId &&
-                v.Personal.Usuario != null && v.Personal.Usuario.Ativo));
-        }
-
         var registros = await consulta
             .Include(s => s.Aluno)
             .Include(s => s.AnalisadaPor).ThenInclude(u => u!.Personal)
@@ -91,11 +83,9 @@ public sealed class AgendaAvaliacaoService
 
         if (dto.Urgente)
         {
-            var personalUsuarioIds = await _db.PersonalAlunos.AsNoTracking()
-                .Where(v => v.AlunoId == aluno.Id && v.Ativo && v.Personal.Usuario != null && v.Personal.Usuario.Ativo)
-                .Select(v => v.Personal.UsuarioId)
-                .Distinct()
-                .ToListAsync();
+            var personalUsuarioIds = await _db.Personais.AsNoTracking()
+                .Where(p => p.Usuario != null && p.Usuario.Ativo)
+                .Select(p => p.UsuarioId).ToListAsync();
             var mensagem = $"{aluno.NomeCompleto} solicitou uma avaliação urgente para {FormatarData(dto.DataDesejada)}.";
             _db.NotificacoesUsuarios.AddRange(personalUsuarioIds.Select(usuarioId => new NotificacaoUsuario
             {

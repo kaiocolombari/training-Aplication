@@ -34,6 +34,7 @@ public class AppDbContext : DbContext
     public DbSet<RegistroAuditoria> RegistrosAuditoria { get; set; }
     public DbSet<Personal> Personais { get; set; }
     public DbSet<PersonalAluno> PersonalAlunos { get; set; }
+    public DbSet<ConvitePersonal> ConvitesPersonais { get; set; }
     public DbSet<Anamnese> Anamnese { get; set; }
     public DbSet<Avaliacao> Avaliacoes { get; set; }
     public DbSet<AvaliacaoHistorico> AvaliacoesHistorico { get; set; }
@@ -82,6 +83,38 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<SolicitacaoCadastro>()
             .Property(s => s.RespostasJson)
             .HasColumnType("jsonb");
+
+        modelBuilder.Entity<SolicitacaoCadastro>()
+            .Property(s => s.StatusAnalise).HasMaxLength(30).HasDefaultValue("AGUARDANDO_ANALISE");
+        modelBuilder.Entity<SolicitacaoCadastro>()
+            .Property(s => s.ObservacaoAnalise).HasMaxLength(1000);
+        modelBuilder.Entity<SolicitacaoCadastro>()
+            .HasOne(s => s.Avaliador).WithMany().HasForeignKey(s => s.AvaliadorUsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ConvitePersonal>()
+            .Property(c => c.TokenHash).HasMaxLength(64);
+        modelBuilder.Entity<ConvitePersonal>()
+            .Property(c => c.Apelido).HasMaxLength(80);
+        modelBuilder.Entity<ConvitePersonal>()
+            .HasIndex(c => c.TokenHash).IsUnique();
+        modelBuilder.Entity<ConvitePersonal>()
+            .HasIndex(c => new { c.PersonalId, c.CriadoEm });
+        modelBuilder.Entity<ConvitePersonal>()
+            .HasOne(c => c.Personal).WithMany().HasForeignKey(c => c.PersonalId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<ConvitePersonal>()
+            .HasOne(c => c.CriadoPorUsuario).WithMany().HasForeignKey(c => c.CriadoPorUsuarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Aluno>()
+            .HasOne(a => a.ConvidadoPorPersonal).WithMany().HasForeignKey(a => a.ConvidadoPorPersonalId)
+            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Aluno>()
+            .HasOne(a => a.ConvitePersonal).WithMany().HasForeignKey(a => a.ConvitePersonalId)
+            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Aluno>()
+            .HasIndex(a => a.ConvidadoPorPersonalId);
 
         modelBuilder.Entity<ConversaEquipe>()
             .HasIndex(c => new { c.UsuarioAId, c.UsuarioBId })

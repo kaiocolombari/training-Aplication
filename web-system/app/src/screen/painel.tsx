@@ -79,6 +79,7 @@ import TarefasPersonal from "./TarefasPersonal";
 import FeedbackAlunos from "./FeedbackAlunos";
 import IndicadoresEquipe from "./IndicadoresEquipe";
 import ManutencaoSistema from "./ManutencaoSistema";
+import ConvitesEquipe from "./ConvitesEquipe";
 import { assessmentScheduleService } from "../service/assessmentScheduleService";
 import { createChatConnection, startChatConnection } from "../service/chatRealtimeService";
 
@@ -159,12 +160,7 @@ const secoes = [
     },
     { id: "alunos", nome: "Alunos", grupo: "Workspace", icone: <BsPeople /> },
     { id: "solicitacoes", nome: "Solicitações", grupo: "Workspace", icone: <BsClipboard2Pulse /> },
-    {
-        id: "equipe",
-        nome: "Equipe",
-        grupo: "Workspace",
-        icone: <FaPeopleGroup />,
-    },
+    { id: "convites", nome: "Convites e indicações", grupo: "Workspace", icone: <BsArrowUpRight /> },
     { id: "indicadores", nome: "Indicadores da equipe", grupo: "Workspace", icone: <TbUserStar /> },
     {
         id: "avaliacoes",
@@ -563,16 +559,7 @@ export default function Painel() {
     }, [alunos, busca, filtroFicha]);
 
     function criarAluno() {
-        setNovoNome("");
-        setNovoEmail("");
-        setNovoTelefone("");
-        setNovaSenha("");
-        setConfirmarNovaSenha("");
-        setNovaDataNascimento("");
-        setErroNovoAluno("");
-        setInfoNovoAluno("");
-        setDadosImportacao(null);
-        setModalNovoAluno(true);
+        navegar("convites");
     }
 
     async function confirmarCriacaoAluno(event: React.FormEvent<HTMLFormElement>) {
@@ -914,6 +901,7 @@ export default function Painel() {
             secao.id === "inicio" ||
             secao.id === "alunos" ||
             secao.id === "solicitacoes" ||
+            (secao.id === "convites" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             secao.id === "relatorios" ||
             secao.id === "chat" ||
             (secao.id === "emails" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
@@ -923,7 +911,6 @@ export default function Painel() {
             (secao.id === "tarefas" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             (secao.id === "manutencao" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             (secao.id === "log" && user?.tipo === "ADMIN") ||
-            (secao.id === "equipe" && user?.tipo === "ADMIN") ||
             (secao.id === "controleAluno" &&
                 (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             (secao.id === "controleAvancado" &&
@@ -1330,7 +1317,7 @@ export default function Painel() {
                         <h1
                             className={`text-[28px] font-semibold tracking-[-0.045em] ${cores.heading}`}
                         >
-                            Seus alunos
+                            Alunos da equipe
                         </h1>
 
                         <p className={`mt-2 text-[13px] ${cores.bodyText}`}>
@@ -1360,7 +1347,7 @@ export default function Painel() {
                             className={`inline-flex h-10 items-center justify-center gap-2 px-4 text-[11px] font-semibold ${cores.primaryButton}`}
                         >
                             <BsPlusLg />
-                            Novo aluno
+                            Gerar convite
                         </button>
                     </div>
                 </div>
@@ -1802,7 +1789,7 @@ export default function Painel() {
                         className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-5 text-[12px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
                     >
                         <BsPlusLg />
-                        Novo aluno
+                                    Gerar convite
                     </button>
                 </div>
 
@@ -2492,6 +2479,8 @@ export default function Painel() {
                 );
             case "indicadores":
                 return user?.tipo === "ADMIN" ? <IndicadoresEquipe /> : renderInicio();
+            case "convites":
+                return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL" ? <ConvitesEquipe /> : renderInicio();
             case "tarefas":
                 return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL" ? (
                     <TarefasPersonal />
@@ -2996,7 +2985,7 @@ export default function Painel() {
                                 id="titulo-novo-aluno"
                                 className={`mt-1 text-[20px] font-semibold ${cores.heading}`}
                             >
-                                Novo aluno
+                        Gerar convite
                             </h2>
                             <p className={`mt-2 text-[11px] leading-5 ${cores.bodyText}`}>
                                 A conta será criada no PostgreSQL. Para um Personal, o vínculo com
@@ -3270,7 +3259,7 @@ export default function Painel() {
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="rounded-lg border border-[var(--border)] p-3">
                                         <p className={`text-[10px] ${cores.subtleText}`}>
-                                            Alunos vinculados
+                                            Alunos convidados por este profissional
                                         </p>
                                         <p
                                             className={`mt-1 text-xl font-semibold ${cores.heading}`}
@@ -3280,10 +3269,10 @@ export default function Painel() {
                                     </div>
                                     <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-3">
                                         <p className="text-[10px] text-amber-700">
-                                            Ficarão sem Personal
+                                            Acesso após desativação
                                         </p>
                                         <p className="mt-1 text-xl font-semibold text-amber-700">
-                                            {resumoExclusaoPersonal.alunosQueFicaraoSemPersonal}
+                                            Compartilhado
                                         </p>
                                     </div>
                                 </div>
@@ -3292,12 +3281,12 @@ export default function Painel() {
                                         <p
                                             className={`text-[10px] font-semibold ${cores.bodyText}`}
                                         >
-                                            Alunos afetados por esta desativação
+                                            Alunos cuja origem de convite está registrada neste profissional
                                         </p>
                                     </div>
                                     {resumoExclusaoPersonal.alunos.length === 0 ? (
                                         <p className={`p-3 text-[11px] ${cores.subtleText}`}>
-                                            Este Personal não possui alunos ativos vinculados.
+                                            Este profissional ainda não possui convites aceitos.
                                         </p>
                                     ) : (
                                         <ul className="divide-y divide-[var(--border)]">

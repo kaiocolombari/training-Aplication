@@ -16,8 +16,8 @@ export interface FeedbackAluno {
 
 export interface TarefaPersonal {
     id: string;
-    personalId: string;
-    personalNome: string;
+    personalId: string | null;
+    personalNome?: string | null;
     alunoId?: string | null;
     alunoNome?: string | null;
     criadoPor: string;

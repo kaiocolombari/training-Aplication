@@ -18,15 +18,18 @@ public sealed class AuthController : ControllerBase
     private readonly AuthService _service;
     private readonly IAntiforgery _antiforgery;
     private readonly CurrentUserService _currentUser;
+    private readonly TurnstileService _turnstile;
 
     public AuthController(
         AuthService service,
         IAntiforgery antiforgery,
-        CurrentUserService currentUser)
+        CurrentUserService currentUser,
+        TurnstileService turnstile)
     {
         _service = service;
         _antiforgery = antiforgery;
         _currentUser = currentUser;
+        _turnstile = turnstile;
     }
 
     [AllowAnonymous]
@@ -53,9 +56,19 @@ public sealed class AuthController : ControllerBase
     [AllowAnonymous]
     [EnableRateLimiting("auth")]
     [HttpPost("register")]
-    public async Task<IActionResult> Registrar([FromBody] RegistrarAlunoDTO dto)
+    public IActionResult Registrar() => StatusCode(StatusCodes.Status410Gone,
+        new { message = "O cadastro é realizado somente por um convite válido da equipe." });
+
+    [AllowAnonymous]
+    [EnableRateLimiting("onboarding")]
+    [RequestSizeLimit(32 * 1024)]
+    [HttpPost("register/invite")]
+    public async Task<IActionResult> RegistrarPorConvite([FromBody] RegistrarAlunoDTO dto, CancellationToken cancellationToken)
     {
-        var session = await _service.RegistrarAlunoAsync(dto);
+        if (!string.IsNullOrWhiteSpace(dto.Website))
+            return BadRequest(new { message = "Não foi possível concluir o cadastro." });
+        await _turnstile.ValidarAsync(dto.CaptchaToken, "student_register", cancellationToken);
+        var session = await _service.RegistrarAlunoPorConviteAsync(dto);
         SetCookies(session.Tokens);
         return Created("/api/auth/me", session.Usuario);
     }
@@ -76,12 +89,8 @@ public sealed class AuthController : ControllerBase
     [AllowAnonymous]
     [EnableRateLimiting("auth")]
     [HttpPost("mobile/register")]
-    public async Task<IActionResult> MobileRegister([FromBody] RegistrarAlunoDTO dto)
-    {
-        var session = await _service.RegistrarAlunoAsync(dto);
-        Response.Headers.CacheControl = "no-store";
-        return Created("/api/auth/me", MobileAuthResponseDTO.From(session));
-    }
+    public IActionResult MobileRegister() => StatusCode(StatusCodes.Status410Gone,
+        new { message = "O cadastro deve ser realizado pelo site, através de um convite da equipe." });
 
     [AllowAnonymous]
     [EnableRateLimiting("auth")]

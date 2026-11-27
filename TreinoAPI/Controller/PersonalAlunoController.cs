@@ -14,13 +14,10 @@ public class PersonalAlunoController : ControllerBase
 {
     private readonly PersonalAlunoService _service;
     private readonly OwnershipService _ownership;
-    private readonly CurrentUserService _current;
-
-    public PersonalAlunoController(PersonalAlunoService service, OwnershipService ownership, CurrentUserService current)
+    public PersonalAlunoController(PersonalAlunoService service, OwnershipService ownership)
     {
         _service = service;
         _ownership = ownership;
-        _current = current;
     }
 
     [HttpGet("{personalId}/alunos")]
@@ -40,14 +37,11 @@ public class PersonalAlunoController : ControllerBase
         return resultado is null ? NotFound() : Ok(resultado);
     }
 
+    [Authorize(Roles = "ADMIN")]
     [HttpPatch("{id}")]
     public async Task<IActionResult> AtualizarVinculo(Guid id, [FromBody] AtualizarPersonalAlunoDTO dto)
     {
         await _ownership.EnsureVinculoAccessAsync(id);
-        // A professional may leave an assignment, but only an administrator can restore it.
-        if (_current.Role == "PERSONAL" && dto.Ativo)
-            return Forbid();
-
         var resultado = await _service.AtualizarVinculo(id, dto);
         return resultado is null ? NotFound("Vínculo não encontrado.") : Ok(resultado);
     }

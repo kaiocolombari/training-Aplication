@@ -152,7 +152,7 @@ export default function CentralAcompanhamentoPersonal({
             ) : null}
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
-                <Metric label="Alunos ativos" value={data.alunosAtivos} detail="Na sua carteira" icon={<BsPerson />} />
+                <Metric label="Alunos ativos" value={data.alunosAtivos} detail="Em toda a equipe" icon={<BsPerson />} />
                 <Metric label="Treinos recebidos" value={data.sessoesNosUltimos7Dias} detail="Últimos 7 dias" icon={<BsActivity />} />
                 <Metric label="Aguardando revisão" value={data.enviosAguardandoRevisao} detail="Sessões concluídas" icon={<BsClipboard2Pulse />} alert />
                 <Metric label="Relatos de dor" value={data.alertasDeDor} detail="Nas sessões carregadas" icon={<BsHeartPulse />} alert />
@@ -276,7 +276,7 @@ export default function CentralAcompanhamentoPersonal({
                                     </div>
                                 </div>
                             ))}
-                            {!data.alunos.length && <Empty title="Carteira vazia" detail="Os alunos vinculados aparecerão aqui." />}
+                            {!data.alunos.length && <Empty title="Nenhum aluno ativo" detail="Os alunos aprovados da equipe aparecerão aqui." />}
                         </div>
                     </section>
                     <section className="rounded-2xl border border-[var(--accent)]/20 bg-[var(--accent-soft)] p-4">

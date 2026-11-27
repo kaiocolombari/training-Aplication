@@ -28,6 +28,12 @@ namespace TreinoAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ConvidadoPorPersonalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ConvitePersonalId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CriadoEm")
                         .HasColumnType("timestamp with time zone");
 
@@ -96,6 +102,10 @@ namespace TreinoAPI.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ConvidadoPorPersonalId");
+
+                    b.HasIndex("ConvitePersonalId");
 
                     b.HasIndex("UsuarioId")
                         .IsUnique();
@@ -498,6 +508,51 @@ namespace TreinoAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("ConversasEquipe");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ConvitePersonal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Apelido")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CriadoPorUsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PersonalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("RevogadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("Utilizacoes")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CriadoPorUsuarioId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("PersonalId", "CriadoEm");
+
+                    b.ToTable("ConvitesPersonais");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.DiaTreino", b =>
@@ -1339,17 +1394,36 @@ namespace TreinoAPI.Migrations
                     b.Property<Guid>("AlunoId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("AnalisadaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("AvaliadorUsuarioId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("EnviadaEm")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ObservacaoAnalise")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("RespostasJson")
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("StatusAnalise")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("AGUARDANDO_ANALISE");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AlunoId")
                         .IsUnique();
+
+                    b.HasIndex("AvaliadorUsuarioId");
 
                     b.ToTable("SolicitacoesCadastro");
                 });
@@ -1392,7 +1466,7 @@ namespace TreinoAPI.Migrations
                         .HasMaxLength(1500)
                         .HasColumnType("character varying(1500)");
 
-                    b.Property<Guid>("PersonalId")
+                    b.Property<Guid?>("PersonalId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Prioridade")
@@ -1739,11 +1813,25 @@ namespace TreinoAPI.Migrations
 
             modelBuilder.Entity("TreinoAPI.Model.Aluno", b =>
                 {
+                    b.HasOne("TreinoAPI.Model.Personal", "ConvidadoPorPersonal")
+                        .WithMany()
+                        .HasForeignKey("ConvidadoPorPersonalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TreinoAPI.Model.ConvitePersonal", "ConvitePersonal")
+                        .WithMany()
+                        .HasForeignKey("ConvitePersonalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TreinoAPI.Model.Usuario", "Usuario")
                         .WithOne("Aluno")
                         .HasForeignKey("TreinoAPI.Model.Aluno", "UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ConvidadoPorPersonal");
+
+                    b.Navigation("ConvitePersonal");
 
                     b.Navigation("Usuario");
                 });
@@ -1888,6 +1976,25 @@ namespace TreinoAPI.Migrations
                     b.Navigation("UsuarioA");
 
                     b.Navigation("UsuarioB");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ConvitePersonal", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.Usuario", "CriadoPorUsuario")
+                        .WithMany()
+                        .HasForeignKey("CriadoPorUsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TreinoAPI.Model.Personal", "Personal")
+                        .WithMany()
+                        .HasForeignKey("PersonalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CriadoPorUsuario");
+
+                    b.Navigation("Personal");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.DiaTreino", b =>
@@ -2166,7 +2273,14 @@ namespace TreinoAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("TreinoAPI.Model.Usuario", "Avaliador")
+                        .WithMany()
+                        .HasForeignKey("AvaliadorUsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Aluno");
+
+                    b.Navigation("Avaliador");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.TarefaPersonal", b =>
@@ -2185,8 +2299,7 @@ namespace TreinoAPI.Migrations
                     b.HasOne("TreinoAPI.Model.Personal", "Personal")
                         .WithMany()
                         .HasForeignKey("PersonalId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Aluno");
 

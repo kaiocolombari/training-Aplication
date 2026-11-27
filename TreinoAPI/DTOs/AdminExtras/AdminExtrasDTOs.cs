@@ -55,8 +55,8 @@ public sealed class TarefaPersonalAtualizarDTO
 public sealed class TarefaPersonalDTO
 {
     public Guid Id { get; set; }
-    public Guid PersonalId { get; set; }
-    public string PersonalNome { get; set; } = string.Empty;
+    public Guid? PersonalId { get; set; }
+    public string? PersonalNome { get; set; }
     public Guid? AlunoId { get; set; }
     public string? AlunoNome { get; set; }
     public string CriadoPor { get; set; } = string.Empty;

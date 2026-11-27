@@ -25,6 +25,13 @@ export default function CadastroAguardando() {
                     Obrigado, {user?.nome}. Nossa equipe recebeu suas informações. Assim que a
                     avaliação for concluída, seu acesso será liberado.
                 </p>
+                {user?.statusCadastro === "REPROVADO" && (
+                    <div role="alert" className="mt-6 rounded-2xl border border-rose-300/20 bg-rose-300/5 p-4 text-left">
+                        <p className="text-xs font-bold text-rose-200">Cadastro precisa de ajustes</p>
+                        <p className="mt-1 text-xs leading-5 text-white/55">{user.observacaoAnalise ?? "A equipe solicitou uma revisão das informações."}</p>
+                        <button onClick={() => navigate("/cadastro/formulario")} className="mt-3 rounded-lg bg-[#a85f60] px-4 py-2 text-xs font-bold text-white">Revisar formulário</button>
+                    </div>
+                )}
                 <div className="mt-8 rounded-2xl border border-white/10 bg-white/[.045] p-5 text-left">
                     <div className="flex items-center gap-3">
                         <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400" />

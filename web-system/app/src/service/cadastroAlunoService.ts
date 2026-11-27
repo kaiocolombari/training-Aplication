@@ -8,6 +8,10 @@ export interface SolicitacaoCadastro {
     criadoEm: string;
     enviadaEm?: string | null;
     formularioEnviado: boolean;
+    convidadoPorPersonal?: string | null;
+    statusAnalise?: string;
+    observacaoAnalise?: string | null;
+    analisadaEm?: string | null;
     respostas: Record<string, unknown>;
 }
 
@@ -18,12 +22,14 @@ export interface ResumoSolicitacoesCadastro {
 }
 
 export const cadastroAlunoService = {
-    enviarRespostas: (respostas: Record<string, unknown>) =>
-        apiPost<void>("/api/cadastro-aluno/respostas", { respostas }),
+    enviarRespostas: (respostas: Record<string, unknown>, captchaToken: string, website?: string) =>
+        apiPost<void>("/api/cadastro-aluno/respostas", { respostas, captchaToken, website }),
     listarSolicitacoes: () =>
         apiGet<SolicitacaoCadastro[]>("/api/cadastro-aluno/solicitacoes"),
     obterResumo: () =>
         apiGet<ResumoSolicitacoesCadastro>("/api/cadastro-aluno/solicitacoes/resumo"),
-    aprovar: (alunoId: string, personalId?: string) =>
-        apiPost<void>(`/api/cadastro-aluno/${alunoId}/aprovar`, { personalId }),
+    aprovar: (alunoId: string, observacao?: string) =>
+        apiPost<void>(`/api/cadastro-aluno/${alunoId}/aprovar`, { observacao }),
+    reprovar: (alunoId: string, observacao: string) =>
+        apiPost<void>(`/api/cadastro-aluno/${alunoId}/reprovar`, { observacao }),
 };

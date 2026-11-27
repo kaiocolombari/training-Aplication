@@ -15,4 +15,13 @@ public sealed class RegistrarAlunoDTO
 
     [Required, MinLength(8), StringLength(128)]
     public string Senha { get; set; } = string.Empty;
+
+    [Required, StringLength(256)]
+    public string TokenConvite { get; set; } = string.Empty;
+
+    [Required, StringLength(2048)]
+    public string CaptchaToken { get; set; } = string.Empty;
+
+    [StringLength(200)]
+    public string? Website { get; set; }
 }

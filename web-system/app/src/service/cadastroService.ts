@@ -27,6 +27,7 @@ export interface AlunoResumoApi {
     criadoEm?: string;
     statusCadastro?: string;
     possuiFichaTecnica?: boolean;
+    convidadoPorPersonalNome?: string | null;
 }
 
 export interface PersonalResumoApi {

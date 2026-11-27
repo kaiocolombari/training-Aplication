@@ -7,6 +7,8 @@ function destinoDoUsuario(user: NonNullable<ReturnType<typeof useAuth>["user"]>)
     if (user.tipo === "ALUNO") {
         return user.statusCadastro === "APROVADO"
             ? "/cadastro/app"
+            : user.statusCadastro === "REPROVADO"
+              ? "/cadastro/formulario"
             : user.formularioEnviado
               ? "/cadastro/aguardando"
               : "/cadastro/formulario";

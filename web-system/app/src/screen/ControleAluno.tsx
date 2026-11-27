@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
     BsActivity,
     BsArrowLeft,
@@ -24,10 +25,12 @@ import AlunoMonitoramentoPicker, { type AlunoMonitoramentoOption } from "../comp
 import ControleVolumeTreino from "./ControleVolumeTreino";
 import ChatAlunoConversa from "../components/ChatAlunoConversa";
 import AssessmentScheduleCalendar from "../components/AssessmentScheduleCalendar";
+import ChecklistAluno from "../components/ChecklistAluno";
+import { comunicacaoService } from "../service/comunicacaoService";
 
 type AlunoControle = Pick<
     AlunoResumoApi,
-    "id" | "nomeCompleto" | "email" | "telefone" | "criadoEm" | "possuiFichaTecnica"
+    "id" | "nomeCompleto" | "email" | "telefone" | "criadoEm" | "possuiFichaTecnica" | "convidadoPorPersonalNome"
 >;
 const abas = [
     { id: "resumo", label: "Visão 360°", icon: <BsActivity /> },
@@ -39,6 +42,7 @@ const abas = [
     { id: "evolucao", label: "Evolução", icon: <BsStars /> },
     { id: "periodizacao", label: "Periodização", icon: <BsCalendar3 /> },
     { id: "pendencias", label: "Pendências", icon: <BsExclamationTriangle /> },
+    { id: "tarefas", label: "Checklist da equipe", icon: <BsClipboard2Pulse /> },
     { id: "diario", label: "Diário técnico", icon: <BsJournalText /> },
     { id: "metas", label: "Metas", icon: <BsBullseye /> },
     { id: "historico", label: "Histórico", icon: <BsClockHistory /> },
@@ -114,6 +118,11 @@ export default function ControleAluno({
     canChat: boolean;
 }) {
     const [aba, setAba] = useState<AbaId>("resumo");
+    const atividadesQuery = useQuery({
+        queryKey: ["aluno", "contexto-auditoria", aluno.id],
+        queryFn: () => comunicacaoService.obterContextoChatAluno(aluno.id),
+        enabled: aba === "historico",
+    });
     const mensagensNaoLidasAluno = alunosDisponiveis.find(item => item.id === aluno.id)?.mensagensNaoLidas ?? 0;
     const treinos = useMemo(
         () => ficha.treino.filter(t => t.nome.trim() || t.exercicios.some(e => e.exercicio.trim())),
@@ -139,6 +148,10 @@ export default function ControleAluno({
 
     const resumo = (
         <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+                <div><p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--text-muted)]">Origem do cadastro</p><p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">{aluno.convidadoPorPersonalNome || "Origem não registrada (cadastro legado)"}</p></div>
+                <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[9px] font-bold text-[var(--accent-text)]">Acesso compartilhado</span>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <Metrica
                     titulo="Treinos prescritos"
@@ -643,6 +656,7 @@ export default function ControleAluno({
                     )}
                 </div>
             );
+        if (aba === "tarefas") return <ChecklistAluno alunoId={aluno.id} />;
         if (aba === "historico") {
             const eventos = [
                 ...avaliacoes.map(a => ({
@@ -665,7 +679,7 @@ export default function ControleAluno({
                             Linha do tempo do aluno
                         </h3>
                         <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-                            Eventos existentes na ficha, ordenados cronologicamente.
+                            Eventos da ficha e ações da equipe, com autor, horário e rota técnica quando disponível.
                         </p>
                     </div>
                     {eventos.length ? (
@@ -697,6 +711,10 @@ export default function ControleAluno({
                             descricao="Avaliações e execuções aparecerão automaticamente conforme forem registradas. Alterações importantes deverão manter autor e versão."
                         />
                     )}
+                    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+                        <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-[13px] font-semibold text-[var(--text-primary)]">Atividades e alterações da equipe</h3><p className="mt-1 text-[10px] text-[var(--text-muted)]">Rastreabilidade das operações relacionadas a este aluno.</p></div>{atividadesQuery.isFetching ? <span className="text-[10px] text-[var(--text-muted)]">Atualizando...</span> : null}</div>
+                        {atividadesQuery.isError ? <p role="alert" className="mt-4 text-[11px] text-[var(--danger)]">Não foi possível carregar o histórico técnico. <button type="button" onClick={() => void atividadesQuery.refetch()} className="font-bold underline">Tentar novamente</button></p> : atividadesQuery.isLoading ? <p className="mt-4 text-[11px] text-[var(--text-muted)]">Carregando atividades...</p> : (atividadesQuery.data?.atividades ?? []).length === 0 ? <p className="mt-4 text-[11px] text-[var(--text-muted)]">Nenhuma atividade de auditoria disponível para este aluno.</p> : <div className="mt-4 divide-y divide-[var(--border)]">{(atividadesQuery.data?.atividades ?? []).map((item, index) => <details key={`${item.criadoEm}-${index}`} className="py-3"><summary className="cursor-pointer list-none"><div className="flex flex-wrap items-start justify-between gap-2"><div><p className="text-[11px] font-semibold text-[var(--text-primary)]">{item.acao} · {item.resumo}</p><p className="mt-1 text-[9px] text-[var(--text-muted)]">{item.usuarioNome} ({item.usuarioTipo}) · {dataPt(item.criadoEm)}</p></div><span className={`rounded-full px-2 py-1 text-[9px] font-bold ${item.resultado === "SUCESSO" ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}`}>{item.statusCode} · {item.resultado}</span></div></summary><div className="mt-3 rounded-lg bg-[var(--surface-secondary)] p-3"><p className="break-all text-[9px] text-[var(--text-secondary)]">{item.metodoHttp} {item.rota}</p></div></details>)}</div>}
+                    </section>
                 </div>
             );
         }
@@ -745,7 +763,7 @@ export default function ControleAluno({
                     "Anotações contextualizadas, com autoria e visibilidade claramente separadas.",
                 itens: [
                     ["Interna da equipe", "Somente profissionais autorizados"],
-                    ["Compartilhada", "Visível para os personais vinculados"],
+                    ["Compartilhada", "Visível para toda a equipe"],
                     ["Orientação ao aluno", "Conteúdo aprovado para exibição no aplicativo"],
                 ],
                 vazio: "Diário sem anotações",

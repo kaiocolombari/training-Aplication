@@ -97,9 +97,9 @@ export default function IndicadoresEquipe() {
                             "pt-BR",
                         )}{" "}
                         a {new Date(`${indicadores.data.fim}T12:00:00`).toLocaleDateString("pt-BR")}
-                        . Os vínculos e treinos representam as carteiras atuais; as avaliações e
-                        ações são filtradas pelo período. Um aluno vinculado a mais de um personal
-                        aparece em cada carteira.
+                        . Os alunos são agrupados pela origem do convite; as avaliações e ações são
+                        filtradas pelo período. Essa atribuição é informativa e não restringe o
+                        acesso compartilhado da equipe.
                     </p>
                     <div className="ui-stagger grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         {cards.map(card => (

@@ -65,7 +65,8 @@ public class AlunoService
             Sistolica = dto.Sistolica,
             Diastolica = dto.Diastolica,
             Usuario = usuario,
-            CriadoEm = DateTime.UtcNow
+            CriadoEm = DateTime.UtcNow,
+            ConvidadoPorPersonalId = personalId
         };
 
         _context.Alunos.Add(aluno);
@@ -109,6 +110,7 @@ public class AlunoService
                 Etnia = a.Etnia,
                 CriadoEm = a.CriadoEm,
                 StatusCadastro = a.StatusCadastro.ToString(),
+                ConvidadoPorPersonalNome = a.ConvidadoPorPersonal != null ? a.ConvidadoPorPersonal.Nome : null,
                 PossuiFichaTecnica = a.Avaliacoes.Any(av => av.Ativo) ||
                     a.Treinos.Any(t => t.Ativo) || a.Anamneses.Any() ||
                     a.TestesCarga.Any() || a.Periodizacoes.Any()
@@ -121,6 +123,7 @@ public class AlunoService
         var aluno = await _context.Alunos
             .AsNoTracking()
             .Include(a => a.Usuario)
+            .Include(a => a.ConvidadoPorPersonal)
             .Include(a => a.Avaliacoes.Where(av => av.Ativo))
             .Include(a => a.Treinos.Where(t => t.Ativo))
             .Include(a => a.Anamneses)
@@ -135,6 +138,7 @@ public class AlunoService
     {
         var aluno = await _context.Alunos
             .Include(a => a.Usuario)
+            .Include(a => a.ConvidadoPorPersonal)
             .Include(a => a.Avaliacoes.Where(av => av.Ativo))
             .Include(a => a.Treinos.Where(t => t.Ativo))
             .Include(a => a.Anamneses)
@@ -228,6 +232,7 @@ public class AlunoService
         Etnia = aluno.Etnia,
         CriadoEm = aluno.CriadoEm,
         StatusCadastro = aluno.StatusCadastro.ToString(),
+        ConvidadoPorPersonalNome = aluno.ConvidadoPorPersonal?.Nome,
         PossuiFichaTecnica = aluno.Avaliacoes.Any(av => av.Ativo) ||
             aluno.Treinos.Any(t => t.Ativo) || aluno.Anamneses.Any() ||
             aluno.TestesCarga.Any() || aluno.Periodizacoes.Any()

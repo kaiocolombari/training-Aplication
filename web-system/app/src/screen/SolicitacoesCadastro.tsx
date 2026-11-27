@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../context/authContext";
 import { cadastroAlunoService } from "../service/cadastroAlunoService";
-import { cadastroService } from "../service/cadastroService";
 import { perguntasCadastro } from "./cadastroPerguntas";
 import { ApiError } from "../service/api";
 import { LoadingState } from "../components/LoadingState";
@@ -15,30 +13,20 @@ function formatarResposta(valor: unknown): string {
 }
 
 export default function SolicitacoesCadastro() {
-    const { user } = useAuth();
     const queryClient = useQueryClient();
-    const [personalAdminId, setPersonalAdminId] = useState("");
+    const [observacoes, setObservacoes] = useState<Record<string, string>>({});
     const [erro, setErro] = useState("");
     const [sucesso, setSucesso] = useState("");
     const solicitacoes = useQuery({
         queryKey: ["solicitacoes-cadastro"],
         queryFn: cadastroAlunoService.listarSolicitacoes,
     });
-    const personais = useQuery({
-        queryKey: ["personais"],
-        queryFn: cadastroService.listarPersonais,
-        enabled: user?.tipo === "ADMIN",
-    });
-    const personalIdAdmin = personalAdminId || personais.data?.[0]?.id || "";
     const aprovar = useMutation({
-        mutationFn: (alunoId: string) =>
-            cadastroAlunoService.aprovar(
-                alunoId,
-                user?.tipo === "ADMIN" ? personalIdAdmin : undefined,
-            ),
+        mutationFn: ({ alunoId, observacao }: { alunoId: string; observacao: string }) =>
+            cadastroAlunoService.aprovar(alunoId, observacao),
         onSuccess: async () => {
             setErro("");
-            setSucesso("Cadastro aprovado. As respostas foram removidas do banco de dados.");
+            setSucesso("Cadastro aprovado. O formulário e o histórico da análise foram preservados.");
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ["solicitacoes-cadastro"] }),
                 queryClient.invalidateQueries({ queryKey: ["solicitacoes-cadastro", "resumo"] }),
@@ -51,6 +39,22 @@ export default function SolicitacoesCadastro() {
             setErro(
                 error instanceof ApiError ? error.message : "Não foi possível aprovar o cadastro.",
             );
+        },
+    });
+    const reprovar = useMutation({
+        mutationFn: ({ alunoId, observacao }: { alunoId: string; observacao: string }) =>
+            cadastroAlunoService.reprovar(alunoId, observacao),
+        onSuccess: async () => {
+            setErro("");
+            setSucesso("Cadastro devolvido para ajustes. O motivo ficou registrado no histórico.");
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["solicitacoes-cadastro"] }),
+                queryClient.invalidateQueries({ queryKey: ["alunos"] }),
+            ]);
+        },
+        onError: error => {
+            setSucesso("");
+            setErro(error instanceof ApiError ? error.message : "Não foi possível reprovar o cadastro.");
         },
     });
     const quantidade = solicitacoes.data?.length ?? 0;
@@ -89,23 +93,6 @@ export default function SolicitacoesCadastro() {
                     </div>
                 </div>
             </div>
-            {user?.tipo === "ADMIN" && (
-                <label className="mb-5 block max-w-sm text-xs font-semibold text-[var(--text-secondary)]">
-                    Vincular aprovações ao personal
-                    <select
-                        value={personalIdAdmin}
-                        onChange={event => setPersonalAdminId(event.target.value)}
-                        className="mt-2 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--input-bg)] px-3 py-2.5 text-sm text-[var(--text-primary)]"
-                    >
-                        <option value="">Selecione um personal</option>
-                        {(personais.data ?? []).map(personal => (
-                            <option key={personal.id} value={personal.id}>
-                                {personal.nomeCompleto}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-            )}
             {erro && (
                 <p
                     role="alert"
@@ -157,6 +144,7 @@ export default function SolicitacoesCadastro() {
                                     Criado em{" "}
                                     {new Date(solicitacao.criadoEm).toLocaleString("pt-BR")}
                                 </p>
+                                <p className="mt-1 text-[10px] text-[var(--text-muted)]">Convidado por: <strong className="text-[var(--text-secondary)]">{solicitacao.convidadoPorPersonal || "Origem legada / não registrada"}</strong></p>
                                 {solicitacao.formularioEnviado && solicitacao.enviadaEm && (
                                     <p className="mt-1 text-[10px] text-[var(--text-muted)]">
                                         Formulário enviado em{" "}
@@ -199,20 +187,10 @@ export default function SolicitacoesCadastro() {
                                 </p>
                             </div>
                         )}
-                        <div className="flex justify-end border-t border-[var(--border)] pt-4">
-                            <button
-                                type="button"
-                                disabled={
-                                    !solicitacao.formularioEnviado ||
-                                    aprovar.isPending ||
-                                    (user?.tipo === "ADMIN" && !personalIdAdmin)
-                                }
-                                aria-busy={aprovar.isPending}
-                                onClick={() => aprovar.mutate(solicitacao.alunoId)}
-                                className="rounded-lg bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                {aprovar.isPending ? "Aprovando..." : "Aprovar cadastro"}
-                            </button>
+                        {solicitacao.formularioEnviado && <label className="mt-2 block text-[10px] font-semibold text-[var(--text-secondary)]">Observação da análise (opcional para aprovação; obrigatória para reprovar)<textarea value={observacoes[solicitacao.alunoId] ?? ""} onChange={event => setObservacoes(current => ({ ...current, [solicitacao.alunoId]: event.target.value }))} maxLength={1000} rows={2} className="mt-2 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--input-bg)] px-3 py-2.5 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" placeholder="Registre os motivos e orientações para o aluno..." /></label>}
+                        <div className="flex flex-wrap justify-end gap-2 border-t border-[var(--border)] pt-4">
+                            <button type="button" disabled={!solicitacao.formularioEnviado || aprovar.isPending || reprovar.isPending || (observacoes[solicitacao.alunoId] ?? "").trim().length < 3} onClick={() => reprovar.mutate({ alunoId: solicitacao.alunoId, observacao: (observacoes[solicitacao.alunoId] ?? "").trim() })} className="rounded-lg border border-[var(--danger)]/30 px-4 py-2.5 text-xs font-bold text-[var(--danger)] transition hover:bg-[var(--danger-soft)] disabled:cursor-not-allowed disabled:opacity-40">{reprovar.isPending ? "Registrando..." : "Solicitar ajustes"}</button>
+                            <button type="button" disabled={!solicitacao.formularioEnviado || aprovar.isPending || reprovar.isPending} aria-busy={aprovar.isPending} onClick={() => aprovar.mutate({ alunoId: solicitacao.alunoId, observacao: observacoes[solicitacao.alunoId] ?? "" })} className="rounded-lg bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">{aprovar.isPending ? "Aprovando..." : "Aprovar cadastro"}</button>
                         </div>
                     </article>
                 ))}

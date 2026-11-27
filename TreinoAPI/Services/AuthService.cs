@@ -3,6 +3,8 @@ using TreinoAPI.Data;
 using TreinoAPI.DTOs.Auth;
 using TreinoAPI.Model;
 using TreinoAPI.Security;
+using TreinoAPI.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace TreinoAPI.Services;
 
@@ -14,6 +16,7 @@ public sealed class AuthService
     private readonly AuditoriaService _auditoria;
     private readonly IHttpContextAccessor _httpContext;
     private readonly ILogger<AuthService> _logger;
+    private readonly InviteOptions _inviteOptions;
 
     public AuthService(
         AppDbContext context,
@@ -21,7 +24,8 @@ public sealed class AuthService
         TokenService tokens,
         AuditoriaService auditoria,
         IHttpContextAccessor httpContext,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IOptions<InviteOptions> inviteOptions)
     {
         _context = context;
         _passwords = passwords;
@@ -29,6 +33,7 @@ public sealed class AuthService
         _auditoria = auditoria;
         _httpContext = httpContext;
         _logger = logger;
+        _inviteOptions = inviteOptions.Value;
     }
 
     public async Task<AuthSessionResult?> LoginAsync(LoginDTO dto)
@@ -70,11 +75,25 @@ public sealed class AuthService
         return session;
     }
 
-    public async Task<AuthSessionResult> RegistrarAlunoAsync(RegistrarAlunoDTO dto)
+    public async Task<AuthSessionResult> RegistrarAlunoPorConviteAsync(RegistrarAlunoDTO dto)
     {
         var email = NormalizeEmail(dto.Email);
         if (await _context.Usuarios.AnyAsync(u => u.Email == email))
             throw DomainException.Conflict("Já existe uma conta cadastrada com este e-mail.");
+
+        var conviteHash = ConvitePersonalService.HashToken(dto.TokenConvite);
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        var convite = await _context.ConvitesPersonais
+            .Include(c => c.Personal).ThenInclude(p => p.Usuario)
+            .FirstOrDefaultAsync(c => c.TokenHash == conviteHash && c.RevogadoEm == null &&
+                c.ExpiraEm > DateTime.UtcNow && c.Personal.Usuario!.Ativo);
+        if (convite is null)
+            throw DomainException.BadRequest("Este convite não é válido ou expirou. Solicite um novo link à equipe.");
+        var maximoPorHora = Math.Clamp(_inviteOptions.MaxRegistrationsPerHourPerInvite, 1, 1000);
+        var cadastrosRecentes = await _context.Alunos.CountAsync(a =>
+            a.ConvitePersonalId == convite.Id && a.CriadoEm >= DateTime.UtcNow.AddHours(-1));
+        if (cadastrosRecentes >= maximoPorHora)
+            throw DomainException.BadRequest("Este link recebeu muitas solicitações recentemente. Entre em contato com a equipe para continuar.");
 
         var usuario = new Usuario
         {
@@ -90,14 +109,35 @@ public sealed class AuthService
             NomeCompleto = dto.NomeCompleto.Trim(),
             Usuario = usuario,
             CriadoEm = DateTime.UtcNow,
-            StatusCadastro = StatusCadastroAluno.PENDENTE
+            StatusCadastro = StatusCadastroAluno.PENDENTE,
+            ConvidadoPorPersonalId = convite.PersonalId,
+            ConvitePersonalId = convite.Id
         };
 
         _context.Usuarios.Add(usuario);
         _context.Alunos.Add(aluno);
-        await _context.SaveChangesAsync();
+        _context.PersonalAlunos.Add(new PersonalAluno
+        {
+            PersonalId = convite.PersonalId,
+            Aluno = aluno,
+            Ativo = true,
+            CriadoEm = DateTime.UtcNow
+        });
+        convite.Utilizacoes++;
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            await transaction.RollbackAsync();
+            if (await _context.Usuarios.AnyAsync(u => u.Email == email))
+                throw DomainException.Conflict("Já existe uma conta cadastrada com este e-mail.");
+            throw;
+        }
 
         var session = await CreateSessionAsync(usuario);
+        await transaction.CommitAsync();
         await RegistrarTentativaLoginAsync(email, usuario, "CADASTRO");
         return session;
     }
@@ -222,7 +262,8 @@ public sealed class AuthService
         AlunoId = usuario.Aluno?.Id,
         Nome = usuario.Personal?.Nome ?? usuario.Aluno?.NomeCompleto ?? usuario.Email,
         StatusCadastro = usuario.Aluno?.StatusCadastro.ToString(),
-        FormularioEnviado = usuario.Aluno?.SolicitacaoCadastro is not null
+        FormularioEnviado = usuario.Aluno?.SolicitacaoCadastro is not null,
+        ObservacaoAnalise = usuario.Aluno?.SolicitacaoCadastro?.ObservacaoAnalise
     };
 
     private async Task RegistrarTentativaLoginAsync(string email, Usuario? usuario, string resultado)

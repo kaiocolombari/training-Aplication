@@ -34,17 +34,27 @@ public sealed class CadastroAlunoService
 
         if (aluno is null)
             throw DomainException.NotFound("Cadastro de aluno não encontrado.");
-        if (aluno.StatusCadastro != StatusCadastroAluno.PENDENTE)
-            throw DomainException.Conflict("Este cadastro não está aguardando avaliação.");
-        if (aluno.SolicitacaoCadastro is not null)
-            throw DomainException.Conflict("O formulário já foi enviado e está aguardando avaliação.");
+        if (aluno.StatusCadastro == StatusCadastroAluno.APROVADO)
+            throw DomainException.Conflict("Seu cadastro já foi aprovado.");
 
-        _db.SolicitacoesCadastro.Add(new SolicitacaoCadastro
+        var agora = DateTime.UtcNow;
+        if (aluno.SolicitacaoCadastro is null)
         {
-            AlunoId = aluno.Id,
-            RespostasJson = json,
-            EnviadaEm = DateTime.UtcNow
-        });
+            _db.SolicitacoesCadastro.Add(new SolicitacaoCadastro
+            {
+                AlunoId = aluno.Id, RespostasJson = json, EnviadaEm = agora
+            });
+        }
+        else
+        {
+            aluno.SolicitacaoCadastro.RespostasJson = json;
+            aluno.SolicitacaoCadastro.EnviadaEm = agora;
+            aluno.SolicitacaoCadastro.StatusAnalise = "AGUARDANDO_ANALISE";
+            aluno.SolicitacaoCadastro.ObservacaoAnalise = null;
+            aluno.SolicitacaoCadastro.AvaliadorUsuarioId = null;
+            aluno.SolicitacaoCadastro.AnalisadaEm = null;
+        }
+        aluno.StatusCadastro = StatusCadastroAluno.PENDENTE;
         await _db.SaveChangesAsync();
     }
 
@@ -55,6 +65,7 @@ public sealed class CadastroAlunoService
             .Where(a => a.Usuario.Ativo && a.StatusCadastro == StatusCadastroAluno.PENDENTE)
             .Include(a => a.Usuario)
             .Include(a => a.SolicitacaoCadastro)
+            .Include(a => a.ConvidadoPorPersonal)
             .OrderBy(a => a.CriadoEm)
             .ToListAsync();
 
@@ -67,6 +78,10 @@ public sealed class CadastroAlunoService
             CriadoEm = aluno.CriadoEm,
             EnviadaEm = aluno.SolicitacaoCadastro?.EnviadaEm,
             FormularioEnviado = aluno.SolicitacaoCadastro is not null,
+            ConvidadoPorPersonal = aluno.ConvidadoPorPersonal?.Nome,
+            StatusAnalise = aluno.SolicitacaoCadastro?.StatusAnalise ?? "AGUARDANDO_FORMULARIO",
+            ObservacaoAnalise = aluno.SolicitacaoCadastro?.ObservacaoAnalise,
+            AnalisadaEm = aluno.SolicitacaoCadastro?.AnalisadaEm,
             Respostas = aluno.SolicitacaoCadastro is null
                 ? new()
                 : JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(aluno.SolicitacaoCadastro.RespostasJson) ?? new()
@@ -81,15 +96,12 @@ public sealed class CadastroAlunoService
         return new { total, enviados, aguardandoFormulario = total - enviados };
     }
 
-    public async Task AprovarAsync(Guid alunoId, Guid? personalIdSolicitado)
+    public async Task AprovarAsync(Guid alunoId, string? observacao)
     {
-        var personalId = _current.Role == "PERSONAL"
-            ? await _db.Personais.Where(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo)
-                .Select(p => (Guid?)p.Id).FirstOrDefaultAsync()
-            : personalIdSolicitado;
-
-        if (!personalId.HasValue || !await _db.Personais.AnyAsync(p => p.Id == personalId.Value && p.Usuario!.Ativo))
-            throw DomainException.BadRequest("Informe um personal válido para vincular o aluno.");
+        if (_current.Role == "PERSONAL" && !await _db.Personais.AnyAsync(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo))
+            throw DomainException.Forbidden();
+        if (observacao?.Length > 1000)
+            throw DomainException.BadRequest("A observação deve ter até 1.000 caracteres.");
 
         await using var transaction = await _db.Database.BeginTransactionAsync();
         var aluno = await _db.Alunos
@@ -101,48 +113,57 @@ public sealed class CadastroAlunoService
         if (aluno.StatusCadastro != StatusCadastroAluno.PENDENTE || aluno.SolicitacaoCadastro is null)
             throw DomainException.Conflict("A solicitação não está mais pendente ou não possui formulário enviado.");
 
-        var vinculoExistente = await _db.PersonalAlunos
-            .FirstOrDefaultAsync(pa => pa.AlunoId == alunoId && pa.PersonalId == personalId.Value);
-        if (vinculoExistente?.Ativo == true)
-            throw DomainException.Conflict("Este aluno já está vinculado ao personal selecionado.");
-
-        var vinculosAtivos = await _db.PersonalAlunos.CountAsync(pa =>
-            pa.AlunoId == alunoId && pa.Ativo && pa.Personal.Usuario!.Ativo);
-        if (vinculosAtivos >= 3)
-            throw DomainException.Conflict("O aluno já possui o limite de 3 personais ativos.");
-
-        if (vinculoExistente is null)
-        {
-            _db.PersonalAlunos.Add(new PersonalAluno
-            {
-                AlunoId = alunoId,
-                PersonalId = personalId.Value,
-                Ativo = true,
-                CriadoEm = DateTime.UtcNow
-            });
-        }
-        else
-        {
-            vinculoExistente.Ativo = true;
-        }
-
         aluno.StatusCadastro = StatusCadastroAluno.APROVADO;
-        _db.SolicitacoesCadastro.Remove(aluno.SolicitacaoCadastro);
-        var personalUsuarioId = await _db.Personais
-            .Where(p => p.Id == personalId.Value)
-            .Select(p => p.UsuarioId)
-            .SingleAsync();
-        _db.NotificacoesUsuarios.Add(new NotificacaoUsuario
+        aluno.SolicitacaoCadastro.StatusAnalise = "APROVADO";
+        aluno.SolicitacaoCadastro.ObservacaoAnalise = string.IsNullOrWhiteSpace(observacao) ? null : observacao.Trim();
+        aluno.SolicitacaoCadastro.AvaliadorUsuarioId = _current.UsuarioId;
+        aluno.SolicitacaoCadastro.AnalisadaEm = DateTime.UtcNow;
+        var equipe = await _db.Usuarios.Where(u => u.Ativo && u.Tipo == TipoUsuario.PERSONAL)
+            .Select(u => u.Id).ToListAsync();
+        _db.NotificacoesUsuarios.AddRange(equipe.Select(usuarioId => new NotificacaoUsuario
         {
             Id = Guid.NewGuid(),
-            UsuarioId = personalUsuarioId,
+            UsuarioId = usuarioId,
             Titulo = "Novo aluno aprovado",
-            Mensagem = $"O cadastro de {aluno.NomeCompleto} foi aprovado e vinculado à sua equipe.",
+            Mensagem = $"O cadastro de {aluno.NomeCompleto} foi aprovado e está disponível para toda a equipe.",
             Tipo = "SISTEMA",
             ReferenciaId = alunoId,
             CriadaEm = DateTime.UtcNow
+        }));
+        _db.NotificacoesUsuarios.Add(new NotificacaoUsuario
+        {
+            Id = Guid.NewGuid(), UsuarioId = aluno.UsuarioId,
+            Titulo = "Cadastro aprovado",
+            Mensagem = "Seu cadastro foi aprovado. Seu acesso aos treinos está liberado.",
+            Tipo = "SISTEMA", ReferenciaId = alunoId, CriadaEm = DateTime.UtcNow
         });
         await _db.SaveChangesAsync();
         await transaction.CommitAsync();
+    }
+
+    public async Task ReprovarAsync(Guid alunoId, string observacao)
+    {
+        if (_current.Role == "PERSONAL" && !await _db.Personais.AnyAsync(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo))
+            throw DomainException.Forbidden();
+        var nota = observacao.Trim();
+        if (nota.Length is < 3 or > 1000)
+            throw DomainException.BadRequest("Informe um motivo de reprovação entre 3 e 1.000 caracteres.");
+        var aluno = await _db.Alunos.Include(a => a.SolicitacaoCadastro)
+            .FirstOrDefaultAsync(a => a.Id == alunoId && a.Usuario.Ativo)
+            ?? throw DomainException.NotFound("Aluno não encontrado.");
+        if (aluno.StatusCadastro != StatusCadastroAluno.PENDENTE || aluno.SolicitacaoCadastro is null)
+            throw DomainException.Conflict("O cadastro não possui formulário pendente para análise.");
+        aluno.StatusCadastro = StatusCadastroAluno.REPROVADO;
+        aluno.SolicitacaoCadastro.StatusAnalise = "REPROVADO";
+        aluno.SolicitacaoCadastro.ObservacaoAnalise = nota;
+        aluno.SolicitacaoCadastro.AvaliadorUsuarioId = _current.UsuarioId;
+        aluno.SolicitacaoCadastro.AnalisadaEm = DateTime.UtcNow;
+        _db.NotificacoesUsuarios.Add(new NotificacaoUsuario
+        {
+            Id = Guid.NewGuid(), UsuarioId = aluno.UsuarioId,
+            Titulo = "Cadastro precisa de ajustes", Mensagem = nota,
+            Tipo = "SISTEMA", ReferenciaId = alunoId, CriadaEm = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync();
     }
 }

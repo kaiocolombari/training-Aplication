@@ -12,10 +12,7 @@ public sealed class AcompanhamentoPersonalService
     private readonly CurrentUserService _current;
     private readonly OwnershipService _ownership;
 
-    public AcompanhamentoPersonalService(
-        AppDbContext db,
-        CurrentUserService current,
-        OwnershipService ownership)
+    public AcompanhamentoPersonalService(AppDbContext db, CurrentUserService current, OwnershipService ownership)
     {
         _db = db;
         _current = current;
@@ -27,20 +24,8 @@ public sealed class AcompanhamentoPersonalService
         var agora = DateTime.UtcNow;
         var hoje = DateOnly.FromDateTime(agora);
         var inicioSemana = hoje.AddDays(-6);
-        var personalId = _current.Role == "PERSONAL"
-            ? await _ownership.GetCurrentPersonalIdAsync()
-            : (Guid?)null;
-
         var alunosQuery = _db.Alunos.AsNoTracking()
             .Where(a => a.Usuario.Ativo);
-        if (personalId.HasValue)
-        {
-            var idsVinculados = _db.PersonalAlunos.AsNoTracking()
-                .Where(pa => pa.PersonalId == personalId.Value && pa.Ativo &&
-                    pa.Personal.Usuario!.Ativo && pa.Aluno.Usuario.Ativo)
-                .Select(pa => pa.AlunoId);
-            alunosQuery = alunosQuery.Where(a => idsVinculados.Contains(a.Id));
-        }
 
         var alunos = await alunosQuery
             .Select(a => new
@@ -85,8 +70,6 @@ public sealed class AcompanhamentoPersonalService
 
         var feedbackQuery = _db.FeedbacksAlunos.AsNoTracking()
             .Where(f => alunoIds.Contains(f.AlunoId) && f.Status == "NOVO");
-        if (personalId.HasValue)
-            feedbackQuery = feedbackQuery.Where(f => f.PersonalId == personalId.Value || f.PersonalId == null);
         var feedbacks = await feedbackQuery
             .OrderByDescending(f => f.CriadoEm)
             .Take(100)
@@ -100,8 +83,6 @@ public sealed class AcompanhamentoPersonalService
         var tarefasQuery = _db.TarefasPersonais.AsNoTracking()
             .Where(t => t.Status != "CONCLUIDA" && t.Status != "CANCELADA" &&
                 t.DataLimite.HasValue && t.DataLimite < agora);
-        if (personalId.HasValue)
-            tarefasQuery = tarefasQuery.Where(t => t.PersonalId == personalId.Value);
         var tarefasAtrasadas = await tarefasQuery
             .OrderBy(t => t.DataLimite)
             .Take(100)

@@ -50,9 +50,8 @@ public class PersonalAlunoService
         if (!personal)
             throw DomainException.NotFound("Personal não encontrado.");
 
-        var aluno = await _context.Alunos.AnyAsync(a => a.Id == dto.AlunoId && a.Usuario.Ativo);
-        if (!aluno)
-            throw DomainException.NotFound("Aluno não encontrado.");
+        var aluno = await _context.Alunos.FirstOrDefaultAsync(a => a.Id == dto.AlunoId && a.Usuario.Ativo);
+        if (aluno is null) throw DomainException.NotFound("Aluno não encontrado.");
 
         var existing = await _context.PersonalAlunos.FirstOrDefaultAsync(pa =>
             pa.PersonalId == dto.PersonalId && pa.AlunoId == dto.AlunoId);
@@ -62,21 +61,12 @@ public class PersonalAlunoService
             if (existing.Ativo)
                 throw DomainException.Conflict("Aluno já está vinculado a este Personal.");
 
-            var activeCount = await _context.PersonalAlunos.CountAsync(pa =>
-                pa.AlunoId == dto.AlunoId && pa.Ativo && pa.Personal.Usuario!.Ativo);
-            if (activeCount >= 3)
-                throw DomainException.Conflict("O aluno já possui o limite de 3 personais ativos.");
-
             existing.Ativo = true;
+            aluno.ConvidadoPorPersonalId ??= dto.PersonalId;
             await _context.SaveChangesAsync();
             await NotificarNovoVinculoAsync(dto.PersonalId, dto.AlunoId);
             return Mapear(existing);
         }
-
-        var quantity = await _context.PersonalAlunos.CountAsync(pa =>
-            pa.AlunoId == dto.AlunoId && pa.Ativo && pa.Personal.Usuario!.Ativo);
-        if (quantity >= 3)
-            throw DomainException.Conflict("O aluno já possui o limite de 3 personais ativos.");
 
         var vinculo = new PersonalAluno
         {
@@ -87,6 +77,7 @@ public class PersonalAlunoService
         };
 
         _context.PersonalAlunos.Add(vinculo);
+        aluno.ConvidadoPorPersonalId ??= dto.PersonalId;
         await _context.SaveChangesAsync();
         await NotificarNovoVinculoAsync(dto.PersonalId, dto.AlunoId);
         return Mapear(vinculo);
@@ -116,11 +107,6 @@ public class PersonalAlunoService
         var jaEstavaAtivo = vinculo.Ativo;
         if (!jaEstavaAtivo)
         {
-            var activeCount = await _context.PersonalAlunos.CountAsync(pa =>
-                pa.AlunoId == vinculo.AlunoId && pa.Ativo && pa.Personal.Usuario!.Ativo);
-            if (activeCount >= 3)
-                throw DomainException.Conflict("O aluno já possui o limite de 3 personais ativos.");
-
             var contasAtivas = await _context.PersonalAlunos.AnyAsync(pa => pa.Id == id &&
                 pa.Personal.Usuario!.Ativo && pa.Aluno.Usuario.Ativo);
             if (!contasAtivas)
@@ -163,27 +149,9 @@ public class PersonalAlunoService
         {
             await _comunicacao.NotificarUsuarioAsync(
                 vinculo.Personal.UsuarioId,
-                "Aluno removido da carteira",
-                $"{vinculo.Aluno.NomeCompleto} foi removido da sua carteira. Motivo: {motivo}",
-                "VINCULO_REMOVIDO",
-                vinculo.AlunoId);
-        }
-
-        var outrosPersonais = await _context.PersonalAlunos.CountAsync(outro =>
-            outro.AlunoId == vinculo.AlunoId && outro.Ativo && outro.Personal.Usuario!.Ativo);
-        if (outrosPersonais == 0 && vinculo.Aluno.Usuario.Ativo)
-        {
-            var mensagem = $"Seu vínculo com {vinculo.Personal.Nome} foi encerrado. No momento você não possui nenhum personal ativo. Entre em contato com a administração para retomar seu acompanhamento. Motivo: {motivo}";
-            await _comunicacao.NotificarUsuarioAsync(
-                vinculo.Aluno.UsuarioId,
-                "Você está sem acompanhamento",
-                mensagem,
-                "ALERTA_ACOMPANHAMENTO",
-                vinculo.AlunoId);
-            await _comunicacao.NotificarAdministradoresAsync(
-                "Aluno sem personal ativo",
-                $"{vinculo.Aluno.NomeCompleto} ficou sem nenhum personal ativo após a remoção do vínculo com {vinculo.Personal.Nome}. Motivo: {motivo}",
-                "ALERTA_ACOMPANHAMENTO",
+                "Registro de origem atualizado",
+                $"A associação histórica de convite de {vinculo.Aluno.NomeCompleto} foi desativada. O acesso compartilhado da equipe ao aluno não é afetado. Motivo: {motivo}",
+                "ORIGEM_CONVITE_ATUALIZADA",
                 vinculo.AlunoId);
         }
 
@@ -192,7 +160,7 @@ public class PersonalAlunoService
             "DELETE",
             $"/api/PersonalAluno/{id}",
             vinculo.AlunoId,
-            $"Aluno {vinculo.Aluno.NomeCompleto} desvinculado do personal {vinculo.Personal.Nome}. Personais restantes: {outrosPersonais}. Motivo: {motivo}");
+            $"Associação histórica de convite entre o aluno {vinculo.Aluno.NomeCompleto} e o personal {vinculo.Personal.Nome} desativada. O acesso compartilhado da equipe permanece ativo. Motivo: {motivo}");
 
         await transaction.CommitAsync();
         return true;
@@ -223,8 +191,8 @@ public class PersonalAlunoService
         {
             await _comunicacao.NotificarUsuarioAsync(
                 dados.UsuarioId,
-                "Novo aluno vinculado",
-                $"{dados.NomeAluno} foi vinculado à sua equipe.",
+                "Origem de convite associada",
+                $"O registro histórico de convite de {dados.NomeAluno} foi associado ao seu perfil. Isso não restringe o acesso dos demais profissionais da equipe.",
                 "SISTEMA",
                 alunoId);
         }

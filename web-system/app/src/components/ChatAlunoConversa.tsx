@@ -428,7 +428,7 @@ export default function ChatAlunoConversa({
                         <div className="m-auto max-w-xs py-8 text-center">
                             <BsChatDots className="mx-auto text-2xl text-[var(--text-muted)]" />
                             <p className="mt-3 text-[11px] font-semibold text-[var(--text-primary)]">Nenhum contato disponível</p>
-                            <p className="mt-1 text-[9px] leading-5 text-[var(--text-muted)]">{modo === "personal" ? "As conversas iniciadas por alunos e seus alunos vinculados aparecerão aqui." : "Não há profissionais cadastrados disponíveis para conversar no momento."}</p>
+                            <p className="mt-1 text-[9px] leading-5 text-[var(--text-muted)]">{modo === "personal" ? "As conversas iniciadas por alunos e os contatos da equipe aparecerão aqui." : "Não há profissionais cadastrados disponíveis para conversar no momento."}</p>
                         </div>
                     )}
                     {modo === "aluno" && contatos.length > 0 && !contato && <p className="m-auto py-8 text-center text-[10px] text-[var(--text-muted)]">Selecione um personal para visualizar ou iniciar a conversa.</p>}

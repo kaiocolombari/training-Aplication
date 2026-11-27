@@ -151,22 +151,40 @@ public sealed class ComunicacaoService
     public async Task<List<ConversaAlunoDTO>> ListarConversasAlunosAsync()
     {
         var atual = _current.UsuarioId;
-        var linksQuery = _db.PersonalAlunos.AsNoTracking()
-            .Where(v => v.Ativo && v.Aluno.Usuario.Ativo && v.Personal.Usuario != null && v.Personal.Usuario.Ativo);
-
+        List<(Guid AlunoId, Guid AlunoUsuarioId, string AlunoNome, Guid PersonalUsuarioId, string PersonalNome)> links;
         if (_current.Role == "PERSONAL")
-            linksQuery = linksQuery.Where(v => v.Personal.UsuarioId == atual);
-        else if (_current.Role != "ADMIN")
-            throw DomainException.Forbidden();
-
-        var links = await linksQuery.Select(v => new
         {
-            v.AlunoId,
-            AlunoUsuarioId = v.Aluno.UsuarioId,
-            AlunoNome = v.Aluno.NomeCompleto,
-            PersonalUsuarioId = v.Personal.UsuarioId,
-            PersonalNome = v.Personal.Nome
-        }).ToListAsync();
+            var personal = await _db.Personais.AsNoTracking()
+                .Where(p => p.UsuarioId == atual && p.Usuario!.Ativo)
+                .Select(p => new { p.UsuarioId, p.Nome })
+                .FirstOrDefaultAsync() ?? throw DomainException.Forbidden();
+            var alunosEquipe = await _db.Alunos.AsNoTracking()
+                .Where(a => a.Usuario.Ativo)
+                .Select(a => new
+                {
+                    AlunoId = a.Id,
+                    AlunoUsuarioId = a.UsuarioId,
+                    AlunoNome = a.NomeCompleto,
+                    PersonalUsuarioId = personal.UsuarioId,
+                    PersonalNome = personal.Nome
+                }).ToListAsync();
+            links = alunosEquipe.Select(v => (v.AlunoId, v.AlunoUsuarioId, v.AlunoNome, v.PersonalUsuarioId, v.PersonalNome)).ToList();
+        }
+        else if (_current.Role == "ADMIN")
+        {
+            var linksAdmin = await _db.PersonalAlunos.AsNoTracking()
+                .Where(v => v.Ativo && v.Aluno.Usuario.Ativo && v.Personal.Usuario != null && v.Personal.Usuario.Ativo)
+                .Select(v => new
+                {
+                    v.AlunoId,
+                    AlunoUsuarioId = v.Aluno.UsuarioId,
+                    AlunoNome = v.Aluno.NomeCompleto,
+                    PersonalUsuarioId = v.Personal.UsuarioId,
+                    PersonalNome = v.Personal.Nome
+                }).ToListAsync();
+            links = linksAdmin.Select(v => (v.AlunoId, v.AlunoUsuarioId, v.AlunoNome, v.PersonalUsuarioId, v.PersonalNome)).ToList();
+        }
+        else throw DomainException.Forbidden();
 
         var alunoUsuarios = links.Select(v => v.AlunoUsuarioId).Distinct().ToArray();
         var personalUsuarios = links.Select(v => v.PersonalUsuarioId).Distinct().ToArray();

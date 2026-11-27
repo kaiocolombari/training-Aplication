@@ -16,17 +16,9 @@ public sealed class ChatAlunoContextService(AppDbContext db, CurrentUserService 
             .FirstOrDefaultAsync(cancellationToken);
         if (aluno is null) throw DomainException.NotFound("Aluno não encontrado.");
 
-        if (current.Role == "PERSONAL")
-        {
-            var vinculado = await db.PersonalAlunos.AnyAsync(v => v.Ativo && v.AlunoId == alunoId &&
-                v.Personal.UsuarioId == current.UsuarioId, cancellationToken);
-            var conversaAtiva = await db.ConversasEquipe.AnyAsync(c =>
-                ((c.UsuarioAId == current.UsuarioId && c.UsuarioB.Aluno != null && c.UsuarioB.Aluno.Id == alunoId) ||
-                 (c.UsuarioBId == current.UsuarioId && c.UsuarioA.Aluno != null && c.UsuarioA.Aluno.Id == alunoId)) &&
-                c.UsuarioA.Ativo && c.UsuarioB.Ativo &&
-                (!c.EhTemporaria || c.ExpiraEm == null || c.ExpiraEm > DateTime.UtcNow), cancellationToken);
-            if (!vinculado && !conversaAtiva) throw DomainException.NotFound("Aluno não encontrado.");
-        }
+        if (current.Role == "PERSONAL" && !await db.Personais.AnyAsync(p =>
+            p.UsuarioId == current.UsuarioId && p.Usuario!.Ativo, cancellationToken))
+            throw DomainException.Forbidden();
 
         var avaliacoesRegistros = await db.Avaliacoes.AsNoTracking()
             .Where(a => a.AlunoId == alunoId && a.Ativo)

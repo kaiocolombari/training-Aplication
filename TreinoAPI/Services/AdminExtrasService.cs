@@ -46,12 +46,8 @@ public sealed class AdminExtrasService
             var alunoId = await ObterAlunoAtualIdAsync();
             consulta = consulta.Where(f => f.AlunoId == alunoId);
         }
-        else if (_current.Role == "PERSONAL")
-        {
-            var personalId = await _ownership.GetCurrentPersonalIdAsync();
-            consulta = consulta.Where(f => f.PersonalId == personalId ||
-                (f.PersonalId == null && f.Aluno.Personais.Any(pa => pa.PersonalId == personalId && pa.Ativo)));
-        }
+        else if (_current.Role == "PERSONAL" && !await _db.Personais.AnyAsync(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo))
+            throw DomainException.Forbidden();
 
         var registros = await consulta.OrderByDescending(f => f.CriadoEm).Take(250).ToListAsync();
         return registros.Select(MapearFeedback).ToList();
@@ -65,9 +61,9 @@ public sealed class AdminExtrasService
             throw DomainException.BadRequest("Informe uma categoria válida, nota de 1 a 5 e comentário entre 5 e 2.000 caracteres.");
 
         var alunoId = await ObterAlunoAtualIdAsync();
-        if (dto.PersonalId.HasValue && !await _db.PersonalAlunos.AnyAsync(pa =>
-            pa.PersonalId == dto.PersonalId && pa.AlunoId == alunoId && pa.Ativo))
-            throw DomainException.NotFound("O profissional selecionado não está vinculado ao seu cadastro.");
+        if (dto.PersonalId.HasValue && !await _db.Personais.AnyAsync(p =>
+            p.Id == dto.PersonalId && p.Usuario!.Ativo))
+            throw DomainException.NotFound("O profissional selecionado não está disponível.");
 
         var registro = new FeedbackAluno
         {
@@ -86,10 +82,10 @@ public sealed class AdminExtrasService
     public async Task<List<object>> ListarPersonaisDoAlunoAsync()
     {
         var alunoId = await ObterAlunoAtualIdAsync();
-        var registros = await _db.PersonalAlunos.AsNoTracking()
-            .Where(pa => pa.AlunoId == alunoId && pa.Ativo && pa.Personal.Usuario!.Ativo)
-            .OrderBy(pa => pa.Personal.Nome)
-            .Select(pa => new { pa.PersonalId, Nome = pa.Personal.Nome })
+        var registros = await _db.Personais.AsNoTracking()
+            .Where(p => p.Usuario!.Ativo)
+            .OrderBy(p => p.Nome)
+            .Select(p => new { PersonalId = p.Id, Nome = p.Nome })
             .ToListAsync();
         return registros.Cast<object>().ToList();
     }
@@ -115,11 +111,11 @@ public sealed class AdminExtrasService
     public async Task<List<TarefaPersonalDTO>> ListarTarefasAsync(Guid? personalId, string? status)
     {
         var consulta = _db.TarefasPersonais.AsNoTracking()
-            .Include(t => t.Personal).ThenInclude(p => p.Usuario)
+            .Include(t => t.Personal).ThenInclude(p => p!.Usuario)
             .Include(t => t.Aluno).Include(t => t.CriadoPorUsuario).AsQueryable();
-        if (_current.Role == "PERSONAL")
-            consulta = consulta.Where(t => t.Personal.UsuarioId == _current.UsuarioId);
-        else if (personalId.HasValue)
+        if (_current.Role == "PERSONAL" && !await _db.Personais.AnyAsync(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo))
+            throw DomainException.Forbidden();
+        else if (_current.Role == "ADMIN" && personalId.HasValue)
             consulta = consulta.Where(t => t.PersonalId == personalId.Value);
 
         if (!string.IsNullOrWhiteSpace(status))
@@ -133,10 +129,10 @@ public sealed class AdminExtrasService
 
     public async Task<TarefaPersonalDTO> CriarTarefaAsync(TarefaPersonalCriarDTO dto)
     {
-        var personalId = _current.Role == "PERSONAL"
+        Guid? personalId = _current.Role == "PERSONAL"
             ? await _ownership.GetCurrentPersonalIdAsync()
-            : dto.PersonalId ?? throw DomainException.BadRequest("Selecione o personal responsável.");
-        await ValidarPersonalAsync(personalId);
+            : dto.PersonalId;
+        if (personalId.HasValue) await ValidarPersonalAsync(personalId.Value);
         await ValidarAlunoDaTarefaAsync(personalId, dto.AlunoId);
 
         var titulo = dto.Titulo.Trim();
@@ -158,9 +154,9 @@ public sealed class AdminExtrasService
             DataLimite = dto.DataLimite?.ToUniversalTime(), CriadaEm = agora, AtualizadaEm = agora
         };
         _db.TarefasPersonais.Add(registro);
-        if (_current.Role == "ADMIN")
+        if (_current.Role == "ADMIN" && personalId.HasValue)
         {
-            var usuarioPersonalId = await _db.Personais.Where(p => p.Id == personalId)
+            var usuarioPersonalId = await _db.Personais.Where(p => p.Id == personalId.Value)
                 .Select(p => p.UsuarioId).FirstAsync();
             _db.NotificacoesUsuarios.Add(new NotificacaoUsuario
             {
@@ -175,11 +171,13 @@ public sealed class AdminExtrasService
 
     public async Task<TarefaPersonalDTO> AtualizarTarefaAsync(Guid id, TarefaPersonalAtualizarDTO dto)
     {
-        var registro = await _db.TarefasPersonais.Include(t => t.Personal).ThenInclude(p => p.Usuario)
+        var registro = await _db.TarefasPersonais.Include(t => t.Personal).ThenInclude(p => p!.Usuario)
             .Include(t => t.Aluno).Include(t => t.CriadoPorUsuario)
             .FirstOrDefaultAsync(t => t.Id == id) ?? throw DomainException.NotFound("Tarefa não encontrada.");
-        if (_current.Role == "PERSONAL" && registro.Personal.UsuarioId != _current.UsuarioId)
-            throw DomainException.NotFound("Tarefa não encontrada.");
+        if (_current.Role == "PERSONAL" && !await _db.Personais.AnyAsync(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo))
+            throw DomainException.Forbidden();
+        if (registro.AlunoId.HasValue)
+            await _ownership.EnsureAlunoAccessAsync(registro.AlunoId.Value);
 
         var titulo = dto.Titulo.Trim();
         var descricao = dto.Descricao.Trim();
@@ -307,9 +305,9 @@ public sealed class AdminExtrasService
 
         foreach (var personal in personais)
         {
-            var alunoIds = _db.PersonalAlunos.AsNoTracking()
-                .Where(pa => pa.PersonalId == personal.Id && pa.Ativo && pa.Aluno.StatusCadastro == StatusCadastroAluno.APROVADO)
-                .Select(pa => pa.AlunoId);
+            var alunoIds = _db.Alunos.AsNoTracking()
+                .Where(a => a.ConvidadoPorPersonalId == personal.Id && a.StatusCadastro == StatusCadastroAluno.APROVADO)
+                .Select(a => a.Id);
             var feedbacks = _db.FeedbacksAlunos.AsNoTracking().Where(f => f.PersonalId == personal.Id);
             resultado.Add(new IndicadoresPersonalDTO
             {
@@ -398,12 +396,14 @@ public sealed class AdminExtrasService
 
     public async Task<List<object>> ListarAlunosDoPersonalAsync(Guid? personalId)
     {
-        var id = await ResolverPersonalIdAsync(personalId);
-        var registros = await _db.PersonalAlunos.AsNoTracking()
-            .Where(pa => pa.PersonalId == id && pa.Ativo && pa.Personal.Usuario!.Ativo &&
-                pa.Aluno.Usuario.Ativo && pa.Aluno.StatusCadastro == StatusCadastroAluno.APROVADO)
-            .OrderBy(pa => pa.Aluno.NomeCompleto)
-            .Select(pa => new { pa.AlunoId, Nome = pa.Aluno.NomeCompleto })
+        if (_current.Role == "PERSONAL")
+            _ = await _ownership.GetCurrentPersonalIdAsync();
+        else if (personalId.HasValue)
+            await ValidarPersonalAsync(personalId.Value);
+        var registros = await _db.Alunos.AsNoTracking()
+            .Where(a => a.Usuario.Ativo && a.StatusCadastro == StatusCadastroAluno.APROVADO)
+            .OrderBy(a => a.NomeCompleto)
+            .Select(a => new { AlunoId = a.Id, Nome = a.NomeCompleto })
             .ToListAsync();
         return registros.Cast<object>().ToList();
     }
@@ -424,12 +424,10 @@ public sealed class AdminExtrasService
             throw DomainException.Forbidden();
     }
 
-    private async Task ValidarAlunoDaTarefaAsync(Guid personalId, Guid? alunoId)
+    private async Task ValidarAlunoDaTarefaAsync(Guid? personalId, Guid? alunoId)
     {
         if (!alunoId.HasValue) return;
-        var vinculado = await _db.PersonalAlunos.AnyAsync(pa => pa.PersonalId == personalId &&
-            pa.AlunoId == alunoId && pa.Ativo && pa.Personal.Usuario!.Ativo && pa.Aluno.Usuario.Ativo);
-        if (!vinculado) throw DomainException.BadRequest("O aluno selecionado não está vinculado ao personal responsável.");
+        await _ownership.EnsureAlunoAccessAsync(alunoId.Value);
     }
 
     private async Task<Guid> ObterAlunoAtualIdAsync()
@@ -444,15 +442,14 @@ public sealed class AdminExtrasService
         if (_current.Role == "ADMIN") return;
         if (_current.Role != "PERSONAL") throw DomainException.Forbidden();
         var personalId = await _ownership.GetCurrentPersonalIdAsync();
-        var permitido = registro.PersonalId == personalId || (registro.PersonalId == null &&
-            await _db.PersonalAlunos.AnyAsync(pa => pa.PersonalId == personalId && pa.AlunoId == registro.AlunoId && pa.Ativo));
-        if (!permitido) throw DomainException.NotFound("Feedback não encontrado.");
+        if (!await _db.Personais.AnyAsync(p => p.Id == personalId && p.Usuario!.Ativo))
+            throw DomainException.Forbidden();
     }
 
     private async Task<TarefaPersonalDTO> ObterTarefaAsync(Guid id)
     {
         var tarefa = await _db.TarefasPersonais.AsNoTracking()
-            .Include(t => t.Personal).ThenInclude(p => p.Usuario)
+            .Include(t => t.Personal).ThenInclude(p => p!.Usuario)
             .Include(t => t.Aluno).Include(t => t.CriadoPorUsuario)
             .FirstAsync(t => t.Id == id);
         return MapearTarefa(tarefa);
@@ -470,7 +467,7 @@ public sealed class AdminExtrasService
 
     private static TarefaPersonalDTO MapearTarefa(TarefaPersonal t) => new()
     {
-        Id = t.Id, PersonalId = t.PersonalId, PersonalNome = t.Personal?.Nome ?? t.Personal?.Usuario?.Email ?? string.Empty,
+        Id = t.Id, PersonalId = t.PersonalId, PersonalNome = t.Personal?.Nome ?? t.Personal?.Usuario?.Email,
         AlunoId = t.AlunoId, AlunoNome = t.Aluno?.NomeCompleto, CriadoPor = t.CriadoPorUsuario?.Email ?? string.Empty,
         CriadoPorTipo = t.CriadoPorUsuario?.Tipo.ToString() ?? string.Empty,
         Titulo = t.Titulo, Descricao = t.Descricao, DicaContexto = t.DicaContexto,

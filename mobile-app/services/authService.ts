@@ -10,20 +10,14 @@ export interface AuthUser {
   personalId: string | null;
   alunoId: string | null;
   nome: string;
-  statusCadastro: "PENDENTE" | "APROVADO" | null;
+  statusCadastro: "PENDENTE" | "APROVADO" | "REPROVADO" | null;
   formularioEnviado: boolean;
+  observacaoAnalise?: string | null;
   controleAvancadoHabilitado: boolean;
 }
 
 export interface LoginPayload {
   email: string;
-  senha: string;
-}
-
-export interface RegisterStudentPayload {
-  nomeCompleto: string;
-  email: string;
-  telefone?: string;
   senha: string;
 }
 
@@ -38,13 +32,8 @@ export const authService = {
 
   login: (payload: LoginPayload) =>
     apiPost<AuthSessionResponse>("/api/auth/mobile/login", payload, 20000),
-  registerStudent: (payload: RegisterStudentPayload) =>
-
-    apiPost<AuthSessionResponse>("/api/auth/mobile/register", payload),
   refresh: (refreshToken: string) =>
     apiPost<AuthSessionResponse>("/api/auth/mobile/refresh", { refreshToken }),
   logout: (refreshToken: string) =>
     apiPost<void>("/api/auth/mobile/logout", { refreshToken }),
-  sendRegistrationAnswers: (respostas: Record<string, string>) =>
-    apiPost<void>("/api/cadastro-aluno/respostas", { respostas }),
 };

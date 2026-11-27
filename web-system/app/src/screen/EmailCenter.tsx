@@ -549,8 +549,8 @@ export default function EmailCenter({ tipoUsuario }: { tipoUsuario: "ADMIN" | "P
                         {tipoUsuario === "PERSONAL" && (
                             <p className="mt-3 flex items-start gap-2 text-[9px] leading-4 text-[var(--text-muted)]">
                                 <BsShieldCheck className="mt-0.5 shrink-0 text-[var(--success)]" />A
-                                lista é limitada aos alunos aprovados que estão vinculados ao seu
-                                perfil.
+                                lista contém todos os alunos aprovados da equipe. O envio e o
+                                resultado de cada mensagem continuam registrados na auditoria.
                             </p>
                         )}
                     </section>

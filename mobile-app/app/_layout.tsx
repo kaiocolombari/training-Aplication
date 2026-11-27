@@ -46,7 +46,7 @@ function AppNavigator() {
     if (isLoading) return;
 
     if (!user) {
-      if (pathname !== "/login" && pathname !== "/register") router.replace("/login");
+      if (pathname !== "/login") router.replace("/login");
       return;
     }
 
@@ -56,8 +56,8 @@ function AppNavigator() {
     }
 
     if (user.statusCadastro !== "APROVADO") {
-      const destination = user.formularioEnviado ? "/cadastro/aguardando" : "/cadastro/formulario";
-      if (pathname !== destination) router.replace(destination);
+      const destination = "/cadastro-pendente";
+      if (pathname !== destination) router.replace(destination as never);
       return;
     }
 
@@ -126,9 +126,7 @@ function AppNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#F3F1EB" } }}>
       <Stack.Screen name="login" />
-      <Stack.Screen name="register" options={{ animation: "slide_from_right" }} />
-      <Stack.Screen name="cadastro/formulario" options={{ gestureEnabled: false }} />
-      <Stack.Screen name="cadastro/aguardando" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="cadastro-pendente" options={{ gestureEnabled: false }} />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="treino/[id]" options={{ animation: "slide_from_right" }} />
       <Stack.Screen name="execucao" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />

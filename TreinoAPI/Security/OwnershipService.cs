@@ -22,10 +22,14 @@ public sealed class OwnershipService
                 .Select(a => a.Id).ToListAsync();
 
         if (_current.Role == "PERSONAL")
-            return await _db.PersonalAlunos.AsNoTracking()
-                .Where(pa => pa.Personal.UsuarioId == _current.UsuarioId &&
-                    pa.Personal.Usuario!.Ativo && pa.Aluno.Usuario.Ativo && pa.Ativo)
-                .Select(pa => pa.AlunoId).Distinct().ToListAsync();
+        {
+            var personalAtivo = await _db.Personais.AnyAsync(p =>
+                p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo);
+            if (!personalAtivo) throw DomainException.Forbidden();
+            return await _db.Alunos.AsNoTracking()
+                .Where(a => a.Usuario.Ativo)
+                .Select(a => a.Id).ToListAsync();
+        }
 
         if (_current.Role == "ALUNO")
             return await _db.Alunos.AsNoTracking()
@@ -55,9 +59,8 @@ public sealed class OwnershipService
 
         var allowed = _current.Role switch
         {
-            "PERSONAL" => await _db.PersonalAlunos.AnyAsync(pa =>
-                pa.AlunoId == alunoId && pa.Personal.UsuarioId == _current.UsuarioId &&
-                pa.Personal.Usuario!.Ativo && pa.Aluno.Usuario.Ativo && pa.Ativo),
+            "PERSONAL" => await _db.Alunos.AnyAsync(a => a.Id == alunoId && a.Usuario.Ativo &&
+                _db.Personais.Any(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo)),
             "ALUNO" => await _db.Alunos.AnyAsync(a => a.Id == alunoId &&
                 a.UsuarioId == _current.UsuarioId && a.Usuario.Ativo),
             _ => false
@@ -212,7 +215,8 @@ public sealed class OwnershipService
             return;
 
         var allowed = _current.Role == "PERSONAL" && await _db.PersonalAlunos.AnyAsync(pa =>
-            pa.Id == id && pa.Ativo && pa.Personal.UsuarioId == _current.UsuarioId && pa.Personal.Usuario!.Ativo);
+            pa.Id == id && pa.Aluno.Usuario.Ativo &&
+            _db.Personais.Any(p => p.UsuarioId == _current.UsuarioId && p.Usuario!.Ativo));
         if (!allowed)
             throw DomainException.NotFound("Vínculo não encontrado.");
     }

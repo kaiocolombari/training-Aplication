@@ -4,6 +4,9 @@ import { useAuth } from "../context/authContext";
 import { cadastroAlunoService } from "../service/cadastroAlunoService";
 import { ApiError } from "../service/api";
 import { perguntasCadastro } from "./cadastroPerguntas";
+import TurnstileWidget from "../components/TurnstileWidget";
+
+const mobileAppUrl = import.meta.env.VITE_MOBILE_APP_URL?.trim();
 
 export default function FormularioCadastro() {
     const navigate = useNavigate();
@@ -11,13 +14,20 @@ export default function FormularioCadastro() {
     const [respostas, setRespostas] = useState<Record<string, string>>({});
     const [erro, setErro] = useState("");
     const [enviando, setEnviando] = useState(false);
+    const [captchaToken, setCaptchaToken] = useState("");
+    const [captchaInstance, setCaptchaInstance] = useState(0);
+    const [website, setWebsite] = useState("");
 
     async function enviar(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setErro("");
+        if (!captchaToken) {
+            setErro("Conclua a verificação de segurança antes de enviar.");
+            return;
+        }
         setEnviando(true);
         try {
-            await cadastroAlunoService.enviarRespostas(respostas);
+            await cadastroAlunoService.enviarRespostas(respostas, captchaToken, website);
             await refreshUser();
             navigate("/cadastro/aguardando", { replace: true });
         } catch (error) {
@@ -26,6 +36,8 @@ export default function FormularioCadastro() {
                     ? error.message
                     : "Não foi possível enviar suas respostas.",
             );
+            setCaptchaToken("");
+            setCaptchaInstance(value => value + 1);
         } finally {
             setEnviando(false);
         }
@@ -63,6 +75,7 @@ export default function FormularioCadastro() {
                     {user?.nome}, responda algumas perguntas para que nossa equipe possa avaliar seu
                     perfil e preparar o acompanhamento adequado.
                 </p>
+                {mobileAppUrl && <a href={mobileAppUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-2 self-start rounded-xl border border-[#c8ef73]/20 bg-[#c8ef73]/5 px-4 py-3 text-[10px] font-bold text-[#d9f5a6]">Baixar aplicativo mobile <span aria-hidden="true">↗</span><span className="font-normal text-white/45">· os treinos serão liberados após aprovação</span></a>}
                 <form onSubmit={enviar} className="mt-8 space-y-5">
                     {perguntasCadastro.map((pergunta, index) => (
                         <label
@@ -130,6 +143,8 @@ export default function FormularioCadastro() {
                             )}
                         </label>
                     ))}
+                    <label className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">Website<input tabIndex={-1} autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
+                    <div className="rounded-2xl border border-white/10 bg-white/[.035] p-4"><TurnstileWidget key={captchaInstance} action="student_form" onToken={setCaptchaToken} /></div>
                     {erro && (
                         <p
                             role="alert"
@@ -144,7 +159,7 @@ export default function FormularioCadastro() {
                             a aprovação do cadastro.
                         </p>
                         <button
-                            disabled={enviando}
+                        disabled={enviando || !captchaToken}
                             aria-busy={enviando}
                             className="rounded-xl bg-[#a85f60] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#bd7374] disabled:opacity-50"
                         >

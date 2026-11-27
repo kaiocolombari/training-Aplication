@@ -65,15 +65,13 @@ export default function TarefasPersonal() {
         if (isAdmin && !personalId && personais.data?.length) setPersonalId(personais.data[0].id);
     }, [isAdmin, personalId, personais.data]);
     const tarefas = useQuery({
-        queryKey: ["extras", "tarefas", isAdmin ? personalId : "proprias"],
-        queryFn: () => adminExtrasService.listarTarefas(isAdmin ? personalId : undefined),
-        enabled: !isAdmin || Boolean(personalId),
+        queryKey: ["extras", "tarefas", "equipe"],
+        queryFn: () => adminExtrasService.listarTarefas(),
         refetchInterval: 30000,
     });
     const alunos = useQuery({
-        queryKey: ["extras", "tarefas-alunos", isAdmin ? personalId : "proprios"],
-        queryFn: () => adminExtrasService.alunosDoPersonal(isAdmin ? personalId : undefined),
-        enabled: !isAdmin || Boolean(personalId),
+        queryKey: ["extras", "tarefas-alunos", "equipe"],
+        queryFn: () => adminExtrasService.alunosDoPersonal(),
     });
     const configuracao = useQuery({
         queryKey: ["extras", "tarefas-config", isAdmin ? personalId : "propria"],
@@ -150,13 +148,12 @@ export default function TarefasPersonal() {
                         Agenda de tarefas
                     </h1>
                     <p className="mt-1.5 max-w-2xl text-[12px] leading-5 text-[var(--text-secondary)]">
-                        Uma agenda privada para cada personal, com tarefas administrativas e
-                        acompanhamento de alunos.
+                        Uma agenda compartilhada: toda a equipe pode criar, acompanhar e concluir tarefas relacionadas aos alunos.
                     </p>
                 </div>
                 {isAdmin && (
                     <label className="grid min-w-56 gap-1 text-[10px] font-semibold text-[var(--text-secondary)]">
-                        Agenda do profissional
+                        Configurações individuais de acompanhamento
                         <select
                             value={personalId}
                             onChange={e => setPersonalId(e.target.value)}
@@ -221,7 +218,7 @@ export default function TarefasPersonal() {
                             e.preventDefault();
                             setErro("");
                             criar.mutate({
-                                personalId: isAdmin ? personalId : undefined,
+                                personalId: undefined,
                                 alunoId: alunoId || undefined,
                                 titulo,
                                 descricao,
@@ -331,7 +328,7 @@ export default function TarefasPersonal() {
                             </p>
                         )}
                         <button
-                            disabled={criar.isPending || (isAdmin && !personalId)}
+                            disabled={criar.isPending}
                             aria-busy={criar.isPending}
                             className="h-10 w-full rounded-lg bg-[var(--accent)] text-xs font-semibold text-white disabled:opacity-50"
                         >
@@ -428,7 +425,7 @@ export default function TarefasPersonal() {
                                 )}
                                 {isAdmin && (
                                     <p className="mt-2 text-[9px] text-[var(--text-muted)]">
-                                        Responsável: {tarefa.personalNome} · Criada por:{" "}
+                                        Origem: {tarefa.personalNome ?? "Equipe"} · Criada por:{" "}
                                         {tarefa.criadoPor}
                                     </p>
                                 )}

@@ -27,6 +27,7 @@ export default [
   ]),
 
   layout("src/components/PublicOnlyLayout.tsx", [
-    route("register", "src/screen/register.tsx"),
+    route("register", "src/screen/login.tsx"),
+    route("convite/:token", "src/screen/registroConvite.tsx"),
   ]),
 ] satisfies RouteConfig;

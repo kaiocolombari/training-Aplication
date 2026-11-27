@@ -16,7 +16,6 @@ import {
   authService,
   type AuthUser,
   type LoginPayload,
-  type RegisterStudentPayload,
 } from "@/services/authService";
 
 const REMEMBER_KEY = "@treino-system/remember-me";
@@ -35,8 +34,6 @@ interface AuthContextValue {
   biometricEnabled: boolean;
   login: (payload: LoginPayload, remember: boolean, enableBiometric: boolean) => Promise<void>;
   biometricLogin: () => Promise<void>;
-  registerStudent: (payload: RegisterStudentPayload) => Promise<void>;
-  submitRegistrationAnswers: (answers: Record<string, string>) => Promise<void>;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -229,23 +226,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(usuario);
   }
 
-  async function registerStudent(payload: RegisterStudentPayload) {
-    const session = await authService.registerStudent(payload);
-    const { usuario, ...sessionTokens } = session;
-    await setAuthTokens(sessionTokens, false);
-    await SecureStore.deleteItemAsync(BIOMETRIC_REFRESH_TOKEN_KEY).catch(() => undefined);
-    await SecureStore.deleteItemAsync(LEGACY_BIOMETRIC_CREDENTIALS_KEY).catch(() => undefined);
-    await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
-    setBiometricEnabled(false);
-    await persistPreferences(payload.email, false);
-    setUser(usuario);
-  }
-
-  async function submitRegistrationAnswers(answers: Record<string, string>) {
-    await authService.sendRegistrationAnswers(answers);
-    await refreshUser();
-  }
-
   const refreshUser = useCallback(async () => {
     const currentUser = await authService.me();
     setUser(currentUser);
@@ -274,8 +254,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     biometricEnabled,
     login,
     biometricLogin,
-    registerStudent,
-    submitRegistrationAnswers,
     refreshUser,
     logout,
   }), [user, isLoading, rememberMe, rememberedEmail, biometricAvailable, biometricEnabled]);

@@ -46,7 +46,12 @@ public class Aluno
 
     public StatusCadastroAluno StatusCadastro { get; set; } = StatusCadastroAluno.APROVADO;
 
+    public Guid? ConvidadoPorPersonalId { get; set; }
+    public Guid? ConvitePersonalId { get; set; }
+
     public Usuario Usuario { get; set; } = null!;
+    public Personal? ConvidadoPorPersonal { get; set; }
+    public ConvitePersonal? ConvitePersonal { get; set; }
 
     public ICollection<PersonalAluno> Personais { get; set; } = new List<PersonalAluno>();
     public ICollection<Anamnese> Anamneses { get; set; } = new List<Anamnese>();

@@ -21,4 +21,5 @@ public class AlunoDTO
     public string StatusCadastro { get; set; } = "APROVADO";
 
     public bool PossuiFichaTecnica { get; set; }
+    public string? ConvidadoPorPersonalNome { get; set; }
 }

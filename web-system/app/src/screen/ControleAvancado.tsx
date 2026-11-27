@@ -455,7 +455,7 @@ export default function ControleAvancado({
                         <p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Administração</p>
                         <h2 className="mt-1 text-[14px] font-semibold text-[var(--text-primary)]">Acesso por profissional</h2>
                         <p className="mt-1 max-w-[650px] text-[10px] leading-5 text-[var(--text-muted)]">
-                            A autorização é persistida pelo ADMIN. O personal autorizado continua limitado aos próprios alunos vinculados, inclusive nas rotas da API.
+                            A autorização é persistida pelo ADMIN. Os profissionais autorizados trabalham sobre os alunos aprovados de toda a equipe; o histórico registra quem executou cada ação.
                         </p>
                     </div>
                     <span className="rounded-full bg-[var(--success-soft)] px-2.5 py-1 text-[8px] font-semibold text-[var(--success)]">Permissões persistidas</span>
@@ -530,8 +530,8 @@ export default function ControleAvancado({
                             </p>
                             <p className="mt-1 text-[10px] leading-5 text-[var(--text-muted)]">
                                 Entre em contato com um administrador da equipe. A autorização será
-                                registrada no perfil profissional e respeitará o escopo de alunos
-                                vinculado ao personal.
+                                registrada no perfil profissional e respeitará o acesso compartilhado
+                                aos alunos aprovados da equipe.
                             </p>
                         </div>
                         <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1.5 text-[9px] font-semibold text-amber-700">
@@ -575,7 +575,7 @@ export default function ControleAvancado({
                 ) : (
                     <div className="rounded-2xl border border-dashed border-[var(--border-strong)] bg-[var(--surface)] p-8 text-center">
                         <p className="text-[13px] font-semibold text-[var(--text-primary)]">Nenhum aluno disponível</p>
-                        <p className="mt-1 text-[11px] text-[var(--text-muted)]">Os alunos vinculados à sua carteira aparecerão aqui.</p>
+                        <p className="mt-1 text-[11px] text-[var(--text-muted)]">Os alunos aprovados da equipe aparecerão aqui.</p>
                     </div>
                 )}
                 {renderPermissoesAdmin()}

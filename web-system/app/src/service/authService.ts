@@ -9,8 +9,9 @@ export interface AuthUser {
     personalId: string | null;
     alunoId: string | null;
     nome: string;
-    statusCadastro: "PENDENTE" | "APROVADO" | null;
+    statusCadastro: "PENDENTE" | "APROVADO" | "REPROVADO" | null;
     formularioEnviado: boolean;
+    observacaoAnalise?: string | null;
     controleAvancadoHabilitado: boolean;
 }
 
@@ -24,11 +25,14 @@ export interface RegisterStudentPayload {
     email: string;
     telefone?: string;
     senha: string;
+    tokenConvite: string;
+    captchaToken: string;
+    website?: string;
 }
 
 export const authService = {
     me: () => apiGet<AuthUser>("/api/auth/me"),
     login: (payload: LoginPayload) => apiPost<AuthUser>("/api/auth/login", payload),
-    registerStudent: (payload: RegisterStudentPayload) => apiPost<AuthUser>("/api/auth/register", payload),
+    registerStudent: (payload: RegisterStudentPayload) => apiPost<AuthUser>("/api/auth/register/invite", payload),
     logout: () => apiPost<void>("/api/auth/logout"),
 };

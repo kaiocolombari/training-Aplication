@@ -133,11 +133,14 @@ Execute com contas de teste separadas (ADMIN, dois PERSONAIS e pelo menos dois A
 ## 8. Riscos e limites identificados nesta auditoria
 
 - O projeto não possui projetos de teste automatizado identificados; as validações realizadas foram build, TypeScript e lint. Os fluxos de negócio, permissões, concorrência e integração com serviços externos ainda precisam de testes integrados.
+- `npm audit --omit=dev` aponta uma vulnerabilidade moderada de `minimatch` transitiva por `@expo/fingerprint` no toolchain Expo. O npm só oferece correção automática forçando downgrade do Expo para SDK 52; isso seria incompatível com o SDK 58 atual, então não foi aplicado. Reavalie quando o Expo atualizar a faixa dependente; não use `npm audit fix --force` neste projeto.
+- O web foi atualizado para React Router `7.18.7` e Express `4.22.3`; removi a dependência direta não utilizada `react-node`, que trazia React `0.13.3`. O `npm audit` completo do web retorna zero vulnerabilidades. No mobile, Expo foi alinhado para `~58.1.0` e o Expo Doctor passou em 20/20 verificações; o alerta moderado de minimatch permanece restrito ao toolchain de fingerprint/build.
+- Validação local final: API `dotnet build --no-restore` com 0 warnings/0 errors; web `npm run typecheck`, `npm run build` e `npm audit --omit=dev` passaram; mobile `npm run typecheck`, `npm run lint` e Expo Doctor 20/20 passaram. O build web ainda exibe avisos de depreciação `envFile` e future flags do React Router, sem falha de compilação.
 - A compatibilidade de credenciais legadas em texto puro precisa ser resolvida/confirmada antes de usar uma base anterior.
 - Os identificadores Android/iOS e o ID EAS ainda precisam ser definidos pelo responsável pelo app.
 - Não foi possível testar containers, deploy, migrations, banco real, proxy, antivírus, APNs/FCM, SMTP, backup/restore nem lojas.
 - As sessões/fila local antigas do mobile não possuem ID do aluno no formato anterior; por segurança, a nova versão passa a isolar esses dados por aluno e não importa automaticamente chaves globais antigas. Antes de atualizar aparelhos já em uso, conclua e sincronize qualquer treino em andamento.
-- O working tree já continha alterações de outras tarefas antes desta preparação. Revise o diff completo e faça um commit de release revisado; não publique diretamente a partir de uma árvore com alterações não identificadas.
+- O checkout já contém o commit de preparação das funcionalidades recentes; as atualizações finais de dependências e este relatório ainda aparecem como modificações locais. Revise o diff completo e faça um commit de release revisado antes do deploy.
 
 ## 9. Critério de liberação
 

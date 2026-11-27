@@ -66,6 +66,21 @@ builder.Services.Configure<AuthOptions>(options =>
 });
 
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.Configure<InviteOptions>(builder.Configuration.GetSection("Invites"));
+var turnstileEnabled = builder.Configuration.GetValue<bool?>("Turnstile:Enabled") ?? !builder.Environment.IsDevelopment();
+var turnstileSiteKey = builder.Configuration["TURNSTILE_SITE_KEY"] ?? builder.Configuration["Turnstile:SiteKey"];
+var turnstileSecretKey = builder.Configuration["TURNSTILE_SECRET_KEY"] ?? builder.Configuration["Turnstile:SecretKey"];
+if (!builder.Environment.IsDevelopment() &&
+    (!turnstileEnabled || string.IsNullOrWhiteSpace(turnstileSiteKey) || string.IsNullOrWhiteSpace(turnstileSecretKey) ||
+     string.IsNullOrWhiteSpace(builder.Configuration["TURNSTILE_EXPECTED_HOSTNAME"] ?? builder.Configuration["Turnstile:ExpectedHostname"])))
+    throw new InvalidOperationException("Configure TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY e TURNSTILE_EXPECTED_HOSTNAME para habilitar cadastro protegido em produção.");
+builder.Services.Configure<TurnstileOptions>(options =>
+{
+    options.Enabled = turnstileEnabled;
+    options.SiteKey = turnstileSiteKey ?? string.Empty;
+    options.SecretKey = turnstileSecretKey ?? string.Empty;
+    options.ExpectedHostname = builder.Configuration["TURNSTILE_EXPECTED_HOSTNAME"] ?? builder.Configuration["Turnstile:ExpectedHostname"];
+});
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddControllers();
@@ -109,6 +124,8 @@ builder.Services.AddScoped<OwnershipService>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CadastroAlunoService>();
+builder.Services.AddScoped<ConvitePersonalService>();
+builder.Services.AddHttpClient<TurnstileService>();
 builder.Services.AddScoped<ComunicacaoService>();
 builder.Services.AddSingleton<ArquivoEquipeStorage>();
 builder.Services.AddSingleton<ChatAttachmentStorage>();
@@ -241,6 +258,27 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = 8,
                 Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("onboarding", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(10),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("invites", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 12,
+                Window = TimeSpan.FromHours(1),
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));

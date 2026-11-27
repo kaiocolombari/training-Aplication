@@ -135,7 +135,7 @@ public class PersonalService
             NomeCompleto = personal.Nome,
             Email = personal.Usuario!.Email,
             TotalAlunos = alunos.Count,
-            AlunosQueFicaraoSemPersonal = alunos.Count(aluno => aluno.OutrosPersonaisAtivos == 0),
+            AlunosQueFicaraoSemPersonal = 0,
             Alunos = alunos
         };
     }
@@ -156,9 +156,6 @@ public class PersonalService
             .Where(pa => pa.PersonalId == id && pa.Ativo && pa.Aluno.Usuario.Ativo)
             .ToListAsync();
 
-        foreach (var vinculo in vinculos)
-            vinculo.Ativo = false;
-
         personal.Usuario.Ativo = false;
         var tokens = await _context.RefreshTokens
             .Where(token => token.UsuarioId == personal.UsuarioId && token.RevogadoEm == null)
@@ -169,35 +166,12 @@ public class PersonalService
         await _context.SaveChangesAsync();
 
         foreach (var vinculo in vinculos)
-        {
-            var outrosPersonais = await _context.PersonalAlunos.CountAsync(outro =>
-                outro.AlunoId == vinculo.AlunoId && outro.Ativo && outro.Personal.Usuario!.Ativo);
-
-            if (outrosPersonais == 0)
-            {
-                var mensagem = $"O personal {personal.Nome} foi removido da equipe. No momento você não possui nenhum personal ativo. Entre em contato com a administração para retomar seu acompanhamento. Motivo: {motivo}";
-                await _comunicacao.NotificarUsuarioAsync(
-                    vinculo.Aluno.UsuarioId,
-                    "Você está sem acompanhamento",
-                    mensagem,
-                    "ALERTA_ACOMPANHAMENTO",
-                    vinculo.AlunoId);
-                await _comunicacao.NotificarAdministradoresAsync(
-                    "Aluno sem personal ativo",
-                    $"{vinculo.Aluno.NomeCompleto} ficou sem nenhum personal ativo após a desativação de {personal.Nome}. Motivo: {motivo}",
-                    "ALERTA_ACOMPANHAMENTO",
-                    vinculo.AlunoId);
-            }
-            else
-            {
-                await _comunicacao.NotificarUsuarioAsync(
-                    vinculo.Aluno.UsuarioId,
-                    "Personal removido da equipe",
-                    $"O personal {personal.Nome} foi removido da sua equipe. Você ainda possui {outrosPersonais} personal(is) ativo(s).",
-                    "VINCULO_REMOVIDO",
-                    vinculo.AlunoId);
-            }
-        }
+            await _comunicacao.NotificarUsuarioAsync(
+                vinculo.Aluno.UsuarioId,
+                "Atualização da equipe",
+                $"O profissional {personal.Nome} foi desativado. Seu acompanhamento continua disponível para os demais profissionais da equipe.",
+                "EQUIPE_ATUALIZADA",
+                vinculo.AlunoId);
 
         var nomes = string.Join(", ", vinculos.Select(vinculo => vinculo.Aluno.NomeCompleto).Take(8));
         if (vinculos.Count > 8)
