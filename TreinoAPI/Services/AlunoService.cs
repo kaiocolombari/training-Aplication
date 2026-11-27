@@ -26,14 +26,11 @@ public class AlunoService
         _auditoria = auditoria;
     }
 
-    public async Task<AlunoDTO> Criar(CriarAlunoDTO dto, Guid? personalId)
+    public async Task<AlunoDTO> Criar(CriarAlunoDTO dto)
     {
         var email = dto.Email.Trim().ToLowerInvariant();
         if (await _context.Usuarios.AnyAsync(u => u.Email == email))
             throw DomainException.Conflict("Já existe uma conta cadastrada com este e-mail.");
-
-        if (personalId.HasValue && !await _context.Personais.AnyAsync(p => p.Id == personalId.Value && p.Usuario!.Ativo))
-            throw DomainException.NotFound("Personal não encontrado.");
 
         var usuario = new Usuario
         {
@@ -65,22 +62,10 @@ public class AlunoService
             Sistolica = dto.Sistolica,
             Diastolica = dto.Diastolica,
             Usuario = usuario,
-            CriadoEm = DateTime.UtcNow,
-            ConvidadoPorPersonalId = personalId
+            CriadoEm = DateTime.UtcNow
         };
 
         _context.Alunos.Add(aluno);
-        if (personalId.HasValue)
-        {
-            _context.PersonalAlunos.Add(new PersonalAluno
-            {
-                PersonalId = personalId.Value,
-                Aluno = aluno,
-                Ativo = true,
-                CriadoEm = DateTime.UtcNow
-            });
-        }
-
         await _context.SaveChangesAsync();
         return Mapear(aluno, usuario);
     }
@@ -184,8 +169,7 @@ public class AlunoService
             return false;
 
         var vinculos = await _context.PersonalAlunos
-            .Include(pa => pa.Personal).ThenInclude(p => p.Usuario)
-            .Where(pa => pa.AlunoId == id && pa.Ativo && pa.Personal.Usuario!.Ativo)
+            .Where(pa => pa.AlunoId == id && pa.Ativo)
             .ToListAsync();
 
         foreach (var vinculo in vinculos)
@@ -198,15 +182,20 @@ public class AlunoService
         foreach (var token in tokens)
             token.RevogadoEm = DateTime.UtcNow;
 
+        var personaisNotificados = await _context.Personais.AsNoTracking()
+            .Where(p => p.Usuario!.Ativo)
+            .Select(p => new { p.UsuarioId, p.Nome })
+            .ToListAsync();
+
         await _context.SaveChangesAsync();
 
-        foreach (var vinculo in vinculos)
+        foreach (var personal in personaisNotificados)
         {
             await _comunicacao.NotificarUsuarioAsync(
-                vinculo.Personal.UsuarioId,
-                "Aluno removido da carteira",
-                $"{aluno.NomeCompleto} foi removido da sua carteira pela administração. Motivo: {motivo}",
-                "VINCULO_REMOVIDO",
+                personal.UsuarioId,
+                "Aluno desativado pela administração",
+                $"{aluno.NomeCompleto} foi desativado pela administração. O histórico foi preservado. Motivo: {motivo}",
+                "ALUNO_DESATIVADO",
                 aluno.Id);
         }
 
@@ -215,7 +204,7 @@ public class AlunoService
             "DELETE",
             $"/api/Aluno/{id}",
             id,
-            $"Aluno {aluno.NomeCompleto} desativado. Personais notificados: {vinculos.Count}. Motivo: {motivo}");
+            $"Aluno {aluno.NomeCompleto} desativado. Personais da equipe notificados: {personaisNotificados.Count}. Motivo: {motivo}");
 
         await transaction.CommitAsync();
         return true;

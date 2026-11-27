@@ -274,7 +274,7 @@ public sealed class EmailService
         {
             var idsAcessiveis = await _ownership.GetAccessibleAlunoIdsAsync();
             if (ids.Any(id => !idsAcessiveis.Contains(id)))
-                throw DomainException.Forbidden("Um ou mais destinatários não pertencem aos seus alunos vinculados.");
+                throw DomainException.Forbidden("Um ou mais destinatários não fazem parte dos alunos ativos disponíveis para a equipe.");
 
             consulta = consulta.Where(u => u.Tipo == TipoUsuario.ALUNO &&
                 u.Aluno != null && idsAcessiveis.Contains(u.Aluno.Id));

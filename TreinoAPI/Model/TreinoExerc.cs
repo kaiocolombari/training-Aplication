@@ -4,6 +4,7 @@ namespace TreinoAPI.Model
     {
         public Guid Id { get; set; }
         public Guid TreinoId { get; set; }
+        public Guid? ExercicioCatalogoId { get; set; }
         public string Exercicio { get; set; } = string.Empty;
         public int? Ordem { get; set; }
         public int? Series { get; set; }
@@ -13,6 +14,7 @@ namespace TreinoAPI.Model
         public int? RiRMAX { get; set; }
         public string? Observacoes { get; set; } = string.Empty;
         public Treino Treino { get; set; } = null!;
+        public ExercicioCatalogo? ExercicioCatalogo { get; set; }
         public ICollection<TreinoExercicioVariacao> Variacoes { get; set; } = new List<TreinoExercicioVariacao>();
     }
 }

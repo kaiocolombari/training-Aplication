@@ -48,6 +48,8 @@ export type SessionExercise = {
   muscle: string;
   rest: string;
   note?: string;
+  videoUrl?: string | null;
+  videoTitle?: string | null;
   prescriptionMissingFields?: Array<"series" | "reps" | "load" | "rir" | "rest">;
   variations: ExerciseVariationPlan[];
   selectedVariationId: string | null;
@@ -354,6 +356,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         muscle: exercise.muscle,
         rest: exercise.rest,
         note: exercise.note,
+        videoUrl: exercise.videoUrl ?? null,
+        videoTitle: exercise.videoTitle ?? null,
         prescriptionMissingFields: exercise.prescriptionMissingFields ?? [],
         variations: exercise.variations ?? [],
         selectedVariationId: null,

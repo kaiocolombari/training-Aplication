@@ -1,5 +1,5 @@
 import type { ExercisePlan, ExerciseVariationPlan, WorkoutPlan } from "@/data/workouts";
-import { ApiError, apiGet, apiPatch, apiPost } from "./api";
+import { ApiError, apiGet, apiPatch, apiPost, getApiBaseUrl } from "./api";
 
 type ApiWorkout = {
   id: string;
@@ -12,6 +12,9 @@ type ApiExercise = {
   id: string;
   treinoId: string;
   exercicio: string;
+  exercicioCatalogoId?: string | null;
+  videoUrl?: string | null;
+  videoTitulo?: string | null;
   ordem?: number | null;
   series?: number | null;
   repeticoes?: number | null;
@@ -193,6 +196,11 @@ function mapVariation(item: NonNullable<ApiExercise["variacoes"]>[number], base:
 }
 
 function mapExercise(item: ApiExercise): ExercisePlan {
+  const videoUrl = item.videoUrl
+    ? item.videoUrl.startsWith("http")
+      ? item.videoUrl
+      : `${getApiBaseUrl()}${item.videoUrl.startsWith("/") ? item.videoUrl : `/${item.videoUrl}`}`
+    : null;
   return {
     id: item.id,
     name: item.exercicio,
@@ -203,6 +211,8 @@ function mapExercise(item: ApiExercise): ExercisePlan {
     rir: item.rirMax ?? 0,
     rest: item.intervalo === null || item.intervalo === undefined ? "—" : `${item.intervalo} s`,
     note: item.observacoes ?? undefined,
+    videoUrl,
+    videoTitle: item.videoTitulo ?? undefined,
     prescriptionMissingFields: [
       ...(item.series == null ? ["series" as const] : []),
       ...(item.repeticoes == null ? ["reps" as const] : []),

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using TreinoAPI.DTOs.Aluno;
-using TreinoAPI.Services;
 using TreinoAPI.Security;
+using TreinoAPI.Services;
 namespace TreinoAPI.Controllers;
 
 [ApiController]
@@ -12,22 +12,18 @@ public class AlunoController : ControllerBase
 {
     private readonly AlunoService _service;
     private readonly OwnershipService _ownership;
-    private readonly CurrentUserService _current;
-
-    public AlunoController(AlunoService service, OwnershipService ownership, CurrentUserService current)
+    public AlunoController(AlunoService service, OwnershipService ownership)
     {
         _service = service;
         _ownership = ownership;
-        _current = current;
     }
 
+    [Authorize(Roles = "ADMIN")]
     [HttpPost]
     public async Task<IActionResult> Criar(CriarAlunoDTO dto)
     {
-        var personalId = _current.Role == "PERSONAL"
-            ? await _ownership.GetCurrentPersonalIdAsync()
-            : dto.PersonalId;
-        var aluno = await _service.Criar(dto, personalId);
+        var aluno = await _service.Criar(dto);
+        HttpContext.Items["AlunoIdAuditoria"] = aluno.Id;
 
         return CreatedAtAction(
             nameof(BuscarPorId),

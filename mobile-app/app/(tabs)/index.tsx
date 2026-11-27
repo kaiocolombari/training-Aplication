@@ -138,7 +138,7 @@ export default function HomeScreen() {
 
       <View className="mt-4 flex-row items-center gap-3 rounded-[22px] border border-line bg-white p-4">
         <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#F0E9DF]"><Flame color="#A85F45" size={19} /></View>
-        <View className="flex-1"><Text className="text-[12px] font-bold text-ink">Seu acompanhamento</Text><Text className="mt-1 text-[10px] leading-4 text-[#858A82]">{data.unavailableSections.includes("personais") ? "Não foi possível consultar seus profissionais vinculados." : data.personals.length > 0 ? `Seu plano está vinculado a ${data.personals.map((item) => item.outroUsuarioNome).join(", ")}.` : "Seu personal aparecerá aqui quando o vínculo estiver ativo."}</Text></View>
+        <View className="flex-1"><Text className="text-[12px] font-bold text-ink">Sua equipe de acompanhamento</Text><Text className="mt-1 text-[10px] leading-4 text-[#858A82]">{data.unavailableSections.includes("personais") ? "Não foi possível consultar os profissionais da equipe." : data.personals.length > 0 ? `Você pode conversar com: ${data.personals.map((item) => item.outroUsuarioNome).join(", ")}.` : "Os profissionais ativos da equipe aparecerão aqui."}</Text></View>
         <CalendarDays color="#9A9E95" size={17} />
       </View>
       <View className="mb-5 mt-6 flex-row items-center justify-center gap-1"><Text className="text-[9px] font-medium text-[#A1A39D]">Dados sincronizados com</Text><Text className="text-[9px] font-extrabold tracking-wide text-[#626B5E]">TREINO SYSTEM</Text>{isRefreshing ? <ActivityIndicator size="small" color="#6B8154" /> : null}</View>

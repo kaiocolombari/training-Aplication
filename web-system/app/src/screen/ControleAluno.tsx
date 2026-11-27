@@ -21,7 +21,9 @@ import {
 } from "react-icons/bs";
 import type { Avaliacao } from "../types/avaliacao";
 import type { AlunoResumoApi } from "../service/cadastroService";
+import type { PersonalResumoApi } from "../service/cadastroService";
 import AlunoMonitoramentoPicker, { type AlunoMonitoramentoOption } from "../components/AlunoMonitoramentoPicker";
+import AlunoVinculosPersonais from "../components/AlunoVinculosPersonais";
 import ControleVolumeTreino from "./ControleVolumeTreino";
 import ChatAlunoConversa from "../components/ChatAlunoConversa";
 import AssessmentScheduleCalendar from "../components/AssessmentScheduleCalendar";
@@ -51,10 +53,15 @@ type AbaId = (typeof abas)[number]["id"];
 
 function dataPt(data?: string | null) {
     if (!data) return "Sem registro";
-    const parsed = new Date(data);
+    const parsed = new Date(/^\d{4}-\d{2}-\d{2}$/.test(data) ? `${data}T12:00:00` : data);
     return Number.isNaN(parsed.getTime())
         ? "Sem registro"
         : parsed.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function dataHoraPt(data: string) {
+    const parsed = new Date(/^\d{4}-\d{2}-\d{2}$/.test(data) ? `${data}T12:00:00` : data);
+    return Number.isNaN(parsed.getTime()) ? "Data indisponível" : parsed.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
 function Vazio({ titulo, descricao }: { titulo: string; descricao: string }) {
@@ -98,6 +105,62 @@ function Metrica({
     );
 }
 
+type EventoAluno = {
+    id: string;
+    data: string;
+    titulo: string;
+    detalhe: string;
+    origem: "Cadastro" | "Ficha" | "Mobile" | "Controle" | "Equipe";
+    autor?: string | null;
+    status?: string | null;
+    metodoHttp?: string;
+    rota?: string;
+};
+
+function LinhaDoTempo({ eventos, compact = false }: { eventos: EventoAluno[]; compact?: boolean }) {
+    const itens = compact ? eventos.slice(0, 5) : eventos;
+    if (!itens.length) {
+        return <Vazio titulo="Ainda não há movimentações" descricao="Quando a equipe atualizar a ficha, o aluno enviar dados pelo aplicativo ou uma tarefa for registrada, tudo aparecerá aqui em ordem cronológica." />;
+    }
+    return (
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+            <div className="space-y-0">
+                {itens.map((evento, index) => (
+                    <div key={evento.id} className="relative flex gap-3 pb-4 last:pb-0">
+                        <div className="flex w-3 shrink-0 flex-col items-center">
+                            <span className="z-10 mt-1 h-2.5 w-2.5 rounded-full border-2 border-[var(--accent)] bg-[var(--surface)]" />
+                            {index < itens.length - 1 ? <span className="absolute bottom-0 top-4 w-px bg-[var(--border)]" /> : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-[11px] font-semibold text-[var(--text-primary)]">{evento.titulo}</p>
+                                <span className="rounded-full bg-[var(--surface-secondary)] px-2 py-0.5 text-[8px] font-semibold text-[var(--text-muted)]">{evento.origem}</span>
+                                {evento.status ? <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[8px] font-semibold text-[var(--accent-text)]">{evento.status.replace(/_/g, " ")}</span> : null}
+                            </div>
+                            <p className="mt-1 text-[10px] leading-5 text-[var(--text-secondary)]">{evento.detalhe}</p>
+                            <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">{evento.autor ? `${evento.autor} · ` : ""}{dataHoraPt(evento.data)}</p>
+                            {!compact && evento.rota ? <details className="mt-2"><summary className="cursor-pointer text-[9px] font-semibold text-[var(--accent-text)]">Detalhes técnicos</summary><p className="mt-1 break-all rounded-lg bg-[var(--surface-secondary)] p-2 text-[9px] text-[var(--text-muted)]">{evento.metodoHttp} {evento.rota}</p></details> : null}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function respostasFormulario(json?: string | null) {
+    if (!json) return [] as Array<[string, string]>;
+    try {
+        const dados = JSON.parse(json) as Record<string, unknown>;
+        return Object.entries(dados)
+            .filter(([, valor]) => ["string", "number", "boolean"].includes(typeof valor) && String(valor).trim())
+            .slice(0, 8)
+            .map(([chave, valor]) => [chave.replace(/([A-Z])/g, " $1").replace(/[_-]/g, " "), String(valor)] as [string, string]);
+    } catch {
+        return [];
+    }
+}
+
 export default function ControleAluno({
     aluno,
     alunosDisponiveis,
@@ -107,6 +170,8 @@ export default function ControleAluno({
     onSelecionarAluno,
     onNavigate,
     canChat,
+    isAdmin,
+    personais,
 }: {
     aluno: AlunoControle;
     alunosDisponiveis: AlunoMonitoramentoOption[];
@@ -116,13 +181,16 @@ export default function ControleAluno({
     onSelecionarAluno: (alunoId: string) => void;
     onNavigate: (section: string) => void;
     canChat: boolean;
+    isAdmin: boolean;
+    personais: PersonalResumoApi[];
 }) {
     const [aba, setAba] = useState<AbaId>("resumo");
     const atividadesQuery = useQuery({
         queryKey: ["aluno", "contexto-auditoria", aluno.id],
         queryFn: () => comunicacaoService.obterContextoChatAluno(aluno.id),
-        enabled: aba === "historico",
+        enabled: aba === "historico" || aba === "resumo",
     });
+    const contexto = atividadesQuery.data;
     const mensagensNaoLidasAluno = alunosDisponiveis.find(item => item.id === aluno.id)?.mensagensNaoLidas ?? 0;
     const treinos = useMemo(
         () => ficha.treino.filter(t => t.nome.trim() || t.exercicios.some(e => e.exercicio.trim())),
@@ -145,6 +213,30 @@ export default function ControleAluno({
         ...(!treinos.length ? ["Criar a primeira prescrição de treino"] : []),
         ...(!semanas.length ? ["Organizar as sessões da periodização"] : []),
     ];
+    const eventosContexto = useMemo<EventoAluno[]>(() => {
+        if (!contexto) return [];
+        const eventos: EventoAluno[] = [];
+        const adicionar = (evento: EventoAluno) => eventos.push(evento);
+        if (aluno.criadoEm) adicionar({ id: "aluno-criado", data: aluno.criadoEm, titulo: "Conta do aluno criada", detalhe: aluno.convidadoPorPersonalNome ? `Cadastro originado pelo convite de ${aluno.convidadoPorPersonalNome}.` : "Início do registro do aluno na equipe.", origem: "Cadastro" });
+        if (contexto.solicitacaoCadastro) {
+            adicionar({ id: "cadastro-formulario", data: contexto.solicitacaoCadastro.enviadaEm, titulo: "Formulário de entrada enviado", detalhe: ["Respostas enviadas pelo aplicativo.", contexto.solicitacaoCadastro.observacaoAnalise, contexto.solicitacaoCadastro.avaliadorNome ? `Analisado por ${contexto.solicitacaoCadastro.avaliadorNome}.` : null].filter(Boolean).join(" "), origem: "Cadastro", autor: "Aluno", status: contexto.solicitacaoCadastro.statusAnalise });
+            if (contexto.solicitacaoCadastro.analisadaEm) adicionar({ id: "cadastro-analisado", data: contexto.solicitacaoCadastro.analisadaEm, titulo: "Análise do cadastro concluída", detalhe: contexto.solicitacaoCadastro.observacaoAnalise || `Resultado: ${contexto.solicitacaoCadastro.statusAnalise.replace(/_/g, " ")}.`, origem: "Equipe", autor: contexto.solicitacaoCadastro.avaliadorNome, status: contexto.solicitacaoCadastro.statusAnalise });
+        }
+        if (contexto.ultimaAnamnese) adicionar({ id: "anamnese", data: contexto.ultimaAnamnese.criadoEm, titulo: "Anamnese registrada", detalhe: [contexto.ultimaAnamnese.tipo, contexto.ultimaAnamnese.objetivo].filter(Boolean).join(" · ") || "Dados iniciais de saúde e objetivos atualizados.", origem: "Ficha" });
+        contexto.avaliacoes.forEach(item => adicionar({ id: `avaliacao-${item.id}`, data: item.realizadaEm, titulo: `Avaliação física #${item.numero}`, detalhe: [item.peso != null ? `${item.peso} kg` : null, item.percentualGordura != null ? `${item.percentualGordura}% de gordura` : null, item.objetivo].filter(Boolean).join(" · ") || "Avaliação física registrada.", origem: "Ficha", autor: item.criadaPorNome }));
+        contexto.historicoAvaliacoes.forEach(item => adicionar({ id: `ficha-historico-${item.id}`, data: item.criadoEm, titulo: item.acao, detalhe: item.resumo, origem: "Ficha", autor: item.usuarioNome }));
+        contexto.treinosAtuais.forEach(item => adicionar({ id: `treino-${item.id}`, data: item.criadoEm, titulo: `Prescrição criada: ${item.nome}`, detalhe: `${item.exercicios.length} exercícios cadastrados na prescrição.`, origem: "Ficha" }));
+        contexto.periodizacoes.forEach(item => adicionar({ id: `periodizacao-${item.id}`, data: item.dataInicio, titulo: `Periodização: ${item.nome}`, detalhe: `${item.totalSemanas} semanas estruturadas.`, origem: "Ficha" }));
+        contexto.execucoesRecentes.forEach(item => {
+            const relatos = item.exercicios.filter(exercicio => exercicio.statusDor !== "none" || Boolean(exercicio.feedback)).length;
+            adicionar({ id: `execucao-${item.id}`, data: item.inicio || item.data, titulo: `Treino realizado: ${item.treinoNome}`, detalhe: `${item.exercicios.length} exercícios registrados${relatos ? ` · ${relatos} exercício(s) com relato de dor/observação` : ""}${item.duracaoSegundos ? ` · ${Math.round(item.duracaoSegundos / 60)} min` : ""}.`, origem: "Mobile", autor: "Aluno" });
+        });
+        contexto.feedbacks.forEach((item, index) => adicionar({ id: `feedback-${index}-${item.criadoEm}`, data: item.criadoEm, titulo: `Feedback do aluno: ${item.categoria}`, detalhe: `Nota ${item.nota}/5 · ${item.comentario}${item.respostaEquipe ? ` · Resposta: ${item.respostaEquipe}` : ""}`, origem: "Mobile", autor: "Aluno", status: item.status }));
+        contexto.solicitacoesAvaliacao.forEach((item, index) => adicionar({ id: `solicitacao-${index}-${item.criadaEm}`, data: item.criadaEm, titulo: "Solicitação de avaliação", detalhe: [item.motivo, `Data desejada: ${dataPt(item.dataDesejada)}`].filter(Boolean).join(" · "), origem: "Mobile", autor: "Aluno", status: item.status }));
+        contexto.tarefas.forEach(item => adicionar({ id: `tarefa-${item.id}`, data: item.concluidaEm || item.atualizadaEm || item.criadaEm, titulo: `Tarefa: ${item.titulo}`, detalhe: [item.descricao, item.dataLimite ? `Prazo: ${dataPt(item.dataLimite)}` : null, `Prioridade: ${item.prioridade}`].filter(Boolean).join(" · "), origem: "Controle", autor: item.criadoPorNome, status: item.status }));
+        contexto.atividades.forEach((item, index) => adicionar({ id: `auditoria-${index}-${item.criadoEm}`, data: item.criadoEm, titulo: item.resumo || item.acao, detalhe: `${item.acao} · ${item.resultado} · HTTP ${item.statusCode}`, origem: "Equipe", autor: `${item.usuarioNome} (${item.usuarioTipo})`, metodoHttp: item.metodoHttp, rota: item.rota }));
+        return eventos.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+    }, [contexto, aluno.criadoEm, aluno.convidadoPorPersonalNome]);
 
     const resumo = (
         <div className="space-y-5">
@@ -178,6 +270,34 @@ export default function ControleAluno({
                     icone={<BsPersonCheck />}
                 />
             </div>
+            {isAdmin ? (
+                <AlunoVinculosPersonais
+                    alunoId={aluno.id}
+                    personais={personais}
+                    convidadoPorPersonalNome={aluno.convidadoPorPersonalNome}
+                />
+            ) : null}
+            {contexto?.solicitacaoCadastro ? (
+                <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Entrada pelo aplicativo</p>
+                            <h3 className="mt-1 text-[14px] font-semibold text-[var(--text-primary)]">Formulário de cadastro</h3>
+                            <p className="mt-1 text-[10px] text-[var(--text-muted)]">Enviado em {dataPt(contexto.solicitacaoCadastro.enviadaEm)}{contexto.solicitacaoCadastro.avaliadorNome ? ` · Analisado por ${contexto.solicitacaoCadastro.avaliadorNome}` : ""}</p>
+                        </div>
+                        <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[9px] font-semibold text-[var(--accent-text)]">{contexto.solicitacaoCadastro.statusAnalise.replace(/_/g, " ")}</span>
+                    </div>
+                    {contexto.solicitacaoCadastro.observacaoAnalise ? <p className="mt-3 rounded-xl bg-[var(--surface-secondary)] p-3 text-[10px] leading-5 text-[var(--text-secondary)]">{contexto.solicitacaoCadastro.observacaoAnalise}</p> : null}
+                    {respostasFormulario(contexto.solicitacaoCadastro.respostasJson).length ? (
+                        <details className="mt-3">
+                            <summary className="cursor-pointer text-[10px] font-semibold text-[var(--accent-text)]">Consultar respostas enviadas</summary>
+                            <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                                {respostasFormulario(contexto.solicitacaoCadastro.respostasJson).map(([pergunta, resposta]) => <div key={pergunta} className="rounded-lg bg-[var(--surface-secondary)] p-3"><dt className="text-[9px] font-semibold uppercase text-[var(--text-muted)]">{pergunta}</dt><dd className="mt-1 text-[10px] leading-5 text-[var(--text-primary)]">{resposta}</dd></div>)}
+                            </dl>
+                        </details>
+                    ) : null}
+                </section>
+            ) : null}
             <div className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
                 <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
                     <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">
@@ -323,6 +443,13 @@ export default function ControleAluno({
                     </span>
                 </button>
             </div>
+            <section className="space-y-3">
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Movimentações recentes</p><h3 className="mt-1 text-[14px] font-semibold text-[var(--text-primary)]">O que aconteceu com este aluno</h3><p className="mt-1 text-[10px] text-[var(--text-muted)]">Ficha, aplicativo, tarefas e ações da equipe em uma única sequência.</p></div>
+                    <button type="button" onClick={() => setAba("historico")} className="text-[10px] font-semibold text-[var(--accent-text)] hover:underline">Abrir histórico completo</button>
+                </div>
+                {atividadesQuery.isLoading ? <p className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-[10px] text-[var(--text-muted)]">Carregando movimentações...</p> : atividadesQuery.isError ? <p className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-[10px] text-[var(--danger)]">Não foi possível carregar o contexto recente.</p> : <LinhaDoTempo eventos={eventosContexto} compact />}
+            </section>
         </div>
     );
 
@@ -658,63 +785,17 @@ export default function ControleAluno({
             );
         if (aba === "tarefas") return <ChecklistAluno alunoId={aluno.id} />;
         if (aba === "historico") {
-            const eventos = [
-                ...avaliacoes.map(a => ({
-                    id: a.id,
-                    data: a.realizadaEm,
-                    titulo: "Avaliação física #" + a.numero,
-                    detalhe: "Registro de avaliação",
-                })),
-                ...execucoes.map((e, i) => ({
-                    id: "exec-" + i,
-                    data: e.data,
-                    titulo: "Treino executado",
-                    detalhe: e.exercicios.length + " exercícios registrados",
-                })),
-            ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
             return (
                 <div className="space-y-4">
                     <div>
                         <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
-                            Linha do tempo do aluno
+                            Histórico completo do aluno
                         </h3>
                         <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-                            Eventos da ficha e ações da equipe, com autor, horário e rota técnica quando disponível.
+                            Uma sequência cronológica que combina ficha técnica, dados enviados pelo aplicativo e atividades do controle da equipe.
                         </p>
                     </div>
-                    {eventos.length ? (
-                        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                            <div className="space-y-0">
-                                {eventos.map((e, i) => (
-                                    <div key={e.id} className="relative flex gap-3 pb-5 last:pb-0">
-                                        <div className="flex w-3 shrink-0 flex-col items-center">
-                                            <span className="z-10 mt-1 h-2.5 w-2.5 rounded-full border-2 border-[var(--accent)] bg-[var(--surface)]" />
-                                            {i < eventos.length - 1 && (
-                                                <span className="absolute bottom-0 top-4 w-px bg-[var(--border)]" />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="text-[12px] font-semibold text-[var(--text-primary)]">
-                                                {e.titulo}
-                                            </p>
-                                            <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
-                                                {e.detalhe} · {dataPt(e.data)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ) : (
-                        <Vazio
-                            titulo="A linha do tempo será iniciada aqui"
-                            descricao="Avaliações e execuções aparecerão automaticamente conforme forem registradas. Alterações importantes deverão manter autor e versão."
-                        />
-                    )}
-                    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                        <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-[13px] font-semibold text-[var(--text-primary)]">Atividades e alterações da equipe</h3><p className="mt-1 text-[10px] text-[var(--text-muted)]">Rastreabilidade das operações relacionadas a este aluno.</p></div>{atividadesQuery.isFetching ? <span className="text-[10px] text-[var(--text-muted)]">Atualizando...</span> : null}</div>
-                        {atividadesQuery.isError ? <p role="alert" className="mt-4 text-[11px] text-[var(--danger)]">Não foi possível carregar o histórico técnico. <button type="button" onClick={() => void atividadesQuery.refetch()} className="font-bold underline">Tentar novamente</button></p> : atividadesQuery.isLoading ? <p className="mt-4 text-[11px] text-[var(--text-muted)]">Carregando atividades...</p> : (atividadesQuery.data?.atividades ?? []).length === 0 ? <p className="mt-4 text-[11px] text-[var(--text-muted)]">Nenhuma atividade de auditoria disponível para este aluno.</p> : <div className="mt-4 divide-y divide-[var(--border)]">{(atividadesQuery.data?.atividades ?? []).map((item, index) => <details key={`${item.criadoEm}-${index}`} className="py-3"><summary className="cursor-pointer list-none"><div className="flex flex-wrap items-start justify-between gap-2"><div><p className="text-[11px] font-semibold text-[var(--text-primary)]">{item.acao} · {item.resumo}</p><p className="mt-1 text-[9px] text-[var(--text-muted)]">{item.usuarioNome} ({item.usuarioTipo}) · {dataPt(item.criadoEm)}</p></div><span className={`rounded-full px-2 py-1 text-[9px] font-bold ${item.resultado === "SUCESSO" ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}`}>{item.statusCode} · {item.resultado}</span></div></summary><div className="mt-3 rounded-lg bg-[var(--surface-secondary)] p-3"><p className="break-all text-[9px] text-[var(--text-secondary)]">{item.metodoHttp} {item.rota}</p></div></details>)}</div>}
-                    </section>
+                    {atividadesQuery.isError ? <p role="alert" className="text-[11px] text-[var(--danger)]">Não foi possível carregar o histórico. <button type="button" onClick={() => void atividadesQuery.refetch()} className="font-bold underline">Tentar novamente</button></p> : atividadesQuery.isLoading ? <p className="text-[11px] text-[var(--text-muted)]">Carregando histórico...</p> : <LinhaDoTempo eventos={eventosContexto} />}
                 </div>
             );
         }

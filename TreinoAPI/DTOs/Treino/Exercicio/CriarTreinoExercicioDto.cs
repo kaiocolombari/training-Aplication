@@ -6,6 +6,7 @@ public class CriarTreinoExercicioDTO
 {
     [Required, StringLength(160, MinimumLength = 2)]
     public string Exercicio { get; set; } = string.Empty;
+    public Guid? ExercicioCatalogoId { get; set; }
     [Range(0, 1000)]
     public int? Ordem { get; set; }
     [Range(1, 100)]

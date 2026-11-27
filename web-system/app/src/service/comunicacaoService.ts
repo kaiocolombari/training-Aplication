@@ -53,6 +53,14 @@ export interface ContextoChatAluno {
     alunoId: string;
     nomeCompleto: string;
     statusCadastro: string;
+    solicitacaoCadastro: {
+        enviadaEm: string;
+        statusAnalise: string;
+        observacaoAnalise?: string | null;
+        avaliadorNome?: string | null;
+        analisadaEm?: string | null;
+        respostasJson: string;
+    } | null;
     ultimaAnamnese: { tipo?: string | null; objetivo?: string | null; observacoes?: string | null; criadoEm: string } | null;
     avaliacoes: Array<{ id: string; numero: number; idade?: number | null; realizadaEm: string; peso?: number | null; altura?: number | null; percentualGordura?: number | null; objetivo?: string | null; observacoes?: string | null; criadaPorNome?: string | null; atualizadaPorNome?: string | null; atualizadaEm?: string | null; perimetros: Array<{ nome: string; valor: number | null }>; dobrasCutaneas: Array<{ nome: string; valor: number | null }> }>;
     historicoAvaliacoes: Array<{ id: string; numeroAvaliacao: number; acao: string; resumo: string; usuarioNome: string; usuarioTipo: string; criadoEm: string; dadosJson?: string | null }>;
@@ -61,6 +69,7 @@ export interface ContextoChatAluno {
     execucoesRecentes: Array<{ id: string; treinoNome: string; data: string; inicio?: string | null; fim?: string | null; duracaoSegundos?: number | null; exercicios: Array<{ nome: string; statusDor: string; feedback?: string | null; hardSets: number; tonelagem: number }> }>;
     treinosAtuais: Array<{ id: string; nome: string; criadoEm: string; exercicios: Array<{ nome: string; series?: number | null; repeticoes?: number | null; carga?: number | null; descansoSegundos?: number | null; rir?: number | null; observacoes?: string | null }> }>;
     periodizacoes: Array<{ id: string; nome: string; dataInicio: string; totalSemanas: number }>;
+    tarefas: Array<{ id: string; titulo: string; descricao: string; categoria: string; prioridade: string; status: string; dataLimite?: string | null; criadaEm: string; atualizadaEm: string; concluidaEm?: string | null; criadoPorNome: string }>;
     atividades: Array<{ acao: string; resumo: string; usuarioNome: string; usuarioTipo: string; resultado: string; metodoHttp: string; rota: string; statusCode: number; criadoEm: string }>;
 }
 

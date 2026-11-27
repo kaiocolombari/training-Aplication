@@ -8,6 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: config.name ?? "Treino System",
     slug: config.slug ?? "treino-system-mobile",
     version: config.version ?? "1.0.0",
+    plugins: [...(config.plugins ?? []), "expo-video"],
     extra: {
       ...config.extra,
       ...(projectId

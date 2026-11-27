@@ -10,7 +10,7 @@ A API persiste as sessões em `ExecucoesTreino`, os exercícios em `ExecucoesExe
 
 A seção **Controle do aluno**, quando nenhum aluno individual está aberto, agora apresenta a Central de acompanhamento:
 
-- carteira de alunos ativos vinculados ao personal;
+- diretório compartilhado de todos os alunos ativos da equipe;
 - sessões concluídas recebidas nos últimos dias;
 - adesão às séries (ou duração planejada versus realizada para cardio);
 - tonelagem calculada somente com séries concluídas;
@@ -27,7 +27,7 @@ A revisão do envio é explícita: o personal marca a sessão como revisada. O r
 - `GET /api/personal/acompanhamento`: resumo e fila de trabalho do usuário autenticado.
 - `PATCH /api/personal/acompanhamento/execucoes/{id}/revisao`: marca ou desmarca uma execução como revisada.
 
-O personal recebe somente alunos com vínculo ativo em `PersonalAluno`. O administrador recebe o consolidado de todos os alunos ativos. A revisão também valida o acesso ao aluno no servidor; não confia no identificador enviado pela interface.
+Todo Personal ativo recebe o consolidado de todos os alunos ativos da equipe, independentemente de quem enviou o convite. ADMIN também recebe o consolidado. A revisão valida o acesso ao aluno no servidor; não confia no identificador enviado pela interface.
 
 ## Banco de dados
 
@@ -42,7 +42,7 @@ A migration `PersonalExecutionReview` adiciona `RevisadaEm` e `RevisadaPorUsuari
 ## Roteiro de teste manual
 
 1. Aplicar a migration e reiniciar a API.
-2. Entrar no mobile como aluno vinculado a um personal.
+2. Entrar no mobile com um aluno aprovado por convite.
 3. Concluir um treino de força com séries concluídas, uma série não concluída, feedback em um exercício e um relato de desconforto/dor.
 4. Conferir que a sessão aparece na Central do personal com adesão, tonelagem, duração, alerta e feedback.
 5. Marcar a sessão como revisada e confirmar que ela sai da fila de revisão após a atualização.

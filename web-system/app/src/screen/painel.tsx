@@ -15,8 +15,6 @@ import {
     BsPlusLg,
     BsSearch,
     BsThreeDots,
-    BsPersonCircle,
-    BsFiletypeJson,
     BsFolder2Open,
     BsUpload,
     BsArrowUpRight,
@@ -28,6 +26,7 @@ import {
     BsPalette,
     BsType,
     BsEnvelope,
+    BsCollectionPlay,
 } from "react-icons/bs";
 import { FaPeopleGroup, FaRegCircleQuestion } from "react-icons/fa6";
 import { VscFeedback } from "react-icons/vsc";
@@ -75,6 +74,7 @@ import { Skeleton } from "../components/Skeleton";
 import { LoadingState } from "../components/LoadingState";
 import AlunoMonitoramentoPicker from "../components/AlunoMonitoramentoPicker";
 import ArquivosEquipe from "./ArquivosEquipe";
+import BibliotecaExercicios from "./BibliotecaExercicios";
 import TarefasPersonal from "./TarefasPersonal";
 import FeedbackAlunos from "./FeedbackAlunos";
 import IndicadoresEquipe from "./IndicadoresEquipe";
@@ -91,6 +91,7 @@ interface AlunoPainel {
     criadoEm: string;
     statusCadastro: string;
     possuiFichaTecnica: boolean;
+    convidadoPorPersonalNome?: string | null;
     avaliacaoPendente: boolean;
     avaliacaoUrgente: boolean;
 }
@@ -155,39 +156,46 @@ const secoes = [
     {
         id: "inicio",
         nome: "Visão geral",
-        grupo: "Workspace",
+        grupo: "Gestão",
         icone: <BsHouseDoor />,
     },
-    { id: "alunos", nome: "Alunos", grupo: "Workspace", icone: <BsPeople /> },
-    { id: "solicitacoes", nome: "Solicitações", grupo: "Workspace", icone: <BsClipboard2Pulse /> },
-    { id: "convites", nome: "Convites e indicações", grupo: "Workspace", icone: <BsArrowUpRight /> },
-    { id: "indicadores", nome: "Indicadores da equipe", grupo: "Workspace", icone: <TbUserStar /> },
+    { id: "alunos", nome: "Alunos", grupo: "Gestão", icone: <BsPeople /> },
+    { id: "equipe", nome: "Equipe", grupo: "Gestão", icone: <FaPeopleGroup /> },
+    { id: "solicitacoes", nome: "Novos cadastros", grupo: "Gestão", icone: <BsClipboard2Pulse /> },
+    { id: "convites", nome: "Convites", grupo: "Gestão", icone: <BsArrowUpRight /> },
+    { id: "indicadores", nome: "Equipe e indicadores", grupo: "Gestão", icone: <TbUserStar /> },
     {
         id: "avaliacoes",
         nome: "Avaliações",
-        grupo: "Treinamento",
+        grupo: "Acompanhamento",
         icone: <BsClipboard2Pulse />,
     },
     {
         id: "periodizacao",
         nome: "Periodização",
-        grupo: "Treinamento",
+        grupo: "Acompanhamento",
         icone: <BsCalendar3 />,
+    },
+    {
+        id: "exercicios",
+        nome: "Biblioteca de exercícios",
+        grupo: "Acompanhamento",
+        icone: <BsCollectionPlay />,
     },
     {
         id: "relatorios",
         nome: "Relatórios",
-        grupo: "Treinamento",
+        grupo: "Inteligência",
         icone: <BsBarChart />,
     },
     {
         id: "chat",
-        nome: "Central de mensagens",
+        nome: "Mensagens",
         grupo: "Comunicação",
         icone: <IoChatbubblesSharp />,
     },
-    { id: "emails", nome: "Central de e-mails", grupo: "Comunicação", icone: <BsEnvelope /> },
-    { id: "arquivos", nome: "Arquivos da equipe", grupo: "Comunicação", icone: <BsFolder2Open /> },
+    { id: "emails", nome: "E-mails", grupo: "Comunicação", icone: <BsEnvelope /> },
+    { id: "arquivos", nome: "Biblioteca de arquivos", grupo: "Comunicação", icone: <BsFolder2Open /> },
     {
         id: "feedback",
         nome: "Feedback",
@@ -196,19 +204,19 @@ const secoes = [
     },
     {
         id: "ajuda",
-        nome: "Central de ajuda",
+        nome: "Ajuda e tutoriais",
         grupo: "Sistema",
         icone: <FaRegCircleQuestion />,
     },
     {
         id: "log",
-        nome: "Atividades",
+        nome: "Histórico de atividades",
         grupo: "Sistema",
         icone: <BsFileEarmarkText />,
     },
     {
         id: "configuracoes",
-        nome: "Configurações",
+        nome: "Preferências",
         grupo: "Sistema",
         icone: <BsGear />,
     },
@@ -220,20 +228,51 @@ const secoes = [
     },
     {
         id: "controleAvancado",
-        nome: "Controle avançado",
+        nome: "Análise avançada",
         grupo: "Acompanhamento",
         icone: <BsCpu />,
     },
     {
         id: "tarefas",
-        nome: "Agenda de tarefas",
+        nome: "Tarefas",
         grupo: "Acompanhamento",
         icone: <BsClipboard2Pulse />,
     },
-    { id: "manutencao", nome: "Manutenção", grupo: "Sistema", icone: <FaTools /> },
+    { id: "manutencao", nome: "Ferramentas do sistema", grupo: "Sistema", icone: <FaTools /> },
 ];
 
-const gruposNavegacao = ["Workspace", "Treinamento", "Acompanhamento", "Comunicação", "Sistema"];
+const gruposNavegacao = ["Gestão", "Acompanhamento", "Comunicação", "Inteligência", "Sistema"];
+const descricoesGrupos: Record<string, string> = {
+    Gestão: "Pessoas e entrada",
+    Acompanhamento: "Rotina dos alunos",
+    Comunicação: "Contato e materiais",
+    Inteligência: "Leitura de resultados",
+    Sistema: "Preferências e suporte",
+};
+
+const descricoesSecoes: Record<string, string> = {
+    inicio: "Um panorama do que merece atenção e dos caminhos disponíveis no painel.",
+    alunos: "Encontre pessoas, abra fichas e acompanhe cada jornada de treinamento.",
+    equipe: "Cadastre profissionais e organize os acessos da equipe.",
+    solicitacoes: "Revise inscrições recebidas e decida os próximos passos de cada cadastro.",
+    convites: "Crie links de entrada e acompanhe quem chegou por cada convite.",
+    indicadores: "Entenda a atividade da equipe e a origem dos novos alunos.",
+    avaliacoes: "Avaliações físicas, anamneses, medidas e histórico dos alunos.",
+    periodizacao: "Planejamento de semanas, dias, sessões e distribuição de volume.",
+    exercicios: "Gerencie movimentos, sinônimos e vídeos que alimentam as prescrições e o mobile.",
+    relatorios: "Transforme os registros da equipe em uma leitura clara da evolução.",
+    chat: "Converse com alunos e mantenha o acompanhamento próximo.",
+    emails: "Organize comunicações por e-mail com os alunos.",
+    arquivos: "Guarde e compartilhe materiais importantes da equipe.",
+    feedback: "Leia relatos dos alunos e acompanhe as respostas da equipe.",
+    ajuda: "Aprenda os fluxos do sistema e descubra como usar cada recurso.",
+    log: "Consulte o que mudou, quando aconteceu e quem realizou cada ação.",
+    configuracoes: "Ajuste aparência, leitura e comportamento do seu espaço.",
+    controleAluno: "Reúna ficha, execução mobile, tarefas e comunicação em uma visão do aluno.",
+    controleAvancado: "Investigue tendências e aprofunde o acompanhamento da equipe.",
+    tarefas: "Organize pendências, responsáveis e próximos passos do acompanhamento.",
+    manutencao: "Acesse ferramentas administrativas e de diagnóstico do sistema.",
+};
 
 const cores = {
     primaryButton: "rounded-lg bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]",
@@ -330,7 +369,7 @@ export default function Painel() {
         [temaVisualId, tema, fonteUi, tamanhoTexto],
     );
 
-    const [secaoAtual, setSecaoAtual] = useState("alunos");
+    const [secaoAtual, setSecaoAtual] = useState("inicio");
     
     const alunosQuery = useQuery({
         queryKey: ["alunos"],
@@ -372,18 +411,10 @@ export default function Painel() {
         enabled: user?.tipo === "ADMIN",
     });
 
-    const [personalSelecionadoId, setPersonalSelecionadoId] = useState("");
-    const vinculosQuery = useQuery({
-        queryKey: ["personal-alunos", personalSelecionadoId],
-        queryFn: () => cadastroService.listarVinculos(personalSelecionadoId),
-        enabled: user?.tipo === "ADMIN" && Boolean(personalSelecionadoId),
-    });
-
     const [novoPersonalNome, setNovoPersonalNome] = useState("");
     const [novoPersonalEmail, setNovoPersonalEmail] = useState("");
     const [novoPersonalTelefone, setNovoPersonalTelefone] = useState("");
     const [novoPersonalSenha, setNovoPersonalSenha] = useState("");
-    const [alunoParaVincularId, setAlunoParaVincularId] = useState("");
     const [erroEquipe, setErroEquipe] = useState("");
     const [sucessoEquipe, setSucessoEquipe] = useState("");
     const [salvandoEquipe, setSalvandoEquipe] = useState(false);
@@ -391,13 +422,6 @@ export default function Painel() {
     const [resumoExclusaoPersonal, setResumoExclusaoPersonal] =
         useState<PersonalExclusaoResumoApi | null>(null);
     const [carregandoResumoExclusao, setCarregandoResumoExclusao] = useState(false);
-    const [vinculoParaDesvincular, setVinculoParaDesvincular] = useState<{
-        id: string;
-        alunoNome: string;
-        personalNome: string;
-
-    } | null>(null);
-
     const [motivoExclusao, setMotivoExclusao] = useState("ENCERRAMENTO_ADMINISTRATIVO");
     const [detalheExclusao, setDetalheExclusao] = useState("");
     const [executandoExclusao, setExecutandoExclusao] = useState(false);
@@ -410,6 +434,7 @@ export default function Painel() {
         criadoEm: aluno.criadoEm ?? "",
         statusCadastro: aluno.statusCadastro ?? "APROVADO",
         possuiFichaTecnica: aluno.possuiFichaTecnica === true,
+        convidadoPorPersonalNome: aluno.convidadoPorPersonalNome ?? null,
         avaliacaoPendente: (solicitacoesAvaliacaoPendentesQuery.data ?? []).some(
             solicitacao => solicitacao.alunoId === aluno.id,
         ),
@@ -452,6 +477,8 @@ export default function Painel() {
     const [menuPerfilAberto, setMenuPerfilAberto] = useState(false);
     const [menuAlunoAberto, setMenuAlunoAberto] = useState<string | null>(null);
     const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+    const [buscaPainelAberta, setBuscaPainelAberta] = useState(false);
+    const [buscaPainel, setBuscaPainel] = useState("");
     const [modalNovoAluno, setModalNovoAluno] = useState(false);
     const [novoNome, setNovoNome] = useState("");
     const [novoEmail, setNovoEmail] = useState("");
@@ -485,6 +512,7 @@ export default function Painel() {
 
     const inputImportarRef = useRef<HTMLInputElement>(null);
     const menuPerfilRef = useRef<HTMLDivElement>(null);
+    const buscaPainelInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         localStorage.setItem("painel_tema", tema);
@@ -503,13 +531,6 @@ export default function Painel() {
     }, [fonteUi]);
 
     useEffect(() => {
-        const personais = personaisQuery.data ?? [];
-        if (!personais.some(personal => personal.id === personalSelecionadoId)) {
-            setPersonalSelecionadoId(personais[0]?.id ?? "");
-        }
-    }, [personaisQuery.data, personalSelecionadoId]);
-
-    useEffect(() => {
         function fecharMenus(event: MouseEvent) {
             if (menuPerfilRef.current && !menuPerfilRef.current.contains(event.target as Node)) {
                 setMenuPerfilAberto(false);
@@ -524,20 +545,34 @@ export default function Painel() {
                 setMenuPerfilAberto(false);
                 setMenuAlunoAberto(null);
                 setMenuMobileAberto(false);
+                setBuscaPainelAberta(false);
                 setAlunoParaExcluir(null);
                 setPersonalParaExcluir(null);
-                setVinculoParaDesvincular(null);
+            }
+        }
+
+        function atalhosGlobais(event: KeyboardEvent) {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+                event.preventDefault();
+                setBuscaPainelAberta(true);
             }
         }
 
         document.addEventListener("mousedown", fecharMenus);
         document.addEventListener("keydown", fecharComEscape);
+        document.addEventListener("keydown", atalhosGlobais);
 
         return () => {
             document.removeEventListener("mousedown", fecharMenus);
             document.removeEventListener("keydown", fecharComEscape);
+            document.removeEventListener("keydown", atalhosGlobais);
         };
     }, []);
+
+    useEffect(() => {
+        if (!buscaPainelAberta) return;
+        buscaPainelInputRef.current?.focus();
+    }, [buscaPainelAberta]);
 
     const alunosFiltrados = useMemo(() => {
         const termo = busca.trim().toLocaleLowerCase("pt-BR");
@@ -754,7 +789,7 @@ export default function Painel() {
             alert(
                 error instanceof ApiError
                     ? error.message
-                    : "Não foi possível consultar os alunos vinculados a este Personal.",
+                    : "Não foi possível consultar os alunos convidados por este Personal.",
             );
         } finally {
             setCarregandoResumoExclusao(false);
@@ -773,10 +808,8 @@ export default function Painel() {
                 queryClient.invalidateQueries({ queryKey: ["personais"] }),
                 queryClient.invalidateQueries({ queryKey: ["alunos"] }),
                 queryClient.invalidateQueries({ queryKey: ["relatorios"] }),
-                queryClient.invalidateQueries({ queryKey: ["personal-alunos"] }),
                 queryClient.invalidateQueries({ queryKey: ["comunicacao", "notificacoes"] }),
             ]);
-            if (personalSelecionadoId === personalParaExcluir.id) setPersonalSelecionadoId("");
             setPersonalParaExcluir(null);
             setResumoExclusaoPersonal(null);
             setDetalheExclusao("");
@@ -805,14 +838,13 @@ export default function Painel() {
 
         setSalvandoEquipe(true);
         try {
-            const personal = await cadastroService.criarPersonal({
+            await cadastroService.criarPersonal({
                 nomeCompleto: novoPersonalNome.trim(),
                 email: novoPersonalEmail.trim(),
                 telefone: novoPersonalTelefone.trim() || undefined,
                 senha: novoPersonalSenha,
             });
             await queryClient.invalidateQueries({ queryKey: ["personais"] });
-            setPersonalSelecionadoId(personal.id);
             setNovoPersonalNome("");
             setNovoPersonalEmail("");
             setNovoPersonalTelefone("");
@@ -826,62 +858,6 @@ export default function Painel() {
             );
         } finally {
             setSalvandoEquipe(false);
-        }
-    }
-
-    async function vincularAlunoEquipe(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setErroEquipe("");
-        setSucessoEquipe("");
-        if (!personalSelecionadoId || !alunoParaVincularId) {
-            setErroEquipe("Selecione um Personal e um aluno.");
-            return;
-        }
-
-        setSalvandoEquipe(true);
-        try {
-            await cadastroService.vincularAluno(personalSelecionadoId, alunoParaVincularId);
-            await queryClient.invalidateQueries({
-                queryKey: ["personal-alunos", personalSelecionadoId],
-            });
-            setAlunoParaVincularId("");
-            setSucessoEquipe("Aluno vinculado à equipe.");
-        } catch (error) {
-            setErroEquipe(
-                error instanceof ApiError ? error.message : "Não foi possível criar o vínculo.",
-            );
-        } finally {
-            setSalvandoEquipe(false);
-        }
-    }
-
-    async function confirmarDesvinculacaoEquipe() {
-        if (!vinculoParaDesvincular) return;
-        setErroEquipe("");
-        setSucessoEquipe("");
-        setExecutandoExclusao(true);
-        try {
-            await cadastroService.desvincularAluno(vinculoParaDesvincular.id, {
-                motivo: motivoExclusao,
-                detalhe: detalheExclusao.trim() || undefined,
-            });
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: ["personal-alunos", personalSelecionadoId],
-                }),
-                queryClient.invalidateQueries({ queryKey: ["comunicacao", "notificacoes"] }),
-            ]);
-            setVinculoParaDesvincular(null);
-            setDetalheExclusao("");
-            setSucessoEquipe(
-                "Vínculo encerrado. O histórico foi preservado e os envolvidos foram notificados.",
-            );
-        } catch (error) {
-            setErroEquipe(
-                error instanceof ApiError ? error.message : "Não foi possível encerrar o vínculo.",
-            );
-        } finally {
-            setExecutandoExclusao(false);
         }
     }
 
@@ -900,6 +876,8 @@ export default function Painel() {
         secao =>
             secao.id === "inicio" ||
             secao.id === "alunos" ||
+            (secao.id === "exercicios" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
+            (secao.id === "equipe" && user?.tipo === "ADMIN") ||
             secao.id === "solicitacoes" ||
             (secao.id === "convites" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             secao.id === "relatorios" ||
@@ -911,6 +889,7 @@ export default function Painel() {
             (secao.id === "tarefas" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             (secao.id === "manutencao" && (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             (secao.id === "log" && user?.tipo === "ADMIN") ||
+            secao.id === "configuracoes" ||
             (secao.id === "controleAluno" &&
                 (user?.tipo === "ADMIN" || user?.tipo === "PERSONAL")) ||
             (secao.id === "controleAvancado" &&
@@ -919,19 +898,6 @@ export default function Painel() {
 
     function renderEquipe() {
         const personais = personaisQuery.data ?? [];
-        const vinculos = vinculosQuery.data ?? [];
-        const personalSelecionado = personais.find(
-            personal => personal.id === personalSelecionadoId,
-        );
-        const alunosVinculados = vinculos
-            .map(vinculo => ({
-                vinculo,
-                aluno: alunos.find(aluno => aluno.id === vinculo.alunoId),
-            }))
-            .filter(item => item.aluno);
-        const alunosDisponiveis = alunos.filter(
-            aluno => !vinculos.some(vinculo => vinculo.alunoId === aluno.id),
-        );
 
         return (
             <section className="w-full max-w-[1440px] space-y-6">
@@ -948,8 +914,10 @@ export default function Painel() {
                             Gestão da equipe
                         </h1>
                         <p className={"mt-2 text-[13px] " + cores.bodyText}>
-                            Cadastre profissionais com login próprio e escolha quais alunos cada um
-                            pode acompanhar. O acesso profissional é limitado aos alunos vinculados.
+                            Cadastre os profissionais da equipe. Todos os personais ativos podem
+                            visualizar e atualizar os alunos da equipe; cadastros pendentes aparecem
+                            na fila de análise e o convite registra a origem
+                            do cadastro, sem criar uma carteira exclusiva.
                         </p>
                     </div>
                     <span className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[11px] text-[var(--text-secondary)]">
@@ -993,8 +961,8 @@ export default function Painel() {
                                 Novo Personal
                             </h2>
                             <p className={"mt-1 text-[11px] " + cores.bodyText}>
-                                O profissional entra com este e-mail e senha. Ele não terá acesso à
-                                administração nem aos alunos de outros profissionais.
+                                O profissional entra com este e-mail e senha. Ele terá acesso
+                                compartilhado aos alunos, sem acesso às funções administrativas.
                             </p>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
@@ -1071,79 +1039,23 @@ export default function Painel() {
                         </div>
                     </form>
 
-                    <form
-                        onSubmit={vincularAlunoEquipe}
-                        autoComplete="off"
-                        className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
-                    >
+                    <aside className="flex flex-col justify-between gap-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
                         <div>
-                            <h2 className={"text-[15px] font-semibold " + cores.heading}>
-                                Vincular aluno
-                            </h2>
-                            <p className={"mt-1 text-[11px] " + cores.bodyText}>
-                                Um aluno pode ter até três Personais ativos.
+                            <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[var(--accent-text)]">Modelo de equipe</p>
+                            <h2 className={"mt-2 text-[15px] font-semibold " + cores.heading}>Acompanhamento compartilhado</h2>
+                            <p className={"mt-2 text-[11px] leading-5 " + cores.bodyText}>
+                                Nenhum aluno fica restrito a um profissional. O personal que enviou o
+                                convite permanece identificado como origem, enquanto toda a equipe
+                                pode consultar, atualizar e acompanhar o cadastro.
                             </p>
                         </div>
-                        <label className="grid gap-1.5">
-                            <span className={"text-[10px] font-semibold " + cores.bodyText}>
-                                Personal responsável
-                            </span>
-                            <select
-                                required
-                                value={personalSelecionadoId}
-                                onChange={event => setPersonalSelecionadoId(event.target.value)}
-                                className={"h-10 px-3 text-[12px] outline-none " + cores.input}
-                                disabled={!personais.length}
-                            >
-                                <option value="">Selecione um Personal</option>
-                                {personais.map(personal => (
-                                    <option key={personal.id} value={personal.id}>
-                                        {personal.nomeCompleto}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <label className="grid gap-1.5">
-                            <span className={"text-[10px] font-semibold " + cores.bodyText}>
-                                Aluno
-                            </span>
-                            <select
-                                required
-                                value={alunoParaVincularId}
-                                onChange={event => setAlunoParaVincularId(event.target.value)}
-                                className={"h-10 px-3 text-[12px] outline-none " + cores.input}
-                                disabled={!personalSelecionadoId || !alunosDisponiveis.length}
-                            >
-                                <option value="">Selecione um aluno</option>
-                                {alunosDisponiveis.map(aluno => (
-                                    <option key={aluno.id} value={aluno.id}>
-                                        {aluno.nome} · {aluno.email}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
-                            <span className={"text-[10px] " + cores.subtleText}>
-                                {alunosDisponiveis.length} alunos disponíveis para este Personal
-                            </span>
-                            <button
-                                disabled={
-                                    salvandoEquipe || !personalSelecionadoId || !alunoParaVincularId
-                                }
-                                aria-busy={salvandoEquipe}
-                                type="submit"
-                                className={
-                                    "h-9 px-4 text-[11px] font-semibold disabled:opacity-50 " +
-                                    cores.primaryButton
-                                }
-                            >
-                                Vincular aluno
-                            </button>
-                        </div>
-                    </form>
+                        <button type="button" onClick={() => navegar("convites")} className={"h-10 self-start px-4 text-[11px] font-semibold " + cores.primaryButton}>
+                            Gerenciar links de convite
+                        </button>
+                    </aside>
                 </div>
 
-                <div className="grid gap-5 lg:grid-cols-[minmax(240px,0.75fr)_minmax(0,1.5fr)]">
+                <div className="grid gap-5">
                     <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
                         <div className="border-b border-[var(--border)] px-4 py-3">
                             <h2 className={"text-[12px] font-semibold " + cores.heading}>
@@ -1161,31 +1073,15 @@ export default function Painel() {
                             </p>
                         ) : (
                             <div className="ui-stagger divide-y divide-[var(--border)]">
-                                {personais.map(personal => {
-                                    const ativo = personal.id === personalSelecionadoId;
-                                    return (
+                                {personais.map(personal => (
                                         <div
                                             key={personal.id}
-                                            className={
-                                                "flex items-center gap-2 px-3 py-2 transition " +
-                                                (ativo
-                                                    ? "bg-[var(--accent-soft)]"
-                                                    : "hover:bg-[var(--row-hover)]")
-                                            }
+                                            className="flex items-center gap-2 px-3 py-2"
                                         >
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setPersonalSelecionadoId(personal.id)
-                                                }
-                                                className="min-w-0 flex-1 px-1 py-2 text-left"
-                                            >
+                                            <div className="min-w-0 flex-1 px-1 py-2">
                                                 <span
                                                     className={
-                                                        "block truncate text-[12px] font-semibold " +
-                                                        (ativo
-                                                            ? "text-[var(--accent-text)]"
-                                                            : cores.heading)
+                                                        "block truncate text-[12px] font-semibold " + cores.heading
                                                     }
                                                 >
                                                     {personal.nomeCompleto}
@@ -1198,7 +1094,7 @@ export default function Painel() {
                                                 >
                                                     {personal.email}
                                                 </span>
-                                            </button>
+                                            </div>
                                             <button
                                                 type="button"
                                                 onClick={() =>
@@ -1214,89 +1110,11 @@ export default function Painel() {
                                                 <BsTrash3 />
                                             </button>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </section>
-
-                    <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-                        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
-                            <div>
-                                <h2 className={"text-[12px] font-semibold " + cores.heading}>
-                                    Alunos vinculados
-                                </h2>
-                                <p className={"mt-0.5 text-[10px] " + cores.subtleText}>
-                                    {personalSelecionado?.nomeCompleto ??
-                                        "Selecione um profissional"}
-                                </p>
-                            </div>
-                            <span className={"text-[10px] " + cores.subtleText}>
-                                {alunosVinculados.length} ativos
-                            </span>
-                        </div>
-                        {vinculosQuery.isLoading && personalSelecionadoId ? (
-                            <LoadingState
-                                label="Carregando vínculos..."
-                                className="justify-start p-4"
-                            />
-                        ) : vinculosQuery.isError ? (
-                            <p role="alert" className="p-4 text-[11px] text-[var(--danger)]">
-                                {vinculosQuery.error instanceof ApiError
-                                    ? vinculosQuery.error.message
-                                    : "Não foi possível carregar os vínculos."}
-                            </p>
-                        ) : alunosVinculados.length === 0 ? (
-                            <p className={"p-4 text-[11px] " + cores.subtleText}>
-                                Este Personal ainda não possui alunos ativos.
-                            </p>
-                        ) : (
-                            <div className="divide-y divide-[var(--border)]">
-                                {alunosVinculados.map(({ vinculo, aluno }) => (
-                                    <div
-                                        key={vinculo.id}
-                                        className="flex flex-col justify-between gap-3 px-4 py-3 sm:flex-row sm:items-center"
-                                    >
-                                        <div className="min-w-0">
-                                            <p
-                                                className={
-                                                    "truncate text-[12px] font-semibold " +
-                                                    cores.heading
-                                                }
-                                            >
-                                                {aluno!.nome}
-                                            </p>
-                                            <p
-                                                className={
-                                                    "mt-0.5 truncate text-[10px] " +
-                                                    cores.subtleText
-                                                }
-                                            >
-                                                {aluno!.email}
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setMotivoExclusao("ENCERRAMENTO_ADMINISTRATIVO");
-                                                setDetalheExclusao("");
-                                                setVinculoParaDesvincular({
-                                                    id: vinculo.id,
-                                                    alunoNome: aluno!.nome,
-                                                    personalNome:
-                                                        personalSelecionado?.nomeCompleto ??
-                                                        "Personal",
-                                                });
-                                            }}
-                                            className="self-start rounded-md border border-[var(--border)] px-3 py-2 text-[10px] font-semibold text-[var(--danger)] transition hover:bg-[var(--danger-soft)] sm:self-auto"
-                                        >
-                                            Desvincular aluno
-                                        </button>
-                                    </div>
                                 ))}
                             </div>
                         )}
                     </section>
+
                 </div>
             </section>
         );
@@ -1326,22 +1144,22 @@ export default function Painel() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        <input
-                            ref={inputImportarRef}
-                            type="file"
-                            accept=".json,application/json"
-                            className="hidden"
-                            onChange={importarAluno}
-                        />
-
-                        <button
-                            onClick={() => inputImportarRef.current?.click()}
-                            className={`inline-flex h-10 items-center justify-center gap-2 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
-                        >
-                            <BsUpload />
-                            Importar
-                        </button>
-
+                        {user?.tipo === "ADMIN" && <>
+                            <input
+                                ref={inputImportarRef}
+                                type="file"
+                                accept=".json,application/json"
+                                className="hidden"
+                                onChange={importarAluno}
+                            />
+                            <button
+                                onClick={() => inputImportarRef.current?.click()}
+                                className={`inline-flex h-10 items-center justify-center gap-2 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
+                            >
+                                <BsUpload />
+                                Importar legado
+                            </button>
+                        </>}
                         <button
                             onClick={criarAluno}
                             className={`inline-flex h-10 items-center justify-center gap-2 px-4 text-[11px] font-semibold ${cores.primaryButton}`}
@@ -1758,292 +1576,181 @@ export default function Painel() {
     function renderInicio() {
         const alunosRecentes = [...alunos]
             .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
-            .slice(0, 4);
-
-        const ultimoCadastro = alunosRecentes[0];
+            .slice(0, 5);
+        const primeiroNome = user?.nome?.trim().split(/\s+/)[0] || "por aqui";
+        const hora = new Date().getHours();
+        const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+        const semFicha = alunos.filter(aluno => !aluno.possuiFichaTecnica).length;
+        const solicitacoesPendentes = solicitacoesResumoQuery.data?.total ?? 0;
+        const ferramentas = secoesVisiveis.filter(secao => secao.id !== "inicio");
 
         return (
-            <section className="w-full max-w-[1440px] space-y-7">
-                {/* Cabeçalho */}
-                <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-                    <div>
-                        <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-text)]">
-                            <span>Workspace</span>
-                            <span className="text-[var(--text-muted)]">/</span>
-                            <span>Visão geral</span>
+            <section className="w-full max-w-[1480px] space-y-8">
+                <header className="painel-hero relative isolate overflow-hidden rounded-[28px] p-6 text-white shadow-[0_28px_70px_-38px_rgba(10,20,30,.7)] sm:p-9 xl:p-11">
+                    <div className="relative z-10 max-w-3xl">
+                        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-white/80 backdrop-blur">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,.9)]" />
+                            Espaço de trabalho da equipe
                         </div>
-
-                        <h1
-                            className={`text-[28px] font-semibold tracking-[-0.045em] ${cores.heading}`}
-                        >
-                            Seu espaço de trabalho.
+                        <p className="text-sm font-medium text-white/70">{saudacao}, {primeiroNome}.</p>
+                        <h1 className="mt-2 max-w-2xl text-[clamp(2rem,4vw,3.5rem)] font-semibold leading-[1.04] tracking-[-.055em]">
+                            Cada aluno tem uma jornada. <span className="text-white/55">Vamos movimentá-la.</span>
                         </h1>
-
-                        <p className={`mt-2 text-[13px] ${cores.bodyText}`}>
-                            Gerencie seus alunos e acompanhe a organização dos seus treinamentos.
+                        <p className="mt-4 max-w-xl text-[13px] leading-6 text-white/75 sm:text-sm">
+                            Convide, avalie, prescreva e acompanhe. Tudo começa por aqui — escolha uma tarefa ou explore as ferramentas da equipe.
                         </p>
+                        <div className="mt-7 flex flex-wrap gap-3">
+                            <button type="button" onClick={criarAluno} className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-[11px] font-bold text-slate-900 shadow-lg transition hover:-translate-y-0.5 hover:bg-white/90">
+                                <BsPlusLg /> Criar convite <BsArrowUpRight className="ml-1" />
+                            </button>
+                            <button type="button" onClick={() => navegar("alunos")} className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 text-[11px] font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15">
+                                <BsPeople /> Explorar alunos
+                            </button>
+                        </div>
                     </div>
+                    <div className="painel-hero-orbit pointer-events-none absolute -right-20 -top-28 hidden h-[440px] w-[440px] rounded-full border border-white/10 lg:block" />
+                    <div className="pointer-events-none absolute -right-10 bottom-[-150px] hidden h-[360px] w-[360px] rounded-full border border-white/10 lg:block" />
+                    <div className="pointer-events-none absolute right-[8%] top-[18%] hidden h-32 w-32 rounded-full border border-white/15 bg-white/[.04] shadow-[inset_0_0_60px_rgba(255,255,255,.08)] backdrop-blur-sm lg:block" />
+                    <div className="pointer-events-none absolute right-[15%] top-[31%] hidden h-3 w-3 rounded-full bg-white/80 shadow-[0_0_25px_rgba(255,255,255,.9)] lg:block" />
+                    <div className="pointer-events-none absolute bottom-7 right-8 hidden text-right lg:block">
+                        <p className="text-[9px] font-bold uppercase tracking-[.2em] text-white/45">Seu painel em movimento</p>
+                        <p className="mt-1 text-2xl font-semibold tracking-[-.04em] text-white/80">01 <span className="text-sm font-normal text-white/45">/ visão geral</span></p>
+                    </div>
+                </header>
 
-                    <button
-                        onClick={criarAluno}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-5 text-[12px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
-                    >
-                        <BsPlusLg />
-                                    Gerar convite
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <button type="button" onClick={() => navegar("alunos")} className="painel-metric group text-left">
+                        <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]"><BsPeople size={18} /></span>
+                        <span className="mt-5 block text-[10px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Alunos na equipe</span>
+                        <span className="mt-1 block text-3xl font-semibold tracking-[-.06em] text-[var(--text-primary)]">{alunos.length}</span>
+                        <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">Abrir base <BsArrowUpRight className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></span>
+                    </button>
+                    <button type="button" onClick={() => navegar("solicitacoes")} className="painel-metric group text-left">
+                        <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600"><BsClipboard2Pulse size={18} /></span>
+                        <span className="mt-5 block text-[10px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Cadastros para revisar</span>
+                        <span className="mt-1 block text-3xl font-semibold tracking-[-.06em] text-[var(--text-primary)]">{solicitacoesPendentes}</span>
+                        <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">Ir para solicitações <BsArrowUpRight className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></span>
+                    </button>
+                    <button type="button" onClick={() => navegar("controleAluno")} className="painel-metric group text-left">
+                        <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-500/10 text-rose-600"><BsActivity size={18} /></span>
+                        <span className="mt-5 block text-[10px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Sem ficha técnica</span>
+                        <span className="mt-1 block text-3xl font-semibold tracking-[-.06em] text-[var(--text-primary)]">{semFicha}</span>
+                        <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">Acompanhar alunos <BsArrowUpRight className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></span>
+                    </button>
+                    <button type="button" onClick={() => navegar("chat")} className="painel-metric group text-left">
+                        <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-500/10 text-sky-600"><BsChatDots size={18} /></span>
+                        <span className="mt-5 block text-[10px] font-semibold uppercase tracking-[.12em] text-[var(--text-muted)]">Notificações pendentes</span>
+                        <span className="mt-1 block text-3xl font-semibold tracking-[-.06em] text-[var(--text-primary)]">{alertasNaoLidos}</span>
+                        <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)]">Abrir comunicação <BsArrowUpRight className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></span>
                     </button>
                 </div>
 
-                {/* Indicadores */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-[var(--text-secondary)]">
-                                Alunos cadastrados
-                            </span>
-                            <BsPeople className="text-lg text-[var(--accent)]" />
+                <section className="space-y-4">
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[.17em] text-[var(--accent-text)]">Descubra o painel</p>
+                            <h2 className="mt-1 text-[22px] font-semibold tracking-[-.04em] text-[var(--text-primary)] sm:text-[26px]">O que você quer fazer agora?</h2>
+                            <p className="mt-1 text-[11px] text-[var(--text-secondary)]">As ferramentas estão organizadas por objetivo. Abra uma para começar a explorar.</p>
                         </div>
-
-                        <p
-                            className={`mt-4 text-[30px] font-semibold tracking-[-0.05em] ${cores.heading}`}
-                        >
-                            {alunos.length}
-                        </p>
-
-                        <p className="mt-1 text-[10px] text-[var(--text-muted)]">
-                            Registros na sua base
-                        </p>
+                        <button type="button" onClick={() => setBuscaPainelAberta(true)} className="inline-flex h-9 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent-text)]">
+                            <BsSearch /> Encontrar ferramenta <kbd className="rounded-md bg-[var(--surface-tertiary)] px-1.5 py-0.5 font-mono text-[9px]">Ctrl / ⌘ K</kbd>
+                        </button>
                     </div>
-
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-[var(--text-secondary)]">
-                                Último cadastro
-                            </span>
-                            <BsPersonCircle className="text-lg text-[var(--accent)]" />
-                        </div>
-
-                        <p
-                            className={`mt-4 truncate text-[17px] font-semibold tracking-[-0.03em] ${cores.heading}`}
-                        >
-                            {ultimoCadastro?.nome || "Nenhum cadastro"}
-                        </p>
-
-                        <p className="mt-1 text-[10px] text-[var(--text-muted)]">
-                            {ultimoCadastro
-                                ? formatarData(ultimoCadastro.criadoEm)
-                                : "Sua base ainda está vazia"}
-                        </p>
-                    </div>
-
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-[var(--text-secondary)]">
-                                Armazenamento
-                            </span>
-                            <BsFolder2Open className="text-lg text-[var(--accent)]" />
-                        </div>
-
-                        <p
-                            className={`mt-4 text-[17px] font-semibold tracking-[-0.03em] ${cores.heading}`}
-                        >
-                            Servidor
-                        </p>
-
-                        <p className="mt-1 text-[10px] text-[var(--text-muted)]">
-                            Dados sincronizados com o PostgreSQL
-                        </p>
-                    </div>
-                </div>
-
-                {/* Conteúdo principal */}
-                <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-                    <div className="min-w-0 space-y-5">
-                        {/* Ações */}
-                        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-                            <div className="border-b border-[var(--border)] px-5 py-4">
-                                <h2 className={`text-[13px] font-semibold ${cores.heading}`}>
-                                    Acesso rápido
-                                </h2>
-                                <p className={`mt-1 text-[11px] ${cores.subtleText}`}>
-                                    Atalhos para suas principais atividades.
-                                </p>
-                            </div>
-
-                            <div className="grid gap-3 p-4 sm:grid-cols-2">
-                                <button
-                                    onClick={criarAluno}
-                                    className="group flex min-h-[120px] flex-col justify-between rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <span className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
-                                            <BsPlusLg className="text-lg" />
-                                        </span>
-
-                                        <BsArrowUpRight className="text-[13px] text-[var(--text-muted)] transition group-hover:text-[var(--accent)]" />
-                                    </div>
-
-                                    <div className="mt-4">
-                                        <strong
-                                            className={`block text-[12px] font-semibold ${cores.heading}`}
-                                        >
-                                            Cadastrar aluno
-                                        </strong>
-                                        <span
-                                            className={`mt-1 block text-[10px] ${cores.bodyText}`}
-                                        >
-                                            Criar uma nova ficha de acompanhamento.
-                                        </span>
-                                    </div>
-                                </button>
-
-                                <button
-                                    onClick={() => navegar("alunos")}
-                                    className="group flex min-h-[120px] flex-col justify-between rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <span className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--surface-tertiary)] text-[var(--text-secondary)]">
-                                            <BsPeople className="text-lg" />
-                                        </span>
-
-                                        <BsArrowUpRight className="text-[13px] text-[var(--text-muted)] transition group-hover:text-[var(--accent)]" />
-                                    </div>
-
-                                    <div className="mt-4">
-                                        <strong
-                                            className={`block text-[12px] font-semibold ${cores.heading}`}
-                                        >
-                                            Gerenciar alunos
-                                        </strong>
-                                        <span
-                                            className={`mt-1 block text-[10px] ${cores.bodyText}`}
-                                        >
-                                            Consultar e administrar sua base.
-                                        </span>
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Alunos recentes */}
-                        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-                            <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
-                                <div>
-                                    <h2 className={`text-[13px] font-semibold ${cores.heading}`}>
-                                        Cadastros recentes
-                                    </h2>
-                                    <p className={`mt-1 text-[11px] ${cores.subtleText}`}>
-                                        Últimos alunos adicionados.
-                                    </p>
-                                </div>
-
-                                <button
-                                    onClick={() => navegar("alunos")}
-                                    className="inline-flex shrink-0 items-center gap-1 rounded-md text-[11px] font-semibold text-[var(--accent-text)] hover:underline"
-                                >
-                                    Ver todos <BsArrowUpRight />
-                                </button>
-                            </div>
-
-                            {alunosRecentes.length === 0 ? (
-                                <div className="px-5 py-10 text-center">
-                                    <BsPeople className="mx-auto text-2xl text-[var(--text-muted)]" />
-                                    <p
-                                        className={`mt-3 text-[12px] font-semibold ${cores.heading}`}
-                                    >
-                                        Nenhum aluno cadastrado
-                                    </p>
-                                    <p className={`mt-1 text-[11px] ${cores.subtleText}`}>
-                                        Seus próximos cadastros aparecerão aqui.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-[var(--border)]">
-                                    {alunosRecentes.map(aluno => (
-                                        <div
-                                            key={aluno.id}
-                                            className="flex items-center justify-between gap-3 px-5 py-3 transition hover:bg-[var(--row-hover)]"
-                                        >
-                                            <div className="flex min-w-0 items-center gap-3">
-                                                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-semibold text-[var(--accent-text)]">
-                                                    {aluno.nome?.charAt(0)?.toUpperCase() || "A"}
-                                                </span>
-
-                                                <div className="min-w-0">
-                                                    <p
-                                                        className={`truncate text-[12px] font-semibold ${cores.heading}`}
-                                                    >
-                                                        {aluno.nome}
-                                                    </p>
-                                                    <p
-                                                        className={`mt-0.5 text-[10px] ${cores.subtleText}`}
-                                                    >
-                                                        {formatarData(aluno.criadoEm)}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <button
-                                                onClick={() => abrirAluno(aluno)}
-                                                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent-text)]"
-                                            >
-                                                {user?.tipo === "PERSONAL" ? "Assumir" : "Abrir"}{" "}
-                                                <BsArrowUpRight />
-                                            </button>
+                    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                        {gruposNavegacao.map((grupo, index) => {
+                            const itens = ferramentas.filter(secao => secao.grupo === grupo);
+                            if (!itens.length) return null;
+                            const numero = String(index + 1).padStart(2, "0");
+                            return (
+                                <article key={grupo} className="painel-tool-group">
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[9px] font-bold uppercase tracking-[.16em] text-[var(--text-muted)]">Área {numero}</p>
+                                            <h3 className="mt-1 text-[15px] font-semibold tracking-[-.025em] text-[var(--text-primary)]">{grupo}</h3>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                        <span className="grid h-8 w-8 place-items-center rounded-full border border-[var(--border)] text-[10px] font-semibold text-[var(--text-muted)]">{itens.length}</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {itens.map(secao => (
+                                            <button key={secao.id} type="button" onClick={() => navegar(secao.id)} className="painel-tool-link group">
+                                                <span className="painel-tool-icon">{secao.icone}</span>
+                                                <span className="min-w-0 flex-1 text-left">
+                                                    <strong className="block truncate text-[11px] font-semibold text-[var(--text-primary)]">{secao.nome}</strong>
+                                                    <span className="mt-0.5 block text-[9px] leading-4 text-[var(--text-muted)]">{descricoesSecoes[secao.id]}</span>
+                                                </span>
+                                                {secao.id === "solicitacoes" && solicitacoesPendentes > 0 ? <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-600">{solicitacoesPendentes}</span> : null}
+                                                {secao.id === "chat" && alertasNaoLidos > 0 ? <span className="rounded-full bg-[var(--accent-soft)] px-2 py-1 text-[9px] font-bold text-[var(--accent-text)]">{alertasNaoLidos}</span> : null}
+                                                <BsArrowUpRight className="shrink-0 text-[12px] text-[var(--text-muted)] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--accent)]" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </article>
+                            );
+                        })}
                     </div>
+                </section>
 
-                    {/* Painel lateral */}
+                <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)]">
+                    <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+                        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4 sm:px-6">
+                            <div>
+                                <p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Movimento recente</p>
+                                <h2 className="mt-1 text-[15px] font-semibold text-[var(--text-primary)]">Alunos que chegaram por último</h2>
+                            </div>
+                            <button type="button" onClick={() => navegar("alunos")} className="inline-flex shrink-0 items-center gap-1 text-[10px] font-semibold text-[var(--accent-text)] hover:underline">Ver base <BsArrowUpRight /></button>
+                        </div>
+                        {alunosRecentes.length === 0 ? (
+                            <div className="px-5 py-10 text-center sm:px-8">
+                                <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]"><BsPeople size={22} /></span>
+                                <p className="mt-4 text-[13px] font-semibold text-[var(--text-primary)]">Sua próxima jornada começa com um convite</p>
+                                <p className="mx-auto mt-1 max-w-sm text-[10px] leading-5 text-[var(--text-muted)]">Envie um link para o aluno preencher o cadastro. Depois, a equipe analisa as informações e inicia o acompanhamento.</p>
+                                <button type="button" onClick={criarAluno} className="mt-4 inline-flex h-9 items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-[10px] font-semibold text-[var(--on-accent)]"><BsPlusLg /> Gerar primeiro convite</button>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-[var(--border)]">
+                                {alunosRecentes.map((aluno, index) => (
+                                    <button key={aluno.id} type="button" onClick={() => abrirAluno(aluno)} className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition hover:bg-[var(--row-hover)] sm:px-6">
+                                        <span className="flex min-w-0 items-center gap-3">
+                                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--surface-tertiary)] text-[12px] font-bold text-[var(--text-secondary)]">{aluno.nome?.charAt(0)?.toUpperCase() || "A"}</span>
+                                            <span className="min-w-0">
+                                                <strong className="block truncate text-[11px] font-semibold text-[var(--text-primary)]">{aluno.nome}</strong>
+                                                <span className="mt-0.5 block text-[9px] text-[var(--text-muted)]">{index === 0 ? "Cadastro mais recente" : `Entrou em ${formatarData(aluno.criadoEm)}`}</span>
+                                            </span>
+                                        </span>
+                                        <span className="inline-flex shrink-0 items-center gap-1 text-[9px] font-semibold text-[var(--accent-text)]">Abrir <BsArrowUpRight className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+
                     <aside className="space-y-4">
-                        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                            <div className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-[var(--warning)]" />
-                                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                                    MVP disponível
-                                </span>
+                        <article className="painel-workflow-card">
+                            <p className="text-[9px] font-bold uppercase tracking-[.15em] text-[var(--accent-text)]">Um caminho simples</p>
+                            <h3 className="mt-1 text-[15px] font-semibold tracking-[-.025em] text-[var(--text-primary)]">Da chegada ao acompanhamento</h3>
+                            <div className="mt-5 space-y-4">
+                                {[
+                                    { n: "01", titulo: "Convide", detalhe: "Compartilhe um link de entrada.", destino: "convites", icone: <BsArrowUpRight /> },
+                                    { n: "02", titulo: "Revise", detalhe: "Analise as informações recebidas.", destino: "solicitacoes", icone: <BsClipboard2Pulse /> },
+                                    { n: "03", titulo: "Estruture", detalhe: "Abra o aluno e monte a ficha.", destino: "alunos", icone: <BsPeople /> },
+                                    { n: "04", titulo: "Acompanhe", detalhe: "Veja execução, relatos e tarefas.", destino: "controleAluno", icone: <BsActivity /> },
+                                ].map(etapa => (
+                                    <button key={etapa.n} type="button" onClick={() => navegar(etapa.destino)} className="group flex w-full items-start gap-3 text-left">
+                                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-[9px] font-bold text-[var(--text-muted)] transition group-hover:border-[var(--accent)] group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent-text)]">{etapa.n}</span>
+                                        <span className="min-w-0 flex-1">
+                                            <strong className="block text-[10px] font-semibold text-[var(--text-primary)]">{etapa.titulo}</strong>
+                                            <span className="mt-0.5 block text-[9px] leading-4 text-[var(--text-muted)]">{etapa.detalhe}</span>
+                                        </span>
+                                        <span className="pt-1 text-[11px] text-[var(--text-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--accent)]">{etapa.icone}</span>
+                                    </button>
+                                ))}
                             </div>
-
-                            <h2 className={`mt-4 text-[15px] font-semibold ${cores.heading}`}>
-                                Sua rotina de treinamento em um só lugar.
-                            </h2>
-
-                            <p className={`mt-2 text-[11px] leading-5 ${cores.bodyText}`}>
-                                Cadastre alunos, monte avaliações físicas, prescreva treinos,
-                                organize a periodização e acompanhe a execução das séries.
-                            </p>
-
-                            <div className="mt-5 border-t border-[var(--border)] pt-4">
-                                <span className="text-[10px] text-[var(--text-muted)]">
-                                    Módulos disponíveis
-                                </span>
-                                <p className={`mt-1 text-[11px] font-semibold ${cores.heading}`}>
-                                    Ficha completa e equipe
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                            <div className="flex items-center gap-2">
-                                <BsFiletypeJson className="text-[var(--accent)]" />
-                                <h3 className={`text-[12px] font-semibold ${cores.heading}`}>
-                                    Importação e exportação
-                                </h3>
-                            </div>
-
-                            <p className={`mt-2 text-[11px] leading-5 ${cores.bodyText}`}>
-                                Transfira fichas entre dispositivos utilizando arquivos JSON.
-                            </p>
-
-                            <button
-                                onClick={() => navegar("alunos")}
-                                className="mt-4 rounded-md text-[11px] font-semibold text-[var(--accent-text)] hover:underline"
-                            >
-                                Acessar gerenciamento →
-                            </button>
-                        </div>
+                        </article>
+                        <button type="button" onClick={() => navegar("arquivos")} className="group flex w-full items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]">
+                            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--surface-tertiary)] text-[var(--accent)]"><BsFolder2Open size={18} /></span>
+                            <span className="min-w-0 flex-1"><strong className="block text-[11px] font-semibold text-[var(--text-primary)]">Biblioteca da equipe</strong><span className="mt-0.5 block text-[9px] text-[var(--text-muted)]">Encontre materiais e arquivos compartilhados.</span></span>
+                            <BsArrowUpRight className="text-[12px] text-[var(--text-muted)] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--accent)]" />
+                        </button>
                     </aside>
                 </div>
             </section>
@@ -2522,6 +2229,10 @@ export default function Painel() {
                     "Planejamento de semanas, dias, sessões e distribuição de volume.",
                     <BsCalendar3 />,
                 );
+            case "exercicios":
+                return user?.tipo === "ADMIN" || user?.tipo === "PERSONAL"
+                    ? <BibliotecaExercicios />
+                    : renderInicio();
             case "relatorios":
                 return <Relatorios />;
 
@@ -2550,6 +2261,7 @@ export default function Painel() {
                             telefone: aluno.telefone,
                             criadoEm: aluno.criadoEm,
                             possuiFichaTecnica: aluno.possuiFichaTecnica,
+                            convidadoPorPersonalNome: aluno.convidadoPorPersonalNome,
                         }}
                         alunosDisponiveis={alunosParaMonitoramento}
                         ficha={fichaAtual}
@@ -2564,6 +2276,8 @@ export default function Painel() {
                         }}
                         onNavigate={navegar}
                         canChat={user?.tipo === "PERSONAL"}
+                        isAdmin={user?.tipo === "ADMIN"}
+                        personais={personaisQuery.data ?? []}
                     />
                 );
             }
@@ -2589,30 +2303,30 @@ export default function Painel() {
             style={estiloPainel}
         >
             {/* Sidebar desktop */}
-            <aside className="sticky top-0 hidden h-screen max-h-screen w-[232px] shrink-0 self-start flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--sidebar)] lg:flex">
-                <div className="flex h-[76px] items-center gap-3 border-b border-[var(--border)] px-5">
-                    <div className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent)] text-[12px] font-bold tracking-[-0.08em] text-white">
+            <aside className="sticky top-0 hidden h-screen max-h-screen w-[252px] shrink-0 self-start flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--sidebar)] lg:flex">
+                <div className="flex h-[82px] items-center gap-3 border-b border-[var(--border)] px-5">
+                    <div className="grid h-10 w-10 place-items-center rounded-[14px] bg-[var(--accent)] text-[13px] font-black tracking-[-0.08em] text-white shadow-[0_8px_20px_color-mix(in_srgb,var(--accent)_28%,transparent)]">
                         GF
                     </div>
-                    <div>
-                        <p className={`text-[12px] font-bold tracking-[-0.02em] ${cores.heading}`}>
+                    <div className="min-w-0">
+                        <p className={`truncate text-[13px] font-bold tracking-[-0.03em] ${cores.heading}`}>
                             G. Fernando
                         </p>
-                        <p className={`mt-0.5 text-[10px] ${cores.subtleText}`}>
-                            Training workspace
+                        <p className={`mt-1 text-[8px] font-bold uppercase tracking-[.16em] ${cores.subtleText}`}>
+                            Training studio
                         </p>
                     </div>
                 </div>
 
-                <div className={`border-b ${cores.divider} px-4 py-4`}>
-                    <div
-                        className={`flex items-center gap-2 rounded-md px-2 text-[10px] font-semibold uppercase tracking-[0.12em] ${cores.subtleText}`}
-                    >
-                        <BsPersonCircle className="text-[13px]" /> Área profissional
+                <div className="border-b border-[var(--border)] px-4 py-4">
+                    <div className="flex items-center gap-3 rounded-xl bg-[var(--surface-secondary)] p-3">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-bold text-[var(--accent-text)]">{(user?.nome?.[0] ?? "U").toUpperCase()}</span>
+                        <span className="min-w-0 flex-1">
+                            <strong className={`block truncate text-[10px] font-semibold ${cores.heading}`}>{user?.nome ?? "Profissional"}</strong>
+                            <span className={`mt-0.5 block text-[9px] ${cores.subtleText}`}>{user?.tipo === "ADMIN" ? "Administrador da equipe" : "Personal da equipe"}</span>
+                        </span>
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,.12)]" title="Sessão ativa" />
                     </div>
-                    <p className={`mt-2 px-2 text-[12px] font-semibold ${cores.heading}`}>
-                        Gestão de treinamento
-                    </p>
                 </div>
 
                 <nav
@@ -2623,9 +2337,10 @@ export default function Painel() {
                         .filter(grupo => secoesVisiveis.some(secao => secao.grupo === grupo))
                         .map(grupo => (
                             <div key={grupo} className="mb-5">
-                                <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                                    {grupo}
-                                </p>
+                                <div className="mb-2 px-2">
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">{grupo}</p>
+                                    <p className="mt-0.5 text-[8px] text-[var(--text-muted)]">{descricoesGrupos[grupo]}</p>
+                                </div>
 
                                 <div className="space-y-0.5">
                                     {secoesVisiveis
@@ -2638,21 +2353,19 @@ export default function Painel() {
                                                     key={secao.id}
                                                     onClick={() => navegar(secao.id)}
                                                     aria-current={ativo ? "page" : undefined}
-                                                    className={`relative flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)] ${
+                                                    className={`group relative flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-[11px] font-medium transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)] ${
                                                         ativo
-                                                            ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                                                            ? "bg-[var(--accent-soft)] font-semibold text-[var(--accent-text)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_16%,transparent)]"
                                                             : "text-[var(--text-secondary)] hover:bg-[var(--row-hover)] hover:text-[var(--text-primary)]"
                                                     }`}
                                                 >
                                                     {ativo && (
                                                         <span className="absolute inset-y-1 left-0 w-[2px] rounded-full bg-[var(--accent)]" />
                                                     )}
-                                                    <span
-                                                        className={`text-[14px] ${ativo ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}
-                                                    >
+                                                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-[14px] transition-colors ${ativo ? "bg-[var(--surface)] text-[var(--accent)]" : "text-[var(--text-muted)] group-hover:bg-[var(--surface)]"}`}>
                                                         {secao.icone}
                                                     </span>
-                                                    {secao.nome}
+                                                    <span className="min-w-0 flex-1 truncate">{secao.nome}</span>
                                                     {secao.id === "chat" && alertasNaoLidos > 0 && (
                                                         <span className="ml-auto rounded-full bg-[var(--accent)] px-1.5 py-0.5 text-[9px] font-bold text-white">
                                                             {alertasNaoLidos > 99
@@ -2678,19 +2391,16 @@ export default function Painel() {
                         ))}
                 </nav>
 
-                <div className={`border-t ${cores.divider} px-5 py-3`}>
-                    <div className={`flex items-center gap-2 text-[10px] ${cores.bodyText}`}>
-                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
-                        {import.meta.env.DEV ? "Ambiente local" : "Ambiente publicado"}
+                <div className="border-t border-[var(--border)] px-4 py-4">
+                    <div className="flex items-center justify-between rounded-xl bg-[var(--surface-secondary)] px-3 py-2.5">
+                        <span className={`flex items-center gap-2 text-[9px] font-medium ${cores.bodyText}`}><span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />{import.meta.env.DEV ? "Ambiente local" : "Ambiente publicado"}</span>
+                        <button type="button" onClick={() => navegar("configuracoes")} className="text-[var(--text-muted)] transition hover:text-[var(--accent-text)]" title="Abrir preferências"><BsGear size={13} /></button>
                     </div>
-                    <p className={`mt-1 text-[9px] ${cores.subtleText}`}>
-                        {import.meta.env.DEV ? "Versão de desenvolvimento" : "Versão de produção"}
-                    </p>
                 </div>
             </aside>
 
             <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-                <header className="sticky top-0 z-20 flex h-[60px] shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--header)]/95 px-4 backdrop-blur-sm sm:px-7">
+                <header className="sticky top-0 z-20 flex h-[68px] shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--header)]/90 px-3 backdrop-blur-xl sm:px-7">
                     <div className="flex min-w-0 items-center gap-3">
                         <button
                             onClick={() => setMenuMobileAberto(!menuMobileAberto)}
@@ -2706,7 +2416,7 @@ export default function Painel() {
                                 className={`text-[9px] font-semibold uppercase tracking-[0.15em] ${cores.subtleText}`}
                             >
                                 G. Fernando <span className="px-1 text-[var(--text-muted)]">/</span>{" "}
-                                Workspace
+                                {secaoSelecionada.grupo}
                             </p>
                             <p className={`truncate text-[13px] font-semibold ${cores.heading}`}>
                                 {secaoSelecionada.nome}
@@ -2714,7 +2424,13 @@ export default function Painel() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <button type="button" onClick={() => setBuscaPainelAberta(true)} aria-label="Buscar ferramentas" className="group hidden h-9 w-[min(34vw,260px)] items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] px-3 text-left transition hover:border-[var(--accent)] md:flex">
+                            <BsSearch className="shrink-0 text-[12px] text-[var(--text-muted)] group-hover:text-[var(--accent-text)]" />
+                            <span className="min-w-0 flex-1 truncate text-[10px] text-[var(--text-muted)]">Buscar uma ferramenta...</span>
+                            <kbd className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-1.5 py-0.5 font-mono text-[8px] text-[var(--text-muted)]">Ctrl K</kbd>
+                        </button>
+                        <button type="button" onClick={() => setBuscaPainelAberta(true)} aria-label="Buscar ferramentas" className="grid h-9 w-9 place-items-center rounded-xl border border-[var(--border)] text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent-text)] md:hidden"><BsSearch size={14} /></button>
                         {solicitacoesAvaliacaoUrgentes.length > 0 && (
                             <button
                                 type="button"
@@ -2823,6 +2539,39 @@ export default function Painel() {
                     </div>
                 </header>
 
+                {buscaPainelAberta && (
+                    <div className="painel-command-backdrop fixed inset-0 z-[70] flex items-start justify-center bg-slate-950/55 px-3 pt-[12vh] backdrop-blur-sm sm:px-6" onMouseDown={event => { if (event.target === event.currentTarget) { setBuscaPainelAberta(false); setBuscaPainel(""); } }}>
+                        <section role="dialog" aria-modal="true" aria-labelledby="titulo-busca-painel" className="painel-command-panel w-full max-w-[620px] overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--modal-bg)] shadow-[0_32px_100px_rgba(0,0,0,.35)]">
+                            <div className="flex items-center gap-3 border-b border-[var(--border)] px-4 py-4 sm:px-5">
+                                <BsSearch className="shrink-0 text-[17px] text-[var(--accent-text)]" />
+                                <label className="min-w-0 flex-1">
+                                    <span id="titulo-busca-painel" className="sr-only">Encontrar ferramenta</span>
+                                    <input ref={buscaPainelInputRef} value={buscaPainel} onChange={event => setBuscaPainel(event.target.value)} placeholder="O que você quer encontrar?" className="w-full border-0 bg-transparent p-0 text-[14px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:ring-0" />
+                                </label>
+                                <kbd className="rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] px-2 py-1 font-mono text-[9px] text-[var(--text-muted)]">ESC</kbd>
+                            </div>
+                            <div className="max-h-[min(58vh,520px)] overflow-y-auto p-3">
+                                <p className="px-2 pb-2 text-[9px] font-bold uppercase tracking-[.15em] text-[var(--text-muted)]">{buscaPainel.trim() ? "Resultados" : "Acesse uma área"}</p>
+                                {secoesVisiveis.filter(secao => `${secao.nome} ${secao.grupo} ${descricoesSecoes[secao.id] ?? ""}`.toLocaleLowerCase("pt-BR").includes(buscaPainel.trim().toLocaleLowerCase("pt-BR"))).length ? (
+                                    secoesVisiveis.filter(secao => `${secao.nome} ${secao.grupo} ${descricoesSecoes[secao.id] ?? ""}`.toLocaleLowerCase("pt-BR").includes(buscaPainel.trim().toLocaleLowerCase("pt-BR"))).map(secao => (
+                                        <button key={secao.id} type="button" onClick={() => { navegar(secao.id); setBuscaPainelAberta(false); setBuscaPainel(""); }} className="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[var(--accent-soft)]">
+                                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--surface-secondary)] text-[15px] text-[var(--text-secondary)] transition group-hover:bg-[var(--surface)] group-hover:text-[var(--accent-text)]">{secao.icone}</span>
+                                            <span className="min-w-0 flex-1"><strong className="block text-[11px] font-semibold text-[var(--text-primary)]">{secao.nome}</strong><span className="mt-0.5 block truncate text-[9px] text-[var(--text-muted)]">{secao.grupo} · {descricoesSecoes[secao.id]}</span></span>
+                                            <BsArrowUpRight className="text-[12px] text-[var(--text-muted)] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--accent)]" />
+                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="px-4 py-10 text-center"><BsSearch className="mx-auto text-xl text-[var(--text-muted)]" /><p className="mt-3 text-[11px] font-semibold text-[var(--text-primary)]">Nenhuma ferramenta encontrada</p><p className="mt-1 text-[9px] text-[var(--text-muted)]">Tente buscar por aluno, mensagem, tarefa, relatório ou configuração.</p></div>
+                                )}
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] bg-[var(--surface-secondary)] px-4 py-3 text-[9px] text-[var(--text-muted)] sm:px-5">
+                                <span>Busque pelo nome ou pelo que deseja fazer.</span>
+                                <span className="font-mono">CTRL / CMD + K</span>
+                            </div>
+                        </section>
+                    </div>
+                )}
+
                 {menuMobileAberto && (
                     <div
                         className="ui-modal-backdrop fixed inset-0 z-30 bg-[var(--overlay)] lg:hidden"
@@ -2835,11 +2584,12 @@ export default function Painel() {
                         >
                             <div className="mb-5 flex items-center justify-between border-b border-[var(--border)] pb-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--accent)] text-[11px] font-bold text-white">
+                                    <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--accent)] text-[11px] font-black text-white shadow-lg">
                                         GF
                                     </span>
-                                    <span className={`text-[12px] font-bold ${cores.heading}`}>
-                                        G. Fernando
+                                    <span>
+                                        <strong className={`block text-[12px] font-bold ${cores.heading}`}>G. Fernando</strong>
+                                        <span className={`mt-0.5 block text-[9px] ${cores.subtleText}`}>Navegação do painel</span>
                                     </span>
                                 </div>
 
@@ -2858,9 +2608,10 @@ export default function Painel() {
                                 )
                                 .map(grupo => (
                                     <div key={grupo} className="mb-5">
-                                        <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                                            {grupo}
-                                        </p>
+                                        <div className="mb-2 px-2">
+                                            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">{grupo}</p>
+                                            <p className="mt-0.5 text-[8px] text-[var(--text-muted)]">{descricoesGrupos[grupo]}</p>
+                                        </div>
 
                                         {secoesVisiveis
                                             .filter(secao => secao.grupo === grupo)
@@ -2979,17 +2730,18 @@ export default function Painel() {
                     >
                         <div className="mb-5">
                             <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--accent-text)]">
-                                Cadastro no servidor
+                                Importação administrativa
                             </p>
                             <h2
                                 id="titulo-novo-aluno"
                                 className={`mt-1 text-[20px] font-semibold ${cores.heading}`}
                             >
-                        Gerar convite
+                                Importar aluno existente
                             </h2>
                             <p className={`mt-2 text-[11px] leading-5 ${cores.bodyText}`}>
-                                A conta será criada no PostgreSQL. Para um Personal, o vínculo com
-                                sua equipe será feito automaticamente.
+                                Use somente para migrar um aluno que já fazia parte da equipe. Novos
+                                alunos devem receber um link de convite e passar pelo formulário de
+                                análise antes da liberação do acesso.
                             </p>
                         </div>
 
@@ -3251,7 +3003,7 @@ export default function Painel() {
 
                         {carregandoResumoExclusao ? (
                             <LoadingState
-                                label="Consultando alunos vinculados..."
+                                label="Consultando alunos convidados..."
                                 className="min-h-28"
                             />
                         ) : resumoExclusaoPersonal ? (
@@ -3307,12 +3059,8 @@ export default function Painel() {
                                                             {aluno.email}
                                                         </span>
                                                     </span>
-                                                    <span
-                                                        className={`shrink-0 text-right text-[9px] ${aluno.outrosPersonaisAtivos > 0 ? "text-[var(--success)]" : "text-amber-700"}`}
-                                                    >
-                                                        {aluno.outrosPersonaisAtivos > 0
-                                                            ? `${aluno.outrosPersonaisAtivos} outro(s) Personal(is)`
-                                                            : "Sem outro Personal"}
+                                                    <span className="shrink-0 text-right text-[9px] text-[var(--text-muted)]">
+                                                        Origem registrada
                                                     </span>
                                                 </li>
                                             ))}
@@ -3320,10 +3068,10 @@ export default function Painel() {
                                     )}
                                 </div>
                                 <p className={`mt-3 text-[10px] leading-5 ${cores.bodyText}`}>
-                                    A conta e os vínculos ativos serão desativados, mas fichas,
-                                    avaliações, treinos e histórico permanecerão no banco. Alunos
-                                    que ficarem sem acompanhamento e a administração receberão
-                                    alertas.
+                                    A conta do profissional será desativada, mas a origem dos
+                                    convites continuará registrada. A equipe mantém acesso
+                                    compartilhado aos alunos; fichas, avaliações, treinos e histórico
+                                    serão preservados.
                                 </p>
                                 <div className="mt-3 grid gap-2">
                                     <label
@@ -3397,92 +3145,6 @@ export default function Painel() {
                 </div>
             )}
 
-            {vinculoParaDesvincular && (
-                <div
-                    className="ui-modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-[var(--overlay)] p-4"
-                    role="presentation"
-                    onMouseDown={event => {
-                        if (event.target === event.currentTarget && !executandoExclusao)
-                            setVinculoParaDesvincular(null);
-                    }}
-                >
-                    <section
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="titulo-desvincular-aluno"
-                        className="w-full max-w-[440px] rounded-2xl border border-[var(--border)] bg-[var(--modal-bg)] p-6 shadow-2xl"
-                    >
-                        <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--danger)]">
-                            Encerramento de vínculo
-                        </p>
-                        <h2
-                            id="titulo-desvincular-aluno"
-                            className={`mt-1 text-[19px] font-semibold ${cores.heading}`}
-                        >
-                            Desvincular aluno?
-                        </h2>
-                        <p className={`mt-3 text-[11px] leading-5 ${cores.bodyText}`}>
-                            <strong>{vinculoParaDesvincular.alunoNome}</strong> deixará a carteira
-                            de <strong>{vinculoParaDesvincular.personalNome}</strong>. Se este for o
-                            último Personal ativo do aluno, ele e a administração receberão um
-                            alerta de falta de acompanhamento. O histórico e a ficha técnica serão
-                            preservados.
-                        </p>
-                        <div className="mt-4 grid gap-2">
-                            <label
-                                className={`grid gap-1.5 text-[10px] font-semibold ${cores.bodyText}`}
-                            >
-                                Motivo
-                                <select
-                                    value={motivoExclusao}
-                                    onChange={event => setMotivoExclusao(event.target.value)}
-                                    className={`h-10 rounded-lg px-3 text-[11px] ${cores.input}`}
-                                >
-                                    {MOTIVOS_OPERACAO.map(([valor, rotulo]) => (
-                                        <option key={valor} value={valor}>
-                                            {rotulo}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-                            <label
-                                className={`grid gap-1.5 text-[10px] font-semibold ${cores.bodyText}`}
-                            >
-                                Detalhes (opcional; obrigatório para "Outro")
-                                <textarea
-                                    value={detalheExclusao}
-                                    onChange={event => setDetalheExclusao(event.target.value)}
-                                    maxLength={500}
-                                    rows={2}
-                                    className={`resize-y rounded-lg px-3 py-2 text-[11px] ${cores.input}`}
-                                />
-                            </label>
-                        </div>
-                        <div className="mt-5 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                disabled={executandoExclusao}
-                                onClick={() => setVinculoParaDesvincular(null)}
-                                className={`h-9 px-4 text-[11px] font-semibold ${cores.secondaryButton}`}
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => void confirmarDesvinculacaoEquipe()}
-                                disabled={
-                                    executandoExclusao ||
-                                    (motivoExclusao === "OUTRO" && !detalheExclusao.trim())
-                                }
-                                aria-busy={executandoExclusao}
-                                className="h-9 rounded-lg bg-[var(--danger)] px-4 text-[11px] font-semibold text-white disabled:opacity-50"
-                            >
-                                {executandoExclusao ? "Encerrando..." : "Confirmar desvinculação"}
-                            </button>
-                        </div>
-                    </section>
-                </div>
-            )}
         </div>
     );
 }

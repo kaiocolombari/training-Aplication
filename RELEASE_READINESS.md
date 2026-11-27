@@ -117,9 +117,10 @@ O primeiro build ainda exige vincular o projeto EAS, definir `android.package` e
 Execute com contas de teste separadas (ADMIN, dois PERSONAIS e pelo menos dois ALUNOS). Não use dados reais para homologação.
 
 - [ ] Login, logout, expiração/renovação de sessão e revogação de refresh token.
-- [ ] Um Personal não consegue abrir ficha, avaliação, treino, execução, conversa ou anexo de aluno sem vínculo/permissão válida.
+- [ ] Definir com o cliente os critérios, pesos e nota de corte do formulário; até isso ser especificado, a aprovação permanece manual (aprovar/reprovar + observação).
+- [ ] Qualquer Personal ativo consegue abrir e atualizar alunos ativos da equipe, inclusive revisar cadastros pendentes, independentemente de quem enviou o convite; a origem permanece apenas para atribuição/auditoria.
 - [ ] Um aluno não consegue consultar dados de outro aluno alterando IDs nas rotas.
-- [ ] Aluno pode iniciar chat com qualquer Personal ativo; contexto completo só aparece durante vínculo ativo ou conversa permitida, conforme regra do produto.
+- [ ] Aluno pode iniciar chat com qualquer Personal ativo; as mensagens permanecem privadas aos participantes, enquanto todo Personal ativo consegue consultar a ficha do aluno aprovado independentemente da conversa/origem do convite.
 - [ ] Mensagens, anexos, SignalR, push e expiração de conversa funcionam; anexos não são liberados sem scanner antivírus aprovado.
 - [ ] Personal recebe execução do treino, dor/feedback, pendências, revisa e a revisão fica registrada com autor/data.
 - [ ] Reenvio de execução após falha de rede não duplica registros; fila pendente continua associada ao aluno correto.

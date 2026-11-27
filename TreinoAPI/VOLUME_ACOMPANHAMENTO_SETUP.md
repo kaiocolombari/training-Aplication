@@ -15,7 +15,7 @@ O número de séries, isoladamente, não mede toda a evolução física nem prov
 
 ## Fluxo no painel
 
-- ADMIN/PERSONAL abre **Alunos** e usa **Acompanhar** no aluno desejado. O backend já limita a listagem do PERSONAL aos alunos com vínculo ativo; ADMIN pode selecionar qualquer aluno ativo.
+- ADMIN/PERSONAL abre **Alunos** e usa **Acompanhar** no aluno desejado. Todo Personal ativo pode selecionar qualquer aluno ativo da equipe; o convite registra a origem, não limita o acesso.
 - Dentro de **Controle do aluno**, o seletor **Aluno monitorado** permite trocar diretamente para outro aluno acessível, sem voltar ao diretório. A troca reutiliza o carregamento de ficha existente e respeita a proteção contra alterações não salvas.
 - A visão geral do Controle do aluno também tem um atalho **Volume mensal**, além da aba na navegação interna.
 - O profissional inicia um ciclo e consulta gráfico/histórico. O formulário de autoavaliação só aparece para o ALUNO no próprio portal.
@@ -24,8 +24,8 @@ O número de séries, isoladamente, não mede toda a evolução física nem prov
 
 | Método | Endpoint | Permissão | Finalidade |
 |---|---|---|---|
-| `GET` | `/api/alunos/{alunoId}/volume-ciclos` | ADMIN, PERSONAL vinculado ou ALUNO dono | Lista ciclos e os 12 pontos calculados |
-| `POST` | `/api/alunos/{alunoId}/volume-ciclos` | ADMIN, PERSONAL vinculado | Inicia um ciclo e captura a prescrição atual |
+| `GET` | `/api/alunos/{alunoId}/volume-ciclos` | ADMIN, qualquer PERSONAL ativo ou ALUNO dono | Lista ciclos e os 12 pontos calculados |
+| `POST` | `/api/alunos/{alunoId}/volume-ciclos` | ADMIN ou qualquer PERSONAL ativo | Inicia um ciclo e captura a prescrição atual |
 | `POST` | `/api/volume-ciclos/{cicloId}/registros` | Somente ALUNO dono do ciclo | Registra o fechamento mensal |
 
 ### Iniciar ciclo
@@ -51,7 +51,7 @@ A API consulta o treino no banco, calcula o total de séries e rejeita treinos s
 
 O mês 1 é criado implicitamente pela referência inicial. Os meses seguintes só podem ser registrados após o fim do respectivo período. Meses anteriores não registrados podem ser preenchidos enquanto o ciclo estiver aberto. Cada ciclo aceita um único registro por mês; os registros são append-only. A observação opcional é preservada e aparece junto ao mês no histórico.
 
-O endpoint de registro exige token com papel `ALUNO` e valida que o ciclo pertence ao próprio aluno autenticado. ADMIN e PERSONAL podem consultar o histórico e iniciar ciclos (respeitando o vínculo), mas não podem enviar autoavaliações em nome do aluno. O autor do registro é obtido do token no backend; o cliente não envia `alunoId` nem `usuarioId` no corpo.
+O endpoint de registro exige token com papel `ALUNO` e valida que o ciclo pertence ao próprio aluno autenticado. ADMIN e qualquer PERSONAL ativo podem consultar o histórico e iniciar ciclos, mas não podem enviar autoavaliações em nome do aluno. O autor do registro é obtido do token no backend; o cliente não envia `alunoId` nem `usuarioId` no corpo.
 
 ### Integração com o aplicativo mobile
 
@@ -81,7 +81,7 @@ dotnet ef database update
 Checklist manual:
 
 1. Como ADMIN/PERSONAL, abrir Controle do aluno, iniciar um ciclo e conferir o total de séries e o snapshot dos exercícios.
-2. Trocar o aluno pelo seletor do cabeçalho; confirmar que a ficha e os ciclos exibidos pertencem ao novo aluno e que o PERSONAL não enxerga alunos sem vínculo.
+2. Trocar o aluno pelo seletor do cabeçalho; confirmar que a ficha e os ciclos exibidos pertencem ao novo aluno e que qualquer PERSONAL ativo consegue abrir alunos convidados por outros profissionais.
 3. Alterar a prescrição e confirmar que o snapshot e a referência anteriores não mudam.
 4. Como ADMIN/PERSONAL, confirmar que o histórico é consultável e que não existe formulário de autoavaliação; tentar `POST` de registro e confirmar `403`.
 5. Como ALUNO, consultar o portal e confirmar que o período ainda aberto não pode ser registrado.
@@ -89,4 +89,4 @@ Checklist manual:
 7. Deixar um mês sem registro e confirmar que ele aparece como não registrado e interrompe a comparação mês a mês.
 8. Tentar registrar o mesmo mês novamente e confirmar conflito.
 9. Iniciar novo ciclo para o mesmo treino e confirmar que o anterior fica encerrado, mas continua consultável.
-10. Validar isolamento entre alunos: ALUNO não consulta nem registra ciclos de outro aluno; PERSONAL só acessa alunos vinculados.
+10. Validar isolamento entre alunos: ALUNO não consulta nem registra ciclos de outro aluno; qualquer PERSONAL ativo acessa os alunos da equipe, mas não os dados de outros alunos fora do sistema.

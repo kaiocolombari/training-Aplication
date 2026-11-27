@@ -20,6 +20,21 @@ public sealed class ChatAlunoContextService(AppDbContext db, CurrentUserService 
             p.UsuarioId == current.UsuarioId && p.Usuario!.Ativo, cancellationToken))
             throw DomainException.Forbidden();
 
+        var solicitacaoCadastro = await db.SolicitacoesCadastro.AsNoTracking()
+            .Where(s => s.AlunoId == alunoId)
+            .OrderByDescending(s => s.EnviadaEm)
+            .Select(s => new SolicitacaoCadastroChatDTO
+            {
+                EnviadaEm = s.EnviadaEm,
+                StatusAnalise = s.StatusAnalise,
+                ObservacaoAnalise = s.ObservacaoAnalise,
+                AvaliadorNome = s.Avaliador == null ? null : s.Avaliador.Personal != null
+                    ? s.Avaliador.Personal.Nome : s.Avaliador.Email,
+                AnalisadaEm = s.AnalisadaEm,
+                RespostasJson = s.RespostasJson
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
         var avaliacoesRegistros = await db.Avaliacoes.AsNoTracking()
             .Where(a => a.AlunoId == alunoId && a.Ativo)
             .Include(a => a.CriadaPorUsuario).ThenInclude(u => u!.Personal)
@@ -177,10 +192,57 @@ public sealed class ChatAlunoContextService(AppDbContext db, CurrentUserService 
                 TotalSemanas = p.PeriodizacaoSemanas.Count
             }).ToListAsync(cancellationToken);
 
+        var tarefas = await db.TarefasPersonais.AsNoTracking()
+            .Where(t => t.AlunoId == alunoId)
+            .OrderByDescending(t => t.AtualizadaEm)
+            .Take(30)
+            .Select(t => new TarefaAlunoChatDTO
+            {
+                Id = t.Id,
+                Titulo = t.Titulo,
+                Descricao = t.Descricao,
+                Categoria = t.Categoria,
+                Prioridade = t.Prioridade,
+                Status = t.Status,
+                DataLimite = t.DataLimite,
+                CriadaEm = t.CriadaEm,
+                AtualizadaEm = t.AtualizadaEm,
+                ConcluidaEm = t.ConcluidaEm,
+                CriadoPorNome = t.CriadoPorUsuario.Personal != null
+                    ? t.CriadoPorUsuario.Personal.Nome : t.CriadoPorUsuario.Email
+            })
+            .ToListAsync(cancellationToken);
+
+        var tarefasIds = await db.TarefasPersonais.AsNoTracking()
+            .Where(t => t.AlunoId == alunoId)
+            .Select(t => t.Id.ToString())
+            .ToListAsync(cancellationToken);
+        var feedbackIds = await db.FeedbacksAlunos.AsNoTracking()
+            .Where(f => f.AlunoId == alunoId)
+            .Select(f => f.Id.ToString())
+            .ToListAsync(cancellationToken);
+        var solicitacoesIds = await db.SolicitacoesAvaliacoes.AsNoTracking()
+            .Where(s => s.AlunoId == alunoId)
+            .Select(s => s.Id.ToString())
+            .ToListAsync(cancellationToken);
+        var ciclosVolumeIds = await db.TreinoVolumeCiclos.AsNoTracking()
+            .Where(c => c.AlunoId == alunoId)
+            .Select(c => c.Id.ToString())
+            .ToListAsync(cancellationToken);
+        var conversasIds = await db.ConversasEquipe.AsNoTracking()
+            .Where(c => (c.UsuarioA.Aluno != null && c.UsuarioA.Aluno.Id == alunoId) ||
+                        (c.UsuarioB.Aluno != null && c.UsuarioB.Aluno.Id == alunoId))
+            .Select(c => c.Id.ToString())
+            .ToListAsync(cancellationToken);
         var idsRecursos = avaliacoes.Select(a => a.Id.ToString())
             .Concat(treinosAtuais.Select(t => t.Id.ToString()))
             .Concat(periodizacoes.Select(p => p.Id.ToString()))
             .Concat(execucoes.Select(e => e.Id.ToString()))
+            .Concat(tarefasIds)
+            .Concat(feedbackIds)
+            .Concat(solicitacoesIds)
+            .Concat(ciclosVolumeIds)
+            .Concat(conversasIds)
             .Append(alunoId.ToString())
             .ToArray();
         var atividades = await db.RegistrosAuditoria.AsNoTracking()
@@ -204,6 +266,7 @@ public sealed class ChatAlunoContextService(AppDbContext db, CurrentUserService 
             AlunoId = aluno.Id,
             NomeCompleto = aluno.NomeCompleto,
             StatusCadastro = aluno.StatusCadastro,
+            SolicitacaoCadastro = solicitacaoCadastro,
             UltimaAnamnese = ultimaAnamnese,
             Avaliacoes = avaliacoes,
             HistoricoAvaliacoes = historico,
@@ -212,6 +275,7 @@ public sealed class ChatAlunoContextService(AppDbContext db, CurrentUserService 
             ExecucoesRecentes = execucoes,
             TreinosAtuais = treinosAtuais,
             Periodizacoes = periodizacoes,
+            Tarefas = tarefas,
             Atividades = atividades
         };
     }

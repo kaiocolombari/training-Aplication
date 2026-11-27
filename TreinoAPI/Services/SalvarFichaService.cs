@@ -14,19 +14,22 @@ public sealed class SalvarFichaService
     private readonly CadastroCompletoService _cadastro;
     private readonly AvaliacaoAuditService _avaliacaoAudit;
     private readonly CurrentUserService _currentUser;
+    private readonly ExercicioCatalogoService _catalogo;
 
     public SalvarFichaService(
         AppDbContext db,
         ExecucaoTreinoService execucoes,
         CadastroCompletoService cadastro,
         AvaliacaoAuditService avaliacaoAudit,
-        CurrentUserService currentUser)
+        CurrentUserService currentUser,
+        ExercicioCatalogoService catalogo)
     {
         _db = db;
         _execucoes = execucoes;
         _cadastro = cadastro;
         _avaliacaoAudit = avaliacaoAudit;
         _currentUser = currentUser;
+        _catalogo = catalogo;
     }
 
     public async Task<CadastroCompletoDTO?> SalvarAsync(Guid alunoId, SalvarFichaDTO dto, bool retornarCadastro = true)
@@ -258,6 +261,10 @@ public sealed class SalvarFichaService
             _db.DiaTreinos.RemoveRange(agendamentosRemovidos);
         }
 
+        var exerciciosCatalogoPorNome = await _catalogo.ResolverEmLoteAsync(
+            dto.Treinos.SelectMany(treino => treino.Exercicios).Select(exercicio => exercicio.Exercicio),
+            CancellationToken.None);
+
         foreach (var input in dto.Treinos)
         {
             if (input.Id == Guid.Empty)
@@ -300,6 +307,8 @@ public sealed class SalvarFichaService
                 }
 
                 exercise.Exercicio = exerciseInput.Exercicio.Trim();
+                var nomeNormalizado = ExercicioCatalogoMatcher.Normalizar(exercise.Exercicio);
+                exercise.ExercicioCatalogoId = exerciciosCatalogoPorNome.GetValueOrDefault(nomeNormalizado);
                 exercise.Ordem = exerciseInput.Ordem;
                 exercise.Series = exerciseInput.Series;
                 exercise.Repeticoes = exerciseInput.Repeticoes;

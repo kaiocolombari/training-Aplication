@@ -40,8 +40,12 @@ public sealed class AdminExtrasController(AdminExtrasService service) : Controll
 
     [Authorize(Roles = "ALUNO")]
     [HttpPost("feedback")]
-    public async Task<IActionResult> CriarFeedback([FromBody] FeedbackAlunoCriarDTO dto) =>
-        Ok(await service.CriarFeedbackAsync(dto));
+    public async Task<IActionResult> CriarFeedback([FromBody] FeedbackAlunoCriarDTO dto)
+    {
+        var feedback = await service.CriarFeedbackAsync(dto);
+        HttpContext.Items["AlunoIdAuditoria"] = feedback.AlunoId;
+        return Ok(feedback);
+    }
 
     [Authorize(Roles = "ADMIN,PERSONAL")]
     [HttpPatch("feedback/{id:guid}")]
@@ -58,8 +62,12 @@ public sealed class AdminExtrasController(AdminExtrasService service) : Controll
 
     [Authorize(Roles = "ADMIN,PERSONAL")]
     [HttpPost("tarefas")]
-    public async Task<IActionResult> CriarTarefa([FromBody] TarefaPersonalCriarDTO dto) =>
-        Ok(await service.CriarTarefaAsync(dto));
+    public async Task<IActionResult> CriarTarefa([FromBody] TarefaPersonalCriarDTO dto)
+    {
+        var tarefa = await service.CriarTarefaAsync(dto);
+        HttpContext.Items["AlunoIdAuditoria"] = tarefa.AlunoId;
+        return Ok(tarefa);
+    }
 
     [Authorize(Roles = "ADMIN,PERSONAL")]
     [HttpPut("tarefas/{id:guid}")]

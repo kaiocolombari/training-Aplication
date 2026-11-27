@@ -41,10 +41,10 @@ export default function Relatorios() {
 
     const indicadores = [
         {
-            titulo: user?.tipo === "ADMIN" ? "Alunos cadastrados" : "Alunos na carteira",
+            titulo: user?.tipo === "ADMIN" ? "Alunos cadastrados" : "Alunos da equipe",
             valor: dados?.totalAlunos,
             descricao:
-                user?.tipo === "ADMIN" ? "Contas aprovadas no sistema" : "Alunos com vínculo ativo",
+                user?.tipo === "ADMIN" ? "Contas aprovadas no sistema" : "Contas aprovadas disponíveis para a equipe",
             icone: <BsPeople />,
             tom: "accent",
         },
@@ -96,7 +96,7 @@ export default function Relatorios() {
                         Relatórios
                     </h1>
                     <p className="mt-1.5 max-w-2xl text-[12px] leading-5 text-[var(--text-secondary)]">
-                        Acompanhe a situação da carteira, o preenchimento das fichas e a evolução
+                        Acompanhe o conjunto de alunos da equipe, o preenchimento das fichas e a evolução
                         operacional da equipe.
                     </p>
                 </div>

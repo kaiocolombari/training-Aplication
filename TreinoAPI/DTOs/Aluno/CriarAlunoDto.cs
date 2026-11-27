@@ -31,6 +31,5 @@ namespace TreinoAPI.DTOs.Aluno
         [Range(0, 300)] public int? Sistolica { get; set; }
         [Range(0, 300)] public int? Diastolica { get; set; }
 
-        public Guid? PersonalId { get; set; }
     }
 }

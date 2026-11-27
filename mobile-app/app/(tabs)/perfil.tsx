@@ -15,11 +15,11 @@ export default function ProfileScreen() {
 
   const options = [
     { label: "Minhas avaliações", description: "Medidas e histórico corporal", icon: ClipboardList, action: () => router.push("/(tabs)/evolucao") },
-    { label: "Falar com meu personal", description: "Tire dúvidas sobre seu planejamento", icon: MessageCircle, action: choosePersonal },
+    { label: "Falar com a equipe", description: "Converse com um profissional do time", icon: MessageCircle, action: choosePersonal },
     { label: "Enviar feedback", description: `${data.feedbacks.length} enviados · acompanhe respostas`, icon: MessageSquareText, action: () => router.push("/feedback" as Href) },
     { label: "Notificações", description: `${unreadNotifications} não lidas`, icon: Bell, action: () => router.push("/notificacoes") },
     { label: "Privacidade e segurança", description: "Sessão protegida e dados da conta", icon: ShieldCheck, action: () => Alert.alert("Privacidade e segurança", `Conta autenticada como ${user?.email ?? "usuário"}. Para encerrar o acesso neste aparelho, use Sair da conta.`) },
-    { label: "Ajuda e suporte", description: "Converse com o profissional responsável", icon: CircleHelp, action: choosePersonal },
+    { label: "Ajuda e suporte", description: "Converse com um profissional da equipe", icon: CircleHelp, action: choosePersonal },
   ];
 
   return (
@@ -31,16 +31,16 @@ export default function ProfileScreen() {
         <View className="h-9 w-9 items-center justify-center rounded-full bg-[#F3F1EB]"><UserRound color="#596257" size={16} /></View>
       </View>
 
-      <SectionTitle>Profissional responsável</SectionTitle>
+      <SectionTitle>Profissionais da equipe</SectionTitle>
       {data.personals.length > 0 ? data.personals.map((personal) => (
         <Pressable key={personal.outroUsuarioId} onPress={() => router.push({ pathname: "/mensagens", params: { destinatarioId: personal.outroUsuarioId, nome: personal.outroUsuarioNome, conversaId: personal.conversaId ?? "" } })} className="mb-2 flex-row items-center gap-3 rounded-[22px] bg-ink p-4">
           <View className="h-11 w-11 items-center justify-center rounded-full bg-white/10"><Text className="text-[12px] font-extrabold text-lime">{personal.outroUsuarioNome.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</Text></View>
-          <View className="flex-1"><Text className="text-[12px] font-bold text-white">{personal.outroUsuarioNome}</Text><Text className="mt-1 text-[10px] text-white/55">Personal vinculado à sua conta</Text>{personal.ultimaMensagem ? <Text numberOfLines={1} className="mt-1 text-[9px] text-white/45">{personal.ultimaMensagem}</Text> : null}</View>
+          <View className="flex-1"><Text className="text-[12px] font-bold text-white">{personal.outroUsuarioNome}</Text><Text className="mt-1 text-[10px] text-white/55">Profissional disponível para conversar</Text>{personal.ultimaMensagem ? <Text numberOfLines={1} className="mt-1 text-[9px] text-white/45">{personal.ultimaMensagem}</Text> : null}</View>
           {personal.naoLidas > 0 ? <View className="h-5 min-w-5 items-center justify-center rounded-full bg-lime px-1"><Text className="text-[9px] font-black text-ink">{personal.naoLidas}</Text></View> : null}
           <MessageCircle color="#C8EF73" size={18} />
         </Pressable>
       )) : (
-        <View className="rounded-[22px] bg-ink p-4"><Text className="text-[12px] font-bold text-white">Nenhum profissional vinculado</Text><Text className="mt-1 text-[10px] leading-4 text-white/55">Os dados do personal aparecerão aqui quando o vínculo estiver ativo no sistema.</Text></View>
+        <View className="rounded-[22px] bg-ink p-4"><Text className="text-[12px] font-bold text-white">Nenhum profissional disponível</Text><Text className="mt-1 text-[10px] leading-4 text-white/55">Os profissionais ativos da equipe aparecerão aqui.</Text></View>
       )}
 
       <SectionTitle>Configurações</SectionTitle>

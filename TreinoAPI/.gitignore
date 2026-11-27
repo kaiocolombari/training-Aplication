@@ -8,6 +8,7 @@ bin/
 obj/
 App_Data/arquivos-equipe/
 App_Data/chat-anexos/
+App_Data/exercicios-videos/
 
 # Visual Studio
 .vs/

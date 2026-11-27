@@ -936,3 +936,140 @@ button[aria-busy="true"]::before {
 .controle-avancado [class~="text-3xl"] {
     font-size: calc(1.875rem * var(--ui-font-scale, 1) * 1.08) !important;
 }
+
+/* Dashboard exploration layer */
+.painel-hero {
+    background:
+        radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--accent) 42%, transparent), transparent 34%),
+        radial-gradient(circle at 68% 115%, rgb(255 255 255 / 12%), transparent 38%),
+        linear-gradient(118deg, color-mix(in srgb, var(--accent) 82%, #101820) 0%, color-mix(in srgb, var(--accent) 55%, #101820) 43%, #15232c 100%);
+    isolation: isolate;
+}
+
+.painel-hero::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background-image: linear-gradient(120deg, transparent 0 62%, rgb(255 255 255 / 4%) 62.2%, transparent 62.5% 100%);
+    content: "";
+    pointer-events: none;
+}
+
+.painel-hero-orbit {
+    animation: painel-orbit 22s linear infinite;
+}
+
+@keyframes painel-orbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.painel-metric {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    background: var(--surface);
+    padding: 1.1rem 1.2rem;
+    box-shadow: 0 8px 24px var(--shadow-color);
+    transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.painel-metric:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+    box-shadow: 0 18px 34px var(--shadow-color);
+}
+
+.painel-tool-group {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 1.35rem;
+    background: var(--surface);
+    padding: 1rem;
+    box-shadow: 0 8px 26px var(--shadow-color);
+    transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.painel-tool-group:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+}
+
+.painel-tool-link {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    gap: 0.7rem;
+    border: 1px solid transparent;
+    border-radius: 0.95rem;
+    padding: 0.65rem;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.painel-tool-link:hover {
+    transform: translateX(2px);
+    border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+    background: var(--surface-secondary);
+}
+
+.painel-tool-icon {
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 0.8rem;
+    background: var(--surface-secondary);
+    color: var(--accent-text);
+    font-size: 1rem;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.painel-tool-link:hover .painel-tool-icon {
+    transform: scale(1.06) rotate(-3deg);
+    background: var(--accent-soft);
+}
+
+.painel-workflow-card {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1.35rem;
+    background:
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 42%),
+        var(--surface);
+    padding: 1.25rem;
+    box-shadow: 0 8px 26px var(--shadow-color);
+}
+
+.painel-command-backdrop {
+    animation: ui-backdrop-in 150ms ease-out both;
+}
+
+.painel-command-panel {
+    animation: ui-dialog-in 190ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+@media (max-width: 639px) {
+    .painel-hero {
+        border-radius: 1.35rem;
+        padding: 1.4rem;
+    }
+
+    .painel-metric {
+        padding: 1rem;
+    }
+
+    .painel-tool-group {
+        padding: 0.85rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .painel-hero-orbit {
+        animation: none;
+    }
+}

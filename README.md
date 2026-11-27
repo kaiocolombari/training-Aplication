@@ -17,8 +17,8 @@ Plataforma web para personal trainers criarem e acompanharem fichas de alunos. E
 - Ficha do aluno com anamnese, dados antropométricos e avaliações físicas ilimitadas.
 - Cada avaliação reúne medidas, perímetros, dobras cutâneas, teste de carga e parecer/observações.
 - Comparação entre quaisquer duas avaliações, arquivamento sem exclusão física e histórico de quem criou/alterou cada avaliação.
-- Agenda de avaliações integrada ao app do aluno e ao Controle de Aluno: solicitações com data desejada, motivo opcional, prioridade urgente e timestamp de envio; personais vinculados recebem notificações e podem agendar ou recusar o pedido. Agendamentos diretos também podem ser criados pelo personal com descrição opcional.
-- Atendimento simples: o Personal assume um aluno, volta à lista para trocar de aluno ou encerra o atendimento atual.
+- Agenda de avaliações integrada ao app do aluno e ao Controle de Aluno: solicitações com data desejada, motivo opcional, prioridade urgente e timestamp de envio; a equipe tem uma fila compartilhada para agendar ou recusar, e solicitações urgentes notificam todos os personais ativos. Agendamentos diretos também podem ser criados por qualquer personal com descrição opcional.
+- Atendimento simples: o Personal abre qualquer aluno da equipe, volta ao diretório para trocar de aluno ou encerra o atendimento atual.
 - Salvamento automático opcional, configurável por profissional (2, 4, 6 ou 10 segundos de inatividade), disponível em Configurações e na tela Salvar; o salvamento manual continua disponível.
 - Prescrição de treinos, exercícios e variações.
 - Periodização por semanas/dias e associação de treinos.
@@ -27,7 +27,7 @@ Plataforma web para personal trainers criarem e acompanharem fichas de alunos. E
 - Importação/exportação de fichas em JSON.
 - Chat em tempo real via SignalR entre aluno e personal, com escolha do profissional, confirmação de entrega/leitura, presença, digitação, anexos verificados e expiração após 48 horas sem mensagens. Conversas internas da equipe permanecem permanentes.
 
-O aluno acessa a experiência mobile após aprovação do cadastro. O ADMIN gerencia a equipe; o PERSONAL só visualiza e altera alunos com vínculo ativo. Os módulos de ficha e a agenda são acessados depois de assumir/abrir um aluno.
+O aluno acessa a experiência mobile após aprovação do cadastro por convite. O ADMIN gerencia a equipe; todo PERSONAL ativo pode visualizar e alterar alunos ativos da equipe, inclusive revisar cadastros pendentes. A origem do convite é mantida apenas para atribuição e auditoria.
 
 ## Requisitos
 
@@ -165,16 +165,16 @@ dotnet ef migrations list
 - Access token e refresh token são enviados em cookies HttpOnly; o refresh token é rotacionado.
 - Operações mutáveis exigem token antifalsificação CSRF.
 - Login/cadastro/refresh possuem rate limit.
-- A API aplica autenticação por padrão e restringe os dados do aluno ao ADMIN ou aos Personais com vínculo ativo. A exceção controlada é o contexto de atendimento no chat: o aluno pode iniciar conversa com qualquer Personal ativo, e o contexto só fica disponível durante a conversa ativa quando não há vínculo. Somente ADMIN cria/gerencia contas de Personal e vínculos; o profissional pode encerrar o atendimento atual sem apagar o vínculo nem o histórico.
-- O chat valida os participantes ativos em cada operação. O aluno pode iniciar uma conversa com qualquer Personal ativo; sem vínculo formal, o contexto do aluno fica disponível somente enquanto a conversa estiver ativa. Anexos ficam em armazenamento privado, são validados por assinatura e precisam passar por um antivírus configurado antes de serem publicados.
+- A API aplica autenticação por padrão. ADMIN e qualquer PERSONAL ativo podem consultar e modificar alunos ativos da equipe, inclusive cadastros pendentes para análise; ALUNO só acessa os próprios dados. `ConvidadoPorPersonalId`, `ConvitePersonalId` e `PersonalAluno` preservam origem/histórico, mas não são regras de autorização. Somente ADMIN gerencia contas da equipe.
+- O chat valida os participantes ativos em cada operação. O aluno pode conversar com qualquer Personal ativo; as mensagens e anexos permanecem privados entre os participantes, mas o acesso à ficha do aluno pela equipe não depende de conversa nem de vínculo de convite. Anexos ficam em armazenamento privado, são validados por assinatura e precisam passar por um antivírus configurado antes de serem publicados.
 - O ADMIN inicial é criado por seed idempotente. Alterar as variáveis de ambiente depois que a conta já existe não troca automaticamente sua senha.
 - Excluir um aluno remove seus dados relacionados; a ação é irreversível. Treinos removidos da ficha são arquivados para preservar o histórico de execução.
 
 ## Limites desta primeira versão
 
 - O banco deve estar com todas as migrations aplicadas. Em Development, a API aplica migrations pendentes na inicialização; fora desse ambiente, aplique-as manualmente antes de publicar e faça backup antes de qualquer atualização de schema.
-- Notificações de solicitação de avaliação são persistidas para todos os personais com vínculo ativo e aparecem na central do painel/app. Push remoto de mensagens usa Expo Push e exige configuração do projeto EAS e credenciais APNs/FCM.
-- Relatórios administrativos e trilha geral de auditoria do sistema ainda não estão implementados. A trilha de auditoria das avaliações físicas está disponível.
+- Solicitações urgentes de avaliação notificam todos os personais ativos; as demais aparecem na fila compartilhada de acompanhamento. Push remoto de mensagens usa Expo Push e exige configuração do projeto EAS e credenciais APNs/FCM.
+- Relatórios administrativos, indicadores por profissional, auditoria técnica para ADMIN e histórico de atividades por aluno estão implementados. A auditoria geral registra operações mutáveis; a timeline do aluno associa os eventos aos recursos e ao aluno relacionado.
 - O envio de convite/recuperação de senha por e-mail não está integrado; as credenciais iniciais devem ser entregues por canal seguro.
 - Para produção, configure HTTPS real, CORS com domínios definitivos, secrets no provedor de deploy, backups PostgreSQL e aplique migrations antes de iniciar a API. A aplicação não executa migrations automaticamente fora de Development.
 - Para configurar antivírus, armazenamento de anexos, push mobile e operação/escala do chat, consulte [`CHAT_SETUP.md`](CHAT_SETUP.md).

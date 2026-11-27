@@ -9,10 +9,12 @@ namespace TreinoAPI.Services;
 public class TreinoExercicioService
 {
     private readonly AppDbContext _context;
+    private readonly ExercicioCatalogoService _catalogo;
 
-    public TreinoExercicioService(AppDbContext context)
+    public TreinoExercicioService(AppDbContext context, ExercicioCatalogoService catalogo)
     {
         _context = context;
+        _catalogo = catalogo;
     }
 
     public async Task<List<TreinoExercicioDTO>> ListarPorTreino(Guid treinoId)
@@ -20,6 +22,8 @@ public class TreinoExercicioService
         var treinoExercicios = await _context.TreinosExercicios
             .Where(te => te.TreinoId == treinoId && te.Treino.Ativo)
             .Include(te => te.Variacoes)
+            .Include(te => te.ExercicioCatalogo!)
+                .ThenInclude(exercicio => exercicio.Videos.Where(video => video.Ativo))
             .OrderBy(te => te.Ordem)
             .ToListAsync();
 
@@ -30,6 +34,8 @@ public class TreinoExercicioService
     {
         var treinoExercicio = await _context.TreinosExercicios
             .Include(te => te.Variacoes)
+            .Include(te => te.ExercicioCatalogo!)
+                .ThenInclude(exercicio => exercicio.Videos.Where(video => video.Ativo))
             .FirstOrDefaultAsync(te => te.TreinoId == treinoId && te.Id == id && te.Treino.Ativo);
 
         if (treinoExercicio == null)
@@ -48,9 +54,20 @@ public class TreinoExercicioService
         if (treino == null)
             throw DomainException.NotFound("Treino não encontrado.");
 
+        var catalogo = dto.ExercicioCatalogoId.HasValue
+            ? await _context.ExerciciosCatalogo
+                .Include(exercicio => exercicio.Sinonimos)
+                .Include(exercicio => exercicio.Videos.Where(video => video.Ativo))
+                .FirstOrDefaultAsync(exercicio => exercicio.Id == dto.ExercicioCatalogoId.Value && exercicio.Ativo)
+            : await _catalogo.ResolverAutomaticamenteAsync(dto.Exercicio, CancellationToken.None);
+        if (dto.ExercicioCatalogoId.HasValue && catalogo is null)
+            throw DomainException.NotFound("O exercício selecionado não existe mais no catálogo.");
+
         var treinoExercicio = new TreinoExercicio
         {
             TreinoId = treinoId,
+            ExercicioCatalogoId = catalogo?.Id,
+            ExercicioCatalogo = catalogo,
             Exercicio = dto.Exercicio,
             Ordem = dto.Ordem,
             Series = dto.Series,
@@ -84,6 +101,16 @@ public class TreinoExercicioService
             return null;
 
         treinoExercicio.Exercicio = dto.Exercicio;
+        var catalogo = dto.ExercicioCatalogoId.HasValue
+            ? await _context.ExerciciosCatalogo
+                .Include(exercicio => exercicio.Sinonimos)
+                .Include(exercicio => exercicio.Videos.Where(video => video.Ativo))
+                .FirstOrDefaultAsync(exercicio => exercicio.Id == dto.ExercicioCatalogoId.Value && exercicio.Ativo)
+            : await _catalogo.ResolverAutomaticamenteAsync(dto.Exercicio, CancellationToken.None);
+        if (dto.ExercicioCatalogoId.HasValue && catalogo is null)
+            throw DomainException.NotFound("O exercício selecionado não existe mais no catálogo.");
+        treinoExercicio.ExercicioCatalogoId = catalogo?.Id;
+        treinoExercicio.ExercicioCatalogo = catalogo;
         treinoExercicio.Ordem = dto.Ordem;
         treinoExercicio.Series = dto.Series;
         treinoExercicio.Repeticoes = dto.Repeticoes;
@@ -150,6 +177,13 @@ public class TreinoExercicioService
             Id = exercicio.Id,
             TreinoId = exercicio.TreinoId,
             Exercicio = exercicio.Exercicio,
+            ExercicioCatalogoId = exercicio.ExercicioCatalogoId,
+            VideoUrl = ObterVideoUrl(exercicio.ExercicioCatalogo),
+            VideoTitulo = exercicio.ExercicioCatalogo?.Videos
+                .Where(video => video.Ativo)
+                .OrderByDescending(video => video.Principal)
+                .Select(video => video.Titulo)
+                .FirstOrDefault(),
             Ordem = exercicio.Ordem,
             Series = exercicio.Series,
             Repeticoes = exercicio.Repeticoes,
@@ -173,6 +207,18 @@ public class TreinoExercicioService
                 })
                 .ToList()
         };
+    }
+
+    private static string? ObterVideoUrl(ExercicioCatalogo? exercicio)
+    {
+        var video = exercicio?.Videos
+            .Where(item => item.Ativo)
+            .OrderByDescending(item => item.Principal)
+            .ThenBy(item => item.Titulo)
+            .FirstOrDefault();
+        return video is null
+            ? null
+            : video.UrlExterna ?? $"/api/exercicios/catalogo/videos/{video.Id}/stream";
     }
 
     private static TreinoExercicioVariacao MapearVariacao(

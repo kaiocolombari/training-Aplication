@@ -89,7 +89,7 @@ public sealed class AuthService
                 c.ExpiraEm > DateTime.UtcNow && c.Personal.Usuario!.Ativo);
         if (convite is null)
             throw DomainException.BadRequest("Este convite não é válido ou expirou. Solicite um novo link à equipe.");
-        var maximoPorHora = Math.Clamp(_inviteOptions.MaxRegistrationsPerHourPerInvite, 1, 1000);
+        var maximoPorHora = Math.Clamp(_inviteOptions.MaxRegistrationsPerHourPerInvite, 1, 100);
         var cadastrosRecentes = await _context.Alunos.CountAsync(a =>
             a.ConvitePersonalId == convite.Id && a.CriadoEm >= DateTime.UtcNow.AddHours(-1));
         if (cadastrosRecentes >= maximoPorHora)
@@ -138,6 +138,17 @@ public sealed class AuthService
 
         var session = await CreateSessionAsync(usuario);
         await transaction.CommitAsync();
+        var request = _httpContext.HttpContext;
+        await _auditoria.RegistrarAsync(
+            usuario.Id,
+            email,
+            "ALUNO",
+            "POST",
+            "/api/auth/register/invite",
+            StatusCodes.Status201Created,
+            request?.Connection.RemoteIpAddress?.ToString(),
+            request?.Request.Headers.UserAgent.ToString(),
+            aluno.Id.ToString());
         await RegistrarTentativaLoginAsync(email, usuario, "CADASTRO");
         return session;
     }

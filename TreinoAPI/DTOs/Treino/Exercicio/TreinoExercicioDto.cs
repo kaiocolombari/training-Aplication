@@ -5,6 +5,9 @@ public class TreinoExercicioDTO
     public Guid Id { get; set; }
     public Guid TreinoId { get; set; }
     public string Exercicio { get; set; } = string.Empty;
+    public Guid? ExercicioCatalogoId { get; set; }
+    public string? VideoUrl { get; set; }
+    public string? VideoTitulo { get; set; }
     public int? Ordem { get; set; }
     public int? Series { get; set; }
     public int? Repeticoes { get; set; }

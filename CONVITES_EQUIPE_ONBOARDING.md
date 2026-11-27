@@ -14,7 +14,7 @@
 - Cada personal cria quantos links precisar, identificados por um apelido/campanha.
 - Cada link recebe 256 bits aleatórios; somente o SHA-256 do token é armazenado.
 - O token bruto é exibido uma única vez ao criar o link. A tela não consegue recuperar o token depois; gere outro se perder.
-- Links expiram após 30 dias por padrão, podem ser revogados e têm limite de 100 registros por hora por convite.
+- Links expiram após 30 dias por padrão, podem ser revogados e têm limite padrão de 30 registros por hora por convite.
 - O aluno só consegue criar conta usando um convite válido.
 - O endpoint antigo de cadastro aberto (POST /api/auth/register) e o endpoint de cadastro mobile (POST /api/auth/mobile/register) retornam HTTP 410.
 - A rota pública do site é /convite/:token. Sem convite, a landing page direciona para o WhatsApp configurado.
@@ -47,7 +47,7 @@ Configure os valores reais no ambiente de produção (não versione .env):
 | TURNSTILE_EXPECTED_HOSTNAME | Hostname exato do site, sem protocolo ou caminho |
 | Turnstile__Enabled | Deve ser true em produção |
 | Invites__ValidityDays | Validade dos links; padrão 30, limite efetivo 1–90 dias |
-| Invites__MaxRegistrationsPerHourPerInvite | Limite de registros por convite/hora; padrão 100 |
+| Invites__MaxRegistrationsPerHourPerInvite | Limite de registros por convite/hora; padrão 30, máximo efetivo 100 |
 | FRONTEND_ORIGINS | Origens exatas do site, separadas por ; |
 | AllowedHosts | Hostnames públicos da API, sem wildcard |
 | FORWARDED_HEADERS_ENABLED | true somente quando atrás de proxy reverso confiável |
@@ -78,9 +78,15 @@ O cliente precisa fornecer o número/URL oficial do WhatsApp e a URL de hospedag
 3. Registro e formulário têm honeypot oculto e limite de tamanho de requisição.
 4. Rotas públicas de convite/registro/formulário usam rate limit de 5 solicitações por IP em 10 minutos.
 5. Criação de convites é limitada a 12 por usuário/hora.
-6. Cada link limita novos registros a 100 por hora por padrão.
+6. Cada link limita novos registros a 30 por hora por padrão (máximo configurável efetivo 100).
 7. Login mantém seu rate limit separado.
 8. O token do convite tem alta entropia e é armazenado somente como hash.
+
+O cadastro normal de novos alunos só ocorre por `/convite/{token}`. A importação de fichas legadas é uma exceção administrativa, disponível apenas para ADMIN, e não atribui um convidante. O fluxo mobile não possui cadastro: somente login.
+
+### Análise e pontuação do formulário
+
+A fila de análise permite que ADMIN aprove ou reprove o cadastro e registre uma observação. Ainda não existe pontuação numérica automática ou nota de corte: o cliente precisa definir critérios, pesos por pergunta e pontuação mínima antes de essa regra ser implementada. Não é seguro inventar esses pesos.
 
 **Limite importante:** o rate limiter ASP.NET é local ao processo. Ele reduz abuso por IP, mas não substitui proteção volumétrica distribuída. Para uma botnet com muitos IPs, publique a API atrás da Cloudflare (proxy laranja) e configure WAF/rate limiting de borda para /api/auth/register/invite, /api/convites/validar e /api/cadastro-aluno/respostas. Mantenha FORWARDED_HEADERS_ENABLED=true apenas com IPs reais e confiáveis do proxy; nunca confie em X-Forwarded-For enviado diretamente pelo cliente. Atualize as faixas oficiais do proxy quando mudarem.
 

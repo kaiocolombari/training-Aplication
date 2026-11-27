@@ -29,8 +29,8 @@ export default function IndicadoresEquipe() {
         { alunos: 0, treinos: 0, avaliacoes: 0, tarefas: 0, feedbacks: 0 },
     );
     const cards = [
-        { label: "Vínculos ativos", value: total.alunos, icon: <BsPeople /> },
-        { label: "Treinos nas carteiras", value: total.treinos, icon: <BsActivity /> },
+        { label: "Alunos convidados", value: total.alunos, icon: <BsPeople /> },
+        { label: "Treinos dos alunos convidados", value: total.treinos, icon: <BsActivity /> },
         { label: "Avaliações no período", value: total.avaliacoes, icon: <BsClipboard2Check /> },
         { label: "Feedbacks recebidos", value: total.feedbacks, icon: <BsStar /> },
     ];
@@ -46,8 +46,8 @@ export default function IndicadoresEquipe() {
                         Indicadores da equipe
                     </h1>
                     <p className="mt-1.5 max-w-2xl text-[12px] leading-5 text-[var(--text-secondary)]">
-                        Visão consolidada da carteira, produção e acompanhamento de cada
-                        profissional.
+                        Visão consolidada da origem dos convites e da atividade registrada por cada
+                        profissional. A origem não limita o acesso compartilhado da equipe.
                     </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -123,7 +123,7 @@ export default function IndicadoresEquipe() {
                                 Desempenho por profissional
                             </h2>
                             <p className="mt-1 text-[10px] text-[var(--text-muted)]">
-                                Indicadores calculados a partir dos vínculos, treinos, avaliações,
+                                Indicadores calculados a partir da origem dos convites, treinos, avaliações,
                                 tarefas, feedbacks e auditoria.
                             </p>
                         </div>
@@ -227,8 +227,9 @@ export default function IndicadoresEquipe() {
                             </h2>
                             <ul className="mt-3 space-y-2 text-[10px] leading-5 text-[var(--text-secondary)]">
                                 <li>
-                                    • Alunos e treinos representam a carteira ativa atual, não um
-                                    retrato histórico.
+                                    • Alunos representam convites aceitos por profissional; treinos
+                                    são a atividade dos alunos atribuídos àquela origem, não uma
+                                    carteira exclusiva ou limite de acesso.
                                 </li>
                                 <li>
                                     • Avaliações e ações de auditoria respeitam o intervalo

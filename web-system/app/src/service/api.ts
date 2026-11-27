@@ -42,13 +42,14 @@ async function fetchWithTimeout(
     options: RequestInit,
     endpoint: string,
     monitorarLeitura: boolean,
+    timeoutMs = 15_000,
 ): Promise<Response> {
     const controller = new AbortController();
     let expirou = false;
     const timeout = setTimeout(() => {
         expirou = true;
         controller.abort();
-    }, 15_000);
+    }, timeoutMs);
 
     if (monitorarLeitura && typeof window !== "undefined") {
         window.dispatchEvent(new Event(API_READ_STARTED_EVENT));
@@ -67,7 +68,7 @@ async function fetchWithTimeout(
         return response;
     } catch (error) {
         const message = expirou
-            ? "A API demorou mais de 15 segundos para responder. A tela não conseguiu carregar os dados."
+            ? `A API demorou mais de ${Math.ceil(timeoutMs / 1000)} segundos para responder. A tela não conseguiu carregar os dados.`
             : "A conexão com a API foi interrompida. Verifique se o servidor está ativo e tente novamente.";
         if (monitorarLeitura) notifyApiReadFailure(endpoint, message);
         throw new ApiError(message, 0, error);
@@ -188,12 +189,13 @@ export async function api<T = unknown>(
     }
 
     const endpointPath = endpoint.split("?")[0];
+    const timeoutMs = typeof FormData !== "undefined" && options.body instanceof FormData ? 180_000 : 15_000;
     const response = await fetchWithTimeout(`${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`, {
         ...options,
         method,
         headers,
         credentials: "include",
-    }, endpointPath, method === "GET" && !endpointPath.startsWith("/api/auth/"));
+    }, endpointPath, method === "GET" && !endpointPath.startsWith("/api/auth/"), timeoutMs);
 
     if (response.ok && ["/api/auth/login", "/api/auth/register", "/api/auth/logout"].includes(endpointPath)) {
         // O token anterior pode ter sido emitido para a identidade anônima ou para a sessão encerrada.

@@ -1,0 +1,4291 @@
+[
+  {
+    "id": "c01",
+    "slug": "dumbbell-bench-press",
+    "name": "Dumbbell Bench Press",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders"
+    ],
+    "region": "upper",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "level": "beginner",
+    "type": "compound",
+    "jointStress": [
+      "shoulder"
+    ],
+    "gear": [
+      "equipment.dumbbell",
+      "equipment.bench",
+      "accessory.gloves"
+    ],
+    "cues": [
+      "Press from mid-chest with wrists stacked over elbows",
+      "Keep shoulder blades pinned to the bench",
+      "Lower for two seconds, press without bouncing"
+    ],
+    "translations": {
+      "de": {
+        "name": "Bankdrücken mit Kurzhanteln",
+        "cues": [
+          "Aus der Brustmitte drücken, Handgelenke über den Ellbogen",
+          "Schulterblätter fest an die Bank pressen",
+          "Zwei Sekunden senken, ohne Schwung drücken"
+        ]
+      },
+      "es": {
+        "name": "Press de banca con mancuernas",
+        "cues": [
+          "Empuja desde el centro del pecho con las muñecas sobre los codos",
+          "Mantén los omóplatos pegados al banco",
+          "Baja en dos segundos y empuja sin rebotar"
+        ]
+      },
+      "fr": {
+        "name": "Développé couché aux haltères",
+        "cues": [
+          "Poussez depuis le milieu de la poitrine, poignets au-dessus des coudes",
+          "Gardez les omoplates plaquées contre le banc",
+          "Descendez en deux secondes, poussez sans rebond"
+        ]
+      },
+      "it": {
+        "name": "Panca piana con manubri",
+        "cues": [
+          "Spingi dal centro del petto con i polsi sopra i gomiti",
+          "Tieni le scapole ben ferme sulla panca",
+          "Scendi in due secondi, spingi senza rimbalzare"
+        ]
+      },
+      "ja": {
+        "name": "ダンベルベンチプレス",
+        "cues": [
+          "手首を肘の真上に置き、胸の中央から押し上げる",
+          "肩甲骨をベンチにしっかり固定する",
+          "2秒かけて下ろし、反動を使わずに押し上げる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/dumbbell-bench-press.mp4",
+      "bytes": 535961,
+      "sha256": "4a672966883d6720d51e95463ea0d2ea3f21aa4446ce3577dfd51e223f176dc9",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 7.5
+    }
+  },
+  {
+    "id": "c02",
+    "slug": "incline-bench-press",
+    "name": "Incline Bench Press",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "shoulders",
+      "triceps"
+    ],
+    "region": "upper",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "shoulder"
+    ],
+    "gear": [
+      "equipment.barbell",
+      "equipment.bench",
+      "equipment.plates"
+    ],
+    "cues": [
+      "Set the bench to 30-45 degrees",
+      "Touch the bar to the upper chest",
+      "Drive the bar up and slightly back"
+    ],
+    "translations": {
+      "de": {
+        "name": "Schrägbankdrücken",
+        "cues": [
+          "Bank auf 30 bis 45 Grad stellen",
+          "Stange zur oberen Brust führen",
+          "Stange nach oben und leicht nach hinten drücken"
+        ]
+      },
+      "es": {
+        "name": "Press de banca inclinado",
+        "cues": [
+          "Ajusta el banco a 30 o 45 grados",
+          "Toca la parte alta del pecho con la barra",
+          "Empuja la barra hacia arriba y ligeramente hacia atrás"
+        ]
+      },
+      "fr": {
+        "name": "Développé incliné à la barre",
+        "cues": [
+          "Réglez le banc entre 30 et 45 degrés",
+          "Touchez le haut de la poitrine avec la barre",
+          "Poussez la barre vers le haut et légèrement vers l'arrière"
+        ]
+      },
+      "it": {
+        "name": "Panca inclinata con bilanciere",
+        "cues": [
+          "Regola la panca a 30 o 45 gradi",
+          "Porta il bilanciere a toccare la parte alta del petto",
+          "Spingi il bilanciere verso l'alto e leggermente indietro"
+        ]
+      },
+      "ja": {
+        "name": "インクラインベンチプレス",
+        "cues": [
+          "ベンチの角度を30から45度に設定する",
+          "バーを胸の上部に軽くタッチさせる",
+          "バーをやや後方へ向けて押し上げる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/incline-bench-press.mp4",
+      "bytes": 491230,
+      "sha256": "862c4522582458244eaf207eb931fbd5e4f237f41f9f4842be80e11b667d85b4",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "c03",
+    "slug": "exercise-ball-dumbbell-bench-press",
+    "name": "Stability Ball Dumbbell Press",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "abs",
+      "triceps"
+    ],
+    "region": "upper",
+    "equipment": [
+      "dumbbell",
+      "ball"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "shoulder"
+    ],
+    "gear": [
+      "equipment.stability-ball",
+      "equipment.dumbbell"
+    ],
+    "cues": [
+      "Rest head and upper back on the ball, hips level",
+      "Squeeze glutes to keep a flat bridge",
+      "Press dumbbells up over the chest"
+    ],
+    "translations": {
+      "de": {
+        "name": "Kurzhantel-Drücken auf dem Gymnastikball",
+        "cues": [
+          "Kopf und oberen Rücken auf dem Ball ablegen, Hüfte auf Höhe",
+          "Gesäß anspannen für eine gerade Brücke",
+          "Kurzhanteln über der Brust nach oben drücken"
+        ]
+      },
+      "es": {
+        "name": "Press con mancuernas sobre fitball",
+        "cues": [
+          "Apoya la cabeza y la espalda alta en el balón, caderas niveladas",
+          "Aprieta los glúteos para mantener un puente plano",
+          "Empuja las mancuernas hacia arriba sobre el pecho"
+        ]
+      },
+      "fr": {
+        "name": "Développé aux haltères sur swiss ball",
+        "cues": [
+          "Appuyez la tête et le haut du dos sur le ballon, hanches à plat",
+          "Serrez les fessiers pour garder un pont droit",
+          "Poussez les haltères vers le haut au-dessus de la poitrine"
+        ]
+      },
+      "it": {
+        "name": "Distensioni con manubri su fitball",
+        "cues": [
+          "Appoggia testa e parte alta della schiena sulla palla, bacino allineato",
+          "Contrai i glutei per mantenere un ponte piatto",
+          "Spingi i manubri verso l'alto sopra il petto"
+        ]
+      },
+      "ja": {
+        "name": "スタビリティボール・ダンベルプレス",
+        "cues": [
+          "頭と上背部をボールに預け、腰の高さをそろえる",
+          "お尻を締めて平らなブリッジを保つ",
+          "ダンベルを胸の真上へ押し上げる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/exercise-ball-dumbbell-bench-press.mp4",
+      "bytes": 590257,
+      "sha256": "ea22859352c10c6d9eb9de31986dafd46989e15023e0faa5fb0aebae65abc1b1",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "c04",
+    "slug": "chest-dip",
+    "name": "Chest Dip",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders"
+    ],
+    "region": "upper",
+    "equipment": [
+      "dipBars"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "shoulder"
+    ],
+    "gear": [
+      "accessory.chalk"
+    ],
+    "cues": [
+      "Lean the torso slightly forward",
+      "Lower until shoulders are just below elbows",
+      "Press up without locking out hard"
+    ],
+    "translations": {
+      "de": {
+        "name": "Brust-Dips",
+        "cues": [
+          "Oberkörper leicht nach vorn neigen",
+          "Absenken, bis die Schultern knapp unter den Ellbogen sind",
+          "Hochdrücken, ohne die Arme hart durchzustrecken"
+        ]
+      },
+      "es": {
+        "name": "Fondos para pecho",
+        "cues": [
+          "Inclina ligeramente el torso hacia delante",
+          "Baja hasta que los hombros queden justo por debajo de los codos",
+          "Sube sin bloquear los codos con fuerza"
+        ]
+      },
+      "fr": {
+        "name": "Dips pour les pectoraux",
+        "cues": [
+          "Penchez légèrement le buste vers l'avant",
+          "Descendez jusqu'à ce que les épaules passent juste sous les coudes",
+          "Remontez sans verrouiller les coudes brutalement"
+        ]
+      },
+      "it": {
+        "name": "Dip per il petto",
+        "cues": [
+          "Inclina leggermente il busto in avanti",
+          "Scendi finché le spalle sono appena sotto i gomiti",
+          "Risali senza bloccare i gomiti con forza"
+        ]
+      },
+      "ja": {
+        "name": "チェストディップ",
+        "cues": [
+          "上体をやや前に傾ける",
+          "肩が肘のすぐ下に来るまで下ろす",
+          "肘を強くロックせずに押し上げる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/chest-dip.mp4",
+      "bytes": 503569,
+      "sha256": "0996d992fec2fd8cb5ca48155a78118d72bc0dbec3cdd59a60a531faf5f303fd",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 7.7
+    }
+  },
+  {
+    "id": "s01",
+    "slug": "military-press",
+    "name": "Overhead Press",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "triceps",
+      "traps"
+    ],
+    "region": "upper",
+    "equipment": [
+      "barbell"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "shoulder",
+      "lowBack"
+    ],
+    "gear": [
+      "equipment.barbell",
+      "equipment.plates",
+      "accessory.belt"
+    ],
+    "cues": [
+      "Brace abs and squeeze glutes before each rep",
+      "Press in a straight line past the face",
+      "Finish with biceps beside the ears"
+    ],
+    "translations": {
+      "de": {
+        "name": "Überkopfdrücken mit der Langhantel",
+        "cues": [
+          "Vor jeder Wiederholung Bauch und Gesäß anspannen",
+          "Stange in gerader Linie am Gesicht vorbeidrücken",
+          "Oben mit den Oberarmen neben den Ohren abschließen"
+        ]
+      },
+      "es": {
+        "name": "Press militar",
+        "cues": [
+          "Activa el abdomen y aprieta los glúteos antes de cada repetición",
+          "Empuja en línea recta pasando por delante de la cara",
+          "Termina con los bíceps junto a las orejas"
+        ]
+      },
+      "fr": {
+        "name": "Développé militaire",
+        "cues": [
+          "Gainez les abdos et serrez les fessiers avant chaque répétition",
+          "Poussez en ligne droite devant le visage",
+          "Terminez avec les bras contre les oreilles"
+        ]
+      },
+      "it": {
+        "name": "Lento avanti con bilanciere",
+        "cues": [
+          "Contrai addome e glutei prima di ogni ripetizione",
+          "Spingi in linea retta davanti al viso",
+          "Concludi con le braccia accanto alle orecchie"
+        ]
+      },
+      "ja": {
+        "name": "オーバーヘッドプレス",
+        "cues": [
+          "毎回、腹圧を高めてお尻を締める",
+          "顔の前を通して、まっすぐ上へ押し上げる",
+          "最後は腕が耳の横に来る位置で止める"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/military-press.mp4",
+      "bytes": 570359,
+      "sha256": "58ea0205a5fa98cd3d5ecb9dc5f1d8ec198a7b5336b505918a0ae4f7df3d1320",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "s02",
+    "slug": "dumbbell-lateral-raise",
+    "name": "Dumbbell Lateral Raise",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "traps"
+    ],
+    "region": "upper",
+    "equipment": [
+      "dumbbell"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.dumbbell"
+    ],
+    "cues": [
+      "Soft bend in the elbows",
+      "Raise to shoulder height, lead with the elbows",
+      "Lower slowly, no swinging"
+    ],
+    "translations": {
+      "de": {
+        "name": "Seitheben mit Kurzhanteln",
+        "cues": [
+          "Ellbogen leicht gebeugt halten",
+          "Bis auf Schulterhöhe heben, die Ellbogen führen",
+          "Langsam senken, nicht schwingen"
+        ]
+      },
+      "es": {
+        "name": "Elevaciones laterales con mancuernas",
+        "cues": [
+          "Codos con una ligera flexión",
+          "Sube hasta la altura de los hombros, guiando con los codos",
+          "Baja despacio, sin balancearte"
+        ]
+      },
+      "fr": {
+        "name": "Élévations latérales aux haltères",
+        "cues": [
+          "Gardez les coudes légèrement fléchis",
+          "Montez à hauteur d'épaules en menant avec les coudes",
+          "Redescendez lentement, sans élan"
+        ]
+      },
+      "it": {
+        "name": "Alzate laterali con manubri",
+        "cues": [
+          "Gomiti leggermente flessi",
+          "Sali fino all'altezza delle spalle, guidando con i gomiti",
+          "Scendi lentamente, senza dondolare"
+        ]
+      },
+      "ja": {
+        "name": "ダンベルサイドレイズ",
+        "cues": [
+          "肘をわずかに曲げておく",
+          "肘から先導して肩の高さまで上げる",
+          "反動を使わず、ゆっくり下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/dumbbell-lateral-raise.mp4",
+      "bytes": 317798,
+      "sha256": "a9add5a9e8d0aaa4b5667bc11e3422c802a3a35942011de18cfd04b37d1f3e18",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 6.8
+    }
+  },
+  {
+    "id": "s03",
+    "slug": "bent-over-low-pulley-rear-delt-fly",
+    "name": "Cable Rear Delt Fly",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "upperBack"
+    ],
+    "region": "upper",
+    "equipment": [
+      "cable"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [
+      "lowBack"
+    ],
+    "gear": [
+      "accessory.cable-attachment"
+    ],
+    "cues": [
+      "Hinge forward with a flat back",
+      "Sweep arms wide in an arc",
+      "Pause when hands reach shoulder line"
+    ],
+    "translations": {
+      "de": {
+        "name": "Reverse Fly am Kabelzug",
+        "cues": [
+          "Mit geradem Rücken nach vorn beugen",
+          "Arme in weitem Bogen nach außen führen",
+          "Kurz halten, wenn die Hände die Schulterlinie erreichen"
+        ]
+      },
+      "es": {
+        "name": "Pájaros en polea",
+        "cues": [
+          "Inclínate hacia delante con la espalda recta",
+          "Abre los brazos en un arco amplio",
+          "Haz una pausa cuando las manos lleguen a la línea de los hombros"
+        ]
+      },
+      "fr": {
+        "name": "Oiseau à la poulie",
+        "cues": [
+          "Penchez-vous en avant, dos plat",
+          "Ouvrez les bras en un large arc",
+          "Marquez une pause quand les mains atteignent la ligne des épaules"
+        ]
+      },
+      "it": {
+        "name": "Alzate posteriori ai cavi",
+        "cues": [
+          "Inclinati in avanti con la schiena dritta",
+          "Apri le braccia in un ampio arco",
+          "Fai una pausa quando le mani raggiungono la linea delle spalle"
+        ]
+      },
+      "ja": {
+        "name": "ケーブルリアデルトフライ",
+        "cues": [
+          "背中を平らに保ったまま前傾する",
+          "腕を大きな弧を描くように開く",
+          "手が肩のラインに来たところで一瞬止める"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/bent-over-low-pulley-rear-delt-fly.mp4",
+      "bytes": 630185,
+      "sha256": "70a0424e11f617fec9e10404f009c600210b77168f5a46a0db5f3f91262bf3dd",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "t01",
+    "slug": "close-grip-bench-press",
+    "name": "Close-Grip Bench Press",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [
+      "chest"
+    ],
+    "region": "upper",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "wrist"
+    ],
+    "gear": [
+      "equipment.barbell",
+      "equipment.bench",
+      "accessory.wraps"
+    ],
+    "cues": [
+      "Hands shoulder-width apart",
+      "Keep elbows tucked close to the body",
+      "Touch the lower chest, press to lockout"
+    ],
+    "translations": {
+      "de": {
+        "name": "Enges Bankdrücken",
+        "cues": [
+          "Hände schulterbreit greifen",
+          "Ellbogen eng am Körper halten",
+          "Untere Brust berühren, bis zur Streckung drücken"
+        ]
+      },
+      "es": {
+        "name": "Press de banca con agarre cerrado",
+        "cues": [
+          "Manos a la anchura de los hombros",
+          "Mantén los codos pegados al cuerpo",
+          "Toca la parte baja del pecho y empuja hasta extender"
+        ]
+      },
+      "fr": {
+        "name": "Développé couché prise serrée",
+        "cues": [
+          "Mains à largeur d'épaules",
+          "Gardez les coudes serrés près du corps",
+          "Touchez le bas de la poitrine, poussez jusqu'à l'extension"
+        ]
+      },
+      "it": {
+        "name": "Panca piana presa stretta",
+        "cues": [
+          "Mani alla larghezza delle spalle",
+          "Tieni i gomiti vicini al corpo",
+          "Tocca la parte bassa del petto, spingi fino in estensione"
+        ]
+      },
+      "ja": {
+        "name": "クローズグリップベンチプレス",
+        "cues": [
+          "手幅は肩幅にする",
+          "肘を体の近くに締めておく",
+          "胸の下部にタッチし、肘が伸びるまで押し上げる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/close-grip-bench-press.mp4",
+      "bytes": 544845,
+      "sha256": "8fd6eebecac7baf42150feb653f76e74aa1b638a6eec74b991dac77a2a237217",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "t02",
+    "slug": "ez-bar-skullcrusher",
+    "name": "EZ Bar Skullcrusher",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [],
+    "region": "upper",
+    "equipment": [
+      "ezBar",
+      "bench"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [
+      "wrist"
+    ],
+    "gear": [
+      "equipment.ez-bar",
+      "equipment.bench"
+    ],
+    "cues": [
+      "Upper arms stay vertical",
+      "Lower the bar toward the forehead",
+      "Extend through the elbows only"
+    ],
+    "translations": {
+      "de": {
+        "name": "Skullcrusher mit der SZ-Stange",
+        "cues": [
+          "Oberarme bleiben senkrecht",
+          "Stange Richtung Stirn absenken",
+          "Nur über die Ellbogen strecken"
+        ]
+      },
+      "es": {
+        "name": "Rompecráneos con barra Z",
+        "cues": [
+          "Los brazos se mantienen verticales",
+          "Baja la barra hacia la frente",
+          "Extiende solo con los codos"
+        ]
+      },
+      "fr": {
+        "name": "Barre au front à la barre EZ",
+        "cues": [
+          "Les bras restent verticaux",
+          "Descendez la barre vers le front",
+          "Étendez uniquement avec les coudes"
+        ]
+      },
+      "it": {
+        "name": "French press con bilanciere EZ",
+        "cues": [
+          "Le braccia restano verticali",
+          "Abbassa il bilanciere verso la fronte",
+          "Estendi solo con i gomiti"
+        ]
+      },
+      "ja": {
+        "name": "EZバー・スカルクラッシャー",
+        "cues": [
+          "上腕は床と垂直に保つ",
+          "バーを額に向けて下ろす",
+          "肘だけを使って伸ばす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/ez-bar-skullcrusher.mp4",
+      "bytes": 580309,
+      "sha256": "b921addf1f8e8417f7b62b4c8c47ca45b13edaaa34269429a7407902bb888ad1",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 7
+    }
+  },
+  {
+    "id": "t03",
+    "slug": "weighted-tricep-dips",
+    "name": "Weighted Tricep Dip",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [
+      "chest"
+    ],
+    "region": "upper",
+    "equipment": [
+      "dipBars"
+    ],
+    "level": "advanced",
+    "type": "compound",
+    "jointStress": [
+      "shoulder"
+    ],
+    "gear": [
+      "accessory.dip-belt",
+      "equipment.plates"
+    ],
+    "cues": [
+      "Keep the torso upright",
+      "Lower to a 90-degree elbow angle",
+      "Press up and lock out the triceps"
+    ],
+    "translations": {
+      "de": {
+        "name": "Trizeps-Dips mit Zusatzgewicht",
+        "cues": [
+          "Oberkörper aufrecht halten",
+          "Bis zu einem Ellbogenwinkel von 90 Grad absenken",
+          "Hochdrücken und den Trizeps durchstrecken"
+        ]
+      },
+      "es": {
+        "name": "Fondos de tríceps con lastre",
+        "cues": [
+          "Mantén el torso erguido",
+          "Baja hasta un ángulo de codos de 90 grados",
+          "Sube y extiende por completo los tríceps"
+        ]
+      },
+      "fr": {
+        "name": "Dips lestés pour les triceps",
+        "cues": [
+          "Gardez le buste droit",
+          "Descendez jusqu'à un angle de coude de 90 degrés",
+          "Poussez et verrouillez les triceps en haut"
+        ]
+      },
+      "it": {
+        "name": "Dip per i tricipiti con zavorra",
+        "cues": [
+          "Mantieni il busto eretto",
+          "Scendi fino a un angolo di 90 gradi ai gomiti",
+          "Spingi e distendi completamente i tricipiti"
+        ]
+      },
+      "ja": {
+        "name": "ウェイテッド・トライセプスディップ",
+        "cues": [
+          "上体を起こしたままにする",
+          "肘が90度になるまで下ろす",
+          "押し上げて上腕三頭筋でしっかり伸ばし切る"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/weighted-tricep-dips.mp4",
+      "bytes": 349698,
+      "sha256": "3e25a2d9d5f7239b8aff969e3acebfcfd29e17192e7ef13ca1b50fbb4d8798ff",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 4.7
+    }
+  },
+  {
+    "id": "b01",
+    "slug": "standing-barbell-curl",
+    "name": "Standing Barbell Curl",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "region": "upper",
+    "equipment": [
+      "barbell"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [
+      "wrist"
+    ],
+    "gear": [
+      "equipment.barbell"
+    ],
+    "cues": [
+      "Elbows stay pinned to the sides",
+      "Curl without leaning back",
+      "Lower all the way to full extension"
+    ],
+    "translations": {
+      "de": {
+        "name": "Langhantel-Curls im Stehen",
+        "cues": [
+          "Ellbogen bleiben an den Seiten fixiert",
+          "Curlen, ohne sich nach hinten zu lehnen",
+          "Ganz bis zur vollen Streckung absenken"
+        ]
+      },
+      "es": {
+        "name": "Curl de bíceps con barra de pie",
+        "cues": [
+          "Los codos se quedan pegados a los costados",
+          "Sube la barra sin inclinarte hacia atrás",
+          "Baja hasta la extensión completa"
+        ]
+      },
+      "fr": {
+        "name": "Curl à la barre debout",
+        "cues": [
+          "Les coudes restent collés aux flancs",
+          "Montez sans vous pencher en arrière",
+          "Redescendez jusqu'à l'extension complète"
+        ]
+      },
+      "it": {
+        "name": "Curl con bilanciere in piedi",
+        "cues": [
+          "I gomiti restano fermi lungo i fianchi",
+          "Fletti senza inclinarti all'indietro",
+          "Scendi fino alla completa estensione"
+        ]
+      },
+      "ja": {
+        "name": "スタンディング・バーベルカール",
+        "cues": [
+          "肘は体の横に固定する",
+          "体を後ろに反らさずにカールする",
+          "腕が完全に伸びるまで下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/standing-barbell-curl.mp4",
+      "bytes": 410834,
+      "sha256": "f4b18a0452de7b5fc10fe7fc8dd73ccda67204bd0bab788aef3bfcafe5f2b182",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "b02",
+    "slug": "incline-dumbbell-curl",
+    "name": "Incline Dumbbell Curl",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [],
+    "region": "upper",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.dumbbell",
+      "equipment.bench"
+    ],
+    "cues": [
+      "Let the arms hang straight down behind the torso",
+      "Curl while keeping elbows still",
+      "Squeeze at the top, lower slowly"
+    ],
+    "translations": {
+      "de": {
+        "name": "Schrägbank-Curls mit Kurzhanteln",
+        "cues": [
+          "Arme gerade hinter dem Oberkörper nach unten hängen lassen",
+          "Curlen, ohne die Ellbogen zu bewegen",
+          "Oben anspannen, langsam senken"
+        ]
+      },
+      "es": {
+        "name": "Curl con mancuernas en banco inclinado",
+        "cues": [
+          "Deja los brazos colgando rectos por detrás del torso",
+          "Haz el curl sin mover los codos",
+          "Aprieta arriba y baja despacio"
+        ]
+      },
+      "fr": {
+        "name": "Curl incliné aux haltères",
+        "cues": [
+          "Laissez les bras pendre droit derrière le buste",
+          "Fléchissez sans bouger les coudes",
+          "Contractez en haut, redescendez lentement"
+        ]
+      },
+      "it": {
+        "name": "Curl con manubri su panca inclinata",
+        "cues": [
+          "Lascia le braccia pendere dritte dietro al busto",
+          "Fletti tenendo fermi i gomiti",
+          "Contrai in alto, scendi lentamente"
+        ]
+      },
+      "ja": {
+        "name": "インクラインダンベルカール",
+        "cues": [
+          "腕を体の後ろにまっすぐ垂らす",
+          "肘を動かさずにカールする",
+          "上で絞り、ゆっくり下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/incline-dumbbell-curl.mp4",
+      "bytes": 568802,
+      "sha256": "515edca026978f7305e566403a578d19a203712fe2ac4e6c8fde4a9b8ef07e22",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "b03",
+    "slug": "dumbbell-hammer-preacher-curl",
+    "name": "Hammer Preacher Curl",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "region": "upper",
+    "equipment": [
+      "dumbbell",
+      "bench"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.dumbbell",
+      "equipment.bench"
+    ],
+    "cues": [
+      "Neutral grip, thumb on top",
+      "Armpit snug against the pad",
+      "Stop just short of vertical at the top"
+    ],
+    "translations": {
+      "de": {
+        "name": "Hammer-Curls an der Scott-Bank",
+        "cues": [
+          "Neutraler Griff, Daumen oben",
+          "Achsel eng am Polster",
+          "Oben kurz vor der Senkrechten stoppen"
+        ]
+      },
+      "es": {
+        "name": "Curl martillo en banco predicador",
+        "cues": [
+          "Agarre neutro, pulgar arriba",
+          "Axila bien apoyada en el cojín",
+          "Detente justo antes de la vertical arriba"
+        ]
+      },
+      "fr": {
+        "name": "Curl marteau au pupitre",
+        "cues": [
+          "Prise neutre, pouce vers le haut",
+          "Aisselle bien calée contre le coussin",
+          "Arrêtez-vous juste avant la verticale en haut"
+        ]
+      },
+      "it": {
+        "name": "Curl a martello alla panca Scott",
+        "cues": [
+          "Presa neutra, pollice in alto",
+          "Ascella ben aderente al cuscino",
+          "In alto fermati poco prima della verticale"
+        ]
+      },
+      "ja": {
+        "name": "ハンマー・プリーチャーカール",
+        "cues": [
+          "ニュートラルグリップで親指を上にする",
+          "脇の下をパッドにしっかり当てる",
+          "上では垂直になる手前で止める"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/dumbbell-hammer-preacher-curl.mp4",
+      "bytes": 685184,
+      "sha256": "8312c3981a89228e6d3632be292dde90e8c53be68249c6dce313a05a5f37754d",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 7.7
+    }
+  },
+  {
+    "id": "f01",
+    "slug": "seated-barbell-wrist-curl",
+    "name": "Seated Wrist Curl",
+    "primaryMuscle": "forearm",
+    "secondaryMuscles": [],
+    "region": "upper",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [
+      "wrist"
+    ],
+    "gear": [
+      "equipment.barbell"
+    ],
+    "cues": [
+      "Forearms rest on the thighs, palms up",
+      "Let the bar roll to the fingertips",
+      "Curl the wrists up and squeeze"
+    ],
+    "translations": {
+      "de": {
+        "name": "Unterarmcurls im Sitzen",
+        "cues": [
+          "Unterarme liegen auf den Oberschenkeln, Handflächen nach oben",
+          "Stange bis zu den Fingerspitzen abrollen lassen",
+          "Handgelenke nach oben curlen und anspannen"
+        ]
+      },
+      "es": {
+        "name": "Curl de muñeca sentado",
+        "cues": [
+          "Antebrazos apoyados en los muslos, palmas hacia arriba",
+          "Deja rodar la barra hasta las yemas de los dedos",
+          "Flexiona las muñecas hacia arriba y aprieta"
+        ]
+      },
+      "fr": {
+        "name": "Curl de poignet assis",
+        "cues": [
+          "Avant-bras sur les cuisses, paumes vers le haut",
+          "Laissez la barre rouler jusqu'au bout des doigts",
+          "Fléchissez les poignets vers le haut et contractez"
+        ]
+      },
+      "it": {
+        "name": "Curl per avambracci da seduto",
+        "cues": [
+          "Avambracci appoggiati sulle cosce, palmi verso l'alto",
+          "Lascia rotolare il bilanciere fino alle punte delle dita",
+          "Fletti i polsi verso l'alto e contrai"
+        ]
+      },
+      "ja": {
+        "name": "シーテッド・リストカール",
+        "cues": [
+          "前腕を太ももに乗せ、手のひらを上に向ける",
+          "バーを指先まで転がす",
+          "手首を巻き上げて絞る"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/seated-barbell-wrist-curl.mp4",
+      "bytes": 495081,
+      "sha256": "023ac9098f1ba04b0266954904ff5311bfa121a0530973e87d956856703c719b",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "f02",
+    "slug": "reverse-grip-barbell-curl",
+    "name": "Reverse-Grip EZ Curl",
+    "primaryMuscle": "forearm",
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "region": "upper",
+    "equipment": [
+      "ezBar"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [
+      "wrist"
+    ],
+    "gear": [
+      "equipment.ez-bar"
+    ],
+    "cues": [
+      "Overhand grip on the angled part of the bar",
+      "Keep wrists neutral as you curl",
+      "Lower under control"
+    ],
+    "translations": {
+      "de": {
+        "name": "Reverse Curls mit der SZ-Stange",
+        "cues": [
+          "Obergriff am abgewinkelten Teil der Stange",
+          "Handgelenke beim Curlen neutral halten",
+          "Kontrolliert absenken"
+        ]
+      },
+      "es": {
+        "name": "Curl inverso con barra Z",
+        "cues": [
+          "Agarre por encima en la parte angulada de la barra",
+          "Mantén las muñecas neutras al subir",
+          "Baja de forma controlada"
+        ]
+      },
+      "fr": {
+        "name": "Curl inversé à la barre EZ",
+        "cues": [
+          "Prise pronation sur la partie coudée de la barre",
+          "Gardez les poignets neutres pendant le curl",
+          "Redescendez de façon contrôlée"
+        ]
+      },
+      "it": {
+        "name": "Curl inverso con bilanciere EZ",
+        "cues": [
+          "Presa prona sulla parte angolata del bilanciere",
+          "Tieni i polsi neutri durante il curl",
+          "Scendi in modo controllato"
+        ]
+      },
+      "ja": {
+        "name": "リバースグリップEZカール",
+        "cues": [
+          "EZバーの曲がった部分を順手で握る",
+          "カール中は手首をまっすぐに保つ",
+          "コントロールしながら下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/reverse-grip-barbell-curl.mp4",
+      "bytes": 370334,
+      "sha256": "e3b63ede814c7ca0ff6fd2d298741321212b222c9fac2021d1abcd5b74609ad8",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "f03",
+    "slug": "plate-pinch-carry",
+    "name": "Plate Pinch Carry",
+    "primaryMuscle": "forearm",
+    "secondaryMuscles": [
+      "traps"
+    ],
+    "region": "upper",
+    "equipment": [
+      "plate"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.plates",
+      "accessory.chalk"
+    ],
+    "cues": [
+      "Pinch two plates smooth side out",
+      "Walk tall with short steps",
+      "Set down before the grip fails"
+    ],
+    "translations": {
+      "de": {
+        "name": "Hantelscheiben im Pinch-Griff tragen",
+        "cues": [
+          "Zwei Scheiben mit den glatten Seiten nach außen zusammenpressen",
+          "Aufrecht mit kleinen Schritten gehen",
+          "Absetzen, bevor der Griff nachgibt"
+        ]
+      },
+      "es": {
+        "name": "Paseo del granjero con discos",
+        "cues": [
+          "Agarra dos discos en pinza con el lado liso hacia fuera",
+          "Camina erguido con pasos cortos",
+          "Suéltalos antes de que falle el agarre"
+        ]
+      },
+      "fr": {
+        "name": "Marche avec disques en pince",
+        "cues": [
+          "Pincez deux disques, côté lisse vers l'extérieur",
+          "Marchez le dos droit à petits pas",
+          "Posez-les avant que la prise ne lâche"
+        ]
+      },
+      "it": {
+        "name": "Camminata con dischi a pinza",
+        "cues": [
+          "Stringi due dischi con il lato liscio verso l'esterno",
+          "Cammina eretto a passi corti",
+          "Appoggiali prima che la presa ceda"
+        ]
+      },
+      "ja": {
+        "name": "プレート・ピンチキャリー",
+        "cues": [
+          "2枚のプレートを平らな面を外側にしてつまむ",
+          "背筋を伸ばして小さな歩幅で歩く",
+          "握力が切れる前に置く"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/plate-pinch-carry.mp4",
+      "bytes": 847319,
+      "sha256": "75f5420784ee68271090d8b997dc821515f0cd9bbdd8af9396114c5e82f30270",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "r01",
+    "slug": "barbell-shrug",
+    "name": "Barbell Shrug",
+    "primaryMuscle": "traps",
+    "secondaryMuscles": [],
+    "region": "upper",
+    "equipment": [
+      "barbell"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.barbell",
+      "accessory.straps"
+    ],
+    "cues": [
+      "Stand tall, arms straight",
+      "Lift shoulders toward the ears",
+      "Hold one second, no rolling"
+    ],
+    "translations": {
+      "de": {
+        "name": "Langhantel-Schulterzucken",
+        "cues": [
+          "Aufrecht stehen, Arme gestreckt",
+          "Schultern Richtung Ohren ziehen",
+          "Eine Sekunde halten, nicht kreisen"
+        ]
+      },
+      "es": {
+        "name": "Encogimientos con barra",
+        "cues": [
+          "De pie, con los brazos estirados",
+          "Sube los hombros hacia las orejas",
+          "Mantén un segundo, sin hacer círculos"
+        ]
+      },
+      "fr": {
+        "name": "Shrug à la barre",
+        "cues": [
+          "Tenez-vous droit, bras tendus",
+          "Montez les épaules vers les oreilles",
+          "Maintenez une seconde, sans faire de rotation"
+        ]
+      },
+      "it": {
+        "name": "Scrollate con bilanciere",
+        "cues": [
+          "Stai eretto, braccia tese",
+          "Solleva le spalle verso le orecchie",
+          "Mantieni un secondo, senza ruotare"
+        ]
+      },
+      "ja": {
+        "name": "バーベルシュラッグ",
+        "cues": [
+          "腕をまっすぐにして立つ",
+          "肩を耳に向けて引き上げる",
+          "1秒キープし、回さない"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/barbell-shrug.mp4",
+      "bytes": 361259,
+      "sha256": "af3f75530fcbc75d97529a03b2bfeff3729abfb9046752f1a712d848997e046f",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 6.3
+    }
+  },
+  {
+    "id": "r02",
+    "slug": "dumbbell-shrug",
+    "name": "Dumbbell Shrug",
+    "primaryMuscle": "traps",
+    "secondaryMuscles": [],
+    "region": "upper",
+    "equipment": [
+      "dumbbell"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.dumbbell",
+      "accessory.straps"
+    ],
+    "cues": [
+      "Dumbbells at the sides, neutral grip",
+      "Shrug straight up",
+      "Lower to a full stretch"
+    ],
+    "translations": {
+      "de": {
+        "name": "Kurzhantel-Schulterzucken",
+        "cues": [
+          "Kurzhanteln seitlich, neutraler Griff",
+          "Schultern senkrecht nach oben ziehen",
+          "Bis zur vollen Dehnung absenken"
+        ]
+      },
+      "es": {
+        "name": "Encogimientos con mancuernas",
+        "cues": [
+          "Mancuernas a los lados, agarre neutro",
+          "Encoge los hombros en línea recta hacia arriba",
+          "Baja hasta estirar por completo"
+        ]
+      },
+      "fr": {
+        "name": "Shrug aux haltères",
+        "cues": [
+          "Haltères le long du corps, prise neutre",
+          "Haussez les épaules bien à la verticale",
+          "Redescendez jusqu'à l'étirement complet"
+        ]
+      },
+      "it": {
+        "name": "Scrollate con manubri",
+        "cues": [
+          "Manubri ai lati, presa neutra",
+          "Scrolla le spalle in verticale",
+          "Scendi fino a sentire il massimo allungamento"
+        ]
+      },
+      "ja": {
+        "name": "ダンベルシュラッグ",
+        "cues": [
+          "ダンベルを体の横に下げ、ニュートラルグリップで持つ",
+          "肩をまっすぐ上にすくめる",
+          "しっかり伸びるところまで下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/dumbbell-shrug.mp4",
+      "bytes": 395334,
+      "sha256": "10a75b59e6f8a6fabe17a3d6541da6e252c22edfe266ccaf6765f5e40215d8fb",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "r03",
+    "slug": "barbell-upright-row",
+    "name": "Barbell Upright Row",
+    "primaryMuscle": "traps",
+    "secondaryMuscles": [
+      "shoulders"
+    ],
+    "region": "upper",
+    "equipment": [
+      "barbell"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "shoulder",
+      "wrist"
+    ],
+    "gear": [
+      "equipment.barbell"
+    ],
+    "cues": [
+      "Grip just outside shoulder-width",
+      "Pull the bar up leading with the elbows",
+      "Stop at lower-chest height"
+    ],
+    "translations": {
+      "de": {
+        "name": "Aufrechtes Rudern mit der Langhantel",
+        "cues": [
+          "Griff knapp breiter als schulterbreit",
+          "Stange nach oben ziehen, die Ellbogen führen",
+          "Auf Höhe der unteren Brust stoppen"
+        ]
+      },
+      "es": {
+        "name": "Remo al mentón con barra",
+        "cues": [
+          "Agarre un poco más ancho que los hombros",
+          "Sube la barra guiando con los codos",
+          "Detente a la altura del pecho bajo"
+        ]
+      },
+      "fr": {
+        "name": "Tirage menton à la barre",
+        "cues": [
+          "Prise un peu plus large que les épaules",
+          "Tirez la barre vers le haut en menant avec les coudes",
+          "Arrêtez-vous à hauteur du bas de la poitrine"
+        ]
+      },
+      "it": {
+        "name": "Tirate al mento con bilanciere",
+        "cues": [
+          "Presa appena più larga delle spalle",
+          "Tira il bilanciere verso l'alto guidando con i gomiti",
+          "Fermati all'altezza della parte bassa del petto"
+        ]
+      },
+      "ja": {
+        "name": "バーベル・アップライトロウ",
+        "cues": [
+          "肩幅よりやや広く握る",
+          "肘から先導してバーを引き上げる",
+          "胸の下あたりの高さで止める"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/barbell-upright-row.mp4",
+      "bytes": 303755,
+      "sha256": "1517a93fbd1233cbe3391f12d341728a364ad90985231e5ad3c49e69209ce51b",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 4.3
+    }
+  },
+  {
+    "id": "u01",
+    "slug": "seated-cable-row",
+    "name": "Seated Cable Row",
+    "primaryMuscle": "upperBack",
+    "secondaryMuscles": [
+      "lats",
+      "biceps"
+    ],
+    "region": "upper",
+    "equipment": [
+      "cable"
+    ],
+    "level": "beginner",
+    "type": "compound",
+    "jointStress": [],
+    "gear": [
+      "accessory.cable-attachment",
+      "accessory.straps"
+    ],
+    "cues": [
+      "Sit tall with a slight knee bend",
+      "Pull the handle to the lower ribs",
+      "Let the shoulder blades reach forward on the return"
+    ],
+    "translations": {
+      "de": {
+        "name": "Kabelrudern im Sitzen",
+        "cues": [
+          "Aufrecht sitzen, Knie leicht gebeugt",
+          "Griff zu den unteren Rippen ziehen",
+          "Beim Zurückführen die Schulterblätter nach vorn gleiten lassen"
+        ]
+      },
+      "es": {
+        "name": "Remo sentado en polea",
+        "cues": [
+          "Siéntate erguido con una ligera flexión de rodillas",
+          "Tira del agarre hacia las costillas inferiores",
+          "Deja que los omóplatos avancen al volver"
+        ]
+      },
+      "fr": {
+        "name": "Tirage horizontal à la poulie",
+        "cues": [
+          "Asseyez-vous droit, genoux légèrement fléchis",
+          "Tirez la poignée vers le bas des côtes",
+          "Laissez les omoplates avancer au retour"
+        ]
+      },
+      "it": {
+        "name": "Pulley basso da seduto",
+        "cues": [
+          "Siediti eretto con le ginocchia leggermente flesse",
+          "Tira la maniglia verso le costole inferiori",
+          "Lascia che le scapole avanzino nel ritorno"
+        ]
+      },
+      "ja": {
+        "name": "シーテッドケーブルロウ",
+        "cues": [
+          "膝を軽く曲げ、背筋を伸ばして座る",
+          "ハンドルをみぞおちの下あたりへ引く",
+          "戻すときに肩甲骨を前に開く"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/seated-cable-row.mp4",
+      "bytes": 432526,
+      "sha256": "855c11d0f0d9ed68ee342208832d94c93e40f9ed9f799fcc86812cef38ad28ef",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 7.3
+    }
+  },
+  {
+    "id": "u02",
+    "slug": "machine-t-bar-row",
+    "name": "Chest-Supported T-Bar Row",
+    "primaryMuscle": "upperBack",
+    "secondaryMuscles": [
+      "lats",
+      "biceps"
+    ],
+    "region": "upper",
+    "equipment": [
+      "machine"
+    ],
+    "level": "beginner",
+    "type": "compound",
+    "jointStress": [],
+    "gear": [
+      "accessory.straps"
+    ],
+    "cues": [
+      "Chest stays on the pad",
+      "Drive elbows back past the torso",
+      "Pause and squeeze the shoulder blades"
+    ],
+    "translations": {
+      "de": {
+        "name": "T-Bar-Rudern mit Brustpolster",
+        "cues": [
+          "Brust bleibt auf dem Polster",
+          "Ellbogen hinter den Oberkörper ziehen",
+          "Kurz halten und die Schulterblätter zusammenpressen"
+        ]
+      },
+      "es": {
+        "name": "Remo en T con apoyo de pecho",
+        "cues": [
+          "El pecho se queda apoyado en el cojín",
+          "Lleva los codos hacia atrás pasando el torso",
+          "Pausa y aprieta los omóplatos"
+        ]
+      },
+      "fr": {
+        "name": "Rowing T-bar avec appui pectoral",
+        "cues": [
+          "La poitrine reste sur le coussin",
+          "Tirez les coudes en arrière, au-delà du buste",
+          "Marquez une pause et serrez les omoplates"
+        ]
+      },
+      "it": {
+        "name": "Rematore T-bar con appoggio al petto",
+        "cues": [
+          "Il petto resta sul cuscino",
+          "Porta i gomiti indietro oltre il busto",
+          "Fai una pausa e stringi le scapole"
+        ]
+      },
+      "ja": {
+        "name": "チェストサポートTバーロウ",
+        "cues": [
+          "胸はパッドから離さない",
+          "肘を体の後ろまで引く",
+          "一瞬止めて肩甲骨を寄せる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/machine-t-bar-row.mp4",
+      "bytes": 529219,
+      "sha256": "f9d7e7011fc842dd6cdf97cbb96764370a2545ed170fdf83d631fb8c0b5c61cf",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 7.2
+    }
+  },
+  {
+    "id": "u03",
+    "slug": "bent-over-row",
+    "name": "Barbell Bent-Over Row",
+    "primaryMuscle": "upperBack",
+    "secondaryMuscles": [
+      "lats",
+      "lowerBack"
+    ],
+    "region": "upper",
+    "equipment": [
+      "barbell"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "lowBack"
+    ],
+    "gear": [
+      "equipment.barbell",
+      "equipment.plates",
+      "accessory.straps"
+    ],
+    "cues": [
+      "Hinge to about 45 degrees, flat back",
+      "Row the bar to the belly button",
+      "Lower without losing the hinge"
+    ],
+    "translations": {
+      "de": {
+        "name": "Langhantelrudern vorgebeugt",
+        "cues": [
+          "Mit geradem Rücken auf etwa 45 Grad vorbeugen",
+          "Stange zum Bauchnabel rudern",
+          "Absenken, ohne die Vorbeuge zu verlieren"
+        ]
+      },
+      "es": {
+        "name": "Remo con barra inclinado",
+        "cues": [
+          "Inclínate unos 45 grados con la espalda recta",
+          "Rema la barra hacia el ombligo",
+          "Baja sin perder la inclinación"
+        ]
+      },
+      "fr": {
+        "name": "Rowing buste penché à la barre",
+        "cues": [
+          "Penchez-vous à environ 45 degrés, dos plat",
+          "Tirez la barre vers le nombril",
+          "Redescendez sans perdre l'inclinaison"
+        ]
+      },
+      "it": {
+        "name": "Rematore con bilanciere",
+        "cues": [
+          "Inclinati a circa 45 gradi con la schiena piatta",
+          "Tira il bilanciere verso l'ombelico",
+          "Scendi senza perdere l'inclinazione"
+        ]
+      },
+      "ja": {
+        "name": "ベントオーバーロウ",
+        "cues": [
+          "背中を平らにして約45度まで前傾する",
+          "バーをおへそに向けて引く",
+          "前傾姿勢を崩さずに下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/bent-over-row.mp4",
+      "bytes": 531910,
+      "sha256": "bc4a8c75c6a3896f7206dcc12b9c31059f3a5c697d135a6b917bdd78636a0157",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "l01",
+    "slug": "lat-pull-down",
+    "name": "Lat Pulldown",
+    "primaryMuscle": "lats",
+    "secondaryMuscles": [
+      "biceps",
+      "upperBack"
+    ],
+    "region": "upper",
+    "equipment": [
+      "cable"
+    ],
+    "level": "beginner",
+    "type": "compound",
+    "jointStress": [],
+    "gear": [
+      "accessory.straps",
+      "accessory.gloves"
+    ],
+    "cues": [
+      "Grip just outside the shoulders",
+      "Pull the bar to the upper chest",
+      "Control the bar all the way up"
+    ],
+    "translations": {
+      "de": {
+        "name": "Latziehen",
+        "cues": [
+          "Griff knapp außerhalb der Schultern",
+          "Stange zur oberen Brust ziehen",
+          "Stange auf dem ganzen Weg nach oben kontrollieren"
+        ]
+      },
+      "es": {
+        "name": "Jalón al pecho",
+        "cues": [
+          "Agarre justo por fuera de los hombros",
+          "Tira de la barra hacia la parte alta del pecho",
+          "Controla la barra durante todo el recorrido de subida"
+        ]
+      },
+      "fr": {
+        "name": "Tirage vertical à la poulie haute",
+        "cues": [
+          "Prise juste à l'extérieur des épaules",
+          "Tirez la barre vers le haut de la poitrine",
+          "Contrôlez la barre sur toute la remontée"
+        ]
+      },
+      "it": {
+        "name": "Lat machine",
+        "cues": [
+          "Presa appena fuori dalle spalle",
+          "Tira la barra verso la parte alta del petto",
+          "Controlla la barra per tutta la risalita"
+        ]
+      },
+      "ja": {
+        "name": "ラットプルダウン",
+        "cues": [
+          "肩幅よりやや広く握る",
+          "バーを胸の上部へ引き下ろす",
+          "戻すときも最後までバーをコントロールする"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/lat-pull-down.mp4",
+      "bytes": 488608,
+      "sha256": "6e036970d11a21751ff82f0f510210aadd735fed2028dfd048d75ae19d35942f",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "l02",
+    "slug": "wide-grip-pull-up",
+    "name": "Wide-Grip Pull-Up",
+    "primaryMuscle": "lats",
+    "secondaryMuscles": [
+      "biceps",
+      "upperBack"
+    ],
+    "region": "upper",
+    "equipment": [
+      "pullupBar"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "shoulder"
+    ],
+    "gear": [
+      "equipment.pullup-bar",
+      "accessory.chalk"
+    ],
+    "cues": [
+      "Start from a dead hang",
+      "Pull the chest toward the bar",
+      "Lower all the way each rep"
+    ],
+    "translations": {
+      "de": {
+        "name": "Klimmzüge im weiten Griff",
+        "cues": [
+          "Aus dem vollständigen Hang starten",
+          "Brust zur Stange ziehen",
+          "Bei jeder Wiederholung ganz absenken"
+        ]
+      },
+      "es": {
+        "name": "Dominadas con agarre ancho",
+        "cues": [
+          "Empieza desde la suspensión completa",
+          "Lleva el pecho hacia la barra",
+          "Baja por completo en cada repetición"
+        ]
+      },
+      "fr": {
+        "name": "Tractions prise large",
+        "cues": [
+          "Partez en suspension complète",
+          "Amenez la poitrine vers la barre",
+          "Descendez complètement à chaque répétition"
+        ]
+      },
+      "it": {
+        "name": "Trazioni presa larga",
+        "cues": [
+          "Parti da sospensione completa",
+          "Porta il petto verso la sbarra",
+          "Scendi completamente a ogni ripetizione"
+        ]
+      },
+      "ja": {
+        "name": "ワイドグリップ懸垂",
+        "cues": [
+          "完全にぶら下がった状態から始める",
+          "胸をバーに近づけるように引く",
+          "毎回、腕が伸び切るまで下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/wide-grip-pull-up.mp4",
+      "bytes": 419675,
+      "sha256": "36cd4dd2c16527e1fc191e5f771a72dd28e4c4e66f8ad29b4af003c2f6ff4e93",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 5.8
+    }
+  },
+  {
+    "id": "l03",
+    "slug": "straight-arm-lat-pull-down",
+    "name": "Straight-Arm Pulldown",
+    "primaryMuscle": "lats",
+    "secondaryMuscles": [],
+    "region": "upper",
+    "equipment": [
+      "cable"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "accessory.cable-attachment"
+    ],
+    "cues": [
+      "Arms nearly straight, slight hinge",
+      "Sweep the bar down to the thighs",
+      "Feel the lats, not the triceps"
+    ],
+    "translations": {
+      "de": {
+        "name": "Latziehen mit gestreckten Armen",
+        "cues": [
+          "Arme fast gestreckt, leicht nach vorn gebeugt",
+          "Stange in weitem Bogen zu den Oberschenkeln ziehen",
+          "Den Latissimus spüren, nicht den Trizeps"
+        ]
+      },
+      "es": {
+        "name": "Jalón con brazos rectos",
+        "cues": [
+          "Brazos casi rectos, con una ligera inclinación",
+          "Lleva la barra hacia abajo hasta los muslos",
+          "Siente los dorsales, no los tríceps"
+        ]
+      },
+      "fr": {
+        "name": "Pull-over à la poulie, bras tendus",
+        "cues": [
+          "Bras presque tendus, légère inclinaison du buste",
+          "Amenez la barre vers les cuisses en arc de cercle",
+          "Sentez les dorsaux, pas les triceps"
+        ]
+      },
+      "it": {
+        "name": "Pulldown a braccia tese",
+        "cues": [
+          "Braccia quasi tese, leggera inclinazione in avanti",
+          "Porta la barra in basso fino alle cosce con un arco",
+          "Senti i dorsali, non i tricipiti"
+        ]
+      },
+      "ja": {
+        "name": "ストレートアーム・プルダウン",
+        "cues": [
+          "腕をほぼ伸ばし、軽く前傾する",
+          "バーを弧を描くように太ももまで引き下ろす",
+          "上腕三頭筋ではなく広背筋を意識する"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/straight-arm-lat-pull-down.mp4",
+      "bytes": 641063,
+      "sha256": "fa032c542b06b7193fc0818077a4616f30ce8467c5aaef329535497407d9b966",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "k01",
+    "slug": "superman",
+    "name": "Superman",
+    "primaryMuscle": "lowerBack",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "core",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.mat"
+    ],
+    "cues": [
+      "Lie face down, arms extended",
+      "Lift arms and legs together",
+      "Hold two seconds at the top"
+    ],
+    "translations": {
+      "de": {
+        "name": "Superman",
+        "cues": [
+          "Bäuchlings liegen, Arme gestreckt",
+          "Arme und Beine gleichzeitig anheben",
+          "Oben zwei Sekunden halten"
+        ]
+      },
+      "es": {
+        "name": "Superman",
+        "cues": [
+          "Tumbado boca abajo con los brazos extendidos",
+          "Levanta brazos y piernas a la vez",
+          "Mantén dos segundos arriba"
+        ]
+      },
+      "fr": {
+        "name": "Superman",
+        "cues": [
+          "Allongez-vous sur le ventre, bras tendus",
+          "Levez bras et jambes ensemble",
+          "Maintenez deux secondes en haut"
+        ]
+      },
+      "it": {
+        "name": "Superman",
+        "cues": [
+          "Sdraiati prono con le braccia distese",
+          "Solleva braccia e gambe insieme",
+          "Mantieni due secondi in alto"
+        ]
+      },
+      "ja": {
+        "name": "スーパーマン",
+        "cues": [
+          "うつ伏せになり、腕を前に伸ばす",
+          "腕と脚を同時に持ち上げる",
+          "上で2秒キープする"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/superman.mp4",
+      "bytes": 507965,
+      "sha256": "3338ecce8e2991629c79fc7d4315dfd94c679ee18531614c8de716b7466f97bd",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "a01",
+    "slug": "sit-up",
+    "name": "Sit-Up",
+    "primaryMuscle": "abs",
+    "secondaryMuscles": [],
+    "region": "core",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [
+      "lowBack"
+    ],
+    "gear": [
+      "equipment.mat"
+    ],
+    "cues": [
+      "Feet anchored, knees bent",
+      "Curl up one vertebra at a time",
+      "Lower slowly to the floor"
+    ],
+    "translations": {
+      "de": {
+        "name": "Sit-up",
+        "cues": [
+          "Füße fixieren, Knie gebeugt",
+          "Wirbel für Wirbel aufrollen",
+          "Langsam zum Boden zurücklegen"
+        ]
+      },
+      "es": {
+        "name": "Abdominales",
+        "cues": [
+          "Pies sujetos, rodillas flexionadas",
+          "Sube enrollando vértebra a vértebra",
+          "Baja despacio hasta el suelo"
+        ]
+      },
+      "fr": {
+        "name": "Relevé de buste",
+        "cues": [
+          "Pieds bloqués, genoux fléchis",
+          "Enroulez le dos vertèbre par vertèbre",
+          "Redescendez lentement jusqu'au sol"
+        ]
+      },
+      "it": {
+        "name": "Sit-up",
+        "cues": [
+          "Piedi bloccati, ginocchia flesse",
+          "Sali arrotolando una vertebra alla volta",
+          "Scendi lentamente fino al pavimento"
+        ]
+      },
+      "ja": {
+        "name": "シットアップ",
+        "cues": [
+          "足を固定し、膝を曲げる",
+          "背骨を一つずつ丸めながら起き上がる",
+          "ゆっくりと床まで戻る"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/sit-up.mp4",
+      "bytes": 355090,
+      "sha256": "c627ecaf66037b3b7865dfa611c9d4f1db576758e625bb235bd537f5281bf314",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 5
+    }
+  },
+  {
+    "id": "a02",
+    "slug": "lying-floor-leg-raise",
+    "name": "Lying Leg Raise",
+    "primaryMuscle": "abs",
+    "secondaryMuscles": [
+      "hipFlexors"
+    ],
+    "region": "core",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [
+      "lowBack"
+    ],
+    "gear": [
+      "equipment.mat"
+    ],
+    "cues": [
+      "Press the lower back into the floor",
+      "Raise straight legs to vertical",
+      "Lower until just above the floor"
+    ],
+    "translations": {
+      "de": {
+        "name": "Beinheben im Liegen",
+        "cues": [
+          "Unteren Rücken in den Boden drücken",
+          "Gestreckte Beine bis zur Senkrechten anheben",
+          "Absenken, bis die Beine knapp über dem Boden sind"
+        ]
+      },
+      "es": {
+        "name": "Elevación de piernas tumbado",
+        "cues": [
+          "Presiona la zona lumbar contra el suelo",
+          "Sube las piernas rectas hasta la vertical",
+          "Baja hasta quedar justo por encima del suelo"
+        ]
+      },
+      "fr": {
+        "name": "Relevé de jambes allongé",
+        "cues": [
+          "Plaquez le bas du dos au sol",
+          "Montez les jambes tendues jusqu'à la verticale",
+          "Redescendez jusqu'à juste au-dessus du sol"
+        ]
+      },
+      "it": {
+        "name": "Sollevamento gambe da sdraiati",
+        "cues": [
+          "Premi la zona lombare contro il pavimento",
+          "Solleva le gambe tese fino alla verticale",
+          "Scendi fino a poco sopra il pavimento"
+        ]
+      },
+      "ja": {
+        "name": "ライイング・レッグレイズ",
+        "cues": [
+          "腰を床に押しつける",
+          "脚をまっすぐ伸ばしたまま垂直まで上げる",
+          "床すれすれまで下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/lying-floor-leg-raise.mp4",
+      "bytes": 593734,
+      "sha256": "00d60f108cf9e28b55ca1871c777d78359f6bfb070ca604ee8074a2028f36716",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "a03",
+    "slug": "weighted-crunch",
+    "name": "Weighted Plate Crunch",
+    "primaryMuscle": "abs",
+    "secondaryMuscles": [],
+    "region": "core",
+    "equipment": [
+      "plate"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.plates",
+      "equipment.mat"
+    ],
+    "cues": [
+      "Hold the plate over the chest",
+      "Crunch the ribs toward the hips",
+      "Exhale hard at the top"
+    ],
+    "translations": {
+      "de": {
+        "name": "Crunch mit Hantelscheibe",
+        "cues": [
+          "Scheibe über der Brust halten",
+          "Rippen Richtung Hüfte crunchen",
+          "Oben kräftig ausatmen"
+        ]
+      },
+      "es": {
+        "name": "Crunch con disco",
+        "cues": [
+          "Sujeta el disco sobre el pecho",
+          "Acerca las costillas hacia las caderas",
+          "Exhala con fuerza arriba"
+        ]
+      },
+      "fr": {
+        "name": "Crunch lesté avec disque",
+        "cues": [
+          "Tenez le disque au-dessus de la poitrine",
+          "Rapprochez les côtes des hanches",
+          "Expirez fort en haut"
+        ]
+      },
+      "it": {
+        "name": "Crunch con disco",
+        "cues": [
+          "Tieni il disco sopra il petto",
+          "Avvicina le costole ai fianchi",
+          "Espira con forza in alto"
+        ]
+      },
+      "ja": {
+        "name": "プレート・クランチ",
+        "cues": [
+          "プレートを胸の上で持つ",
+          "肋骨を骨盤に近づけるように丸める",
+          "上で息を強く吐く"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/weighted-crunch.mp4",
+      "bytes": 515602,
+      "sha256": "94ca8aa1346a66ec4477be3dd6f4d276b82fd6d27460029a36c36af0bc75eef5",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "o01",
+    "slug": "tall-kneeling-cable-lift",
+    "name": "Kneeling Cable Lift",
+    "primaryMuscle": "obliques",
+    "secondaryMuscles": [
+      "abs"
+    ],
+    "region": "core",
+    "equipment": [
+      "cable"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "accessory.cable-attachment",
+      "equipment.mat"
+    ],
+    "cues": [
+      "Kneel tall, hips square",
+      "Lift the rope diagonally across the body",
+      "Resist rotation on the way back"
+    ],
+    "translations": {
+      "de": {
+        "name": "Kabelzug-Lift im Kniestand",
+        "cues": [
+          "Aufrecht knien, Hüfte gerade",
+          "Seil diagonal über den Körper ziehen",
+          "Auf dem Rückweg die Rotation bremsen"
+        ]
+      },
+      "es": {
+        "name": "Elevación en polea de rodillas",
+        "cues": [
+          "Arrodíllate erguido con las caderas rectas",
+          "Sube la cuerda en diagonal a través del cuerpo",
+          "Resiste la rotación en el camino de vuelta"
+        ]
+      },
+      "fr": {
+        "name": "Montée diagonale à la poulie à genoux",
+        "cues": [
+          "Mettez-vous à genoux, droit, hanches de face",
+          "Montez la corde en diagonale devant le corps",
+          "Résistez à la rotation pendant le retour"
+        ]
+      },
+      "it": {
+        "name": "Lift ai cavi in ginocchio",
+        "cues": [
+          "Inginocchiati eretto, bacino frontale",
+          "Solleva la corda in diagonale attraverso il corpo",
+          "Resisti alla rotazione nel ritorno"
+        ]
+      },
+      "ja": {
+        "name": "ニーリング・ケーブルリフト",
+        "cues": [
+          "背筋を伸ばして膝立ちし、腰は正面に向ける",
+          "ロープを体の前で斜めに引き上げる",
+          "戻すときは体のひねりに抵抗する"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/tall-kneeling-cable-lift.mp4",
+      "bytes": 557043,
+      "sha256": "8814320a8ae2ad1772aa008fae68d061af5969c796668fce32ee6a9cbc12df47",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "o02",
+    "slug": "tall-kneeling-cable-chop",
+    "name": "Kneeling Cable Chop",
+    "primaryMuscle": "obliques",
+    "secondaryMuscles": [
+      "abs"
+    ],
+    "region": "core",
+    "equipment": [
+      "cable"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "accessory.cable-attachment",
+      "equipment.mat"
+    ],
+    "cues": [
+      "Start high on one side",
+      "Chop down across the body",
+      "Keep the hips facing forward"
+    ],
+    "translations": {
+      "de": {
+        "name": "Kabelzug-Chop im Kniestand",
+        "cues": [
+          "Hoch auf einer Seite starten",
+          "Diagonal über den Körper nach unten ziehen",
+          "Hüfte zeigt weiter nach vorn"
+        ]
+      },
+      "es": {
+        "name": "Leñador en polea de rodillas",
+        "cues": [
+          "Empieza arriba en un lado",
+          "Baja en diagonal a través del cuerpo",
+          "Mantén las caderas mirando al frente"
+        ]
+      },
+      "fr": {
+        "name": "Bûcheron à la poulie à genoux",
+        "cues": [
+          "Partez en haut sur un côté",
+          "Descendez en diagonale devant le corps",
+          "Gardez les hanches face à l'avant"
+        ]
+      },
+      "it": {
+        "name": "Chop ai cavi in ginocchio",
+        "cues": [
+          "Parti in alto da un lato",
+          "Scendi in diagonale attraverso il corpo",
+          "Mantieni il bacino rivolto in avanti"
+        ]
+      },
+      "ja": {
+        "name": "ニーリング・ケーブルチョップ",
+        "cues": [
+          "片側の高い位置から始める",
+          "体の前を横切るように斜め下へ引く",
+          "腰は正面に向けたままにする"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/tall-kneeling-cable-chop.mp4",
+      "bytes": 536918,
+      "sha256": "f832c70f2dec70a83672e084b6871caafc8394fe7f6d61a86b0954c14dade629",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "o03",
+    "slug": "split-stance-cable-lift",
+    "name": "Split-Stance Cable Lift",
+    "primaryMuscle": "obliques",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "core",
+    "equipment": [
+      "cable"
+    ],
+    "level": "intermediate",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "accessory.cable-attachment"
+    ],
+    "cues": [
+      "Narrow split stance",
+      "Lift from low to high across the body",
+      "Stay balanced through the front foot"
+    ],
+    "translations": {
+      "de": {
+        "name": "Kabelzug-Lift im Ausfallschrittstand",
+        "cues": [
+          "Enger Ausfallschrittstand",
+          "Diagonal von unten nach oben über den Körper ziehen",
+          "Das Gleichgewicht über den vorderen Fuß halten"
+        ]
+      },
+      "es": {
+        "name": "Elevación en polea en posición dividida",
+        "cues": [
+          "Posición dividida estrecha",
+          "Sube de abajo arriba a través del cuerpo",
+          "Mantén el equilibrio sobre el pie delantero"
+        ]
+      },
+      "fr": {
+        "name": "Montée diagonale à la poulie en fente statique",
+        "cues": [
+          "Fente statique étroite",
+          "Montez de bas en haut devant le corps",
+          "Restez équilibré sur le pied avant"
+        ]
+      },
+      "it": {
+        "name": "Lift ai cavi in posizione a staffa",
+        "cues": [
+          "Posizione a staffa stretta",
+          "Solleva dal basso verso l'alto attraverso il corpo",
+          "Resta in equilibrio sul piede anteriore"
+        ]
+      },
+      "ja": {
+        "name": "スプリットスタンス・ケーブルリフト",
+        "cues": [
+          "狭いスプリットスタンスで構える",
+          "低い位置から高い位置へ体を横切るように引き上げる",
+          "前足でバランスを保つ"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/split-stance-cable-lift.mp4",
+      "bytes": 636756,
+      "sha256": "5de6e474047aa95988f550332a0be3e33cee094d37d9022657dbd3c70420127c",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "g01",
+    "slug": "barbell-hip-thrust",
+    "name": "Barbell Hip Thrust",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "region": "lower",
+    "equipment": [
+      "barbell",
+      "bench"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [],
+    "gear": [
+      "equipment.barbell",
+      "equipment.plates",
+      "accessory.barbell-pad"
+    ],
+    "cues": [
+      "Upper back on the bench edge, bar over the hips",
+      "Drive through the heels to full hip extension",
+      "Chin tucked, ribs down at the top"
+    ],
+    "translations": {
+      "de": {
+        "name": "Hip Thrust mit der Langhantel",
+        "cues": [
+          "Oberer Rücken an der Bankkante, Stange über der Hüfte",
+          "Über die Fersen bis zur vollen Hüftstreckung drücken",
+          "Kinn angezogen, Rippen oben nach unten"
+        ]
+      },
+      "es": {
+        "name": "Hip thrust con barra",
+        "cues": [
+          "Espalda alta en el borde del banco, barra sobre las caderas",
+          "Empuja con los talones hasta extender del todo la cadera",
+          "Barbilla pegada, costillas abajo en la parte alta"
+        ]
+      },
+      "fr": {
+        "name": "Hip thrust à la barre",
+        "cues": [
+          "Haut du dos sur le bord du banc, barre au-dessus des hanches",
+          "Poussez dans les talons jusqu'à l'extension complète des hanches",
+          "Menton rentré, côtes basses en haut"
+        ]
+      },
+      "it": {
+        "name": "Hip thrust con bilanciere",
+        "cues": [
+          "Parte alta della schiena sul bordo della panca, bilanciere sopra il bacino",
+          "Spingi sui talloni fino alla completa estensione dell'anca",
+          "Mento raccolto, costole basse in alto"
+        ]
+      },
+      "ja": {
+        "name": "バーベルヒップスラスト",
+        "cues": [
+          "上背部をベンチの端に当て、バーを腰の上に置く",
+          "かかとで床を押し、股関節を完全に伸ばす",
+          "顎を引き、トップでは肋骨を下げる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/barbell-hip-thrust.mp4",
+      "bytes": 479580,
+      "sha256": "5a398e255028ed9b9344872d33cc23b0df577665b03ae6590c808cc7f8510e44",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 7
+    }
+  },
+  {
+    "id": "g02",
+    "slug": "hyperextension",
+    "name": "Back Extension",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings",
+      "lowerBack"
+    ],
+    "region": "lower",
+    "equipment": [
+      "machine"
+    ],
+    "level": "beginner",
+    "type": "compound",
+    "jointStress": [
+      "lowBack"
+    ],
+    "gear": [],
+    "cues": [
+      "Pad just below the hip crease",
+      "Hinge down with a flat back",
+      "Rise until the body forms a line"
+    ],
+    "translations": {
+      "de": {
+        "name": "Rückenstrecker",
+        "cues": [
+          "Polster knapp unter der Hüftbeuge",
+          "Mit geradem Rücken nach unten beugen",
+          "Aufrichten, bis der Körper eine Linie bildet"
+        ]
+      },
+      "es": {
+        "name": "Extensión de espalda",
+        "cues": [
+          "Cojín justo por debajo del pliegue de la cadera",
+          "Baja con la espalda recta",
+          "Sube hasta que el cuerpo forme una línea"
+        ]
+      },
+      "fr": {
+        "name": "Extension lombaire",
+        "cues": [
+          "Coussin juste sous le pli de la hanche",
+          "Descendez en gardant le dos plat",
+          "Remontez jusqu'à former une ligne droite"
+        ]
+      },
+      "it": {
+        "name": "Estensioni per la schiena",
+        "cues": [
+          "Cuscino appena sotto la piega dell'anca",
+          "Scendi con la schiena piatta",
+          "Risali finché il corpo forma una linea"
+        ]
+      },
+      "ja": {
+        "name": "バックエクステンション",
+        "cues": [
+          "パッドを股関節のすぐ下に合わせる",
+          "背中を平らに保ったまま上体を倒す",
+          "体が一直線になるまで起こす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/hyperextension.mp4",
+      "bytes": 446825,
+      "sha256": "d42636a992b73dab6b2ffbf26abbd786c2922aa3039c619c555b908fea16347f",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "g03",
+    "slug": "good-mornings",
+    "name": "Good Morning",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings",
+      "lowerBack"
+    ],
+    "region": "lower",
+    "equipment": [
+      "barbell"
+    ],
+    "level": "advanced",
+    "type": "compound",
+    "jointStress": [
+      "lowBack"
+    ],
+    "gear": [
+      "equipment.barbell",
+      "accessory.belt"
+    ],
+    "cues": [
+      "Bar on the upper back, soft knees",
+      "Push the hips back until the torso nears parallel",
+      "Stand up by squeezing the glutes"
+    ],
+    "translations": {
+      "de": {
+        "name": "Good Morning",
+        "cues": [
+          "Stange auf dem oberen Rücken, Knie locker",
+          "Hüfte nach hinten schieben, bis der Oberkörper fast waagerecht ist",
+          "Durch Anspannen des Gesäßes aufrichten"
+        ]
+      },
+      "es": {
+        "name": "Buenos días con barra",
+        "cues": [
+          "Barra en la espalda alta, rodillas ligeramente flexionadas",
+          "Lleva la cadera atrás hasta que el torso quede casi paralelo",
+          "Levántate apretando los glúteos"
+        ]
+      },
+      "fr": {
+        "name": "Good morning",
+        "cues": [
+          "Barre sur le haut du dos, genoux souples",
+          "Poussez les hanches vers l'arrière jusqu'à ce que le buste soit presque parallèle au sol",
+          "Redressez-vous en serrant les fessiers"
+        ]
+      },
+      "it": {
+        "name": "Good morning",
+        "cues": [
+          "Bilanciere sulla parte alta della schiena, ginocchia morbide",
+          "Porta il bacino indietro finché il busto è quasi parallelo",
+          "Risali contraendo i glutei"
+        ]
+      },
+      "ja": {
+        "name": "グッドモーニング",
+        "cues": [
+          "バーを上背部に担ぎ、膝は軽く曲げる",
+          "上体がほぼ水平になるまでお尻を後ろに引く",
+          "お尻を締めて立ち上がる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/good-mornings.mp4",
+      "bytes": 441917,
+      "sha256": "bf14b80adcbdba7951b9260e0ce4851d5879f5008421a7cbd02115b34724d38b",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "q01",
+    "slug": "barbell-back-squat",
+    "name": "Barbell Back Squat",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "adductors"
+    ],
+    "region": "lower",
+    "equipment": [
+      "barbell"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "knee",
+      "lowBack"
+    ],
+    "gear": [
+      "equipment.barbell",
+      "equipment.plates",
+      "accessory.belt",
+      "apparel.lifting-shoes"
+    ],
+    "cues": [
+      "Brace before you descend",
+      "Knees track over the toes",
+      "Drive up through the whole foot"
+    ],
+    "translations": {
+      "de": {
+        "name": "Kniebeuge mit der Langhantel",
+        "cues": [
+          "Vor dem Abwärtsgehen den Rumpf anspannen",
+          "Knie folgen der Richtung der Zehen",
+          "Über den ganzen Fuß nach oben drücken"
+        ]
+      },
+      "es": {
+        "name": "Sentadilla trasera con barra",
+        "cues": [
+          "Activa el core antes de bajar",
+          "Las rodillas siguen la dirección de los pies",
+          "Empuja hacia arriba con todo el pie"
+        ]
+      },
+      "fr": {
+        "name": "Squat arrière à la barre",
+        "cues": [
+          "Gainez avant de descendre",
+          "Les genoux suivent la direction des orteils",
+          "Poussez dans tout le pied pour remonter"
+        ]
+      },
+      "it": {
+        "name": "Squat con bilanciere",
+        "cues": [
+          "Mantieni il busto in tensione prima di scendere",
+          "Le ginocchia seguono la direzione delle punte dei piedi",
+          "Spingi con tutto il piede"
+        ]
+      },
+      "ja": {
+        "name": "バーベルバックスクワット",
+        "cues": [
+          "しゃがむ前に腹圧を高める",
+          "膝はつま先と同じ方向に向ける",
+          "足裏全体で床を押して立ち上がる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/barbell-back-squat.mp4",
+      "bytes": 589793,
+      "sha256": "efeb07ad150adda0c4fb9c54ef8935d6ba72b20cbb9eb44fe83048b0725163f6",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "q02",
+    "slug": "leg-press",
+    "name": "Leg Press",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "lower",
+    "equipment": [
+      "machine"
+    ],
+    "level": "beginner",
+    "type": "compound",
+    "jointStress": [
+      "knee"
+    ],
+    "gear": [
+      "apparel.lifting-shoes"
+    ],
+    "cues": [
+      "Feet shoulder-width, mid platform",
+      "Lower until knees reach about 90 degrees",
+      "Do not lock the knees at the top"
+    ],
+    "translations": {
+      "de": {
+        "name": "Beinpresse",
+        "cues": [
+          "Füße schulterbreit, Mitte der Platte",
+          "Absenken, bis die Knie etwa 90 Grad erreichen",
+          "Knie oben nicht durchdrücken"
+        ]
+      },
+      "es": {
+        "name": "Prensa de piernas",
+        "cues": [
+          "Pies a la anchura de los hombros, en el centro de la plataforma",
+          "Baja hasta que las rodillas lleguen a unos 90 grados",
+          "No bloquees las rodillas arriba"
+        ]
+      },
+      "fr": {
+        "name": "Presse à cuisses",
+        "cues": [
+          "Pieds à largeur d'épaules, au milieu de la plateforme",
+          "Descendez jusqu'à environ 90 degrés aux genoux",
+          "Ne verrouillez pas les genoux en haut"
+        ]
+      },
+      "it": {
+        "name": "Leg press",
+        "cues": [
+          "Piedi alla larghezza delle spalle, a metà pedana",
+          "Scendi finché le ginocchia raggiungono circa 90 gradi",
+          "Non bloccare le ginocchia in alto"
+        ]
+      },
+      "ja": {
+        "name": "レッグプレス",
+        "cues": [
+          "足は肩幅でプレートの中央に置く",
+          "膝が約90度になるまで下ろす",
+          "上で膝をロックしない"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/leg-press.mp4",
+      "bytes": 667366,
+      "sha256": "8c176158b027eef44a33513b04cf83559605ce1b5237b48eeaf1fb9d03fcca76",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "q03",
+    "slug": "machine-hack-squat",
+    "name": "Hack Squat",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "lower",
+    "equipment": [
+      "machine"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "knee"
+    ],
+    "gear": [
+      "apparel.lifting-shoes"
+    ],
+    "cues": [
+      "Back flat against the pad",
+      "Sink deep with control",
+      "Push through the mid-foot"
+    ],
+    "translations": {
+      "de": {
+        "name": "Hackenschmidt-Kniebeuge",
+        "cues": [
+          "Rücken flach am Polster",
+          "Kontrolliert tief absenken",
+          "Über den Mittelfuß nach oben drücken"
+        ]
+      },
+      "es": {
+        "name": "Sentadilla hack",
+        "cues": [
+          "Espalda plana contra el respaldo",
+          "Baja profundo con control",
+          "Empuja con la parte media del pie"
+        ]
+      },
+      "fr": {
+        "name": "Squat hack",
+        "cues": [
+          "Dos bien plaqué contre le dossier",
+          "Descendez profondément avec contrôle",
+          "Poussez dans le milieu du pied"
+        ]
+      },
+      "it": {
+        "name": "Hack squat",
+        "cues": [
+          "Schiena piatta contro lo schienale",
+          "Scendi in profondità con controllo",
+          "Spingi con il centro del piede"
+        ]
+      },
+      "ja": {
+        "name": "ハックスクワット",
+        "cues": [
+          "背中をパッドにぴったり付ける",
+          "コントロールしながら深くしゃがむ",
+          "足の中央で押し上げる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/machine-hack-squat.mp4",
+      "bytes": 750603,
+      "sha256": "2ffcdc5d4cbf60039907ac528d9d1c20dc10c0752febaadb76fd7a72cc87b984",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "q04",
+    "slug": "exercise-ball-wall-squat",
+    "name": "Stability Ball Wall Squat",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "lower",
+    "equipment": [
+      "ball"
+    ],
+    "level": "beginner",
+    "type": "compound",
+    "jointStress": [
+      "knee"
+    ],
+    "gear": [
+      "equipment.stability-ball"
+    ],
+    "cues": [
+      "Ball between the lower back and the wall",
+      "Squat down with the ball rolling with you",
+      "Stand tall and squeeze the glutes"
+    ],
+    "translations": {
+      "de": {
+        "name": "Wandkniebeuge mit Gymnastikball",
+        "cues": [
+          "Ball zwischen unterem Rücken und Wand",
+          "In die Kniebeuge gehen, der Ball rollt mit",
+          "Aufrecht aufstehen und das Gesäß anspannen"
+        ]
+      },
+      "es": {
+        "name": "Sentadilla en pared con fitball",
+        "cues": [
+          "Balón entre la zona lumbar y la pared",
+          "Baja en sentadilla con el balón rodando contigo",
+          "Ponte de pie y aprieta los glúteos"
+        ]
+      },
+      "fr": {
+        "name": "Squat au mur avec swiss ball",
+        "cues": [
+          "Ballon entre le bas du dos et le mur",
+          "Descendez en squat, le ballon roule avec vous",
+          "Remontez droit en serrant les fessiers"
+        ]
+      },
+      "it": {
+        "name": "Squat al muro con fitball",
+        "cues": [
+          "Palla tra la zona lombare e il muro",
+          "Scendi in squat con la palla che rotola con te",
+          "Risali eretto e contrai i glutei"
+        ]
+      },
+      "ja": {
+        "name": "スタビリティボール・ウォールスクワット",
+        "cues": [
+          "腰と壁の間にボールを挟む",
+          "ボールを転がしながらしゃがむ",
+          "まっすぐ立ち上がり、お尻を締める"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/exercise-ball-wall-squat.mp4",
+      "bytes": 340239,
+      "sha256": "f021447ebe74898d886b9ba23ffc11ea663e416231ec01f40bdc1da8f52d2244",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "h01",
+    "slug": "stiff-leg-deadlift",
+    "name": "Stiff-Leg Deadlift",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes",
+      "lowerBack"
+    ],
+    "region": "lower",
+    "equipment": [
+      "barbell"
+    ],
+    "level": "intermediate",
+    "type": "compound",
+    "jointStress": [
+      "lowBack"
+    ],
+    "gear": [
+      "equipment.barbell",
+      "equipment.plates",
+      "accessory.straps"
+    ],
+    "cues": [
+      "Soft knees, bar close to the legs",
+      "Hinge until you feel a strong hamstring stretch",
+      "Return by driving the hips forward"
+    ],
+    "translations": {
+      "de": {
+        "name": "Kreuzheben mit gestreckten Beinen",
+        "cues": [
+          "Knie locker, Stange nah an den Beinen",
+          "Beugen, bis du eine starke Dehnung in der Beinrückseite spürst",
+          "Zurück durch Vorschieben der Hüfte"
+        ]
+      },
+      "es": {
+        "name": "Peso muerto con piernas rígidas",
+        "cues": [
+          "Rodillas ligeramente flexionadas, barra cerca de las piernas",
+          "Inclínate hasta notar un estiramiento fuerte en el femoral",
+          "Vuelve llevando la cadera hacia delante"
+        ]
+      },
+      "fr": {
+        "name": "Soulevé de terre jambes tendues",
+        "cues": [
+          "Genoux souples, barre près des jambes",
+          "Penchez-vous jusqu'à sentir un fort étirement des ischio-jambiers",
+          "Remontez en poussant les hanches vers l'avant"
+        ]
+      },
+      "it": {
+        "name": "Stacco a gambe tese",
+        "cues": [
+          "Ginocchia morbide, bilanciere vicino alle gambe",
+          "Inclinati finché senti un forte allungamento dei femorali",
+          "Risali spingendo il bacino in avanti"
+        ]
+      },
+      "ja": {
+        "name": "スティッフレッグ・デッドリフト",
+        "cues": [
+          "膝は軽く曲げ、バーを脚に近づけておく",
+          "ハムストリングスが強く伸びるところまで上体を倒す",
+          "股関節を前に押し出して戻る"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/stiff-leg-deadlift.mp4",
+      "bytes": 421810,
+      "sha256": "0eb070d20b01b5c6c53744ae0934c7d2f69f2fbc6303cf7a8b7d42fa05cfcc03",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "h02",
+    "slug": "seated-leg-curl",
+    "name": "Seated Leg Curl",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [],
+    "region": "lower",
+    "equipment": [
+      "machine"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [],
+    "cues": [
+      "Line the knee up with the machine pivot",
+      "Curl the pad under the seat",
+      "Return slowly, keep tension"
+    ],
+    "translations": {
+      "de": {
+        "name": "Beinbeuger im Sitzen",
+        "cues": [
+          "Knie auf Höhe der Drehachse der Maschine",
+          "Polster unter den Sitz curlen",
+          "Langsam zurückführen, Spannung halten"
+        ]
+      },
+      "es": {
+        "name": "Curl femoral sentado",
+        "cues": [
+          "Alinea la rodilla con el eje de la máquina",
+          "Lleva el rodillo hacia atrás por debajo del asiento",
+          "Vuelve despacio, manteniendo la tensión"
+        ]
+      },
+      "fr": {
+        "name": "Leg curl assis",
+        "cues": [
+          "Alignez le genou avec l'axe de la machine",
+          "Ramenez le coussin sous le siège",
+          "Revenez lentement en gardant la tension"
+        ]
+      },
+      "it": {
+        "name": "Leg curl da seduto",
+        "cues": [
+          "Allinea il ginocchio con il perno della macchina",
+          "Porta il cuscino sotto il sedile",
+          "Torna lentamente, mantieni la tensione"
+        ]
+      },
+      "ja": {
+        "name": "シーテッドレッグカール",
+        "cues": [
+          "膝の位置をマシンの軸に合わせる",
+          "パッドをシートの下へ引き込む",
+          "テンションを保ったままゆっくり戻す"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/seated-leg-curl.mp4",
+      "bytes": 530075,
+      "sha256": "f88603a2d40de9d742dccdccd88e44a7abb7d2504aa6dabb8b0c4098b829f2b0",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 6.8
+    }
+  },
+  {
+    "id": "h03",
+    "slug": "exercise-ball-leg-curl",
+    "name": "Stability Ball Leg Curl",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "lower",
+    "equipment": [
+      "ball"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "equipment.stability-ball",
+      "equipment.mat"
+    ],
+    "cues": [
+      "Heels on the ball, hips lifted",
+      "Curl the ball toward the glutes",
+      "Keep the hips up throughout"
+    ],
+    "translations": {
+      "de": {
+        "name": "Beincurls mit dem Gymnastikball",
+        "cues": [
+          "Fersen auf dem Ball, Hüfte angehoben",
+          "Ball Richtung Gesäß curlen",
+          "Hüfte die ganze Zeit oben halten"
+        ]
+      },
+      "es": {
+        "name": "Curl femoral con fitball",
+        "cues": [
+          "Talones sobre el balón, caderas elevadas",
+          "Acerca el balón hacia los glúteos",
+          "Mantén las caderas arriba todo el tiempo"
+        ]
+      },
+      "fr": {
+        "name": "Leg curl sur swiss ball",
+        "cues": [
+          "Talons sur le ballon, hanches levées",
+          "Ramenez le ballon vers les fessiers",
+          "Gardez les hanches hautes tout du long"
+        ]
+      },
+      "it": {
+        "name": "Leg curl con fitball",
+        "cues": [
+          "Talloni sulla palla, bacino sollevato",
+          "Porta la palla verso i glutei",
+          "Tieni il bacino alto per tutto il movimento"
+        ]
+      },
+      "ja": {
+        "name": "スタビリティボール・レッグカール",
+        "cues": [
+          "かかとをボールに乗せ、腰を持ち上げる",
+          "ボールをお尻に向けて引き寄せる",
+          "動作中ずっと腰を高く保つ"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/exercise-ball-leg-curl.mp4",
+      "bytes": 443191,
+      "sha256": "ccf47a6bea898e544448fb28eba61a352213ab79f805c4f602610951acacc8cc",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "h04",
+    "slug": "nordic-hamstring-curl",
+    "name": "Nordic Hamstring Curl",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [],
+    "region": "lower",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "advanced",
+    "type": "isolation",
+    "jointStress": [
+      "knee"
+    ],
+    "gear": [
+      "equipment.mat"
+    ],
+    "cues": [
+      "Kneel with ankles anchored",
+      "Lower the body forward as slowly as possible",
+      "Catch with the hands, push back up"
+    ],
+    "translations": {
+      "de": {
+        "name": "Nordic Hamstring Curl",
+        "cues": [
+          "Knien, Knöchel fixiert",
+          "Körper so langsam wie möglich nach vorn absenken",
+          "Mit den Händen abfangen und wieder hochdrücken"
+        ]
+      },
+      "es": {
+        "name": "Curl nórdico de isquios",
+        "cues": [
+          "De rodillas con los tobillos sujetos",
+          "Baja el cuerpo hacia delante lo más lento posible",
+          "Frena con las manos y empuja para volver arriba"
+        ]
+      },
+      "fr": {
+        "name": "Nordic curl",
+        "cues": [
+          "À genoux, chevilles bloquées",
+          "Descendez le corps vers l'avant aussi lentement que possible",
+          "Réceptionnez avec les mains, puis repoussez pour remonter"
+        ]
+      },
+      "it": {
+        "name": "Nordic hamstring curl",
+        "cues": [
+          "Inginocchiati con le caviglie bloccate",
+          "Scendi in avanti con il corpo il più lentamente possibile",
+          "Frena con le mani e spingi per risalire"
+        ]
+      },
+      "ja": {
+        "name": "ノルディック・ハムストリングカール",
+        "cues": [
+          "足首を固定して膝立ちになる",
+          "できるだけゆっくり体を前に倒す",
+          "手で受け止め、押し返して戻る"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/nordic-hamstring-curl.mp4",
+      "bytes": 625988,
+      "sha256": "ebe48b779a3e0d6d05ae6da4c0e169141ad6ac0d8f79b07378d9165082df044a",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "v01",
+    "slug": "standing-machine-calf-raise",
+    "name": "Standing Calf Raise",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "region": "lower",
+    "equipment": [
+      "machine"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [],
+    "cues": [
+      "Balls of the feet on the edge",
+      "Rise as high as possible",
+      "Lower into a full stretch"
+    ],
+    "translations": {
+      "de": {
+        "name": "Wadenheben im Stehen",
+        "cues": [
+          "Fußballen auf der Kante",
+          "So hoch wie möglich hochdrücken",
+          "Bis zur vollen Dehnung absenken"
+        ]
+      },
+      "es": {
+        "name": "Elevación de talones de pie",
+        "cues": [
+          "Parte delantera de los pies en el borde",
+          "Sube lo más alto posible",
+          "Baja hasta un estiramiento completo"
+        ]
+      },
+      "fr": {
+        "name": "Mollets debout à la machine",
+        "cues": [
+          "Avant-pieds sur le rebord",
+          "Montez le plus haut possible",
+          "Descendez jusqu'à l'étirement complet"
+        ]
+      },
+      "it": {
+        "name": "Calf in piedi",
+        "cues": [
+          "Avampiedi sul bordo",
+          "Sali il più in alto possibile",
+          "Scendi fino al massimo allungamento"
+        ]
+      },
+      "ja": {
+        "name": "スタンディング・カーフレイズ",
+        "cues": [
+          "つま先の付け根を台の端に乗せる",
+          "できるだけ高くかかとを上げる",
+          "しっかり伸びるところまで下ろす"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/standing-machine-calf-raise.mp4",
+      "bytes": 457605,
+      "sha256": "722bcb2ff5d63b6a295d950bdd8b9013d961c289611946f1c207106deefc9844",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "v02",
+    "slug": "seated-calf-raise",
+    "name": "Seated Calf Raise",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "region": "lower",
+    "equipment": [
+      "machine"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [],
+    "cues": [
+      "Pad snug above the knees",
+      "Press up through the big toe",
+      "Pause in the stretch"
+    ],
+    "translations": {
+      "de": {
+        "name": "Wadenheben im Sitzen",
+        "cues": [
+          "Polster eng über den Knien",
+          "Über den großen Zeh hochdrücken",
+          "In der Dehnung kurz halten"
+        ]
+      },
+      "es": {
+        "name": "Elevación de talones sentado",
+        "cues": [
+          "Cojín bien ajustado sobre las rodillas",
+          "Empuja a través del dedo gordo",
+          "Haz una pausa en el estiramiento"
+        ]
+      },
+      "fr": {
+        "name": "Mollets assis",
+        "cues": [
+          "Coussin calé juste au-dessus des genoux",
+          "Poussez dans le gros orteil",
+          "Marquez une pause dans l'étirement"
+        ]
+      },
+      "it": {
+        "name": "Calf da seduto",
+        "cues": [
+          "Cuscino aderente sopra le ginocchia",
+          "Spingi attraverso l'alluce",
+          "Fai una pausa nell'allungamento"
+        ]
+      },
+      "ja": {
+        "name": "シーテッド・カーフレイズ",
+        "cues": [
+          "パッドを膝のすぐ上に密着させる",
+          "親指の付け根で押し上げる",
+          "伸びたところで一瞬止める"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/seated-calf-raise.mp4",
+      "bytes": 557530,
+      "sha256": "85c92922dd116ca5011688c9862b4bedad61095535dec1dd22dcd262a17682cd",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 5.5
+    }
+  },
+  {
+    "id": "v03",
+    "slug": "45-degree-leg-press-calf-raise",
+    "name": "Leg Press Calf Raise",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "region": "lower",
+    "equipment": [
+      "machine"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [],
+    "cues": [
+      "Only the balls of the feet on the platform",
+      "Knees straight but not locked",
+      "Full range, slow tempo"
+    ],
+    "translations": {
+      "de": {
+        "name": "Wadenheben an der Beinpresse",
+        "cues": [
+          "Nur die Fußballen auf der Platte",
+          "Knie gestreckt, aber nicht durchgedrückt",
+          "Voller Bewegungsumfang, langsames Tempo"
+        ]
+      },
+      "es": {
+        "name": "Elevación de talones en prensa",
+        "cues": [
+          "Solo la parte delantera de los pies en la plataforma",
+          "Rodillas rectas pero sin bloquear",
+          "Rango completo y ritmo lento"
+        ]
+      },
+      "fr": {
+        "name": "Mollets à la presse à cuisses",
+        "cues": [
+          "Seulement l'avant des pieds sur la plateforme",
+          "Genoux tendus mais non verrouillés",
+          "Amplitude complète, tempo lent"
+        ]
+      },
+      "it": {
+        "name": "Calf alla leg press",
+        "cues": [
+          "Solo gli avampiedi sulla pedana",
+          "Ginocchia tese ma non bloccate",
+          "Escursione completa, ritmo lento"
+        ]
+      },
+      "ja": {
+        "name": "レッグプレス・カーフレイズ",
+        "cues": [
+          "プレートには足の前部だけを乗せる",
+          "膝は伸ばすがロックしない",
+          "可動域をフルに使い、ゆっくり行う"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/45-degree-leg-press-calf-raise.mp4",
+      "bytes": 757410,
+      "sha256": "4b986a6c86916f7044c3381e2577024524eb2b305994a466606b2cce1b76f38d",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "d01",
+    "slug": "hip-adduction-machine",
+    "name": "Hip Adduction Machine",
+    "primaryMuscle": "adductors",
+    "secondaryMuscles": [],
+    "region": "lower",
+    "equipment": [
+      "machine"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [],
+    "cues": [
+      "Sit upright against the pad",
+      "Squeeze the legs together",
+      "Open slowly to a comfortable stretch"
+    ],
+    "translations": {
+      "de": {
+        "name": "Adduktorenmaschine",
+        "cues": [
+          "Aufrecht gegen das Polster sitzen",
+          "Beine zusammenpressen",
+          "Langsam bis zu einer angenehmen Dehnung öffnen"
+        ]
+      },
+      "es": {
+        "name": "Máquina de aductores",
+        "cues": [
+          "Siéntate erguido contra el respaldo",
+          "Aprieta las piernas una contra otra",
+          "Abre despacio hasta un estiramiento cómodo"
+        ]
+      },
+      "fr": {
+        "name": "Machine à adducteurs",
+        "cues": [
+          "Asseyez-vous droit contre le dossier",
+          "Serrez les jambes l'une vers l'autre",
+          "Ouvrez lentement jusqu'à un étirement confortable"
+        ]
+      },
+      "it": {
+        "name": "Macchina adduttori",
+        "cues": [
+          "Siediti eretto contro lo schienale",
+          "Stringi le gambe una contro l'altra",
+          "Apri lentamente fino a un allungamento confortevole"
+        ]
+      },
+      "ja": {
+        "name": "ヒップアダクションマシン",
+        "cues": [
+          "パッドに背中を付けて背筋を伸ばして座る",
+          "両脚を内側に締める",
+          "気持ちよく伸びるところまでゆっくり開く"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/hip-adduction-machine.mp4",
+      "bytes": 351994,
+      "sha256": "81e64b8fe0dd420ab8b6f4fd7c0c5131fac4e7358a90813006358f417e7a7183",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "d02",
+    "slug": "alternating-lateral-lunge-with-overhead-reach",
+    "name": "Lateral Lunge with Reach",
+    "primaryMuscle": "adductors",
+    "secondaryMuscles": [
+      "glutes",
+      "quads"
+    ],
+    "region": "lower",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "beginner",
+    "type": "mobility",
+    "jointStress": [
+      "knee"
+    ],
+    "gear": [
+      "equipment.mat"
+    ],
+    "cues": [
+      "Step wide and sit into one hip",
+      "Reach both arms overhead",
+      "Alternate sides with control"
+    ],
+    "translations": {
+      "de": {
+        "name": "Seitlicher Ausfallschritt mit Überkopfreichen",
+        "cues": [
+          "Weit zur Seite treten und in die Hüfte sinken",
+          "Beide Arme über den Kopf strecken",
+          "Kontrolliert die Seiten wechseln"
+        ]
+      },
+      "es": {
+        "name": "Zancada lateral con alcance sobre la cabeza",
+        "cues": [
+          "Da un paso amplio y siéntate sobre una cadera",
+          "Estira ambos brazos por encima de la cabeza",
+          "Alterna los lados con control"
+        ]
+      },
+      "fr": {
+        "name": "Fente latérale avec bras tendus au-dessus de la tête",
+        "cues": [
+          "Faites un grand pas sur le côté et asseyez-vous sur une hanche",
+          "Tendez les deux bras au-dessus de la tête",
+          "Alternez les côtés avec contrôle"
+        ]
+      },
+      "it": {
+        "name": "Affondo laterale con braccia sopra la testa",
+        "cues": [
+          "Fai un passo ampio e siediti su un'anca",
+          "Allunga entrambe le braccia sopra la testa",
+          "Alterna i lati con controllo"
+        ]
+      },
+      "ja": {
+        "name": "オーバーヘッドリーチ付きラテラルランジ",
+        "cues": [
+          "大きく横に踏み出し、片側の股関節に腰を落とす",
+          "両腕を頭上に伸ばす",
+          "コントロールしながら左右交互に行う"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/alternating-lateral-lunge-with-overhead-reach.mp4",
+      "bytes": 756229,
+      "sha256": "d84a87b56c24cc22321ed6984e7966aa89c84583d262fadbb2aa2b94678df06e",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "d03",
+    "slug": "deep-squat-prying",
+    "name": "Deep Squat Pry",
+    "primaryMuscle": "adductors",
+    "secondaryMuscles": [
+      "hipFlexors"
+    ],
+    "region": "lower",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "beginner",
+    "type": "mobility",
+    "jointStress": [
+      "knee"
+    ],
+    "gear": [],
+    "cues": [
+      "Sink into a deep squat, heels down",
+      "Use the elbows to press the knees out",
+      "Shift side to side slowly"
+    ],
+    "translations": {
+      "de": {
+        "name": "Tiefe Kniebeuge mit Knieöffner",
+        "cues": [
+          "In die tiefe Kniebeuge sinken, Fersen am Boden",
+          "Mit den Ellbogen die Knie nach außen drücken",
+          "Langsam von Seite zu Seite verlagern"
+        ]
+      },
+      "es": {
+        "name": "Sentadilla profunda con apertura de rodillas",
+        "cues": [
+          "Baja a una sentadilla profunda con los talones en el suelo",
+          "Usa los codos para empujar las rodillas hacia fuera",
+          "Desplázate de lado a lado despacio"
+        ]
+      },
+      "fr": {
+        "name": "Squat profond avec ouverture des genoux",
+        "cues": [
+          "Descendez en squat profond, talons au sol",
+          "Utilisez les coudes pour écarter les genoux",
+          "Balancez doucement d'un côté à l'autre"
+        ]
+      },
+      "it": {
+        "name": "Squat profondo con apertura delle ginocchia",
+        "cues": [
+          "Scendi in squat profondo con i talloni a terra",
+          "Usa i gomiti per spingere le ginocchia in fuori",
+          "Sposta il peso da un lato all'altro lentamente"
+        ]
+      },
+      "ja": {
+        "name": "ディープスクワット・プライ",
+        "cues": [
+          "かかとを床に付けたまま深くしゃがむ",
+          "肘で膝を外側に押し広げる",
+          "ゆっくり左右に体重を移す"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/deep-squat-prying.mp4",
+      "bytes": 501514,
+      "sha256": "0fab2ae96ce1b097d64afc1533ffb62c5dbb0eaa9b1e5f0010d92c0ddbe59bf5",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "e02",
+    "slug": "cable-hip-abduction",
+    "name": "Cable Hip Abduction",
+    "primaryMuscle": "abductors",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "lower",
+    "equipment": [
+      "cable"
+    ],
+    "level": "beginner",
+    "type": "isolation",
+    "jointStress": [],
+    "gear": [
+      "accessory.cable-attachment"
+    ],
+    "cues": [
+      "Cuff on the outside ankle",
+      "Sweep the leg out without leaning",
+      "Return over two seconds"
+    ],
+    "translations": {
+      "de": {
+        "name": "Hüftabduktion am Kabelzug",
+        "cues": [
+          "Manschette am äußeren Knöchel",
+          "Bein nach außen führen, ohne sich zu lehnen",
+          "In zwei Sekunden zurückführen"
+        ]
+      },
+      "es": {
+        "name": "Abducción de cadera en polea",
+        "cues": [
+          "Tobillera en el tobillo exterior",
+          "Lleva la pierna hacia fuera sin inclinarte",
+          "Vuelve en dos segundos"
+        ]
+      },
+      "fr": {
+        "name": "Abduction de hanche à la poulie",
+        "cues": [
+          "Sangle à la cheville extérieure",
+          "Écartez la jambe sans vous pencher",
+          "Revenez en deux secondes"
+        ]
+      },
+      "it": {
+        "name": "Abduzione d'anca ai cavi",
+        "cues": [
+          "Cavigliera sulla caviglia esterna",
+          "Porta la gamba in fuori senza inclinarti",
+          "Torna in due secondi"
+        ]
+      },
+      "ja": {
+        "name": "ケーブルヒップアブダクション",
+        "cues": [
+          "カフを外側の足首に付ける",
+          "体を傾けずに脚を横へ振り出す",
+          "2秒かけて戻す"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/cable-hip-abduction.mp4",
+      "bytes": 350458,
+      "sha256": "de7685b61d4b5fead2a0b1e291621d90c8416a299b9bbe5a461ed152ccbd8050",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "m01",
+    "slug": "cradle-walk",
+    "name": "Cradle Walk",
+    "primaryMuscle": "hipFlexors",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "mobility",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "beginner",
+    "type": "mobility",
+    "jointStress": [],
+    "gear": [],
+    "cues": [
+      "Lift one shin and hug it toward the chest",
+      "Rise onto the standing toes",
+      "Step forward and switch sides"
+    ],
+    "translations": {
+      "de": {
+        "name": "Cradle Walk",
+        "cues": [
+          "Ein Schienbein anheben und zur Brust ziehen",
+          "Auf die Zehen des Standbeins steigen",
+          "Einen Schritt vorwärts, dann die Seite wechseln"
+        ]
+      },
+      "es": {
+        "name": "Cradle walk",
+        "cues": [
+          "Sube una espinilla y abrázala hacia el pecho",
+          "Elévate sobre la punta del pie de apoyo",
+          "Da un paso adelante y cambia de lado"
+        ]
+      },
+      "fr": {
+        "name": "Cradle walk",
+        "cues": [
+          "Levez un tibia et ramenez-le contre la poitrine",
+          "Montez sur la pointe du pied d'appui",
+          "Avancez d'un pas et changez de côté"
+        ]
+      },
+      "it": {
+        "name": "Cradle walk",
+        "cues": [
+          "Solleva uno stinco e abbraccialo verso il petto",
+          "Sali sulla punta del piede d'appoggio",
+          "Fai un passo avanti e cambia lato"
+        ]
+      },
+      "ja": {
+        "name": "クレードルウォーク",
+        "cues": [
+          "片方のすねを持ち上げ、胸に引き寄せる",
+          "軸足のつま先立ちになる",
+          "一歩前に進み、左右を入れ替える"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/cradle-walk.mp4",
+      "bytes": 569861,
+      "sha256": "c56eff174eaa9f00bf467203bfb572f1aa4d24fabb51009711d617106b55ed10",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "m02",
+    "slug": "fire-hydrant-circles",
+    "name": "Fire Hydrant Circles",
+    "primaryMuscle": "hipFlexors",
+    "secondaryMuscles": [
+      "abductors"
+    ],
+    "region": "mobility",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "beginner",
+    "type": "mobility",
+    "jointStress": [],
+    "gear": [
+      "equipment.mat"
+    ],
+    "cues": [
+      "Hands under shoulders, knees under hips",
+      "Draw big circles with one knee",
+      "Keep the torso still"
+    ],
+    "translations": {
+      "de": {
+        "name": "Fire-Hydrant-Kreise",
+        "cues": [
+          "Hände unter den Schultern, Knie unter der Hüfte",
+          "Mit einem Knie große Kreise ziehen",
+          "Oberkörper ruhig halten"
+        ]
+      },
+      "es": {
+        "name": "Círculos de cadera en cuadrupedia",
+        "cues": [
+          "Manos bajo los hombros, rodillas bajo las caderas",
+          "Dibuja círculos grandes con una rodilla",
+          "Mantén el torso quieto"
+        ]
+      },
+      "fr": {
+        "name": "Cercles de hanche à quatre pattes",
+        "cues": [
+          "Mains sous les épaules, genoux sous les hanches",
+          "Dessinez de grands cercles avec un genou",
+          "Gardez le buste immobile"
+        ]
+      },
+      "it": {
+        "name": "Cerchi d'anca in quadrupedia",
+        "cues": [
+          "Mani sotto le spalle, ginocchia sotto le anche",
+          "Disegna grandi cerchi con un ginocchio",
+          "Tieni il busto fermo"
+        ]
+      },
+      "ja": {
+        "name": "ファイヤーハイドラント・サークル",
+        "cues": [
+          "手は肩の真下、膝は腰の真下に置く",
+          "片膝で大きな円を描く",
+          "上体は動かさない"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/fire-hydrant-circles.mp4",
+      "bytes": 432945,
+      "sha256": "a0365104831fb9499a64f3d94aa5d92f768548faf63416f78f8566ab9e8153ec",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 6.8
+    }
+  },
+  {
+    "id": "m03",
+    "slug": "kneeling-posterior-hip-capsule-mobilization",
+    "name": "Kneeling Hip Capsule Mobilization",
+    "primaryMuscle": "hipFlexors",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "region": "mobility",
+    "equipment": [
+      "bodyweight"
+    ],
+    "level": "beginner",
+    "type": "mobility",
+    "jointStress": [
+      "knee"
+    ],
+    "gear": [
+      "equipment.mat"
+    ],
+    "cues": [
+      "Kneel with one leg crossed behind",
+      "Shift the hips back and to the side",
+      "Breathe into the stretch"
+    ],
+    "translations": {
+      "de": {
+        "name": "Hüftkapsel-Mobilisation im Kniestand",
+        "cues": [
+          "Knien, ein Bein nach hinten gekreuzt",
+          "Hüfte nach hinten und zur Seite verlagern",
+          "In die Dehnung hineinatmen"
+        ]
+      },
+      "es": {
+        "name": "Movilización de la cápsula de cadera de rodillas",
+        "cues": [
+          "De rodillas con una pierna cruzada por detrás",
+          "Lleva la cadera hacia atrás y hacia un lado",
+          "Respira dentro del estiramiento"
+        ]
+      },
+      "fr": {
+        "name": "Mobilisation de la capsule de hanche à genoux",
+        "cues": [
+          "À genoux, une jambe croisée derrière",
+          "Poussez les hanches vers l'arrière et sur le côté",
+          "Respirez dans l'étirement"
+        ]
+      },
+      "it": {
+        "name": "Mobilizzazione della capsula dell'anca in ginocchio",
+        "cues": [
+          "Inginocchiati con una gamba incrociata dietro",
+          "Sposta il bacino indietro e di lato",
+          "Respira dentro l'allungamento"
+        ]
+      },
+      "ja": {
+        "name": "ニーリング・股関節包モビライゼーション",
+        "cues": [
+          "片脚を後ろにクロスさせて膝立ちになる",
+          "腰を後ろと横に移動させる",
+          "ストレッチに向けて呼吸を送る"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/kneeling-posterior-hip-capsule-mobilization.mp4",
+      "bytes": 449470,
+      "sha256": "86ac4397eeaf99dd4e1ae73c45d458117a9348679d5f1b024395517ec191f468",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 6.5
+    }
+  },
+  {
+    "id": "z01",
+    "slug": "it-band-foam-rolling",
+    "name": "IT Band Foam Rolling",
+    "primaryMuscle": "itBand",
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "region": "mobility",
+    "equipment": [
+      "roller"
+    ],
+    "level": "beginner",
+    "type": "recovery",
+    "jointStress": [],
+    "gear": [
+      "recovery.foam-roller"
+    ],
+    "cues": [
+      "Lie on your side over the roller",
+      "Roll from hip to just above the knee",
+      "Pause on tight spots for a breath"
+    ],
+    "translations": {
+      "de": {
+        "name": "Faszienrolle für das Iliotibialband",
+        "cues": [
+          "Seitlich auf die Rolle legen",
+          "Von der Hüfte bis knapp über das Knie rollen",
+          "Auf verspannten Stellen einen Atemzug lang verweilen"
+        ]
+      },
+      "es": {
+        "name": "Rodillo de espuma para la banda iliotibial",
+        "cues": [
+          "Túmbate de lado sobre el rodillo",
+          "Rueda desde la cadera hasta justo por encima de la rodilla",
+          "Detente un respiro en los puntos tensos"
+        ]
+      },
+      "fr": {
+        "name": "Rouleau de massage pour la bandelette ilio-tibiale",
+        "cues": [
+          "Allongez-vous sur le côté sur le rouleau",
+          "Roulez de la hanche jusqu'à juste au-dessus du genou",
+          "Restez le temps d'une respiration sur les points tendus"
+        ]
+      },
+      "it": {
+        "name": "Foam roller per la bandelletta ileotibiale",
+        "cues": [
+          "Sdraiati di lato sul rullo",
+          "Rotola dall'anca fino appena sopra il ginocchio",
+          "Sui punti tesi fermati per un respiro"
+        ]
+      },
+      "ja": {
+        "name": "腸脛靭帯のフォームローリング",
+        "cues": [
+          "ローラーの上に横向きに寝る",
+          "股関節から膝のすぐ上まで転がす",
+          "硬い部分では呼吸一回分とどまる"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/it-band-foam-rolling.mp4",
+      "bytes": 547525,
+      "sha256": "232f2ee8fe2032a1ed025396dadeefc7c4e38da3a13788c535b7a875f78fb991",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "z02",
+    "slug": "plantar-fascia-lacrosse-ball",
+    "name": "Plantar Fascia Release",
+    "primaryMuscle": "plantar",
+    "secondaryMuscles": [],
+    "region": "mobility",
+    "equipment": [
+      "lacrosse"
+    ],
+    "level": "beginner",
+    "type": "recovery",
+    "jointStress": [],
+    "gear": [
+      "recovery.massage-ball"
+    ],
+    "cues": [
+      "Stand and place the ball under the arch",
+      "Roll heel to toe with light pressure",
+      "Spend extra time on tender spots"
+    ],
+    "translations": {
+      "de": {
+        "name": "Plantarfaszie lösen",
+        "cues": [
+          "Aufstehen und den Ball unter das Fußgewölbe legen",
+          "Mit leichtem Druck von der Ferse zu den Zehen rollen",
+          "Auf empfindlichen Stellen länger verweilen"
+        ]
+      },
+      "es": {
+        "name": "Liberación de la fascia plantar",
+        "cues": [
+          "De pie, coloca la pelota bajo el arco del pie",
+          "Rueda del talón a los dedos con presión suave",
+          "Dedica más tiempo a las zonas sensibles"
+        ]
+      },
+      "fr": {
+        "name": "Relâchement de l'aponévrose plantaire",
+        "cues": [
+          "Debout, placez la balle sous la voûte plantaire",
+          "Roulez du talon aux orteils avec une pression légère",
+          "Insistez sur les zones sensibles"
+        ]
+      },
+      "it": {
+        "name": "Rilascio della fascia plantare",
+        "cues": [
+          "In piedi, posiziona la palla sotto l'arco plantare",
+          "Rotola dal tallone alle dita con pressione leggera",
+          "Dedica più tempo ai punti dolenti"
+        ]
+      },
+      "ja": {
+        "name": "足底筋膜リリース",
+        "cues": [
+          "立ってボールを土踏まずの下に置く",
+          "軽い圧でかかとからつま先へ転がす",
+          "痛みのある部分は時間をかける"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/plantar-fascia-lacrosse-ball.mp4",
+      "bytes": 472690,
+      "sha256": "d46872c8cc73c90787012fabaea369d317a0a54999fe59cafa74c9ce895a1a6a",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "z03",
+    "slug": "palmar-fascia-lacrosse-ball",
+    "name": "Palm Release",
+    "primaryMuscle": "palmar",
+    "secondaryMuscles": [
+      "forearm"
+    ],
+    "region": "mobility",
+    "equipment": [
+      "lacrosse"
+    ],
+    "level": "beginner",
+    "type": "recovery",
+    "jointStress": [],
+    "gear": [
+      "recovery.massage-ball"
+    ],
+    "cues": [
+      "Pin the ball under the palm on a table",
+      "Roll in small circles",
+      "Open and close the fingers as you roll"
+    ],
+    "translations": {
+      "de": {
+        "name": "Handfläche lösen",
+        "cues": [
+          "Ball auf dem Tisch unter der Handfläche fixieren",
+          "In kleinen Kreisen rollen",
+          "Beim Rollen die Finger öffnen und schließen"
+        ]
+      },
+      "es": {
+        "name": "Liberación de la palma de la mano",
+        "cues": [
+          "Fija la pelota bajo la palma sobre una mesa",
+          "Rueda en círculos pequeños",
+          "Abre y cierra los dedos mientras ruedas"
+        ]
+      },
+      "fr": {
+        "name": "Relâchement de la paume",
+        "cues": [
+          "Bloquez la balle sous la paume, sur une table",
+          "Roulez en petits cercles",
+          "Ouvrez et fermez les doigts en roulant"
+        ]
+      },
+      "it": {
+        "name": "Rilascio del palmo della mano",
+        "cues": [
+          "Blocca la palla sotto il palmo su un tavolo",
+          "Rotola con piccoli cerchi",
+          "Apri e chiudi le dita mentre rotoli"
+        ]
+      },
+      "ja": {
+        "name": "手のひらリリース",
+        "cues": [
+          "テーブルの上で手のひらの下にボールを押さえる",
+          "小さな円を描くように転がす",
+          "転がしながら指を開いたり閉じたりする"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/palmar-fascia-lacrosse-ball.mp4",
+      "bytes": 438529,
+      "sha256": "59c5ad5015abfda4df6a4bfd23c790a2421440f4c916f98c1d9031223e74dbc3",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  },
+  {
+    "id": "z04",
+    "slug": "neck-tiger-tail",
+    "name": "Neck Release",
+    "primaryMuscle": "neck",
+    "secondaryMuscles": [
+      "traps"
+    ],
+    "region": "mobility",
+    "equipment": [
+      "roller"
+    ],
+    "level": "beginner",
+    "type": "recovery",
+    "jointStress": [],
+    "gear": [
+      "recovery.massage-gun",
+      "recovery.foam-roller"
+    ],
+    "cues": [
+      "Roll the stick along the side of the neck",
+      "Use gentle pressure only",
+      "Turn the head slowly while rolling"
+    ],
+    "translations": {
+      "de": {
+        "name": "Nacken lösen",
+        "cues": [
+          "Den Stab seitlich am Nacken entlangrollen",
+          "Nur sanften Druck verwenden",
+          "Den Kopf beim Rollen langsam drehen"
+        ]
+      },
+      "es": {
+        "name": "Liberación del cuello",
+        "cues": [
+          "Pasa el rodillo por el lateral del cuello",
+          "Usa solo una presión suave",
+          "Gira la cabeza despacio mientras ruedas"
+        ]
+      },
+      "fr": {
+        "name": "Relâchement de la nuque",
+        "cues": [
+          "Faites rouler le bâton sur le côté du cou",
+          "Utilisez seulement une pression douce",
+          "Tournez lentement la tête en roulant"
+        ]
+      },
+      "it": {
+        "name": "Rilascio del collo",
+        "cues": [
+          "Fai scorrere il bastone lungo il lato del collo",
+          "Usa solo una pressione delicata",
+          "Ruota lentamente la testa mentre rotoli"
+        ]
+      },
+      "ja": {
+        "name": "首のリリース",
+        "cues": [
+          "スティックを首の側面に沿って転がす",
+          "軽い圧だけを使う",
+          "転がしながらゆっくり頭を回す"
+        ]
+      }
+    },
+    "video": {
+      "path": "media/video/neck-tiger-tail.mp4",
+      "bytes": 470511,
+      "sha256": "011e4718aa259242667d1a6b6edaa28e16ce8858960de932dbec150ece25d0c6",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 8
+    }
+  }
+]

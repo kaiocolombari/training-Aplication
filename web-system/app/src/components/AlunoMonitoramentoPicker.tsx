@@ -219,7 +219,7 @@ export default function AlunoMonitoramentoPicker({
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    <p className="text-[10px] font-semibold text-[var(--text-primary)]">Sua carteira de alunos</p>
+                    <p className="text-[10px] font-semibold text-[var(--text-primary)]">Alunos da equipe</p>
                     <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">{filtrados.length} de {alunos.length} alunos · selecione para abrir o acompanhamento</p>
                 </div>
                 <span className="rounded-full bg-[var(--surface-tertiary)] px-2.5 py-1 text-[9px] font-semibold text-[var(--text-muted)]">{alunos.length} cadastrados</span>

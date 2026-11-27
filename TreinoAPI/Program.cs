@@ -129,6 +129,7 @@ builder.Services.AddHttpClient<TurnstileService>();
 builder.Services.AddScoped<ComunicacaoService>();
 builder.Services.AddSingleton<ArquivoEquipeStorage>();
 builder.Services.AddSingleton<ChatAttachmentStorage>();
+builder.Services.AddSingleton<ExercicioVideoStorage>();
 builder.Services.AddSingleton<ChatAttachmentSecurityScanner>();
 builder.Services.AddScoped<ArquivoEquipeService>();
 builder.Services.AddScoped<ChatAttachmentService>();
@@ -158,6 +159,7 @@ builder.Services.AddScoped<PeriodizacaoSemanaService>();
 builder.Services.AddScoped<PerimetroService>();
 builder.Services.AddScoped<TreinoDiaService>();
 builder.Services.AddScoped<TreinoExercicioService>();
+builder.Services.AddScoped<ExercicioCatalogoService>();
 builder.Services.AddScoped<ExecucaoTreinoService>();
 builder.Services.AddScoped<AcompanhamentoPersonalService>();
 builder.Services.AddScoped<VolumeAcompanhamentoService>();
@@ -318,6 +320,18 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+    options.AddPolicy("exercise-video-upload", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
 });
 
 builder.Services
@@ -406,6 +420,7 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
+    await ExercicioCatalogoSeeder.SeedAsync(scope.ServiceProvider);
     await AdminSeeder.SeedAsync(scope.ServiceProvider, app.Configuration);
 }
 

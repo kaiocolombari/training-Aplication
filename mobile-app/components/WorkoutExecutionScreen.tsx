@@ -44,6 +44,7 @@ import {
 } from "lucide-react-native";
 
 import { Tag } from "@/components/ui";
+import { ExerciseVideoPlayer } from "@/components/ExerciseVideoPlayer";
 import { useWorkout } from "@/context/WorkoutContext";
 import {
   cancelAppNotifications,
@@ -1149,7 +1150,11 @@ export default function WorkoutExecutionScreen() {
           {!isResting ? (
             <>
               <ExerciseDescription description={exercise.note} />
-              <View className="mt-4"><VideoPlaceholder /></View>
+              <View className="mt-4">
+                {exercise.videoUrl
+                  ? <ExerciseVideoPlayer url={exercise.videoUrl} title={exercise.videoTitle} />
+                  : <VideoPlaceholder />}
+              </View>
               <Pressable onPress={() => { animateLayoutChange(); setFeedbackExpanded((value) => !value); }} className="mt-3 flex-row items-center justify-between rounded-2xl border border-[#E9E6DE] bg-white px-4 py-4">
                 <View className="flex-row items-center gap-2">
                   <Info color="#747B70" size={16} />

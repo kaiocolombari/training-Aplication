@@ -19,7 +19,8 @@ public sealed class AuditoriaMiddleware
 
         if (!MetodosAuditaveis.Contains(context.Request.Method) ||
             !context.Request.Path.StartsWithSegments("/api") ||
-            context.Request.Path.StartsWithSegments("/api/auditoria"))
+            context.Request.Path.StartsWithSegments("/api/auditoria") ||
+            context.Request.Path.StartsWithSegments("/api/auth/register/invite"))
             return;
 
         var exclusaoComAuditoriaDetalhada =
@@ -45,7 +46,8 @@ public sealed class AuditoriaMiddleware
                 context.Request.Path.Value ?? "/api",
                 context.Response.StatusCode,
                 context.Connection.RemoteIpAddress?.ToString(),
-                context.Request.Headers.UserAgent.ToString());
+                context.Request.Headers.UserAgent.ToString(),
+                await auditoria.ResolverRecursoAlunoAsync(context));
         }
         catch (Exception exception)
         {

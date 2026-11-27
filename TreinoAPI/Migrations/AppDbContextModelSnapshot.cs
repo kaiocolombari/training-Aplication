@@ -804,6 +804,104 @@ namespace TreinoAPI.Migrations
                     b.ToTable("ExecucoesTreino");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.ExercicioCatalogo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("AtualizadoEmUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CodigoFonte")
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<DateTime>("CriadoEmUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descricao")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Dificuldade")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Equipamento")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("FonteDados")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("GrupoMuscular")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Instrucoes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LicencaDados")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("NomeNormalizado")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CodigoFonte")
+                        .IsUnique()
+                        .HasFilter("\"CodigoFonte\" IS NOT NULL");
+
+                    b.HasIndex("NomeNormalizado");
+
+                    b.ToTable("ExerciciosCatalogo");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExercicioSinonimo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExercicioCatalogoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("NomeNormalizado")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExercicioCatalogoId", "NomeNormalizado")
+                        .IsUnique();
+
+                    b.ToTable("ExerciciosSinonimos");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.FeedbackAluno", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1590,6 +1688,9 @@ namespace TreinoAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ExercicioCatalogoId")
+                        .HasColumnType("uuid");
+
                     b.Property<int?>("Intervalo")
                         .HasColumnType("integer");
 
@@ -1612,6 +1713,8 @@ namespace TreinoAPI.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExercicioCatalogoId");
 
                     b.HasIndex("TreinoId");
 
@@ -1781,6 +1884,66 @@ namespace TreinoAPI.Migrations
                         {
                             t.HasCheckConstraint("usuario_tipo_check", "\"Tipo\" IN ('PERSONAL', 'ALUNO', 'ADMIN')");
                         });
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.VideoExercicio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ChaveArmazenamento")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("CriadoEmUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("DuracaoSegundos")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("ExercicioCatalogoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Fonte")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Licenca")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<bool>("Principal")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TipoConteudo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<string>("UrlExterna")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExercicioCatalogoId", "Ativo", "Principal");
+
+                    b.ToTable("VideosExercicios");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.VolumeSemanal", b =>
@@ -2067,6 +2230,17 @@ namespace TreinoAPI.Migrations
                     b.Navigation("Treino");
                 });
 
+            modelBuilder.Entity("TreinoAPI.Model.ExercicioSinonimo", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.ExercicioCatalogo", "ExercicioCatalogo")
+                        .WithMany("Sinonimos")
+                        .HasForeignKey("ExercicioCatalogoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExercicioCatalogo");
+                });
+
             modelBuilder.Entity("TreinoAPI.Model.FeedbackAluno", b =>
                 {
                     b.HasOne("TreinoAPI.Model.Aluno", "Aluno")
@@ -2343,11 +2517,18 @@ namespace TreinoAPI.Migrations
 
             modelBuilder.Entity("TreinoAPI.Model.TreinoExercicio", b =>
                 {
+                    b.HasOne("TreinoAPI.Model.ExercicioCatalogo", "ExercicioCatalogo")
+                        .WithMany()
+                        .HasForeignKey("ExercicioCatalogoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TreinoAPI.Model.Treino", "Treino")
                         .WithMany("TreinoExercicios")
                         .HasForeignKey("TreinoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ExercicioCatalogo");
 
                     b.Navigation("Treino");
                 });
@@ -2405,6 +2586,17 @@ namespace TreinoAPI.Migrations
                     b.Navigation("Ciclo");
 
                     b.Navigation("RegistradoPorUsuario");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.VideoExercicio", b =>
+                {
+                    b.HasOne("TreinoAPI.Model.ExercicioCatalogo", "ExercicioCatalogo")
+                        .WithMany("Videos")
+                        .HasForeignKey("ExercicioCatalogoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExercicioCatalogo");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.VolumeSemanal", b =>
@@ -2470,6 +2662,13 @@ namespace TreinoAPI.Migrations
             modelBuilder.Entity("TreinoAPI.Model.ExecucaoTreino", b =>
                 {
                     b.Navigation("Exercicios");
+                });
+
+            modelBuilder.Entity("TreinoAPI.Model.ExercicioCatalogo", b =>
+                {
+                    b.Navigation("Sinonimos");
+
+                    b.Navigation("Videos");
                 });
 
             modelBuilder.Entity("TreinoAPI.Model.GrupoMuscular", b =>

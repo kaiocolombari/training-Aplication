@@ -44,6 +44,31 @@ public class PersonalAlunoService
             .ToListAsync();
     }
 
+    public async Task<List<PersonalAlunoVinculoDTO>> BuscarVinculosAluno(Guid alunoId)
+    {
+        return await _context.PersonalAlunos
+            .AsNoTracking()
+            .Where(pa => pa.AlunoId == alunoId && pa.Personal.Usuario!.Ativo)
+            .OrderByDescending(pa => pa.Ativo)
+            .ThenBy(pa => pa.CriadoEm)
+            .Select(pa => new PersonalAlunoVinculoDTO
+            {
+                Id = pa.Id,
+                PersonalId = pa.PersonalId,
+                PersonalNome = pa.Personal.Nome,
+                AlunoId = pa.AlunoId,
+                Ativo = pa.Ativo,
+                CriadoEm = pa.CriadoEm
+            })
+            .ToListAsync();
+    }
+
+    public Task<Guid?> ObterAlunoIdPorVinculo(Guid id) => _context.PersonalAlunos
+        .AsNoTracking()
+        .Where(pa => pa.Id == id)
+        .Select(pa => (Guid?)pa.AlunoId)
+        .FirstOrDefaultAsync();
+
     public async Task<PersonalAlunoDTO?> VincularAluno(VincularAlunoDTO dto)
     {
         var personal = await _context.Personais.AnyAsync(p => p.Id == dto.PersonalId && p.Usuario!.Ativo);

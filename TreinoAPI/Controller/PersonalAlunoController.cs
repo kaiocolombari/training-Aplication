@@ -29,12 +29,22 @@ public class PersonalAlunoController : ControllerBase
     }
 
     [Authorize(Roles = "ADMIN")]
+    [HttpGet("aluno/{alunoId}")]
+    public async Task<IActionResult> BuscarVinculosAluno(Guid alunoId)
+    {
+        var vinculos = await _service.BuscarVinculosAluno(alunoId);
+        return Ok(vinculos);
+    }
+
+    [Authorize(Roles = "ADMIN")]
     [HttpPost]
     public async Task<IActionResult> VincularAluno([FromBody] VincularAlunoDTO dto)
     {
         await _ownership.EnsurePersonalAccessAsync(dto.PersonalId);
         var resultado = await _service.VincularAluno(dto);
-        return resultado is null ? NotFound() : Ok(resultado);
+        if (resultado is null) return NotFound();
+        HttpContext.Items["AlunoIdAuditoria"] = resultado.AlunoId;
+        return Ok(resultado);
     }
 
     [Authorize(Roles = "ADMIN")]
@@ -43,6 +53,8 @@ public class PersonalAlunoController : ControllerBase
     {
         await _ownership.EnsureVinculoAccessAsync(id);
         var resultado = await _service.AtualizarVinculo(id, dto);
+        if (resultado is not null)
+            HttpContext.Items["AlunoIdAuditoria"] = resultado.AlunoId;
         return resultado is null ? NotFound("Vínculo não encontrado.") : Ok(resultado);
     }
 
@@ -51,7 +63,10 @@ public class PersonalAlunoController : ControllerBase
     public async Task<IActionResult> DeletarVinculo(Guid id, [FromBody] MotivoOperacaoDTO? dto)
     {
         await _ownership.EnsureVinculoAccessAsync(id);
+        var alunoId = await _service.ObterAlunoIdPorVinculo(id);
         var removido = await _service.DeletarVinculo(id, dto);
+        if (alunoId.HasValue)
+            HttpContext.Items["AlunoIdAuditoria"] = alunoId.Value;
         return removido ? NoContent() : NotFound("Vínculo não encontrado.");
     }
 }

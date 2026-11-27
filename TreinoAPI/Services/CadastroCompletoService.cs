@@ -69,6 +69,8 @@ public sealed class CadastroCompletoService
         var exercicios = await _db.TreinosExercicios.AsNoTracking()
             .Where(e => treinoIds.Contains(e.TreinoId))
             .Include(e => e.Variacoes)
+            .Include(e => e.ExercicioCatalogo!)
+                .ThenInclude(exercicio => exercicio.Videos.Where(video => video.Ativo))
             .ToListAsync();
 
         var periodizacoes = await _db.Periodizacoes.AsNoTracking()
@@ -247,6 +249,19 @@ public sealed class CadastroCompletoService
         Id = item.Id,
         TreinoId = item.TreinoId,
         Exercicio = item.Exercicio,
+        ExercicioCatalogoId = item.ExercicioCatalogoId,
+        VideoUrl = item.ExercicioCatalogo?.Videos
+            .Where(video => video.Ativo)
+            .OrderByDescending(video => video.Principal)
+            .ThenBy(video => video.Titulo)
+            .Select(video => video.UrlExterna ?? $"/api/exercicios/catalogo/videos/{video.Id}/stream")
+            .FirstOrDefault(),
+        VideoTitulo = item.ExercicioCatalogo?.Videos
+            .Where(video => video.Ativo)
+            .OrderByDescending(video => video.Principal)
+            .ThenBy(video => video.Titulo)
+            .Select(video => video.Titulo)
+            .FirstOrDefault(),
         Ordem = item.Ordem,
         Series = item.Series,
         Repeticoes = item.Repeticoes,

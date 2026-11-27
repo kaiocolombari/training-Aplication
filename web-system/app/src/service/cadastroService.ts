@@ -38,9 +38,10 @@ export interface PersonalResumoApi {
     telefone?: string | null;
 }
 
-export interface PersonalAlunoApi {
+export interface PersonalAlunoVinculoApi {
     id: string;
     personalId: string;
+    personalNome: string;
     alunoId: string;
     ativo: boolean;
     criadoEm: string;
@@ -56,12 +57,10 @@ export interface PersonalExclusaoResumoApi {
     nomeCompleto: string;
     email: string;
     totalAlunos: number;
-    alunosQueFicaraoSemPersonal: number;
     alunos: Array<{
         id: string;
         nomeCompleto: string;
         email: string;
-        outrosPersonaisAtivos: number;
     }>;
 }
 
@@ -619,20 +618,18 @@ export async function salvarFichaAutosave(alunoId: string, dados: Avaliacao) {
 export const cadastroService = {
     listarAlunos: () => apiGet<AlunoResumoApi[]>("/api/Aluno"),
     listarPersonais: () => apiGet<PersonalResumoApi[]>("/api/Personal"),
-    listarVinculos: (personalId: string) =>
-        apiGet<PersonalAlunoApi[]>("/api/PersonalAluno/" + personalId + "/alunos"),
+    listarVinculosAluno: (alunoId: string) =>
+        apiGet<PersonalAlunoVinculoApi[]>(`/api/PersonalAluno/aluno/${alunoId}`),
+    vincularAlunoPersonal: (alunoId: string, personalId: string) =>
+        apiPost<PersonalAlunoVinculoApi>("/api/PersonalAluno", { alunoId, personalId }),
+    atualizarVinculoPersonal: (vinculoId: string, payload: { ativo: boolean; motivo?: string; detalhe?: string }) =>
+        apiPatch<PersonalAlunoVinculoApi>(`/api/PersonalAluno/${vinculoId}`, payload),
     criarPersonal: (payload: { nomeCompleto: string; email: string; senha: string; telefone?: string }) =>
         apiPost<PersonalResumoApi>("/api/Personal", payload),
     obterResumoExclusaoPersonal: (personalId: string) =>
         apiGet<PersonalExclusaoResumoApi>(`/api/Personal/${personalId}/resumo-exclusao`),
     excluirPersonal: (personalId: string, payload: MotivoOperacaoPayload) =>
         apiDelete<void>(`/api/Personal/${personalId}`, payload),
-    vincularAluno: (personalId: string, alunoId: string) =>
-        apiPost<PersonalAlunoApi>("/api/PersonalAluno", { personalId, alunoId }),
-    desvincularAluno: (vinculoId: string, payload: MotivoOperacaoPayload) =>
-        apiDelete<void>("/api/PersonalAluno/" + vinculoId, payload),
-    atualizarVinculo: (vinculoId: string, ativo: boolean) =>
-        apiPatch<PersonalAlunoApi>("/api/PersonalAluno/" + vinculoId, { ativo }),
     obterCadastro: (alunoId: string) => apiGet<CadastroCompletoApi>(`/api/cadastros/alunos/${alunoId}`),
     listarGruposMusculares: () => apiGet<GrupoApi[]>("/api/grupos-musculares"),
     criarAvaliacao: (alunoId: string) =>

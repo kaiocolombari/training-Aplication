@@ -5,6 +5,7 @@ public sealed class AlunoChatContextoDTO
     public Guid AlunoId { get; set; }
     public string NomeCompleto { get; set; } = string.Empty;
     public string StatusCadastro { get; set; } = string.Empty;
+    public SolicitacaoCadastroChatDTO? SolicitacaoCadastro { get; set; }
     public AnamneseChatDTO? UltimaAnamnese { get; set; }
     public List<AvaliacaoChatDTO> Avaliacoes { get; set; } = [];
     public List<HistoricoAvaliacaoChatDTO> HistoricoAvaliacoes { get; set; } = [];
@@ -13,7 +14,33 @@ public sealed class AlunoChatContextoDTO
     public List<ExecucaoChatDTO> ExecucoesRecentes { get; set; } = [];
     public List<TreinoChatDTO> TreinosAtuais { get; set; } = [];
     public List<PeriodizacaoChatDTO> Periodizacoes { get; set; } = [];
+    public List<TarefaAlunoChatDTO> Tarefas { get; set; } = [];
     public List<AtividadeChatDTO> Atividades { get; set; } = [];
+}
+
+public sealed class SolicitacaoCadastroChatDTO
+{
+    public DateTime EnviadaEm { get; set; }
+    public string StatusAnalise { get; set; } = string.Empty;
+    public string? ObservacaoAnalise { get; set; }
+    public string? AvaliadorNome { get; set; }
+    public DateTime? AnalisadaEm { get; set; }
+    public string RespostasJson { get; set; } = "{}";
+}
+
+public sealed class TarefaAlunoChatDTO
+{
+    public Guid Id { get; set; }
+    public string Titulo { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public string Categoria { get; set; } = string.Empty;
+    public string Prioridade { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime? DataLimite { get; set; }
+    public DateTime CriadaEm { get; set; }
+    public DateTime AtualizadaEm { get; set; }
+    public DateTime? ConcluidaEm { get; set; }
+    public string CriadoPorNome { get; set; } = string.Empty;
 }
 
 public sealed class AnamneseChatDTO

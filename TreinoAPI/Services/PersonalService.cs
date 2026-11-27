@@ -115,17 +115,14 @@ public class PersonalService
             .FirstOrDefaultAsync(p => p.Id == id && p.Usuario!.Ativo)
             ?? throw DomainException.NotFound("Personal não encontrado.");
 
-        var alunos = await _context.PersonalAlunos.AsNoTracking()
-            .Where(pa => pa.PersonalId == id && pa.Ativo && pa.Aluno.Usuario.Ativo)
-            .OrderBy(pa => pa.Aluno.NomeCompleto)
-            .Select(pa => new AlunoAfetadoExclusaoDTO
+        var alunos = await _context.Alunos.AsNoTracking()
+            .Where(a => a.ConvidadoPorPersonalId == id && a.Usuario.Ativo)
+            .OrderBy(a => a.NomeCompleto)
+            .Select(a => new AlunoAfetadoExclusaoDTO
             {
-                Id = pa.AlunoId,
-                NomeCompleto = pa.Aluno.NomeCompleto,
-                Email = pa.Aluno.Usuario.Email,
-                OutrosPersonaisAtivos = _context.PersonalAlunos.Count(outro =>
-                    outro.AlunoId == pa.AlunoId && outro.Ativo && outro.PersonalId != id &&
-                    outro.Personal.Usuario!.Ativo)
+                Id = a.Id,
+                NomeCompleto = a.NomeCompleto,
+                Email = a.Usuario.Email
             })
             .ToListAsync();
 
@@ -135,7 +132,6 @@ public class PersonalService
             NomeCompleto = personal.Nome,
             Email = personal.Usuario!.Email,
             TotalAlunos = alunos.Count,
-            AlunosQueFicaraoSemPersonal = 0,
             Alunos = alunos
         };
     }
@@ -151,9 +147,9 @@ public class PersonalService
         if (personal?.Usuario is null)
             return false;
 
-        var vinculos = await _context.PersonalAlunos
-            .Include(pa => pa.Aluno).ThenInclude(a => a.Usuario)
-            .Where(pa => pa.PersonalId == id && pa.Ativo && pa.Aluno.Usuario.Ativo)
+        var alunosConvidados = await _context.Alunos
+            .Include(a => a.Usuario)
+            .Where(a => a.ConvidadoPorPersonalId == id && a.Usuario.Ativo)
             .ToListAsync();
 
         personal.Usuario.Ativo = false;
@@ -165,18 +161,18 @@ public class PersonalService
 
         await _context.SaveChangesAsync();
 
-        foreach (var vinculo in vinculos)
+        foreach (var aluno in alunosConvidados)
             await _comunicacao.NotificarUsuarioAsync(
-                vinculo.Aluno.UsuarioId,
+                aluno.UsuarioId,
                 "Atualização da equipe",
                 $"O profissional {personal.Nome} foi desativado. Seu acompanhamento continua disponível para os demais profissionais da equipe.",
                 "EQUIPE_ATUALIZADA",
-                vinculo.AlunoId);
+                aluno.Id);
 
-        var nomes = string.Join(", ", vinculos.Select(vinculo => vinculo.Aluno.NomeCompleto).Take(8));
-        if (vinculos.Count > 8)
-            nomes += $" e mais {vinculos.Count - 8}";
-        var resumo = $"Personal {personal.Nome} desativado. Alunos afetados: {vinculos.Count}. Lista: {nomes}. Motivo: {motivo}";
+        var nomes = string.Join(", ", alunosConvidados.Select(aluno => aluno.NomeCompleto).Take(8));
+        if (alunosConvidados.Count > 8)
+            nomes += $" e mais {alunosConvidados.Count - 8}";
+        var resumo = $"Personal {personal.Nome} desativado. Alunos convidados: {alunosConvidados.Count}. Lista: {nomes}. Motivo: {motivo}";
         await _auditoria.RegistrarOperacaoDetalhadaAsync(
             "EXCLUSAO_PERSONAL", "DELETE", $"/api/Personal/{id}", id, resumo);
 

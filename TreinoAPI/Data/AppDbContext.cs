@@ -46,6 +46,9 @@ public class AppDbContext : DbContext
     public DbSet<Treino> Treinos { get; set; }
     public DbSet<TreinoExercicio> TreinosExercicios { get; set; }
     public DbSet<TreinoExercicioVariacao> TreinoExercicioVariacoes { get; set; }
+    public DbSet<ExercicioCatalogo> ExerciciosCatalogo { get; set; }
+    public DbSet<ExercicioSinonimo> ExerciciosSinonimos { get; set; }
+    public DbSet<VideoExercicio> VideosExercicios { get; set; }
     public DbSet<DiaTreino> DiaTreinos { get; set; }
     public DbSet<Periodizacao> Periodizacoes { get; set; }
     public DbSet<PeriodizacaoSemana> PeriodizacaoSemanas { get; set; }
@@ -629,6 +632,63 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(td => td.TreinoId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .Property(e => e.Nome).HasMaxLength(160);
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .Property(e => e.NomeNormalizado).HasMaxLength(180);
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .Property(e => e.GrupoMuscular).HasMaxLength(100);
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .Property(e => e.Equipamento).HasMaxLength(160);
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .Property(e => e.Dificuldade).HasMaxLength(40);
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .Property(e => e.CodigoFonte).HasMaxLength(180);
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .Property(e => e.FonteDados).HasMaxLength(160);
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .Property(e => e.LicencaDados).HasMaxLength(40);
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .HasIndex(e => e.CodigoFonte).IsUnique().HasFilter("\"CodigoFonte\" IS NOT NULL");
+        modelBuilder.Entity<ExercicioCatalogo>()
+            .HasIndex(e => e.NomeNormalizado);
+
+        modelBuilder.Entity<ExercicioSinonimo>()
+            .Property(s => s.Nome).HasMaxLength(160);
+        modelBuilder.Entity<ExercicioSinonimo>()
+            .Property(s => s.NomeNormalizado).HasMaxLength(180);
+        modelBuilder.Entity<ExercicioSinonimo>()
+            .Property(s => s.Origem).HasMaxLength(30);
+        modelBuilder.Entity<ExercicioSinonimo>()
+            .HasIndex(s => new { s.ExercicioCatalogoId, s.NomeNormalizado }).IsUnique();
+        modelBuilder.Entity<ExercicioSinonimo>()
+            .HasOne(s => s.ExercicioCatalogo).WithMany(e => e.Sinonimos)
+            .HasForeignKey(s => s.ExercicioCatalogoId).OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<VideoExercicio>()
+            .Property(v => v.Titulo).HasMaxLength(180);
+        modelBuilder.Entity<VideoExercicio>()
+            .Property(v => v.UrlExterna).HasMaxLength(2048);
+        modelBuilder.Entity<VideoExercicio>()
+            .Property(v => v.ChaveArmazenamento).HasMaxLength(32);
+        modelBuilder.Entity<VideoExercicio>()
+            .Property(v => v.TipoConteudo).HasMaxLength(100);
+        modelBuilder.Entity<VideoExercicio>()
+            .Property(v => v.Origem).HasMaxLength(30);
+        modelBuilder.Entity<VideoExercicio>()
+            .Property(v => v.Licenca).HasMaxLength(80);
+        modelBuilder.Entity<VideoExercicio>()
+            .Property(v => v.Fonte).HasMaxLength(500);
+        modelBuilder.Entity<VideoExercicio>()
+            .HasIndex(v => new { v.ExercicioCatalogoId, v.Ativo, v.Principal });
+        modelBuilder.Entity<VideoExercicio>()
+            .HasOne(v => v.ExercicioCatalogo).WithMany(e => e.Videos)
+            .HasForeignKey(v => v.ExercicioCatalogoId).OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TreinoExercicio>()
+            .HasOne(e => e.ExercicioCatalogo).WithMany()
+            .HasForeignKey(e => e.ExercicioCatalogoId).OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Usuario>()
             .ToTable("Usuarios", t =>
